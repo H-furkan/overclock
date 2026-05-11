@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OVERCLOCK">
+<meta name="theme-color" content="#000000">
+<title>OVERCLOCK</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>">
+<script>
+const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standalone",background_color:"#000000",theme_color:"#000000",orientation:"portrait",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000'/><text x='96' y='140' font-size='120' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#000;--deep:#080808;--dark:#111;--mid:#1a1a1a;
+  --panel:#141414;--bd:#2a2a2a;--bd2:#444;--dim:#333;
+  --muted:#555;--gray:#777;--bright:#ccc;--white:#f0f0f0;
+  --green:#8fff8f;--yellow:#ffff66;--red:#ff6666;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;background:var(--black);color:var(--bright);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);user-select:none;-webkit-user-select:none}
+input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radius:0;-webkit-appearance:none;appearance:none;user-select:text;-webkit-user-select:text}
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-thumb{background:var(--dim)}
+
+/* overlays */
+#scanlines{position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px)}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:9998;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.65) 100%)}
+
+/* status bar */
+#statusbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--bd);background:var(--deep);font-size:10px;letter-spacing:2px;z-index:200}
+#statuslabel{font-family:'Orbitron',monospace;font-weight:900;font-size:11px;letter-spacing:3px;padding:3px 10px;border:1px solid var(--bd2);color:var(--gray)}
+#statuslabel.active{color:var(--green);border-color:var(--green);text-shadow:0 0 10px var(--green);background:rgba(143,255,143,.05);animation:pg 2s ease-in-out infinite}
+#statuslabel.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);background:rgba(255,255,102,.05);animation:py 2s ease-in-out infinite}
+@keyframes pg{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes py{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes xpf{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-55px)}}
+
+/* tab bar */
+#tabbar{flex-shrink:0;display:flex;border-bottom:1px solid var(--bd);background:var(--deep);overflow-x:auto;z-index:200}
+#tabbar::-webkit-scrollbar{height:0}
+.tab{flex:1;min-width:52px;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+.tab.active{background:var(--panel);border-bottom:2px solid var(--bright);color:var(--white)}
+
+/* content */
+#content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.page{display:none}.page.visible{display:block}
+
+/* blocks */
+.block{background:var(--panel);border-bottom:1px solid var(--bd);padding:14px 16px}
+.blabel{font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--bd)}
+
+/* xp */
+#xp-num{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:var(--white);text-shadow:0 0 12px rgba(255,255,255,.3)}
+#xp-bar-wrap{height:8px;background:var(--dim);overflow:hidden;margin:8px 0 4px;position:relative}
+#xp-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--dim),var(--bright));transition:width .5s;position:relative}
+#xp-bar::after{content:'';position:absolute;right:0;top:0;width:3px;height:100%;background:var(--white);box-shadow:0 0 8px var(--white)}
+.xp-ticks{display:flex;justify-content:space-between;font-size:7px;color:var(--dim)}
+#level-badge{width:44px;height:44px;border:2px solid var(--bd2);background:var(--mid);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+#level-num{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:var(--white);line-height:1}
+#level-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--bright);letter-spacing:2px}
+#level-next{font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+
+/* timer ring */
+#timer-svg{transform:rotate(-90deg);display:block}
+#timer-ring-bg{fill:none;stroke:var(--dim);stroke-width:3}
+#timer-ring{fill:none;stroke:var(--bright);stroke-width:3;stroke-dasharray:408;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 4px rgba(255,255,255,.5))}
+#timer-num{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:var(--white);letter-spacing:2px;text-shadow:0 0 10px rgba(255,255,255,.35)}
+#timer-unit{font-size:8px;color:var(--muted);letter-spacing:3px;margin-top:2px}
+#timer-wrap{position:relative;flex-shrink:0;width:130px;height:130px}
+#timer-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+
+/* buttons */
+.btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 14px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+.btn:active{background:var(--dim)}
+.btn.primary{background:var(--dim);color:var(--white)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:active{background:rgba(255,102,102,.1)}
+.btn.fw{width:100%}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.brow{display:flex;gap:8px;flex-wrap:wrap}
+
+/* inputs */
+.inp{font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px 12px;background:var(--deep);border:1px solid var(--bd);color:var(--bright);outline:none;letter-spacing:1px;min-height:44px;width:100%}
+.inp:focus{border-color:var(--bd2)}
+.irow{display:flex;gap:8px}
+.irow .inp{flex:1}
+.ilabel{font-size:8px;color:var(--muted);margin-bottom:5px;letter-spacing:2px;text-transform:uppercase}
+.igrp{display:flex;flex-direction:column;gap:4px;flex:1}
+
+/* boss */
+#boss-panel{background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--white);padding:12px 14px;margin-bottom:12px;position:relative}
+#boss-tag{position:absolute;top:8px;right:10px;font-size:7px;letter-spacing:2px;color:var(--dim)}
+#boss-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px;margin-bottom:8px}
+#boss-hp-wrap{height:5px;background:var(--dim);margin-bottom:4px}
+#boss-hp-fill{height:100%;width:70%;background:var(--bright);transition:width .4s}
+.boss-hp-lbl{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);margin-bottom:10px}
+
+/* enemy intel */
+.enemy-item{background:var(--mid);border-left:2px solid var(--dim);margin-bottom:6px}
+.enemy-item.hot{border-left-color:var(--red)}
+.enemy-top{display:flex;align-items:center;padding:10px 12px;cursor:pointer;min-height:44px;gap:8px}
+.enemy-name{flex:1;font-size:10px;color:var(--bright);letter-spacing:1px}
+.enemy-note-hint{font-size:7px;color:var(--muted);margin-top:2px}
+.enemy-cnt{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--white)}
+.enemy-cnt.hot{color:var(--red);text-shadow:0 0 8px var(--red)}
+.enemy-btns{display:flex;border-top:1px solid var(--bd)}
+.enemy-act{flex:1;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:7px 4px;border:none;background:transparent;cursor:pointer;text-transform:uppercase;min-height:34px;color:var(--muted)}
+.enemy-act:active{background:var(--dim)}
+.enemy-act.note{color:var(--gray);border-right:1px solid var(--bd)}
+.enemy-act.del{color:var(--red)}
+
+/* bio */
+.bio-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--mid);border:1px solid var(--bd);margin-bottom:8px;cursor:pointer;min-height:44px}
+.bio-val{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
+.bio-val.on{color:var(--green);text-shadow:0 0 6px var(--green)}
+.bio-val.warn{color:var(--yellow)}
+.bio-val.off{color:var(--muted)}
+
+/* tasks */
+.task-item{background:var(--mid);border:1px solid var(--bd);border-left:2px solid var(--dim);padding:12px 14px;margin-bottom:8px}
+.task-item.done-item{border-left-color:var(--green);opacity:.55}
+.task-item.od-item{border-left-color:var(--red)}
+.task-item.urg-item{border-left-color:var(--yellow)}
+.task-hdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.task-txt{font-size:11px;color:var(--bright);letter-spacing:1px;flex:1;line-height:1.4}
+.task-txt.done-txt{text-decoration:line-through;color:var(--muted)}
+.task-xp{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;padding:2px 7px;border:1px solid var(--bd2);color:var(--bright);white-space:nowrap;flex-shrink:0}
+.task-meta{font-size:8px;color:var(--muted);letter-spacing:1px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.task-st{font-size:7px;padding:2px 7px;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.task-st.od{color:var(--red);border:1px solid var(--red)}
+.task-st.urg{color:var(--yellow);border:1px solid var(--yellow)}
+.task-st.done{color:var(--green);border:1px solid var(--green)}
+.task-st.pend{color:var(--muted);border:1px solid var(--bd)}
+.task-acts{display:flex;gap:6px;flex-wrap:wrap}
+.task-btn{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:6px 10px;border:1px solid var(--bd);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;min-height:36px}
+.task-btn:active{background:var(--dim)}
+.task-btn.ok{border-color:var(--green);color:var(--green)}
+.task-btn.rm{border-color:var(--red);color:var(--red)}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.pdot.high{background:var(--red)}.pdot.med{background:var(--yellow)}.pdot.low{background:var(--gray)}
+.fbtn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:5px 12px;border:1px solid var(--bd);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;min-height:34px}
+.fbtn.active{border-color:var(--bright);color:var(--white);background:var(--dim)}
+
+/* badges */
+.badge-card{padding:12px 8px;background:var(--mid);border:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;gap:5px;opacity:.38}
+.badge-card.earned{opacity:1;border-color:var(--bd2)}
+.badge-icon{font-size:22px;filter:grayscale(100%)}
+.badge-card.earned .badge-icon{filter:none}
+.badge-name{font-size:7px;letter-spacing:1px;color:var(--gray);text-align:center;text-transform:uppercase;line-height:1.3}
+.badge-card.earned .badge-name{color:var(--bright)}
+.badge-desc{font-size:7px;color:var(--muted);text-align:center}
+
+/* log */
+.log-entry{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:10px}
+.log-time{color:var(--dim);flex-shrink:0}
+.log-msg{color:var(--gray);word-break:break-all}
+
+/* notifications */
+#notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
+#notif.show{opacity:1}
+#xp-popup{position:fixed;top:80px;right:16px;z-index:9600;font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--white);text-shadow:0 0 15px rgba(255,255,255,.6);pointer-events:none;opacity:0;letter-spacing:2px}
+#xp-popup.show{animation:xpf 1.4s ease-out forwards}
+
+/* error modal */
+#error-modal{display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,0,0,.93);align-items:center;justify-content:center}
+#error-modal.show{display:flex}
+#error-box{background:var(--dark);border:2px solid var(--red);padding:28px 22px;max-width:340px;width:92%;text-align:center}
+#error-box h2{font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:var(--red);text-shadow:0 0 20px var(--red);letter-spacing:4px;margin-bottom:10px;animation:pg 1s ease-in-out infinite}
+.err-sub{font-size:9px;color:var(--bright);letter-spacing:3px;margin-bottom:16px;line-height:1.8}
+#error-list{text-align:left;margin-bottom:16px;max-height:200px;overflow-y:auto}
+.err-task{font-size:10px;color:var(--red);letter-spacing:1px;padding:6px 0;border-bottom:1px solid var(--bd)}
+
+/* notes modal */
+#notes-modal{display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.9);align-items:flex-end;justify-content:center}
+#notes-modal.show{display:flex}
+#notes-box{background:var(--dark);border:1px solid var(--bd2);border-bottom:none;width:100%;max-width:600px;padding:16px;display:flex;flex-direction:column}
+#notes-subj{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--white);letter-spacing:2px;margin-bottom:12px}
+#notes-ta{background:var(--deep);border:1px solid var(--bd);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:11px;padding:12px;resize:none;outline:none;letter-spacing:1px;line-height:1.6;min-height:200px;width:100%}
+#notes-ta:focus{border-color:var(--bd2)}
+
+/* confirm boxes */
+.confirm-box{background:var(--mid);border:1px solid var(--bd2);padding:12px 14px;margin-top:8px}
+.confirm-msg{font-size:10px;color:var(--yellow);letter-spacing:1px;margin-bottom:10px;line-height:1.7}
+.confirm-msg.danger{color:var(--red)}
+
+/* util */
+.fbet{display:flex;justify-content:space-between;align-items:center}
+.fctr{display:flex;align-items:center}
+.g8{gap:8px}.g12{gap:12px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
+.fw{width:100%}
+.ssec{padding:14px 0;border-bottom:1px solid var(--bd)}
+.slbl{font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+
+/* streak panel */
+#streak-panel{display:flex;align-items:center;gap:10px;background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);padding:10px 12px;margin-top:10px}
+#streak-panel.fire{border-left-color:var(--red);animation:pg 2.5s ease-in-out infinite}
+#streak-icon{font-size:20px;filter:grayscale(100%);opacity:.55}
+#streak-panel.fire #streak-icon{filter:none;opacity:1;text-shadow:0 0 12px var(--red)}
+#streak-num{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);line-height:1}
+#streak-lbl{font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+#streak-msg{flex:1;font-size:8px;color:var(--bright);letter-spacing:1px;line-height:1.4;text-transform:uppercase}
+
+/* difficulty tier badge */
+#tier-badge{display:inline-block;font-size:7px;letter-spacing:2px;padding:2px 7px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);margin-left:6px;vertical-align:middle}
+#tier-badge.t2{border-color:var(--bright);color:var(--white)}
+#tier-badge.t3{border-color:var(--yellow);color:var(--yellow);text-shadow:0 0 6px var(--yellow)}
+#tier-badge.t4{border-color:var(--red);color:var(--red);text-shadow:0 0 6px var(--red)}
+#tier-badge.t5{border-color:var(--red);color:var(--white);background:var(--red);text-shadow:0 0 10px var(--red);animation:pg 1.6s ease-in-out infinite}
+
+/* leak / debuff banner */
+#leak-banner{display:none;background:var(--mid);border:1px solid var(--red);border-left:3px solid var(--red);padding:9px 12px;margin-top:8px;animation:pg 1.4s ease-in-out infinite}
+#leak-banner.show{display:flex;align-items:center;gap:10px}
+#leak-banner .leak-ico{font-size:14px;color:var(--red);text-shadow:0 0 10px var(--red)}
+#leak-banner .leak-txt{flex:1;font-size:9px;color:var(--red);letter-spacing:2px;text-transform:uppercase;line-height:1.4}
+#leak-banner .leak-rate{font-family:'Orbitron',monospace;font-size:10px;color:var(--red);font-weight:700}
+
+/* fullscreen timer */
+#fs-timer{display:none;position:fixed;inset:0;z-index:9750;background:var(--black);flex-direction:column;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0) 16px env(safe-area-inset-bottom,0)}
+#fs-timer.show{display:flex}
+#fs-timer-svg{transform:rotate(-90deg);max-width:88vw;max-height:55vh;width:340px;height:340px}
+#fs-timer-ring-bg{fill:none;stroke:var(--dim);stroke-width:2}
+#fs-timer-ring{fill:none;stroke:var(--bright);stroke-width:2;stroke-dasharray:912;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 8px rgba(255,255,255,.55))}
+#fs-timer-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+#fs-timer-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+#fs-timer-num{font-family:'Orbitron',monospace;font-size:62px;font-weight:900;color:var(--white);letter-spacing:4px;text-shadow:0 0 20px rgba(255,255,255,.5);line-height:1}
+#fs-timer-unit{font-size:11px;color:var(--muted);letter-spacing:6px;margin-top:8px}
+#fs-mode-lbl{font-family:'Orbitron',monospace;font-size:10px;color:var(--gray);letter-spacing:4px;margin-top:20px;text-transform:uppercase}
+#fs-mission{font-family:'Orbitron',monospace;font-size:13px;color:var(--white);letter-spacing:3px;margin-top:6px;text-align:center;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fs-controls{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;justify-content:center}
+#fs-controls .btn{min-width:120px}
+#fs-exit{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);right:14px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:8px 12px;border:1px solid var(--bd2);background:var(--deep);color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:38px}
+#fs-status{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);left:14px;font-family:'Orbitron',monospace;font-weight:900;font-size:10px;letter-spacing:3px;padding:4px 10px;border:1px solid var(--bd2);color:var(--gray)}
+#fs-status.active{color:var(--green);border-color:var(--green);text-shadow:0 0 10px var(--green);animation:pg 2s ease-in-out infinite}
+#fs-status.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);animation:py 2s ease-in-out infinite}
+#fs-tier{position:absolute;bottom:calc(env(safe-area-inset-bottom,0) + 14px);font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+
+/* fullscreen toggle btn */
+.fs-btn{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:7px 10px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:32px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.fs-btn:active{background:var(--dim)}
+
+/* recurring task UI */
+.rec-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.rec-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:7px 8px;border:1px solid var(--bd);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:1px;min-height:34px;flex:1;min-width:64px}
+.rec-btn.active{border-color:var(--bright);color:var(--white);background:var(--dim)}
+.task-rec-tag{font-size:7px;letter-spacing:2px;padding:2px 6px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);text-transform:uppercase;display:inline-block}
+.task-rec-tag.daily{border-color:var(--green);color:var(--green)}
+.task-rec-tag.weekday{border-color:var(--yellow);color:var(--yellow)}
+.task-rec-tag.weekly{border-color:var(--bright);color:var(--white)}
+
+/* analytics canvas */
+#chart-wrap{background:var(--mid);border:1px solid var(--bd);padding:14px 12px;margin-bottom:10px}
+#focus-chart{width:100%;height:180px;display:block;background:var(--deep);border:1px solid var(--bd)}
+.chart-legend{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat-card{background:var(--mid);border:1px solid var(--bd);padding:11px 12px;border-left:2px solid var(--bd2)}
+.stat-card .sv{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);line-height:1}
+.stat-card .sl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+.stat-card.hot{border-left-color:var(--red)}
+.stat-card.hot .sv{color:var(--red);text-shadow:0 0 8px var(--red)}
+.stat-card.good{border-left-color:var(--green)}
+.stat-card.good .sv{color:var(--green);text-shadow:0 0 8px var(--green)}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="xp-popup"></div>
+<div id="notif"></div>
+
+<!-- ERROR MODAL -->
+<div id="error-modal">
+  <div id="error-box">
+    <h2>⚠ ERROR!</h2>
+    <div class="err-sub">TAMAMLANMAMIŞ GÖREVLER<br>TR-1 PROTOKOL İHLALİ</div>
+    <div id="error-list"></div>
+    <button class="btn danger fw" onclick="closeErrModal()">⏎ KABUL ET &amp; DEVAM</button>
+  </div>
+</div>
+
+<!-- NOTES MODAL -->
+<div id="notes-modal">
+  <div id="notes-box">
+    <div id="notes-subj">📝 NOTLAR</div>
+    <textarea id="notes-ta" placeholder="Bu konuya özel notlarını buraya yaz..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn primary" style="flex:1" onclick="saveNotes()">💾 KAYDET</button>
+      <button class="btn" onclick="closeNotes()">↩ KAPAT</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span style="color:var(--muted);font-size:9px">OVERCLOCK // TR-1</span>
+  <div id="statuslabel">● STANDBY</div>
+  <span id="clock" style="color:var(--gray);font-size:11px;letter-spacing:2px">00:00:00</span>
+</div>
+
+<!-- TAB BAR -->
+<div id="tabbar">
+  <button class="tab active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
+  <button class="tab" onclick="goTab(this,'tasks')">📋 TASKS</button>
+  <button class="tab" onclick="goTab(this,'stats')">📊 DATA</button>
+  <button class="tab" onclick="goTab(this,'log')">🗒 LOG</button>
+  <button class="tab" onclick="goTab(this,'achievements')">✦ BADGES</button>
+  <button class="tab" onclick="goTab(this,'settings')">⚙ SYS</button>
+</div>
+
+<!-- FULLSCREEN TIMER OVERLAY -->
+<div id="fs-timer">
+  <div id="fs-status">● STANDBY</div>
+  <button id="fs-exit" onclick="exitFullscreen()">⛶ ÇIK</button>
+  <div id="fs-timer-wrap">
+    <svg id="fs-timer-svg" viewBox="0 0 320 320">
+      <circle id="fs-timer-ring-bg" cx="160" cy="160" r="145"/>
+      <circle id="fs-timer-ring" cx="160" cy="160" r="145" stroke-dasharray="911"/>
+    </svg>
+    <div id="fs-timer-inner">
+      <div id="fs-timer-num">90:00</div>
+      <div id="fs-timer-unit">FOCUS</div>
+    </div>
+  </div>
+  <div id="fs-mode-lbl">Focus — 90dk</div>
+  <div id="fs-mission">AYT MATEMATİK</div>
+  <div id="fs-controls">
+    <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
+    <button class="btn" onclick="resetTimer()">↺ RESET</button>
+  </div>
+  <div id="fs-tier">TIER I // STD GOAL</div>
+</div>
+
+<div id="content">
+
+<!-- ══════════ PAGE: HQ ══════════ -->
+<div id="page-cockpit" class="page visible">
+
+  <!-- XP BAR -->
+  <div class="block">
+    <div class="fbet mb8">
+      <span style="font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase">■ Daily XP <span id="tier-badge">T1</span></span>
+      <span><span id="xp-num">0</span><span style="font-size:10px;color:var(--muted)"> / <span id="xp-goal">1200</span> XP</span></span>
+    </div>
+    <div id="xp-bar-wrap"><div id="xp-bar"></div></div>
+    <div class="xp-ticks" id="xp-ticks"><span>0</span><span>300</span><span>600</span><span>900</span><span>1200</span></div>
+    <div class="fctr g12 mt12">
+      <div id="level-badge"><span id="level-num">1</span><span style="font-size:7px;color:var(--muted);letter-spacing:2px">LVL</span></div>
+      <div style="flex:1"><div id="level-title">CADET</div><div id="level-next" style="font-size:8px;color:var(--muted);margin-top:2px"></div></div>
+      <div style="display:flex;gap:10px">
+        <div style="text-align:center">
+          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">SESSION</div>
+          <div id="session-count" style="font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--bright)">0</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">FOCUS</div>
+          <div id="cum-focus" style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--bright);margin-top:3px">0d</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">MOLA</div>
+          <div id="cum-break" style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--bright);margin-top:3px">0d</div>
+        </div>
+      </div>
+    </div>
+    <div id="streak-panel">
+      <span id="streak-icon">🔥</span>
+      <div>
+        <div id="streak-num">0</div>
+        <div id="streak-lbl">GÜN STREAK</div>
+      </div>
+      <div id="streak-msg">HEDEFE ULAŞ — ZİNCİRİ BAŞLAT</div>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="block fctr g12" style="align-items:flex-start">
+    <div id="timer-wrap">
+      <svg id="timer-svg" width="130" height="130" viewBox="0 0 130 130">
+        <circle id="timer-ring-bg" cx="65" cy="65" r="65"/>
+        <circle id="timer-ring" cx="65" cy="65" r="65"/>
+      </svg>
+      <div id="timer-inner">
+        <div id="timer-num">90:00</div>
+        <div id="timer-unit">FOCUS</div>
+      </div>
+    </div>
+    <div style="flex:1">
+      <div id="timer-mode-lbl" style="font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Focus — 90dk</div>
+      <div class="bgrid mb8">
+        <button class="btn primary" id="btn-start" onclick="toggleTimer()">▶ START</button>
+        <button class="btn" onclick="resetTimer()">↺ RESET</button>
+        <button class="btn" onclick="addXP(50,'Manuel')">+50 XP</button>
+        <button class="btn" onclick="addXP(100,'Manuel')">+100 XP</button>
+      </div>
+      <button class="btn fw" style="font-size:8px;color:var(--muted);border-color:var(--bd)" onclick="tog('timer-set-panel')">⚙ SÜRE: <span id="timer-cfg-lbl">90dk/20dk</span></button>
+      <div id="timer-set-panel" style="display:none;margin-top:8px">
+        <div class="irow">
+          <div class="igrp"><div class="ilabel">Focus (dk)</div><input class="inp" id="inp-focus" type="number" min="1" max="240" value="90"></div>
+          <div class="igrp"><div class="ilabel">Mola (dk)</div><input class="inp" id="inp-break" type="number" min="1" max="60" value="20"></div>
+        </div>
+        <button class="btn primary fw mt8" onclick="applyTimer()">UYGULA</button>
+      </div>
+      <div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-top:8px">Piyano Molasına Kalan: <span id="break-rem" style="color:var(--yellow)">90:00</span></div>
+      <button class="fs-btn fw mt8" onclick="enterFullscreen()">⛶ TAM EKRAN MODU</button>
+      <div id="leak-banner">
+        <span class="leak-ico">⚠</span>
+        <div class="leak-txt">SIZINTI TESPİT EDİLDİ // SİSTEM SOĞUYOR</div>
+        <span class="leak-rate">-2 XP/15s</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSION + BOSS -->
+  <div class="block">
+    <div class="blabel">■ Current Mission</div>
+    <div id="boss-panel">
+      <span id="boss-tag">BOSS FIGHT</span>
+      <div id="boss-name">TÜREV BOSS FIGHT</div>
+      <div id="boss-hp-wrap"><div id="boss-hp-fill"></div></div>
+      <div class="boss-hp-lbl"><span>HP: <span id="boss-hp-val">70</span>%</span><span>TARGET: ELIMINATION</span></div>
+      <div class="brow">
+        <button class="btn" onclick="dmgBoss(10)">-10 HP</button>
+        <button class="btn" onclick="dmgBoss(25)">-25 HP</button>
+        <button class="btn primary" onclick="defeatBoss()" style="flex:1">⚔ YENİLDİ</button>
+      </div>
+    </div>
+    <div id="mission-title" style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);text-transform:uppercase;letter-spacing:3px;margin-bottom:4px">AYT MATEMATİK</div>
+    <div id="mission-sub" style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-bottom:12px">Türev &amp; Limit — Derinlik Protokolü</div>
+    <div class="brow mb8">
+      <button class="btn" onclick="tog('mission-edit')">✏ GÖREV</button>
+      <button class="btn" onclick="tog('boss-edit')">🗡 BOSS</button>
+    </div>
+    <div id="mission-edit" style="display:none" class="mb8">
+      <div class="irow"><input class="inp" id="inp-mission" placeholder="Yeni görev..." onkeydown="if(event.key==='Enter')setMission()"><button class="btn primary" onclick="setMission()">SET</button></div>
+    </div>
+    <div id="boss-edit" style="display:none">
+      <div class="irow"><input class="inp" id="inp-boss-name" placeholder="Boss adı..."><input class="inp" id="inp-boss-hp" type="number" min="0" max="100" placeholder="HP%" style="max-width:80px"><button class="btn primary" onclick="setBoss()">SET</button></div>
+    </div>
+  </div>
+
+  <!-- ENEMY INTEL -->
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Enemy Intel</div>
+      <span style="font-size:8px;color:var(--gray)">TOTAL: <b id="total-errors" style="color:var(--bright)">0</b></span>
+    </div>
+    <div id="enemy-grid"></div>
+    <button class="btn fw mt8" onclick="tog('enemy-add')">+ KONU EKLE</button>
+    <div id="enemy-add" style="display:none;margin-top:8px">
+      <div class="irow"><input class="inp" id="inp-enemy" placeholder="Konu adı..." onkeydown="if(event.key==='Enter')addEnemySubject()"><button class="btn primary" onclick="addEnemySubject()">EKLE</button></div>
+    </div>
+  </div>
+
+  <!-- BIOMETRICS -->
+  <div class="block">
+    <div class="blabel">■ Biometric Stats</div>
+    <div class="bio-item" onclick="toggleFasting()">
+      <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">⚡ Açlık Modu</span>
+      <span id="fasting-val" class="bio-val on">AKTİF</span>
+    </div>
+    <div style="background:var(--mid);border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px">
+      <div class="fbet mb8">
+        <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">💧 Hidrasyon</span>
+        <span id="water-val" class="bio-val warn">0 / 8</span>
+      </div>
+      <div style="height:3px;background:var(--dim);margin-bottom:8px"><div id="water-bar" style="height:100%;width:0%;background:var(--bright);transition:width .4s"></div></div>
+      <div class="brow"><button class="btn" style="flex:1" onclick="addWater()">+ İÇ (250ml)</button><button class="btn" onclick="resetWater()">↺</button></div>
+    </div>
+    <div class="bio-item" style="cursor:default">
+      <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">🧂 Himalaya Tuzu</span>
+      <span id="salt-val" class="bio-val off">BEKLEMEDE</span>
+    </div>
+  </div>
+</div><!-- /cockpit -->
+
+<!-- ══════════ PAGE: TASKS ══════════ -->
+<div id="page-tasks" class="page">
+  <div class="block">
+    <div class="blabel">■ Görev Ekle</div>
+    <div style="margin-bottom:8px"><div class="ilabel">GÖREV ADI *</div><input class="inp" id="inp-task-title" placeholder="Örn: AYT Fizik — Kuvvet konusu"></div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">DEADLINE</div><input class="inp" id="inp-task-date" type="date"></div>
+      <div class="igrp"><div class="ilabel">XP ÖDÜLÜ</div><input class="inp" id="inp-task-xp" type="number" min="10" max="500" value="50"></div>
+      <div class="igrp"><div class="ilabel">ÖNCELİK</div>
+        <select class="inp" id="inp-task-prio">
+          <option value="high">🔴 YÜKSEK</option>
+          <option value="med" selected>🟡 ORTA</option>
+          <option value="low">⚪ DÜŞÜK</option>
+        </select>
+      </div>
+    </div>
+    <div class="ilabel">TEKRAR</div>
+    <div class="rec-row">
+      <button type="button" class="rec-btn active" data-rec="none" onclick="setRecur(this,'none')">— TEK SEFER</button>
+      <button type="button" class="rec-btn" data-rec="daily" onclick="setRecur(this,'daily')">🔁 GÜNLÜK</button>
+      <button type="button" class="rec-btn" data-rec="weekday" onclick="setRecur(this,'weekday')">📅 HAFTA İÇİ</button>
+      <button type="button" class="rec-btn" data-rec="weekly" onclick="setRecur(this,'weekly')">📆 HAFTALIK</button>
+    </div>
+    <button class="btn primary fw" onclick="addTask()">+ GÖREVE EKLE</button>
+  </div>
+  <div class="block">
+    <div class="fbet mb12">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Görevler</div>
+      <div style="font-size:8px;color:var(--muted)">✓ <span id="tasks-done-today">0</span> bugün</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      <button class="fbtn active" id="fa" onclick="filterTasks('all',this)">TÜMÜ</button>
+      <button class="fbtn" id="fp" onclick="filterTasks('pending',this)">BEKLEYEN</button>
+      <button class="fbtn" id="fo" onclick="filterTasks('overdue',this)">⚠ GECİKMİŞ</button>
+      <button class="fbtn" id="fd" onclick="filterTasks('done',this)">BİTEN</button>
+    </div>
+    <div id="task-list"></div>
+    <div id="task-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:16px 0;display:none">Görev yok.</div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: STATS ══════════ -->
+<div id="page-stats" class="page">
+  <div class="block">
+    <div class="blabel">■ Haftalık Odaklanma</div>
+    <div id="chart-wrap">
+      <canvas id="focus-chart" width="600" height="180"></canvas>
+      <div class="chart-legend">
+        <span>HAFTANIN GÜNLERİ</span>
+        <span>SAAT (FOCUS)</span>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Süreklilik & Zorluk</div>
+    <div class="stat-grid">
+      <div class="stat-card good">
+        <div class="sv" id="stat-streak">0</div>
+        <div class="sl">🔥 Gün Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="stat-best-streak">0</div>
+        <div class="sl">★ En Uzun Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="stat-tier">I</div>
+        <div class="sl">⚡ Zorluk Tier</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="stat-goal">1200</div>
+        <div class="sl">🎯 Günlük XP Hedefi</div>
+      </div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Toplam İstatistikler</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="sv" id="stat-total-xp">0</div>
+        <div class="sl">∑ Toplam XP</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="stat-total-focus">0s</div>
+        <div class="sl">⏱ Toplam Focus</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="stat-total-tasks">0</div>
+        <div class="sl">✓ Bitti Task</div>
+      </div>
+      <div class="stat-card hot">
+        <div class="sv" id="stat-total-bosses">0</div>
+        <div class="sl">⚔ Boss Kills</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: LOG ══════════ -->
+<div id="page-log" class="page">
+  <div class="block">
+    <div class="blabel">■ Boss Yenildi</div>
+    <div id="boss-log-list"></div>
+    <div id="boss-log-empty" style="font-size:10px;color:var(--dim)">Henüz boss yenilmedi.</div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ System Log</div>
+    <div id="sys-log-list"></div>
+    <div id="sys-log-empty" style="font-size:10px;color:var(--dim)">Log boş.</div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: ACHIEVEMENTS ══════════ -->
+<div id="page-achievements" class="page">
+  <div class="block">
+    <div class="blabel">■ Achievement Sistemi</div>
+    <div style="background:var(--mid);border:1px solid var(--bd2);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+      <span style="font-size:32px">🏆</span>
+      <div>
+        <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px">LGS LEGACY</div>
+        <div style="font-size:8px;color:var(--gray);letter-spacing:2px;margin-top:3px">Geçmişin kanıtı. Bu rozet hiç sökmez.</div>
+        <div style="display:inline-block;font-size:7px;letter-spacing:2px;color:var(--white);background:var(--dim);padding:2px 8px;margin-top:6px">ONUR MADALYASI</div>
+      </div>
+    </div>
+    <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">GÜNLÜK (her gün sıfırlanır)</div>
+    <div id="daily-badges" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
+    <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">KALICI (sıfırlanmaz)</div>
+    <div id="perm-badges" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: SETTINGS ══════════ -->
+<div id="page-settings" class="page">
+  <div class="block">
+    <div class="blabel">■ Sistem Ayarları</div>
+    <div class="ssec">
+      <div class="slbl">Timer Ayarları</div>
+      <div class="irow mb8">
+        <div class="igrp"><div class="ilabel">Focus (dk)</div><input class="inp" id="set-focus" type="number" min="1" max="240" value="90"></div>
+        <div class="igrp"><div class="ilabel">Mola (dk)</div><input class="inp" id="set-break" type="number" min="1" max="60" value="20"></div>
+      </div>
+      <button class="btn primary fw" onclick="applyTimerSettings()">UYGULA</button>
+    </div>
+    <div class="ssec">
+      <div class="slbl">XP Referansı</div>
+      <div style="font-size:10px;color:var(--gray);line-height:2">
+        Günlük hedef: <b style="color:var(--bright)">1200 XP</b><br>
+        Session: <b style="color:var(--bright)">+150 XP</b> &nbsp;|&nbsp; Boss: <b style="color:var(--bright)">+100 XP</b><br>
+        Task: <b style="color:var(--bright)">belirlediğin kadar</b> &nbsp;|&nbsp; Rozet: <b style="color:var(--bright)">+50 XP</b>
+      </div>
+    </div>
+    <div class="ssec">
+      <div class="slbl">Veri Yönetimi</div>
+      <button class="btn fw mb8" onclick="tog('conf-daily')">↺ GÜNLÜK SIFIRLA</button>
+      <div id="conf-daily" style="display:none" class="confirm-box mb8">
+        <div class="confirm-msg">XP, session, su, hata sayıları ve günlük rozetler sıfırlanır.<br>Boss log, tasks ve kalıcı rozetler korunur.</div>
+        <div class="brow"><button class="btn primary" onclick="execDailyReset()">✓ EVET</button><button class="btn" onclick="hideEl('conf-daily')">✕ İPTAL</button></div>
+      </div>
+      <button class="btn danger fw" onclick="tog('conf-full')">🗑 TAM SİL</button>
+      <div id="conf-full" style="display:none" class="confirm-box mt8">
+        <div class="confirm-msg danger">⚠ TÜM VERİLER SİLİNECEK. Geri alınamaz!</div>
+        <div class="brow"><button class="btn danger" onclick="execFullReset()">✓ EVET SİL</button><button class="btn" onclick="hideEl('conf-full')">✕ İPTAL</button></div>
+      </div>
+    </div>
+    <div class="ssec" style="border-bottom:none">
+      <div class="slbl">Hakkında</div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v5.0 // TR-1<br>Samsung Galaxy Tab S9 FE optimize<br>Samsung Internet → Ana Ekrana Ekle</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+'use strict';
+// ════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════
+const SK = 'overclock_v5';
+const XPGOAL_BASE = 1200;
+const CIRC = 2 * Math.PI * 65;
+const FS_CIRC = 2 * Math.PI * 145;
+
+// Difficulty Tiers — XPGOAL scales with totalXp (persistent rank)
+const TIERS = [
+  {min:0,     goal:1200, name:'TIER I',   sub:'STD GOAL',     cls:''},
+  {min:2500,  goal:1300, name:'TIER II',  sub:'ELEVATED',     cls:'t2'},
+  {min:7000,  goal:1400, name:'TIER III', sub:'HARDWIRED',    cls:'t3'},
+  {min:15000, goal:1500, name:'TIER IV',  sub:'OVERCLOCKED',  cls:'t4'},
+  {min:30000, goal:1600, name:'TIER V',   sub:'TITAN PROTO',  cls:'t5'},
+];
+function getTier(){ let r=TIERS[0]; TIERS.forEach(t=>{if((S.totalXp||0)>=t.min)r=t;}); return r; }
+function getDailyGoal(){ return getTier().goal; }
+
+const LEVELS = [
+  {min:0,    title:'CADET',      next:'SPECIALIST', nextMin:200},
+  {min:200,  title:'SPECIALIST', next:'OPERATIVE',  nextMin:500},
+  {min:500,  title:'OPERATIVE',  next:'COMMANDER',  nextMin:800},
+  {min:800,  title:'COMMANDER',  next:'ELITE',       nextMin:1100},
+  {min:1100, title:'ELITE',      next:'TITAN',       nextMin:1200},
+  {min:1200, title:'TITAN',      next:null,          nextMin:null},
+];
+
+const BADGES = [
+  {id:'korn',       icon:'🎸', name:'KORN SLAYER',    desc:'4h gürültü bloğu',      type:'daily',     trig:'manual'},
+  {id:'maestro',    icon:'🎹', name:'SILENT MAESTRO', desc:'12h sessizlikte çalış', type:'daily',     trig:'manual'},
+  {id:'titan_b',    icon:'💀', name:'TITAN PROTOCOL', desc:'1200 XP tamamla',       type:'daily',     trig:'auto'},
+  {id:'streak',     icon:'⚡', name:'CHAIN STRIKE',   desc:'3 session üst üste',    type:'daily',     trig:'auto'},
+  {id:'hydra',      icon:'💧', name:'HYDRA',          desc:'Günde 8 bardak su',     type:'daily',     trig:'auto'},
+  {id:'iron',       icon:'🔩', name:'IRON WILL',      desc:'5 session tamamla',     type:'daily',     trig:'auto'},
+  {id:'ghost',      icon:'👻', name:'GHOST MODE',     desc:'2h kesintisiz',         type:'daily',     trig:'manual'},
+  {id:'error0',     icon:'🎯', name:'ZERO ERRORS',    desc:'0 hata ile günü bitir', type:'daily',     trig:'manual'},
+  {id:'dawn',       icon:'🌅', name:'DAWN PROTOCOL',  desc:'06:00\'dan önce başla', type:'daily',     trig:'auto'},
+  {id:'taskmaster', icon:'✅', name:'TASK MASTER',    desc:'5 task tamamla',        type:'daily',     trig:'auto'},
+  {id:'overdrive',  icon:'🔥', name:'OVERDRIVE',      desc:'1 günde 3+ session',    type:'daily',     trig:'auto'},
+  {id:'slayer',     icon:'⚔️', name:'BOSS SLAYER',    desc:'Toplam 3 boss yenildi', type:'permanent', trig:'auto'},
+  {id:'scholar',    icon:'📚', name:'WAR SCHOLAR',    desc:'5 farklı konu çalış',   type:'permanent', trig:'auto'},
+  {id:'tasklegend', icon:'🗂',  name:'TASK LEGEND',    desc:'Toplam 20 task bitti',  type:'permanent', trig:'auto'},
+];
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+function defState() {
+  return {
+    xp:0, totalXp:0,
+    focusMin:90, breakMin:20,
+    sessions:0, streak:0, kills:0,
+    cumFocusSecs:0, cumBreakSecs:0,
+    missionTitle:'AYT MATEMATİK',
+    missionSub:'Türev & Limit — Derinlik Protokolü',
+    bossName:'TÜREV BOSS FIGHT', bossHp:70,
+    errors:{},
+    notes:{},
+    waterCount:0, fastingOverride:null,
+    earnedBadges:['lgs'],
+    bossLog:[], missionHistory:[],
+    logEntries:[], tasks:[],
+    tasksDoneTotal:0, tasksDoneToday:0,
+    lastDate:today(),
+    // NEW: streak system
+    dayStreak:0, bestStreak:0, lastGoalHitDate:null,
+    // NEW: focus history for analytics — array of {date,focusSecs}
+    focusHistory:[],
+    // NEW: today's focus accumulator (carried into history at day rollover)
+    todayFocusSecs:0,
+  };
+}
+
+let S = defState();
+
+// ════════════════════════════════════════
+// PERSISTENCE
+// ════════════════════════════════════════
+function save() {
+  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    S = Object.assign(defState(), saved);
+    const t = today();
+    if (saved.lastDate !== t) {
+      const dids = BADGES.filter(b=>b.type==='daily').map(b=>b.id);
+      // ── STREAK CHAIN LOGIC ──
+      // If yesterday's XP reached goal (lastGoalHitDate === saved.lastDate),
+      // and saved.lastDate is exactly yesterday, keep chain. Otherwise reset.
+      const yesterdayStr = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+      const hitYesterday = (saved.lastGoalHitDate === saved.lastDate);
+      const lastWasYesterday = (saved.lastDate === yesterdayStr);
+      if (!(hitYesterday && lastWasYesterday)) {
+        S.dayStreak = 0;
+      }
+      // ── PUSH YESTERDAY'S FOCUS INTO HISTORY ──
+      if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
+        S.focusHistory = (saved.focusHistory||[]).filter(h=>h.date!==saved.lastDate);
+        S.focusHistory.push({date:saved.lastDate, focusSecs:saved.todayFocusSecs||0});
+        // keep last 30 days
+        if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
+      }
+      S.todayFocusSecs = 0;
+      // ── DAILY RESETS ──
+      S.xp=0; S.sessions=0; S.streak=0; S.kills=0;
+      S.waterCount=0; S.tasksDoneToday=0;
+      S.earnedBadges = (saved.earnedBadges||['lgs']).filter(id=>!dids.includes(id));
+      S.errors = {};
+      S.logEntries = [];
+      S.lastDate = t;
+      // ── RECURRING TASK REGENERATION ──
+      const dow = new Date().getDay(); // 0=Sun..6=Sat
+      const isWeekday = (dow >= 1 && dow <= 5);
+      S.tasks = (saved.tasks||[]).map(tk => {
+        const rec = tk.recurring || 'none';
+        let resetIt = false;
+        if (tk.done && rec !== 'none') {
+          if (rec === 'daily') resetIt = true;
+          else if (rec === 'weekday' && isWeekday) resetIt = true;
+          else if (rec === 'weekly') {
+            // reset if 7+ days passed since last completion (doneDate)
+            if (tk.doneDate) {
+              const d1 = new Date(tk.doneDate), d2 = new Date(t);
+              const diff = Math.round((d2-d1)/86400000);
+              if (diff >= 7) resetIt = true;
+            }
+          }
+        }
+        if (resetIt) return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false});
+        if (!tk.done && tk.deadline && tk.deadline < t && rec === 'none') return Object.assign({},tk,{overdue:true});
+        return tk;
+      });
+      save();
+      checkOverdue(true);
+    } else {
+      checkOverdue(false);
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function today() {
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtSecs(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function fmtHM(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h>0?h+'s '+String(m).padStart(2,'0')+'d':m+'d'; }
+function nowStr(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function fmtDate(str){ if(!str)return''; const[y,m,d]=str.split('-'); return d+'.'+m+'.'+y; }
+function daysUntil(str){ if(!str)return null; const a=new Date();a.setHours(0,0,0,0);const b=new Date(str);b.setHours(0,0,0,0);return Math.round((b-a)/86400000); }
+function getLevel(xp){ let r=LEVELS[0]; LEVELS.forEach(l=>{if(xp>=l.min)r=l;}); return r; }
+function g(id){ return document.getElementById(id); }
+function tog(id){ const e=g(id); e.style.display=e.style.display==='none'?'block':'none'; }
+function hideEl(id){ g(id).style.display='none'; }
+
+// ════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════
+function goTab(btn, name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  g('page-'+name).classList.add('visible');
+  btn.classList.add('active');
+  g('content').scrollTop=0;
+  // STATS tab: canvas needs a real size before drawing — defer
+  if (name === 'stats') setTimeout(()=>{ try{ renderStats(); }catch(e){} }, 40);
+}
+
+// ════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════
+setInterval(()=>{
+  const d=new Date();
+  g('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  if(S.fastingOverride===null){
+    const on=d.getHours()<12;
+    const fv=g('fasting-val'); fv.textContent=on?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(on?'on':'off');
+  }
+},1000);
+
+// ════════════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════════════
+let _nt=null;
+function notify(msg){ const e=g('notif');e.textContent=msg;e.classList.add('show');clearTimeout(_nt);_nt=setTimeout(()=>e.classList.remove('show'),3500); }
+function showXpPop(amt){ const e=g('xp-popup');e.textContent='+'+amt+' XP';e.classList.remove('show');void e.offsetWidth;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1600); }
+function addLog(msg){ S.logEntries.unshift({t:nowStr(),msg});if(S.logEntries.length>60)S.logEntries.pop();renderLog(); }
+
+// ════════════════════════════════════════
+// XP & LEVEL
+// ════════════════════════════════════════
+function addXP(amt, label) {
+  const goal = getDailyGoal();
+  const wasAtGoal = S.xp >= goal;
+  S.xp = Math.min(S.xp + amt, goal);
+  S.totalXp = (S.totalXp||0) + amt;
+  // ── STREAK: just hit the goal? ──
+  if (!wasAtGoal && S.xp >= goal) {
+    if (S.lastGoalHitDate !== today()) {
+      S.dayStreak = (S.dayStreak||0) + 1;
+      S.lastGoalHitDate = today();
+      if (S.dayStreak > (S.bestStreak||0)) S.bestStreak = S.dayStreak;
+      notify('🔥 STREAK +1 // '+S.dayStreak+' GÜN');
+      addLog('Streak: '+S.dayStreak+' gün.');
+    }
+  }
+  save(); showXpPop(amt); renderXP(); renderStreak();
+  if(label) addLog(label+': +'+amt+' XP');
+  if(S.xp >= goal) earnBadge('titan_b');
+}
+
+// ── XP DRAIN (for debuff/leak) ──
+function drainXP(amt, label){
+  if (S.xp <= 0) return;
+  S.xp = Math.max(0, S.xp - amt);
+  save(); renderXP();
+  if (label) addLog(label);
+}
+
+function renderXP() {
+  const goal = getDailyGoal();
+  g('xp-num').textContent = S.xp;
+  g('xp-goal').textContent = goal;
+  g('xp-bar').style.width = Math.min(S.xp/goal*100,100)+'%';
+  const lv = getLevel(S.xp), idx = LEVELS.indexOf(lv);
+  g('level-num').textContent = idx+1;
+  g('level-title').textContent = lv.title;
+  g('level-next').textContent = lv.next ? 'Sonraki: '+lv.next+' ('+(lv.nextMin-S.xp)+' XP)' : '// MAX RANK';
+  // ── Dynamic tier badge ──
+  const tier = getTier();
+  const tb = g('tier-badge');
+  if (tb) {
+    tb.textContent = tier.name.replace('TIER ','T');
+    tb.className = tier.cls;
+  }
+  // ── Dynamic xp tick labels ──
+  const ticks = g('xp-ticks');
+  if (ticks) {
+    const q = Math.round(goal/4);
+    ticks.innerHTML = '<span>0</span><span>'+q+'</span><span>'+(q*2)+'</span><span>'+(q*3)+'</span><span>'+goal+'</span>';
+  }
+}
+
+// ── STREAK RENDER ──
+function renderStreak(){
+  const n = S.dayStreak||0;
+  const numEl = g('streak-num'); if(!numEl) return;
+  numEl.textContent = n;
+  const panel = g('streak-panel');
+  const msg = g('streak-msg');
+  if (n >= 3) panel.classList.add('fire'); else panel.classList.remove('fire');
+  if (n === 0)      msg.textContent = 'HEDEFE ULAŞ — ZİNCİRİ BAŞLAT';
+  else if (n === 1) msg.textContent = '1 GÜN — DEVAM ET';
+  else if (n < 3)   msg.textContent = n+' GÜN ARDIŞIK — IVME KAZANIYORSUN';
+  else if (n < 7)   msg.textContent = n+' GÜNDÜR KESİNTİSİZ ODAKLANIYORSUN';
+  else if (n < 14)  msg.textContent = '🔥 '+n+' GÜN — ZİNCİR YANIYOR';
+  else if (n < 30)  msg.textContent = '⚡ '+n+' GÜN — TITAN PROTOKOLÜ AKTİF';
+  else              msg.textContent = '👑 '+n+' GÜN — EFSANEVİ';
+}
+
+function renderCumulative() {
+  const fc=g('cum-focus'),bc=g('cum-break');
+  if(fc) fc.textContent=fmtHM(S.cumFocusSecs||0);
+  if(bc) bc.textContent=fmtHM(S.cumBreakSecs||0);
+}
+
+// ════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════
+let timerRunning=false, isBreak=false, timerSecs=0, timerIv=null;
+
+function initTimer(){ timerSecs=S.focusMin*60; syncTimerInputs(); renderTimer(); }
+
+function syncTimerInputs(){
+  g('inp-focus').value=S.focusMin; g('inp-break').value=S.breakMin;
+  g('set-focus').value=S.focusMin; g('set-break').value=S.breakMin;
+  g('timer-cfg-lbl').textContent=S.focusMin+'dk/'+S.breakMin+'dk';
+}
+
+function toggleTimer(){
+  if(timerRunning){
+    clearInterval(timerIv); timerRunning=false;
+    g('btn-start').textContent='▶ START';
+    const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
+    setStatus('standby'); addLog('Timer duraklatıldı.');
+  } else {
+    // starting a new focus session cancels leak
+    if (!isBreak) stopLeak();
+    if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
+    timerRunning=true;
+    g('btn-start').textContent='⏸ PAUSE';
+    const fb=g('fs-btn-start'); if(fb) fb.textContent='⏸ PAUSE';
+    setStatus(isBreak?'break':'active');
+    timerIv=setInterval(tickTimer,1000);
+    addLog(isBreak?'Mola başladı.':'Focus başladı — '+S.focusMin+'dk.');
+  }
+}
+
+function tickTimer(){
+  timerSecs--;
+  // accumulate today's focus seconds while in focus
+  if (!isBreak && timerRunning) {
+    S.todayFocusSecs = (S.todayFocusSecs||0) + 1;
+  }
+  if(timerSecs<=0){
+    clearInterval(timerIv); timerRunning=false;
+    g('btn-start').textContent='▶ START';
+    const fsBtn = g('fs-btn-start'); if (fsBtn) fsBtn.textContent='▶ START';
+    if(!isBreak){
+      S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
+      S.sessions++; S.streak++; S.kills++;
+      g('session-count').textContent=S.sessions;
+      renderCumulative();
+      addXP(150,'Session tamamlandı');
+      notify('SESSION COMPLETE // +150 XP // MOLAYA GEÇ');
+      if(S.streak>=3) earnBadge('streak');
+      if(S.sessions>=5) earnBadge('iron');
+      if(S.sessions>=3) earnBadge('overdrive');
+      isBreak=true; timerSecs=S.breakMin*60; setStatus('break');
+    } else {
+      S.cumBreakSecs=(S.cumBreakSecs||0)+S.breakMin*60;
+      renderCumulative();
+      notify('⚠ MOLA BİTTİ // YENİ OTURUM BAŞLAT');
+      addLog('Mola tamamlandı.');
+      isBreak=false; timerSecs=S.focusMin*60; setStatus('standby');
+      // ── DEBUFF: start leak countdown if no new session begins ──
+      startLeak();
+    }
+    save();
+  }
+  renderTimer();
+}
+
+// ════════════════════════════════════════
+// DEBUFF / LEAK SYSTEM
+// ════════════════════════════════════════
+let leakIv = null;
+let leakActive = false;
+
+function startLeak(){
+  stopLeak();
+  leakActive = true;
+  const banner = g('leak-banner');
+  if (banner) banner.classList.add('show');
+  notify('⚠ SIZINTI TESPİT EDİLDİ // SİSTEM SOĞUYOR');
+  addLog('Sızıntı aktif: XP düşüyor.');
+  // every 15s drain 2 XP
+  leakIv = setInterval(()=>{
+    if (S.xp <= 0) {
+      stopLeak();
+      return;
+    }
+    drainXP(2, 'Sızıntı: -2 XP');
+  }, 15000);
+}
+
+function stopLeak(){
+  if (leakIv) { clearInterval(leakIv); leakIv = null; }
+  if (leakActive) {
+    leakActive = false;
+    const banner = g('leak-banner');
+    if (banner) banner.classList.remove('show');
+    addLog('Sızıntı durduruldu.');
+  }
+}
+
+function resetTimer(){
+  clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0;
+  stopLeak();
+  timerSecs=S.focusMin*60;
+  g('btn-start').textContent='▶ START';
+  const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
+  setStatus('standby'); renderTimer(); save(); addLog('Timer sıfırlandı.');
+}
+
+function renderTimer(){
+  const total=(isBreak?S.breakMin:S.focusMin)*60;
+  const frac = timerSecs/total;
+  const off=CIRC*(1-frac);
+  const ring=g('timer-ring');
+  ring.style.strokeDashoffset=off;
+  ring.style.stroke=isBreak?'var(--yellow)':'var(--bright)';
+  ring.style.filter=isBreak?'drop-shadow(0 0 4px rgba(255,255,102,.5))':'drop-shadow(0 0 4px rgba(255,255,255,.5))';
+  g('timer-num').textContent=fmtSecs(timerSecs);
+  g('timer-num').style.color=isBreak?'var(--yellow)':'var(--white)';
+  g('timer-unit').textContent=isBreak?'MOLA':'FOCUS';
+  g('timer-mode-lbl').textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
+  g('break-rem').textContent=fmtSecs(timerSecs);
+  // ── FULLSCREEN MIRROR ──
+  const fsRing = g('fs-timer-ring');
+  if (fsRing) {
+    fsRing.style.strokeDashoffset = FS_CIRC*(1-frac);
+    fsRing.style.stroke = isBreak?'var(--yellow)':'var(--bright)';
+    fsRing.style.filter = isBreak?'drop-shadow(0 0 10px rgba(255,255,102,.6))':'drop-shadow(0 0 10px rgba(255,255,255,.6))';
+  }
+  const fsNum = g('fs-timer-num');
+  if (fsNum) {
+    fsNum.textContent = fmtSecs(timerSecs);
+    fsNum.style.color = isBreak?'var(--yellow)':'var(--white)';
+  }
+  const fsUnit = g('fs-timer-unit'); if (fsUnit) fsUnit.textContent = isBreak?'MOLA':'FOCUS';
+  const fsMode = g('fs-mode-lbl'); if (fsMode) fsMode.textContent = isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
+  const fsMission = g('fs-mission'); if (fsMission) fsMission.textContent = S.missionTitle;
+  const fsTier = g('fs-tier'); if (fsTier) { const t=getTier(); fsTier.textContent = t.name+' // '+t.sub+' // GOAL '+t.goal+' XP'; }
+}
+
+function setStatus(mode){
+  const e=g('statuslabel'); e.className='';
+  const fs=g('fs-status'); if(fs) fs.className='';
+  if(mode==='active'){
+    e.textContent='● OVERCLOCKED'; e.classList.add('active');
+    if(fs){ fs.textContent='● OVERCLOCKED'; fs.classList.add('active'); }
+  } else if(mode==='break'){
+    e.textContent='● MOLA'; e.classList.add('brk');
+    if(fs){ fs.textContent='● MOLA'; fs.classList.add('brk'); }
+  } else {
+    e.textContent='● STANDBY';
+    if(fs) fs.textContent='● STANDBY';
+  }
+}
+
+// ════════════════════════════════════════
+// FULLSCREEN TIMER
+// ════════════════════════════════════════
+function enterFullscreen(){
+  const fs = g('fs-timer');
+  if (!fs) return;
+  fs.classList.add('show');
+  // sync the start button label
+  const fb = g('fs-btn-start');
+  if (fb) fb.textContent = timerRunning ? '⏸ PAUSE' : '▶ START';
+  renderTimer();
+  // also try the real fullscreen API if available
+  try {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    }
+  } catch(e){}
+}
+
+function exitFullscreen(){
+  const fs = g('fs-timer');
+  if (fs) fs.classList.remove('show');
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(()=>{});
+    }
+  } catch(e){}
+}
+
+function applyTimer(){
+  const f=Math.max(1,Math.min(240,parseInt(g('inp-focus').value)||90));
+  const b=Math.max(1,Math.min(60,parseInt(g('inp-break').value)||20));
+  S.focusMin=f; S.breakMin=b;
+  if(!timerRunning) timerSecs=(isBreak?b:f)*60;
+  syncTimerInputs(); renderTimer(); save(); hideEl('timer-set-panel');
+  notify('TIMER: '+f+'dk / '+b+'dk'); addLog('Timer: '+f+'dk / '+b+'dk');
+}
+
+function applyTimerSettings(){
+  const f=Math.max(1,Math.min(240,parseInt(g('set-focus').value)||90));
+  const b=Math.max(1,Math.min(60,parseInt(g('set-break').value)||20));
+  S.focusMin=f; S.breakMin=b;
+  if(!timerRunning) timerSecs=(isBreak?b:f)*60;
+  syncTimerInputs(); renderTimer(); save();
+  notify('TIMER: '+f+'dk / '+b+'dk'); addLog('Timer: '+f+'dk / '+b+'dk');
+}
+
+// ════════════════════════════════════════
+// MISSION & BOSS
+// ════════════════════════════════════════
+function setMission(){
+  const v=g('inp-mission').value.trim(); if(!v)return;
+  S.missionTitle=v.toUpperCase(); S.missionSub='Aktif protokol yüklendi.';
+  if(!S.missionHistory.includes(v)) S.missionHistory.push(v);
+  if(S.missionHistory.length>=5) earnBadge('scholar');
+  g('mission-title').textContent=S.missionTitle;
+  g('mission-sub').textContent=S.missionSub;
+  g('inp-mission').value=''; hideEl('mission-edit'); save();
+  addXP(10,'Görev güncellendi'); addLog('Görev: '+v);
+}
+
+function setBoss(){
+  const n=g('inp-boss-name').value.trim(); if(!n)return;
+  const h=Math.min(100,Math.max(0,parseInt(g('inp-boss-hp').value)||100));
+  S.bossName=n.toUpperCase(); S.bossHp=h;
+  g('inp-boss-name').value=''; g('inp-boss-hp').value='';
+  hideEl('boss-edit'); renderBoss(); save(); addLog('Boss: '+n+' HP:'+h+'%');
+}
+
+function renderBoss(){
+  g('boss-name').textContent=S.bossName;
+  g('boss-hp-fill').style.width=S.bossHp+'%';
+  g('boss-hp-fill').style.background=S.bossHp>30?'var(--bright)':'var(--red)';
+  g('boss-hp-val').textContent=S.bossHp;
+}
+
+function dmgBoss(d){ S.bossHp=Math.max(0,S.bossHp-d); renderBoss(); save(); }
+
+function defeatBoss(){
+  const num=S.bossLog.length+1;
+  S.bossLog.push({num,name:S.bossName,time:nowStr(),date:today()});
+  S.bossHp=0; renderBoss(); save();
+  addXP(100,'Boss yenildi');
+  notify('⚔ BOSS YENİLDİ: '+S.bossName);
+  addLog('Boss yenildi: '+S.bossName);
+  renderLog();
+  if(S.bossLog.length>=3) earnBadge('slayer');
+}
+
+// ════════════════════════════════════════
+// ENEMY INTEL
+// ════════════════════════════════════════
+function addError(subj){
+  S.errors[subj]=(S.errors[subj]||0)+1;
+  save(); renderEnemyGrid();
+  addLog('Hata: '+subj+' ('+S.errors[subj]+')');
+}
+
+function deleteEnemy(subj){
+  delete S.errors[subj];
+  if(S.notes) delete S.notes[subj];
+  save(); renderEnemyGrid();
+  notify('KONU SİLİNDİ: '+subj);
+  addLog('Konu silindi: '+subj);
+}
+
+function addEnemySubject(){
+  const v=g('inp-enemy').value.trim();
+  if(!v||v in S.errors){ notify('Konu zaten var veya boş!'); return; }
+  S.errors[v]=0; save(); renderEnemyGrid();
+  g('inp-enemy').value=''; hideEl('enemy-add');
+  addLog('Konu eklendi: '+v);
+}
+
+// ── NOTES ──
+let _noteSubj=null;
+
+function openNotes(subj){
+  _noteSubj=subj;
+  g('notes-subj').textContent='📝 '+subj.toUpperCase()+' — NOTLAR';
+  g('notes-ta').value=(S.notes&&S.notes[subj])||'';
+  g('notes-modal').style.display='flex';
+  setTimeout(()=>g('notes-ta').focus(),100);
+}
+
+function saveNotes(){
+  if(!_noteSubj)return;
+  if(!S.notes) S.notes={};
+  S.notes[_noteSubj]=g('notes-ta').value;
+  save(); closeNotes();
+  notify('NOT KAYDEDİLDİ');
+  addLog('Not kaydedildi: '+_noteSubj);
+  renderEnemyGrid();
+}
+
+function closeNotes(){
+  g('notes-modal').style.display='none';
+  _noteSubj=null;
+}
+
+function renderEnemyGrid(){
+  const gr=g('enemy-grid'); gr.innerHTML='';
+  const total=Object.values(S.errors).reduce((a,b)=>a+b,0);
+  g('total-errors').textContent=total;
+
+  if(!Object.keys(S.errors).length){
+    gr.innerHTML='<div style="font-size:9px;color:var(--dim);letter-spacing:2px;padding:8px 0">Konu yok — ekle butonunu kullan.</div>';
+    return;
+  }
+
+  Object.entries(S.errors).forEach(([subj,cnt])=>{
+    const hot=cnt>=5;
+    const hasNote=S.notes&&S.notes[subj]&&S.notes[subj].trim().length>0;
+
+    const wrap=document.createElement('div');
+    wrap.className='enemy-item'+(hot?' hot':'');
+
+    // top row: tap to add error
+    const top=document.createElement('div');
+    top.className='enemy-top';
+    top.onclick=()=>addError(subj);
+    top.innerHTML=
+      '<div style="flex:1;min-width:0">'+
+        '<div class="enemy-name">'+subj+'</div>'+
+        (hasNote?'<div class="enemy-note-hint">📝 not var</div>':'')+
+      '</div>'+
+      '<span class="enemy-cnt'+(hot?' hot':'')+'">'+cnt+'</span>';
+
+    // bottom row: note + delete buttons
+    const bbar=document.createElement('div');
+    bbar.className='enemy-btns';
+
+    const noteBtn=document.createElement('button');
+    noteBtn.className='enemy-act note';
+    noteBtn.textContent='📝 NOT AL';
+    noteBtn.onclick=function(e){ e.stopPropagation(); openNotes(subj); };
+
+    const delBtn=document.createElement('button');
+    delBtn.className='enemy-act del';
+    delBtn.textContent='✕ SİL';
+    delBtn.onclick=function(e){ e.stopPropagation(); deleteEnemy(subj); };
+
+    bbar.appendChild(noteBtn);
+    bbar.appendChild(delBtn);
+    wrap.appendChild(top);
+    wrap.appendChild(bbar);
+    gr.appendChild(wrap);
+  });
+}
+
+// ════════════════════════════════════════
+// BIOMETRICS
+// ════════════════════════════════════════
+function toggleFasting(){
+  const cur=S.fastingOverride!==null?S.fastingOverride:new Date().getHours()<12;
+  S.fastingOverride=!cur;
+  const fv=g('fasting-val'); fv.textContent=S.fastingOverride?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(S.fastingOverride?'on':'off');
+  save();
+}
+
+function addWater(){
+  S.waterCount=Math.min(S.waterCount+1,8); updateWaterUI();
+  if(S.waterCount%2===0){ const sv=g('salt-val');sv.textContent='EKLE ⚡';sv.className='bio-val warn';notify('🧂 HIMALAYA TUZU EKLE'); }
+  if(S.waterCount>=8) earnBadge('hydra');
+  save(); addLog('Su: '+S.waterCount+'/8');
+}
+
+function resetWater(){
+  S.waterCount=0; updateWaterUI();
+  const sv=g('salt-val');sv.textContent='BEKLEMEDE';sv.className='bio-val off'; save();
+}
+
+function updateWaterUI(){
+  g('water-val').textContent=S.waterCount+' / 8';
+  g('water-bar').style.width=(S.waterCount/8*100)+'%';
+  g('water-val').className='bio-val '+(S.waterCount>=8?'on':'warn');
+}
+
+// ════════════════════════════════════════
+// TASKS
+// ════════════════════════════════════════
+let taskFilter='all';
+
+let _recurChoice = 'none';
+function setRecur(btn, val){
+  _recurChoice = val;
+  document.querySelectorAll('.rec-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function addTask(){
+  const title=g('inp-task-title').value.trim();
+  if(!title){notify('GÖREV ADI GİR!');return;}
+  const deadline=g('inp-task-date').value;
+  const xpAmt=Math.max(10,Math.min(500,parseInt(g('inp-task-xp').value)||50));
+  const priority=g('inp-task-prio').value;
+  const recurring = _recurChoice || 'none';
+  const t=today();
+  S.tasks.unshift({
+    id:Date.now(), title,
+    deadline: (recurring==='none' ? (deadline||null) : null),
+    xp:xpAmt, priority, recurring,
+    done:false,
+    overdue: !!(recurring==='none' && deadline && deadline<t),
+    createdAt:t, doneAt:null, doneDate:null,
+    createdDow: new Date().getDay()
+  });
+  g('inp-task-title').value=''; g('inp-task-date').value=''; g('inp-task-xp').value='50'; g('inp-task-prio').value='med';
+  // reset recur to "none"
+  _recurChoice = 'none';
+  document.querySelectorAll('.rec-btn').forEach(b=>{ b.classList.toggle('active', b.dataset.rec==='none'); });
+  save(); renderTasks();
+  const rlbl = recurring==='none' ? '' : ' ['+recurring.toUpperCase()+']';
+  addLog('Task: '+title+' ['+xpAmt+' XP]'+rlbl);
+}
+
+function completeTask(id){
+  const tk=S.tasks.find(t=>t.id===id); if(!tk||tk.done)return;
+  tk.done=true; tk.doneAt=nowStr(); tk.doneDate=today(); tk.overdue=false;
+  S.tasksDoneTotal++; S.tasksDoneToday++;
+  save(); renderTasks();
+  addXP(tk.xp,'Task: '+tk.title);
+  notify('✓ TAMAMLANDI // +'+tk.xp+' XP');
+  addLog('Task bitti: '+tk.title);
+  g('tasks-done-today').textContent=S.tasksDoneToday;
+  if(S.tasksDoneToday>=5) earnBadge('taskmaster');
+  if(S.tasksDoneTotal>=20) earnBadge('tasklegend');
+}
+
+function deleteTask(id){
+  S.tasks=S.tasks.filter(t=>t.id!==id); save(); renderTasks(); addLog('Task silindi.');
+}
+
+function filterTasks(f,btn){
+  taskFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks(){
+  const listEl=g('task-list'), emptyEl=g('task-empty');
+  const t=today();
+  let tasks=S.tasks;
+  if(taskFilter==='pending') tasks=tasks.filter(tk=>!tk.done);
+  if(taskFilter==='overdue') tasks=tasks.filter(tk=>!tk.done&&(tk.overdue||(tk.deadline&&tk.deadline<t)));
+  if(taskFilter==='done')    tasks=tasks.filter(tk=>tk.done);
+  g('tasks-done-today').textContent=S.tasksDoneToday;
+  if(!tasks.length){listEl.innerHTML='';emptyEl.style.display='block';return;}
+  emptyEl.style.display='none';
+  listEl.innerHTML=tasks.map(tk=>{
+    const days=daysUntil(tk.deadline);
+    const od=!tk.done&&(tk.overdue||(tk.deadline&&tk.deadline<t));
+    const urg=!tk.done&&!od&&days!==null&&days<=1;
+    let stCls='pend',stLbl='BEKLEYEN';
+    if(tk.done){stCls='done';stLbl='TAMAMLANDI';}
+    else if(od){stCls='od';stLbl='⚠ GECİKMİŞ';}
+    else if(urg){stCls='urg';stLbl=days===0?'🔥 BUGÜN':'⚡ YARIN';}
+    const cardCls=tk.done?'done-item':od?'od-item':urg?'urg-item':'';
+    const prioCls=tk.priority==='high'?'high':tk.priority==='med'?'med':'low';
+    const dayTxt=(!tk.done&&days!==null)?(days<0?Math.abs(days)+'g gecikmiş':days===0?'Bugün!':days+'g kaldı'):'';
+    const rec = tk.recurring || 'none';
+    const recTag = rec==='daily' ? '<span class="task-rec-tag daily">🔁 GÜNLÜK</span>'
+                : rec==='weekday' ? '<span class="task-rec-tag weekday">📅 HAFTA İÇİ</span>'
+                : rec==='weekly' ? '<span class="task-rec-tag weekly">📆 HAFTALIK</span>'
+                : '';
+    return '<div class="task-item '+cardCls+'">'+
+      '<div class="task-hdr">'+
+        '<div class="pdot '+prioCls+'"></div>'+
+        '<div class="task-txt'+(tk.done?' done-txt':'')+'">'+tk.title+'</div>'+
+        '<span class="task-xp">'+tk.xp+' XP</span>'+
+      '</div>'+
+      '<div class="task-meta">'+
+        (tk.deadline?'<span>📅 '+fmtDate(tk.deadline)+'</span>':'')+
+        (dayTxt?'<span style="color:'+(days<0?'var(--red)':days<=1?'var(--yellow)':'var(--muted)')+'">'+dayTxt+'</span>':'')+
+        (tk.done&&tk.doneAt?'<span>✓ '+tk.doneAt+'</span>':'')+
+        (recTag?recTag:'')+
+        '<span class="task-st '+stCls+'">'+stLbl+'</span>'+
+      '</div>'+
+      '<div class="task-acts">'+
+        (!tk.done?'<button class="task-btn ok" onclick="completeTask('+tk.id+')">✓ BİTTİ</button>':'')+
+        '<button class="task-btn rm" onclick="deleteTask('+tk.id+')">✕ SİL</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// OVERDUE MODAL
+// ════════════════════════════════════════
+function checkOverdue(isNewDay){
+  const t=today();
+  S.tasks.forEach(tk=>{if(!tk.done&&tk.deadline&&tk.deadline<t) tk.overdue=true;});
+  if(isNewDay){
+    const list=S.tasks.filter(tk=>tk.overdue);
+    if(list.length>0){
+      g('error-list').innerHTML=list.map((tk,i)=>'<div class="err-task">'+(i+1)+'. '+tk.title+(tk.deadline?' ['+fmtDate(tk.deadline)+']':'')+'</div>').join('');
+      g('error-modal').classList.add('show');
+    }
+  }
+}
+function closeErrModal(){ g('error-modal').classList.remove('show'); }
+
+// ════════════════════════════════════════
+// BADGES
+// ════════════════════════════════════════
+function earnBadge(id){
+  if(S.earnedBadges.includes(id))return;
+  S.earnedBadges.push(id); save();
+  const def=BADGES.find(b=>b.id===id);
+  if(def) notify('✦ BADGE: '+def.name);
+  addLog('Rozet: '+(def?def.name:id));
+  addXP(50,'Rozet bonusu');
+  renderBadges();
+}
+
+function renderBadges(){
+  function card(b){
+    const earned=S.earnedBadges.includes(b.id);
+    return '<div class="badge-card'+(earned?' earned':'')+'">'+
+      '<div class="badge-icon">'+b.icon+'</div>'+
+      '<div class="badge-name">'+b.name+'</div>'+
+      '<div class="badge-desc">'+b.desc+'</div>'+
+      (earned
+        ?'<div style="font-size:7px;color:var(--green);letter-spacing:2px">✓ EARNED</div>'
+        :(b.trig==='manual'
+          ?'<button onclick="earnBadge(\''+b.id+'\')" style="margin-top:4px;background:var(--dim);border:1px solid var(--bd);color:var(--bright);font-family:\'Share Tech Mono\',monospace;font-size:8px;padding:4px 10px;cursor:pointer;letter-spacing:1px">✓ KAZAN</button>'
+          :'<div style="font-size:7px;color:var(--dim)">otomatik</div>')
+      )+'</div>';
+  }
+  g('daily-badges').innerHTML=BADGES.filter(b=>b.type==='daily').map(card).join('');
+  g('perm-badges').innerHTML=BADGES.filter(b=>b.type==='permanent').map(card).join('');
+}
+
+// ════════════════════════════════════════
+// LOG
+// ════════════════════════════════════════
+function renderLog(){
+  const bl=g('boss-log-list'),be=g('boss-log-empty');
+  const sl=g('sys-log-list'), se=g('sys-log-empty');
+  if(!S.bossLog.length){bl.innerHTML='';be.style.display='block';}
+  else{
+    be.style.display='none';
+    bl.innerHTML=S.bossLog.map(b=>'<div style="padding:10px 12px;background:var(--mid);border-left:2px solid var(--white);margin-bottom:6px;display:flex;gap:12px;align-items:center"><span style="font-family:Orbitron,monospace;font-size:13px;color:var(--white);min-width:22px">'+b.num+'.</span><span style="flex:1;font-size:11px;color:var(--bright)">'+b.name+'</span><span style="font-size:8px;color:var(--muted)">['+b.time+']</span></div>').join('');
+  }
+  if(!S.logEntries.length){sl.innerHTML='';se.style.display='block';}
+  else{
+    se.style.display='none';
+    sl.innerHTML=S.logEntries.map(e=>'<div class="log-entry"><span class="log-time">['+e.t+']</span><span class="log-msg">'+e.msg+'</span></div>').join('');
+  }
+}
+
+// ════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════
+function execDailyReset(){
+  const dids=BADGES.filter(b=>b.type==='daily').map(b=>b.id);
+  // Push today's focus into history if any
+  if ((S.todayFocusSecs||0) > 0) {
+    S.focusHistory = (S.focusHistory||[]).filter(h=>h.date!==today());
+    S.focusHistory.push({date:today(), focusSecs:S.todayFocusSecs});
+    if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
+  }
+  S.xp=0; S.sessions=0; S.streak=0; S.kills=0; S.waterCount=0; S.tasksDoneToday=0;
+  S.todayFocusSecs = 0;
+  S.earnedBadges=S.earnedBadges.filter(id=>!dids.includes(id));
+  S.errors={}; S.logEntries=[]; S.lastDate=today();
+  stopLeak();
+  save(); renderAll(); hideEl('conf-daily');
+  notify('GÜNLÜK VERİLER SIFIRLANDI'); addLog('Günlük reset.');
+}
+
+function execFullReset(){
+  try{localStorage.removeItem(SK);}catch(e){}
+  S=defState(); timerRunning=false; isBreak=false;
+  clearInterval(timerIv); timerSecs=S.focusMin*60;
+  save(); renderAll(); hideEl('conf-full');
+  notify('SİSTEM SIFIRLANDI');
+}
+
+// ════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════
+function renderAll(){
+  renderXP(); renderStreak(); renderBoss(); renderEnemyGrid(); updateWaterUI();
+  renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
+  renderStats();
+  g('session-count').textContent=S.sessions;
+  g('tasks-done-today').textContent=S.tasksDoneToday;
+  syncTimerInputs();
+  g('mission-title').textContent=S.missionTitle;
+  g('mission-sub').textContent=S.missionSub;
+  const fa=S.fastingOverride!==null?S.fastingOverride:new Date().getHours()<12;
+  const fv=g('fasting-val'); fv.textContent=fa?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(fa?'on':'off');
+  const sv=g('salt-val');
+  if(S.waterCount>0&&S.waterCount%2===0){sv.textContent='EKLE ⚡';sv.className='bio-val warn';}
+  else{sv.textContent='BEKLEMEDE';sv.className='bio-val off';}
+}
+
+// ════════════════════════════════════════
+// STATS / ANALYTICS
+// ════════════════════════════════════════
+function renderStats(){
+  // numeric stat cards
+  const sStreak = g('stat-streak'); if (sStreak) sStreak.textContent = S.dayStreak||0;
+  const sBest = g('stat-best-streak'); if (sBest) sBest.textContent = S.bestStreak||0;
+  const tier = getTier();
+  const tierIdx = TIERS.indexOf(tier);
+  const sTier = g('stat-tier'); if (sTier) sTier.textContent = ['I','II','III','IV','V'][tierIdx]||'I';
+  const sGoal = g('stat-goal'); if (sGoal) sGoal.textContent = tier.goal;
+  const sTotXp = g('stat-total-xp'); if (sTotXp) sTotXp.textContent = S.totalXp||0;
+  const sTotF = g('stat-total-focus'); if (sTotF) sTotF.textContent = fmtHM((S.cumFocusSecs||0));
+  const sTotT = g('stat-total-tasks'); if (sTotT) sTotT.textContent = S.tasksDoneTotal||0;
+  const sTotB = g('stat-total-bosses'); if (sTotB) sTotB.textContent = (S.bossLog||[]).length;
+  // chart
+  drawFocusChart();
+}
+
+function drawFocusChart(){
+  const cv = g('focus-chart'); if (!cv) return;
+  const ctx = cv.getContext('2d');
+  // sharpen for retina
+  const dpr = window.devicePixelRatio || 1;
+  const wantW = cv.clientWidth || 600;
+  const wantH = cv.clientHeight || 180;
+  if (cv.width !== wantW*dpr || cv.height !== wantH*dpr) {
+    cv.width = wantW*dpr; cv.height = wantH*dpr;
+  }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const W = wantW, H = wantH;
+  ctx.clearRect(0,0,W,H);
+
+  // build last-7-days data including today
+  const days = [];
+  const todayStr = today();
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    let secs = 0;
+    if (ds === todayStr) {
+      secs = S.todayFocusSecs || 0;
+    } else {
+      const h = (S.focusHistory||[]).find(x=>x.date===ds);
+      if (h) secs = h.focusSecs || 0;
+    }
+    const dow = d.getDay();
+    const labels = ['PZ','PT','SA','ÇA','PE','CU','CT'];
+    days.push({label:labels[dow], secs, isToday: ds===todayStr});
+  }
+
+  // chart dims
+  const padL = 30, padR = 14, padT = 14, padB = 24;
+  const cw = W - padL - padR;
+  const ch = H - padT - padB;
+
+  // determine max (hours)
+  const maxSecs = Math.max.apply(null, days.map(d=>d.secs).concat([3600])); // at least 1h scale
+  const maxHrs = Math.ceil(maxSecs/3600);
+  const yMax = Math.max(1, maxHrs);
+
+  // styles via CSS vars
+  const cs = getComputedStyle(document.documentElement);
+  const col_dim = cs.getPropertyValue('--dim').trim() || '#333';
+  const col_bd = cs.getPropertyValue('--bd').trim() || '#2a2a2a';
+  const col_muted = cs.getPropertyValue('--muted').trim() || '#555';
+  const col_bright = cs.getPropertyValue('--bright').trim() || '#ccc';
+  const col_white = cs.getPropertyValue('--white').trim() || '#f0f0f0';
+  const col_red = cs.getPropertyValue('--red').trim() || '#ff6666';
+
+  // grid lines (every 1h)
+  ctx.strokeStyle = col_dim;
+  ctx.lineWidth = 1;
+  ctx.font = "9px 'Share Tech Mono', monospace";
+  ctx.fillStyle = col_muted;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let h=0; h<=yMax; h++) {
+    const y = padT + ch - (h/yMax)*ch;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
+    ctx.fillText(h+'s', padL-4, y);
+  }
+
+  // bars
+  const bw = cw / days.length;
+  const innerPad = Math.min(8, bw*0.18);
+  days.forEach((d,i)=>{
+    const hrs = d.secs/3600;
+    const bh = (hrs/yMax)*ch;
+    const x = padL + i*bw + innerPad;
+    const w = bw - innerPad*2;
+    const y = padT + ch - bh;
+    // bar
+    ctx.fillStyle = d.isToday ? col_white : col_bright;
+    ctx.fillRect(x, y, w, bh);
+    // bar top glow line
+    if (bh > 2) {
+      ctx.fillStyle = d.isToday ? col_red : col_white;
+      ctx.fillRect(x, y, w, 2);
+    }
+    // x label
+    ctx.fillStyle = d.isToday ? col_white : col_muted;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(d.label, x+w/2, padT+ch+4);
+    // value above bar
+    if (hrs > 0) {
+      ctx.fillStyle = col_bright;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      const lbl = hrs >= 1 ? hrs.toFixed(1)+'s' : Math.round(d.secs/60)+'d';
+      ctx.fillText(lbl, x+w/2, y-2);
+    }
+  });
+}
+
+// redraw chart on resize
+window.addEventListener('resize', ()=>{ drawFocusChart(); });
+
+// ════════════════════════════════════════
+// SERVICE WORKER
+// ════════════════════════════════════════
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>clients.claim());self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(()=>{});
+}
+
+// ════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════
+loadState();
+timerSecs=S.focusMin*60;
+renderAll();
+addLog('OVERCLOCK v5.0 başlatıldı.');
+</script>
+</body>
+</html>
