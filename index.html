@@ -1088,26 +1088,14 @@ function enterFullscreen(){
   const fs = g('fs-timer');
   if (!fs) return;
   fs.classList.add('show');
-  // sync the start button label
   const fb = g('fs-btn-start');
   if (fb) fb.textContent = timerRunning ? '⏸ PAUSE' : '▶ START';
   renderTimer();
-  // also try the real fullscreen API if available
-  try {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(()=>{});
-    }
-  } catch(e){}
 }
 
 function exitFullscreen(){
   const fs = g('fs-timer');
   if (fs) fs.classList.remove('show');
-  try {
-    if (document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(()=>{});
-    }
-  } catch(e){}
 }
 
 function applyTimer(){
