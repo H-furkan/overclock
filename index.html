@@ -58,11 +58,18 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 @keyframes py{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes xpf{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-55px)}}
 
-/* tab bar */
-#tabbar{flex-shrink:0;display:flex;border-bottom:1px solid var(--bd);background:var(--deep);overflow-x:auto;z-index:200}
-#tabbar::-webkit-scrollbar{height:0}
-.tab{flex:1;min-width:52px;padding:9px 2px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
-.tab.active{background:var(--panel);border-bottom:2px solid var(--bright);color:var(--white)}
+/* collapsible sidebar nav */
+#nav-burger{background:transparent;border:1px solid var(--bd2);color:var(--bright);font-size:15px;line-height:1;padding:4px 10px;margin-right:10px;cursor:pointer;border-radius:2px}
+#nav-burger:active{background:var(--dim)}
+#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s;z-index:998}
+#nav-overlay.show{opacity:1;pointer-events:auto}
+#sidebar{position:fixed;top:0;left:0;bottom:0;width:230px;max-width:78vw;background:var(--deep);border-right:1px solid var(--bd2);z-index:999;transform:translateX(-100%);transition:transform .22s ease;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);overflow-y:auto}
+#sidebar.open{transform:translateX(0);box-shadow:6px 0 24px rgba(0,0,0,.5)}
+#sidebar-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--bd);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+#sidebar-head button{background:transparent;border:none;color:var(--gray);font-size:14px;cursor:pointer;padding:2px 6px}
+.navitem{display:block;width:100%;text-align:left;padding:14px 18px;background:transparent;border:none;border-left:3px solid transparent;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+.navitem:active{background:var(--mid)}
+.navitem.active{background:var(--panel);border-left:3px solid var(--bright);color:var(--white)}
 
 /* content */
 #content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
@@ -416,22 +423,29 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
 <!-- STATUS BAR -->
 <div id="statusbar">
+  <button id="nav-burger" onclick="toggleNav()" aria-label="Menü">☰</button>
   <span style="color:var(--muted);font-size:9px">OVERCLOCK // TR-1</span>
   <div id="statuslabel">● STANDBY</div>
   <span id="clock" style="color:var(--gray);font-size:11px;letter-spacing:2px">00:00:00</span>
 </div>
 
-<!-- TAB BAR -->
-<div id="tabbar">
-  <button class="tab active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
-  <button class="tab" onclick="goTab(this,'tasks')">📋 TASKS</button>
-  <button class="tab" onclick="goTab(this,'habits')">🔄 HABITS</button>
-  <button class="tab" onclick="goTab(this,'stats')">📊 DATA</button>
-  <button class="tab" onclick="goTab(this,'shop')">📦 SHOP</button>
-  <button class="tab" onclick="goTab(this,'log')">🗒 LOG</button>
-  <button class="tab" onclick="goTab(this,'achievements')">✦ BADGES</button>
-  <button class="tab" onclick="goTab(this,'settings')">⚙ SYS</button>
-</div>
+<!-- SIDEBAR NAV (collapsible) -->
+<div id="nav-overlay" onclick="closeNav()"></div>
+<nav id="sidebar">
+  <div id="sidebar-head">
+    <span>NAVİGASYON</span>
+    <button onclick="closeNav()" aria-label="Kapat">✕</button>
+  </div>
+  <button class="navitem active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
+  <button class="navitem" onclick="goTab(this,'tasks')">📋 GÖREVLER</button>
+  <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
+  <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
+  <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
+  <button class="navitem" onclick="goTab(this,'shop')">📦 MARKET</button>
+  <button class="navitem" onclick="goTab(this,'log')">🗒 LOG</button>
+  <button class="navitem" onclick="goTab(this,'achievements')">✦ ROZETLER</button>
+  <button class="navitem" onclick="goTab(this,'settings')">⚙ SİSTEM</button>
+</nav>
 
 <!-- FULLSCREEN TIMER OVERLAY -->
 <div id="fs-timer">
@@ -523,7 +537,9 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
           <option value="">— Seç (TYT/AYT) —</option>
           <optgroup label="── TYT ──">
             <option value="TYT Mat">TYT Matematik</option>
-            <option value="TYT Fen">TYT Fen Bilimleri</option>
+            <option value="TYT Fizik">TYT Fizik</option>
+            <option value="TYT Kimya">TYT Kimya</option>
+            <option value="TYT Biyoloji">TYT Biyoloji</option>
             <option value="TYT Türk">TYT Türkçe</option>
             <option value="TYT Sos">TYT Sosyal</option>
           </optgroup>
@@ -532,10 +548,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
             <option value="AYT Fiz">AYT Fizik</option>
             <option value="AYT Kim">AYT Kimya</option>
             <option value="AYT Bio">AYT Biyoloji</option>
-            <option value="AYT Edeb">AYT Edebiyat</option>
-            <option value="AYT Tarih">AYT Tarih</option>
-            <option value="AYT Coğ">AYT Coğrafya</option>
-            <option value="AYT Fel">AYT Felsefe</option>
           </optgroup>
           <optgroup label="── DİĞER ──">
             <option value="İngilizce">İngilizce</option>
@@ -802,10 +814,77 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 
   <div class="block">
+    <div class="blabel">■ Streak Koruyucu</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Pahalı bilerek — her gün kullanılmasın diye. Bir gün hedefi kaçırırsan otomatik harcanır, streak'in kırılmaz. Stoklanabilir.</div>
+    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:10px">📦 Stokta: <b id="streak-stock" style="color:var(--white)">0</b> adet</div>
+    <div class="shop-grid" id="shop-streak"></div>
+  </div>
+
+  <div class="block">
     <div class="blabel">■ Avatar / Süsleme (Kalıcı)</div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Level rozetinin üzerinde gösterilir. Bir kere al.</div>
     <div class="shop-grid" id="shop-cosmetics"></div>
   </div>
+</div>
+
+<!-- ══════════ PAGE: EXAM / NET TAKİP ══════════ -->
+<div id="page-exam" class="page">
+
+  <div class="block">
+    <div class="blabel">■ Deneme Net Girişi</div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">SINAV TÜRÜ</div>
+        <select class="inp" id="exam-type" onchange="renderExamInputs()">
+          <option value="TYT">TYT</option>
+          <option value="AYT">AYT (Sayısal)</option>
+        </select>
+      </div>
+      <div class="igrp"><div class="ilabel">TARİH</div><input class="inp" id="exam-date" type="date"></div>
+    </div>
+    <div style="margin-bottom:8px"><div class="ilabel">DENEME ADI (ops.)</div><input class="inp" id="exam-name" placeholder="Örn: 3D Yayınları TYT-12"></div>
+    <div id="exam-net-inputs"></div>
+    <div id="exam-total-preview" style="font-size:10px;color:var(--bright);letter-spacing:1px;margin:8px 0">TOPLAM NET: <b style="color:var(--white)">0.00</b></div>
+    <button class="btn primary fw" onclick="addExam()">💾 DENEMEYİ KAYDET</button>
+  </div>
+
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Net Trend Grafiği</div>
+      <div style="display:flex;gap:4px">
+        <button class="fbtn active" id="ng-TYT" onclick="setNetChartType('TYT',this)">TYT</button>
+        <button class="fbtn" id="ng-AYT" onclick="setNetChartType('AYT',this)">AYT</button>
+      </div>
+    </div>
+    <canvas id="net-chart" style="width:100%;height:190px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div id="net-chart-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:8px">Bu tür için henüz deneme girilmedi.</div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Deneme Geçmişi</div>
+    <div id="exam-history-list"></div>
+    <div id="exam-history-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz deneme kaydı yok.</div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Konu Bitirme Yüzdeleri</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Her ders için müfredatın ne kadarını bitirdiğini işaretle.</div>
+    <div id="topic-progress-list"></div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Soru Çözüm İstatistiği</div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">DERS</div>
+        <select class="inp" id="q-subject"></select>
+      </div>
+      <div class="igrp"><div class="ilabel">SORU SAYISI</div><input class="inp" id="q-count" type="number" min="1" max="2000" placeholder="Örn: 40"></div>
+    </div>
+    <button class="btn primary fw mb8" onclick="addQuestions()">+ EKLE</button>
+    <div id="q-total" style="font-size:10px;color:var(--bright);letter-spacing:1px;margin-bottom:8px">∑ TOPLAM ÇÖZÜLEN: <b style="color:var(--white)">0</b> soru</div>
+    <div id="q-stats-list"></div>
+    <div id="q-stats-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz soru kaydı yok.</div>
+  </div>
+
 </div>
 
 <div id="page-log" class="page">
@@ -855,8 +934,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <div class="ssec">
       <div class="slbl">XP Referansı</div>
       <div style="font-size:10px;color:var(--gray);line-height:2">
-        Günlük hedef: <b style="color:var(--bright)">1200 XP</b><br>
-        Session: <b style="color:var(--bright)">+150 XP</b> &nbsp;|&nbsp; Boss: <b style="color:var(--bright)">+100 XP</b><br>
+        Günlük hedef: <b style="color:var(--bright)">tier'a göre 1200+ XP</b><br>
+        Session: <b style="color:var(--bright)">~2 XP/dk</b> (örn. 90dk → +180 XP) &nbsp;|&nbsp; Boss: <b style="color:var(--bright)">+100 XP</b><br>
         Task: <b style="color:var(--bright)">belirlediğin kadar</b> &nbsp;|&nbsp; Rozet: <b style="color:var(--bright)">+50 XP</b>
       </div>
     </div>
@@ -874,6 +953,19 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
     </div>
     <div class="ssec">
+      <div class="slbl">Yedekleme & Senkron (Sync)</div>
+      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+        Tüm verini bir <b style="color:var(--bright)">.json</b> dosyasına aktar. Tarayıcı geçmişini silmeden önce yedekle, başka cihazda <b style="color:var(--bright)">İÇE AKTAR</b> ile geri yükle.
+      </div>
+      <button class="btn fw mb8" onclick="exportData()">⬇ DIŞA AKTAR (YEDEK AL)</button>
+      <button class="btn fw" onclick="document.getElementById('import-file').click()">⬆ İÇE AKTAR (GERİ YÜKLE)</button>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importData(this.files[0])">
+      <div id="import-confirm" style="display:none" class="confirm-box mt8">
+        <div class="confirm-msg danger">⚠ İçe aktarılan veri mevcut tüm verinin <b>yerine geçecek</b>. Devam edilsin mi?</div>
+        <div class="brow"><button class="btn primary" onclick="applyImport()">✓ YÜKLE & YENİLE</button><button class="btn" onclick="cancelImport()">✕ İPTAL</button></div>
+      </div>
+    </div>
+    <div class="ssec">
       <div class="slbl">Bildirim & Ses</div>
       <div class="bio-item" onclick="toggleSound()" style="cursor:pointer">
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">🔔 Session Zili</span>
@@ -887,7 +979,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v6.0 // TR-1<br>Samsung Galaxy Tab S9 FE optimize<br>Samsung Internet → Ana Ekrana Ekle</div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.0 // TR-1<br>Net takip · Streak koruyucu · JSON yedek<br>Samsung Internet → Ana Ekrana Ekle</div>
     </div>
   </div>
 </div>
@@ -961,6 +1053,13 @@ const TIERS = [
 function getTier(){ let r=TIERS[0]; TIERS.forEach(t=>{if((S.totalXp||0)>=t.min)r=t;}); return r; }
 function getDailyGoal(){ return getTier().goal; }
 
+// Session XP scales with focus duration (minute-based, not flat).
+// ~2 XP/dk: 10dk→20, 25dk→50, 45dk→90, 90dk→180, 120dk→240. Clamp 15–400.
+function calcSessionXP(min){
+  const m = Math.max(1, parseInt(min)||0);
+  return Math.max(15, Math.min(400, Math.round(m * 2)));
+}
+
 const LEVELS = [
   {min:0,    title:'CADET',      next:'SPECIALIST', nextMin:200},
   {min:200,  title:'SPECIALIST', next:'OPERATIVE',  nextMin:500},
@@ -1005,9 +1104,11 @@ const SHOP_ITEMS = [
   {id:'theme_amber',   cat:'theme', icon:'🟧', name:'AMBER',   desc:'Sıcak amber CRT terminali',    cost:900},
   {id:'theme_violet',  cat:'theme', icon:'🟣', name:'VIOLET',  desc:'Derin mor — gece yarısı',      cost:1500},
   // BOOSTS (one-shot, time-limited)
-  {id:'boost_xp1h',  cat:'boost', icon:'⚡',  name:'2X XP — 1H',  desc:'1 saat boyunca tüm XP 2 kat', cost:600,  duration:3600},
-  {id:'boost_xp30',  cat:'boost', icon:'🔥',  name:'2X XP — 30D', desc:'30 dk içinde kazanılan XP 2 katı', cost:350, duration:1800},
+  {id:'boost_xp1h',  cat:'boost', icon:'⚡',  name:'2X XP — 1H',  desc:'1 saat boyunca tüm XP 2 kat', cost:1500,  duration:3600},
+  {id:'boost_xp30',  cat:'boost', icon:'🔥',  name:'2X XP — 30D', desc:'30 dk içinde kazanılan XP 2 katı', cost:900, duration:1800},
   {id:'boost_shield',cat:'boost', icon:'🛡',  name:'KALKAN — 2H', desc:'2 saat boss saldırısını engelle', cost:500, duration:7200, shield:true},
+  // STREAK PROTECTOR (consumable — auto-consumed on a missed day)
+  {id:'streak_shield', cat:'streak', icon:'❄️', name:'STREAK KORUYUCU', desc:'Bir gün hedefi kaçırsan bile streak kırılmaz. Otomatik harcanır. Stoklanabilir.', cost:2500},
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Level rozeti yanında 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Level rozeti yanında ⚡', cost:550},
@@ -1092,6 +1193,7 @@ function defState() {
     bossAggroLastHit:null,        // ms timestamp of last boss aggression damage
     // ── NEW v6: SHOP / INVENTORY ──
     spentXp:0,                    // total XP spent in shop
+    streakProtectors:0,           // owned streak-protector charges (consumable)
     inventory:[],                 // array of owned item ids
     equippedTheme:'default',
     equippedCosmetic:null,
@@ -1100,6 +1202,10 @@ function defState() {
     notifEnabled:false,           // browser notifications permission cached
     // ── NEW v6: REMINDERS ──
     remindersFired:{},            // {date: [taskId,...]} fired today
+    // ── NEW v7: EXAM / NET TRACKING ──
+    exams:[],                     // [{id,date,type,name,nets:{},total}]
+    topicProgress:{},             // {subjectKey: pct 0-100}
+    questionLog:{},               // {subject: totalCount}
   };
 }
 
@@ -1125,10 +1231,23 @@ function loadState() {
       // If yesterday's XP reached goal (lastGoalHitDate === saved.lastDate),
       // and saved.lastDate is exactly yesterday, keep chain. Otherwise reset.
       const yesterdayStr = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+      const dayBeforeStr = (()=>{const d=new Date();d.setDate(d.getDate()-2);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
       const hitYesterday = (saved.lastGoalHitDate === saved.lastDate);
       const lastWasYesterday = (saved.lastDate === yesterdayStr);
       if (!(hitYesterday && lastWasYesterday)) {
-        S.dayStreak = 0;
+        // ── STREAK PROTECTOR: cover a single missed day ──
+        // single-day lapse = active yesterday but missed goal, OR skipped exactly yesterday
+        const singleDayLapse =
+          (lastWasYesterday && !hitYesterday) ||
+          (saved.lastDate === dayBeforeStr && hitYesterday);
+        if (singleDayLapse && (saved.dayStreak||0) > 0 && (saved.streakProtectors||0) > 0) {
+          S.streakProtectors = (saved.streakProtectors||0) - 1;
+          S.dayStreak = saved.dayStreak;            // chain preserved
+          S.lastGoalHitDate = yesterdayStr;         // bridge the gap so chain continues today
+          S._streakSaved = true;                    // flag for a one-time notice
+        } else {
+          S.dayStreak = 0;
+        }
       }
       // ── PUSH YESTERDAY'S FOCUS INTO HISTORY ──
       if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
@@ -1219,9 +1338,10 @@ function hideEl(id){ g(id).style.display='none'; }
 // ════════════════════════════════════════
 function goTab(btn, name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('visible'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.navitem').forEach(t=>t.classList.remove('active'));
   g('page-'+name).classList.add('visible');
-  btn.classList.add('active');
+  if(btn && btn.classList) btn.classList.add('active');
+  closeNav();
   g('content').scrollTop=0;
   // STATS tab: canvas needs a real size before drawing — defer
   if (name === 'stats') setTimeout(()=>{ try{ renderStats(); }catch(e){} }, 40);
@@ -1229,8 +1349,71 @@ function goTab(btn, name) {
   if (name === 'habits') setTimeout(()=>{ try{ renderHabitCharts(); drawCalendar(_calHabitId); }catch(e){} }, 40);
   // SHOP tab
   if (name === 'shop') setTimeout(()=>{ try{ renderShop(); }catch(e){} }, 20);
+  // EXAM tab
+  if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
   // Resume audio context on tap (mobile policy)
   try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
+}
+
+// ════════════════════════════════════════
+// DATA SYNC — JSON Export / Import
+// ════════════════════════════════════════
+function exportData(){
+  try{
+    const payload={ app:'overclock', v:7, exportedAt:new Date().toISOString(), data:S };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const d=new Date();
+    const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0');
+    a.href=url; a.download='overclock-yedek-'+stamp+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    notify('⬇ YEDEK İNDİRİLDİ');
+    addLog('Veri dışa aktarıldı (yedek).');
+  }catch(e){ notify('YEDEK HATASI: '+e.message); }
+}
+
+let _pendingImport=null;
+function importData(file){
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const parsed=JSON.parse(r.result);
+      const data=(parsed&&parsed.data)?parsed.data:parsed;
+      if(!data||typeof data!=='object'||typeof data.totalXp==='undefined'){
+        notify('GEÇERSİZ YEDEK DOSYASI'); return;
+      }
+      _pendingImport=data;
+      g('import-confirm').style.display='block';
+      notify('Dosya okundu — onay bekleniyor.');
+    }catch(e){ notify('OKUMA HATASI: '+e.message); }
+  };
+  r.onerror=()=>notify('DOSYA OKUNAMADI');
+  r.readAsText(file);
+  const fi=g('import-file'); if(fi) fi.value='';
+}
+function cancelImport(){ _pendingImport=null; hideEl('import-confirm'); }
+function applyImport(){
+  if(!_pendingImport){ hideEl('import-confirm'); return; }
+  try{
+    S=Object.assign(defState(), _pendingImport);
+    save();
+    notify('✓ VERİ YÜKLENDİ // YENİLENİYOR');
+    setTimeout(()=>location.reload(),700);
+  }catch(e){ notify('YÜKLEME HATASI: '+e.message); }
+}
+
+function toggleNav(){
+  const sb=g('sidebar'), ov=g('nav-overlay');
+  const open=sb.classList.toggle('open');
+  if(ov) ov.classList.toggle('show',open);
+}
+function closeNav(){
+  const sb=g('sidebar'), ov=g('nav-overlay');
+  if(sb) sb.classList.remove('open');
+  if(ov) ov.classList.remove('show');
 }
 
 // ════════════════════════════════════════
@@ -1338,6 +1521,8 @@ function renderStreak(){
   else if (n < 14)  msg.textContent = '🔥 '+n+' GÜN — ZİNCİR YANIYOR';
   else if (n < 30)  msg.textContent = '⚡ '+n+' GÜN — TITAN PROTOKOLÜ AKTİF';
   else              msg.textContent = '👑 '+n+' GÜN — EFSANEVİ';
+  const sp = S.streakProtectors||0;
+  if (sp > 0) msg.textContent += ' // ❄️×'+sp;
 }
 
 function renderCumulative() {
@@ -1414,8 +1599,9 @@ function tickTimer(){
       playBell('focus_end');
       // ── BOSS aggro reset: just worked ──
       S.lastFocusEnd = Date.now();
-      addXP(150,'Session tamamlandı');
-      notify('🔔 SESSION COMPLETE // +150 XP // MOLAYA GEÇ');
+      const sxp = calcSessionXP(S.focusMin);
+      addXP(sxp,'Session tamamlandı ('+S.focusMin+'dk)');
+      notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
       if(S.streak>=3) earnBadge('streak');
       if(S.sessions>=5) earnBadge('iron');
       if(S.sessions>=3) earnBadge('overdrive');
@@ -2228,6 +2414,14 @@ function buyItem(id){
     return;
   }
   S.spentXp = (S.spentXp||0) + item.cost;
+  if (item.cat === 'streak') {
+    S.streakProtectors = (S.streakProtectors||0) + 1;
+    notify('❄️ STREAK KORUYUCU ALINDI // STOK: '+S.streakProtectors);
+    addLog('Streak koruyucu alındı (-'+item.cost+' XP) // stok: '+S.streakProtectors);
+    playBell('reminder');
+    save(); renderShop(); renderXP(); renderStreak();
+    return;
+  }
   if (item.cat === 'boost') {
     // activate immediately
     const dur = item.duration || 3600;
@@ -2292,6 +2486,8 @@ function renderShop(){
   const themesEl = g('shop-themes');
   const boostsEl = g('shop-boosts');
   const cosEl    = g('shop-cosmetics');
+  const streakEl = g('shop-streak');
+  const stockEl  = g('streak-stock'); if (stockEl) stockEl.textContent = S.streakProtectors||0;
   if (!themesEl || !boostsEl || !cosEl) return;
 
   function renderItem(item){
@@ -2347,6 +2543,242 @@ function renderShop(){
   boostsEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='boost').map(renderItem).join('') ||
     '<div style="font-size:9px;color:var(--dim);padding:8px 0">Boost yok.</div>';
   cosEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='cosmetic').map(renderItem).join('');
+  if (streakEl) streakEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='streak').map(renderItem).join('');
+}
+
+// ════════════════════════════════════════
+// EXAM / NET TRACKING  (v7)
+// ════════════════════════════════════════
+const EXAM_DEFS = {
+  TYT: [
+    {key:'turkce', label:'Türkçe',          max:40},
+    {key:'mat',    label:'Matematik',       max:40},
+    {key:'fen',    label:'Fen Bilimleri',   max:20},
+    {key:'sos',    label:'Sosyal Bilimler', max:20},
+  ],
+  AYT: [
+    {key:'mat', label:'Matematik', max:40},
+    {key:'fiz', label:'Fizik',     max:14},
+    {key:'kim', label:'Kimya',     max:13},
+    {key:'bio', label:'Biyoloji',  max:13},
+  ],
+};
+// Subjects used for topic-progress & question stats (YKS Sayısal)
+const STUDY_SUBJECTS = [
+  'TYT Türkçe','TYT Matematik','TYT Fizik','TYT Kimya','TYT Biyoloji','TYT Sosyal',
+  'AYT Matematik','AYT Fizik','AYT Kimya','AYT Biyoloji',
+];
+
+function examDefs(){ const t=g('exam-type'); return EXAM_DEFS[(t&&t.value)||'TYT']||EXAM_DEFS.TYT; }
+
+function renderExamInputs(){
+  const wrap=g('exam-net-inputs'); if(!wrap) return;
+  wrap.innerHTML = examDefs().map(s=>
+    '<div class="irow mb8" style="align-items:center">'+
+      '<div style="flex:1;font-size:10px;color:var(--gray);letter-spacing:1px">'+s.label+' <span style="color:var(--dim)">/'+s.max+'</span></div>'+
+      '<input class="inp" style="max-width:90px" type="number" min="0" max="'+s.max+'" step="0.25" id="exam-in-'+s.key+'" placeholder="net" oninput="updateExamPreview()">'+
+    '</div>'
+  ).join('');
+  const dEl=g('exam-date'); if(dEl && !dEl.value) dEl.value=today();
+  updateExamPreview();
+}
+
+function updateExamPreview(){
+  let tot=0;
+  examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); const v=el?parseFloat(el.value):0; if(!isNaN(v)) tot+=v; });
+  const p=g('exam-total-preview'); if(p) p.innerHTML='TOPLAM NET: <b style="color:var(--white)">'+tot.toFixed(2)+'</b>';
+}
+
+function addExam(){
+  const type=(g('exam-type')||{}).value||'TYT';
+  const date=(g('exam-date')||{}).value||today();
+  const name=((g('exam-name')||{}).value||'').trim();
+  const nets={}; let total=0, any=false;
+  examDefs().forEach(s=>{
+    const el=g('exam-in-'+s.key); let v=el?parseFloat(el.value):NaN;
+    if(isNaN(v)) v=0; else any=true;
+    v=Math.max(0,Math.min(s.max,v));
+    nets[s.key]=v; total+=v;
+  });
+  if(!any){ notify('EN AZ BİR DERS NETİ GİR!'); return; }
+  S.exams = S.exams||[];
+  S.exams.push({id:Date.now(), date, type, name, nets, total:Math.round(total*100)/100});
+  S.exams.sort((a,b)=> (a.date<b.date?-1:a.date>b.date?1:a.id-b.id));
+  save();
+  // clear net inputs
+  examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); if(el) el.value=''; });
+  const nm=g('exam-name'); if(nm) nm.value='';
+  updateExamPreview();
+  notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET');
+  addLog('Deneme: '+type+(name?' ('+name+')':'')+' — '+total.toFixed(2)+' net');
+  _netChartType=type; document.querySelectorAll('#ng-TYT,#ng-AYT').forEach(b=>b.classList.toggle('active',b.id==='ng-'+type));
+  renderExam();
+}
+
+function deleteExam(id){
+  S.exams=(S.exams||[]).filter(e=>e.id!==id);
+  save(); renderExam();
+}
+
+let _netChartType='TYT';
+function setNetChartType(t,btn){
+  _netChartType=t;
+  document.querySelectorAll('#ng-TYT,#ng-AYT').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  drawNetChart();
+}
+
+function drawNetChart(){
+  const cv=g('net-chart'); if(!cv) return;
+  const data=(S.exams||[]).filter(e=>e.type===_netChartType);
+  const emptyEl=g('net-chart-empty');
+  if(emptyEl) emptyEl.style.display = data.length? 'none':'block';
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.clientHeight||190;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  if(!data.length) return;
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_bright=cs.getPropertyValue('--bright').trim();
+  const col_white=cs.getPropertyValue('--white').trim();
+  const maxNet=EXAM_DEFS[_netChartType].reduce((a,s)=>a+s.max,0);
+  const padL=28,padR=12,padT=12,padB=22;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  ctx.font="7px 'Share Tech Mono',monospace";
+  [0,.25,.5,.75,1].forEach(f=>{
+    const y=padT+ch*(1-f);
+    ctx.strokeStyle=col_dim; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(Math.round(f*maxNet),padL-3,y);
+  });
+  const n=data.length;
+  const xOf=i=> n===1 ? padL+cw/2 : padL + (cw*i/(n-1));
+  const yOf=v=> padT+ch*(1-Math.max(0,Math.min(maxNet,v))/maxNet);
+  // area
+  ctx.beginPath(); ctx.moveTo(xOf(0),padT+ch);
+  data.forEach((e,i)=>ctx.lineTo(xOf(i),yOf(e.total)));
+  ctx.lineTo(xOf(n-1),padT+ch); ctx.closePath();
+  ctx.fillStyle='rgba(204,204,204,0.07)'; ctx.fill();
+  // line
+  ctx.strokeStyle=col_bright; ctx.lineWidth=1.5; ctx.beginPath();
+  data.forEach((e,i)=>{ const x=xOf(i),y=yOf(e.total); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke();
+  // dots + value labels
+  data.forEach((e,i)=>{
+    const x=xOf(i),y=yOf(e.total);
+    ctx.fillStyle=col_white; ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=col_bright; ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(e.total.toFixed(1), x, y-5);
+  });
+  // x labels (first / mid / last date)
+  ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
+  const idxs = n<=4 ? data.map((_,i)=>i) : [0,Math.floor((n-1)/2),n-1];
+  idxs.forEach(i=>{ const d=(data[i].date||'').slice(5); ctx.fillText(d,xOf(i),padT+ch+5); });
+}
+
+function renderExamHistory(){
+  const el=g('exam-history-list'), emp=g('exam-history-empty');
+  if(!el) return;
+  const list=(S.exams||[]).slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:b.id-a.id);
+  if(emp) emp.style.display=list.length?'none':'block';
+  el.innerHTML=list.map(e=>{
+    const defs=EXAM_DEFS[e.type]||[];
+    const breakdown=defs.map(s=>s.label.slice(0,3)+' '+((e.nets&&e.nets[s.key])||0)).join(' · ');
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);padding:10px 12px;margin-bottom:8px">'+
+      '<div class="fbet" style="margin-bottom:4px">'+
+        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white)">'+e.type+' — '+e.total.toFixed(2)+' NET</span>'+
+        '<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px" onclick="deleteExam('+e.id+')">SİL</button>'+
+      '</div>'+
+      '<div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-bottom:3px">'+fmtDate(e.date)+(e.name?' // '+e.name:'')+'</div>'+
+      '<div style="font-size:8px;color:var(--muted);letter-spacing:1px">'+breakdown+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function setTopicProgress(key,val){
+  S.topicProgress=S.topicProgress||{};
+  S.topicProgress[key]=Math.max(0,Math.min(100,parseInt(val)||0));
+  save();
+  const lbl=g('tp-val-'+btoa(unescape(encodeURIComponent(key))).replace(/=/g,''));
+  if(lbl) lbl.textContent=S.topicProgress[key]+'%';
+  const bar=g('tp-bar-'+btoa(unescape(encodeURIComponent(key))).replace(/=/g,''));
+  if(bar) bar.style.width=S.topicProgress[key]+'%';
+}
+
+function renderTopicProgress(){
+  const el=g('topic-progress-list'); if(!el) return;
+  S.topicProgress=S.topicProgress||{};
+  el.innerHTML=STUDY_SUBJECTS.map(subj=>{
+    const id=btoa(unescape(encodeURIComponent(subj))).replace(/=/g,'');
+    const v=S.topicProgress[subj]||0;
+    return '<div style="margin-bottom:12px">'+
+      '<div class="fbet" style="margin-bottom:4px">'+
+        '<span style="font-size:9px;color:var(--gray);letter-spacing:1px">'+subj+'</span>'+
+        '<span id="tp-val-'+id+'" style="font-size:10px;color:var(--bright);font-family:\'Orbitron\',monospace">'+v+'%</span>'+
+      '</div>'+
+      '<div style="height:8px;background:var(--mid);border:1px solid var(--bd);position:relative;margin-bottom:4px">'+
+        '<div id="tp-bar-'+id+'" style="height:100%;width:'+v+'%;background:var(--bright);transition:width .2s"></div>'+
+      '</div>'+
+      '<input type="range" min="0" max="100" step="5" value="'+v+'" style="width:100%" oninput="setTopicProgress(\''+subj.replace(/'/g,"\\'")+'\',this.value)">'+
+    '</div>';
+  }).join('');
+}
+
+function renderQuestionSubjects(){
+  const sel=g('q-subject'); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=STUDY_SUBJECTS.map(s=>'<option value="'+s+'">'+s+'</option>').join('');
+  if(cur) sel.value=cur;
+}
+
+function addQuestions(){
+  const subj=(g('q-subject')||{}).value;
+  const c=parseInt((g('q-count')||{}).value);
+  if(!subj||!c||c<1){ notify('DERS VE SORU SAYISI GİR!'); return; }
+  S.questionLog=S.questionLog||{};
+  S.questionLog[subj]=(S.questionLog[subj]||0)+c;
+  save();
+  const ci=g('q-count'); if(ci) ci.value='';
+  notify('✓ '+c+' SORU EKLENDİ // '+subj);
+  addLog('Soru çözümü: +'+c+' ('+subj+')');
+  renderQuestionStats();
+}
+
+function renderQuestionStats(){
+  const el=g('q-stats-list'), emp=g('q-stats-empty'), tot=g('q-total');
+  if(!el) return;
+  const log=S.questionLog||{};
+  const entries=Object.entries(log).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(emp) emp.style.display=entries.length?'none':'block';
+  const sum=entries.reduce((a,[,v])=>a+v,0);
+  if(tot) tot.innerHTML='∑ TOPLAM ÇÖZÜLEN: <b style="color:var(--white)">'+sum+'</b> soru';
+  const mx=Math.max(1,...entries.map(([,v])=>v));
+  el.innerHTML=entries.map(([s,v])=>
+    '<div style="margin-bottom:10px">'+
+      '<div class="fbet" style="margin-bottom:3px">'+
+        '<span style="font-size:9px;color:var(--gray);letter-spacing:1px">'+s+'</span>'+
+        '<span style="font-size:10px;color:var(--bright);font-family:\'Orbitron\',monospace">'+v+'</span>'+
+      '</div>'+
+      '<div style="height:8px;background:var(--mid);border:1px solid var(--bd)">'+
+        '<div style="height:100%;width:'+(v/mx*100)+'%;background:var(--bright)"></div>'+
+      '</div>'+
+    '</div>'
+  ).join('');
+}
+
+function renderExam(){
+  if(!g('exam-net-inputs')) return;
+  if(!g('exam-net-inputs').children.length) renderExamInputs();
+  renderQuestionSubjects();
+  renderExamHistory();
+  renderTopicProgress();
+  renderQuestionStats();
+  setTimeout(()=>{ try{ drawNetChart(); }catch(e){} }, 40);
 }
 
 // ════════════════════════════════════════
@@ -2749,6 +3181,15 @@ function renderAll(){
   const sv=g('salt-val');
   if(S.waterCount>0&&S.waterCount%2===0){sv.textContent='EKLE ⚡';sv.className='bio-val warn';}
   else{sv.textContent='BEKLEMEDE';sv.className='bio-val off';}
+  // ── STREAK PROTECTOR consumed last night → notify once ──
+  if (S._streakSaved) {
+    S._streakSaved = false;
+    setTimeout(()=>{
+      notify('❄️ STREAK KORUYUCU KULLANILDI // ZİNCİR KORUNDU ('+(S.dayStreak||0)+' GÜN)');
+      addLog('Streak koruyucu harcandı — zincir korundu. Kalan: '+(S.streakProtectors||0));
+      save();
+    }, 600);
+  }
   // run boss aggression check right after rendering (handles long-time-away on reopen)
   try { bossAggroTick(); } catch(e){}
 }
