@@ -21,7 +21,24 @@ document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement
   --panel:#141414;--bd:#2a2a2a;--bd2:#444;--dim:#333;
   --muted:#555;--gray:#777;--bright:#ccc;--white:#f0f0f0;
   --green:#8fff8f;--yellow:#ffff66;--red:#ff6666;
+  --accent:#ccc;/* themeable accent */
 }
+/* THEMES */
+body[data-theme="crimson"]{--accent:#ff4466;--bright:#ffb0b8;--white:#fff0f2}
+body[data-theme="crimson"] #xp-bar{background:linear-gradient(90deg,#440000,#ff4466)}
+body[data-theme="crimson"] #xp-bar::after{background:#ff4466;box-shadow:0 0 10px #ff4466}
+body[data-theme="cyber"]{--accent:#44ffee;--bright:#a0ecf2;--white:#e0fffd}
+body[data-theme="cyber"] #xp-bar{background:linear-gradient(90deg,#003c3a,#44ffee)}
+body[data-theme="cyber"] #xp-bar::after{background:#44ffee;box-shadow:0 0 10px #44ffee}
+body[data-theme="toxic"]{--accent:#aaff44;--bright:#caea8e;--white:#e8ffc0}
+body[data-theme="toxic"] #xp-bar{background:linear-gradient(90deg,#1a3300,#aaff44)}
+body[data-theme="toxic"] #xp-bar::after{background:#aaff44;box-shadow:0 0 10px #aaff44}
+body[data-theme="amber"]{--accent:#ffaa33;--bright:#f0c882;--white:#ffe5b8}
+body[data-theme="amber"] #xp-bar{background:linear-gradient(90deg,#3a1f00,#ffaa33)}
+body[data-theme="amber"] #xp-bar::after{background:#ffaa33;box-shadow:0 0 10px #ffaa33}
+body[data-theme="violet"]{--accent:#bb88ff;--bright:#d4b0ff;--white:#efe0ff}
+body[data-theme="violet"] #xp-bar{background:linear-gradient(90deg,#1a0033,#bb88ff)}
+body[data-theme="violet"] #xp-bar::after{background:#bb88ff;box-shadow:0 0 10px #bb88ff}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{height:100%;overflow:hidden}
 body{height:100%;overflow:hidden;background:var(--black);color:var(--bright);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);user-select:none;-webkit-user-select:none}
@@ -254,6 +271,23 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .task-rec-tag.weekday{border-color:var(--yellow);color:var(--yellow)}
 .task-rec-tag.weekly{border-color:var(--bright);color:var(--white)}
 
+/* habits */
+.habit-item{background:var(--mid);border:1px solid var(--bd);border-left:2px solid var(--dim);margin-bottom:8px;overflow:hidden}
+.habit-item.done{border-left-color:var(--green)}
+.habit-top{display:flex;align-items:center;gap:10px;padding:12px 14px;min-height:52px}
+.habit-name{flex:1;font-size:11px;color:var(--bright);letter-spacing:1px;line-height:1.3}
+.habit-streak{text-align:right;flex-shrink:0}
+.habit-streak-num{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);line-height:1}
+.habit-streak-num.fire{color:var(--red);text-shadow:0 0 8px var(--red)}
+.habit-streak-lbl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.habit-btns{display:flex;border-top:1px solid var(--bd)}
+.habit-act{flex:1;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:8px 4px;border:none;background:transparent;cursor:pointer;text-transform:uppercase;min-height:34px;color:var(--muted);text-align:center}
+.habit-act:active{background:var(--dim)}
+.habit-act.ok{color:var(--green)}
+.habit-act.del{color:var(--red);border-left:1px solid var(--bd)}
+.habit-check{width:26px;height:26px;border:2px solid var(--bd2);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent}
+.habit-check.done{border-color:var(--green);background:rgba(143,255,143,.12);color:var(--green)}
+
 /* analytics canvas */
 #chart-wrap{background:var(--mid);border:1px solid var(--bd);padding:14px 12px;margin-bottom:10px}
 #focus-chart{width:100%;height:180px;display:block;background:var(--deep);border:1px solid var(--bd)}
@@ -266,6 +300,90 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .stat-card.hot .sv{color:var(--red);text-shadow:0 0 8px var(--red)}
 .stat-card.good{border-left-color:var(--green)}
 .stat-card.good .sv{color:var(--green);text-shadow:0 0 8px var(--green)}
+
+/* habit calendar */
+.hcal-tab{font-family:'Share Tech Mono',monospace;font-size:8px;padding:5px 10px;border:1px solid var(--bd);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:1px;min-height:30px}
+.hcal-tab.active{border-color:var(--bright);color:var(--white);background:var(--dim)}
+.hcal-header{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.hcal-grid-outer{overflow-x:auto}
+.hcal-grid{min-width:320px}
+.hcal-row{display:flex;align-items:center;gap:2px;margin-bottom:2px}
+.hcal-day-lbl{font-size:7px;color:var(--dim);letter-spacing:1px;text-align:right;padding-right:4px;white-space:nowrap;min-width:22px;flex-shrink:0}
+.hcal-cell{width:20px;height:20px;min-width:20px;display:flex;align-items:center;justify-content:center;font-size:9px;border:1px solid var(--bd);background:var(--deep);cursor:default;flex-shrink:0}
+.hcal-cell.tick{background:rgba(143,255,143,.15);border-color:var(--green);color:var(--green)}
+.hcal-cell.cross{background:rgba(255,102,102,.08);border-color:var(--dim);color:var(--dim)}
+.hcal-cell.future{background:transparent;border-color:transparent;color:transparent}
+.hcal-cell.today-cell{outline:1px solid var(--bright)}
+.hcal-col-labels{display:flex;align-items:center;gap:2px;margin-bottom:3px;margin-left:26px}
+.hcal-col-lbl{width:20px;min-width:20px;font-size:6px;color:var(--dim);text-align:center;flex-shrink:0}
+.hcal-streak-info{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:8px;text-transform:uppercase;padding-top:8px;border-top:1px solid var(--bd)}
+
+/* numeric habit chart */
+.hchart-wrap{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.hchart-wrap:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.hchart-title{font-size:9px;color:var(--bright);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.hchart-canvas{width:100%;height:100px;display:block;background:var(--deep);border:1px solid var(--bd)}
+.hchart-meta{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:4px}
+
+/* numeric habit input row */
+.habit-num-row{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--deep);border-top:1px solid var(--bd)}
+.habit-num-row input{flex:1;font-family:'Share Tech Mono',monospace;font-size:11px;padding:6px 10px;background:var(--mid);border:1px solid var(--bd);color:var(--bright);outline:none;min-height:32px;text-align:center;letter-spacing:1px}
+.habit-num-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:6px 10px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:32px}
+.habit-num-btn:active{background:var(--dim)}
+
+/* SUB-TASKS */
+.subtask-wrap{margin-top:8px;border-top:1px dashed var(--bd);padding-top:8px}
+.subtask-bar{height:3px;background:var(--dim);margin-bottom:8px;overflow:hidden}
+.subtask-bar-fill{height:100%;background:var(--accent,var(--bright));transition:width .4s}
+.subtask-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.subtask-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--deep);border:1px solid var(--bd);min-height:34px}
+.subtask-item.done .subtask-txt{text-decoration:line-through;color:var(--muted)}
+.subtask-check{width:16px;height:16px;border:1.5px solid var(--bd2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent}
+.subtask-check.done{border-color:var(--green);background:rgba(143,255,143,.12);color:var(--green)}
+.subtask-txt{flex:1;font-size:10px;color:var(--bright);letter-spacing:1px}
+.subtask-del{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--red);background:transparent;border:none;cursor:pointer;padding:2px 6px;min-height:28px}
+.subtask-add-row{display:flex;gap:6px}
+.subtask-add-row input{flex:1;font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 8px;background:var(--deep);border:1px solid var(--bd);color:var(--bright);outline:none;min-height:32px;letter-spacing:1px}
+.subtask-add-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:6px 10px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:32px;letter-spacing:1px}
+.subtask-add-btn:active{background:var(--dim)}
+.task-progress{font-family:'Orbitron',monospace;font-size:8px;color:var(--accent,var(--bright));letter-spacing:1px;padding:1px 6px;border:1px solid var(--bd);margin-left:4px}
+.task-toggle-sub{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);background:transparent;border:1px solid var(--bd);padding:6px 10px;cursor:pointer;letter-spacing:1px;min-height:36px;text-transform:uppercase}
+
+/* REMINDER */
+.task-reminder-tag{font-size:7px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--accent,var(--bright));color:var(--accent,var(--bright));background:rgba(204,204,204,.06)}
+
+/* BOSS AGGRESSION */
+#boss-aggro{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,102,102,.08);border:1px solid var(--red);border-left:3px solid var(--red);font-size:9px;color:var(--red);letter-spacing:1px;line-height:1.5}
+#boss-aggro.show{display:block;animation:pg 1.8s ease-in-out infinite}
+#boss-aggro b{font-family:'Orbitron',monospace;letter-spacing:2px}
+#boss-panel.defeated{border-left-color:var(--green);opacity:.55}
+#boss-panel.defeated #boss-name{color:var(--green);text-shadow:0 0 8px var(--green)}
+.boss-defeated-tag{display:inline-block;font-size:7px;padding:2px 6px;letter-spacing:2px;color:var(--green);border:1px solid var(--green);margin-left:6px;text-transform:uppercase}
+
+/* SHOP / INVENTORY */
+.shop-balance{display:flex;align-items:center;justify-content:space-between;background:var(--mid);border:1px solid var(--bd2);padding:12px 14px;margin-bottom:12px}
+.shop-balance-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--accent,var(--white));text-shadow:0 0 10px rgba(204,204,204,.3)}
+.shop-balance-lbl{font-size:7px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.shop-card{background:var(--mid);border:1px solid var(--bd);padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative}
+.shop-card.owned{border-color:var(--green);background:rgba(143,255,143,.04)}
+.shop-card.active-item{border-color:var(--accent,var(--white));box-shadow:inset 0 0 0 1px var(--accent,var(--white))}
+.shop-icon{font-size:26px;line-height:1}
+.shop-name{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:var(--bright);letter-spacing:2px;text-transform:uppercase}
+.shop-desc{font-size:7px;color:var(--muted);letter-spacing:1px;line-height:1.4}
+.shop-cost{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:1px;padding:2px 8px;border:1px solid var(--yellow);background:rgba(255,255,102,.05)}
+.shop-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:6px 12px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;letter-spacing:1px;min-height:32px;width:100%;margin-top:2px}
+.shop-btn:active{background:var(--dim)}
+.shop-btn.primary{background:var(--dim);color:var(--white);border-color:var(--bright)}
+.shop-btn.equipped{color:var(--green);border-color:var(--green);background:rgba(143,255,143,.08);cursor:default}
+.shop-btn.locked{color:var(--muted);border-color:var(--bd);cursor:not-allowed}
+.shop-section-lbl{font-size:8px;letter-spacing:3px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase}
+.boost-tag{position:absolute;top:4px;right:4px;font-size:6px;letter-spacing:1px;color:var(--yellow);border:1px solid var(--yellow);padding:1px 4px;background:rgba(0,0,0,.5);text-transform:uppercase}
+#boost-banner{display:none;background:var(--mid);border:1px solid var(--yellow);border-left:3px solid var(--yellow);padding:9px 12px;margin-top:8px;align-items:center;gap:10px}
+#boost-banner.show{display:flex;animation:pg 2.5s ease-in-out infinite}
+#boost-banner .b-ico{font-size:14px;color:var(--yellow);text-shadow:0 0 8px var(--yellow)}
+#boost-banner .b-txt{flex:1;font-size:9px;color:var(--yellow);letter-spacing:2px;text-transform:uppercase}
+#boost-banner .b-time{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--yellow)}
 </style>
 </head>
 <body>
@@ -307,7 +425,9 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 <div id="tabbar">
   <button class="tab active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
   <button class="tab" onclick="goTab(this,'tasks')">📋 TASKS</button>
+  <button class="tab" onclick="goTab(this,'habits')">🔄 HABITS</button>
   <button class="tab" onclick="goTab(this,'stats')">📊 DATA</button>
+  <button class="tab" onclick="goTab(this,'shop')">📦 SHOP</button>
   <button class="tab" onclick="goTab(this,'log')">🗒 LOG</button>
   <button class="tab" onclick="goTab(this,'achievements')">✦ BADGES</button>
   <button class="tab" onclick="goTab(this,'settings')">⚙ SYS</button>
@@ -397,6 +517,32 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <button class="btn" onclick="addXP(50,'Manuel')">+50 XP</button>
         <button class="btn" onclick="addXP(100,'Manuel')">+100 XP</button>
       </div>
+      <div style="margin-bottom:8px">
+        <div class="ilabel" style="margin-bottom:4px">📚 AKTİF DERS</div>
+        <select class="inp" id="sel-subject" onchange="S.activeSubject=this.value;save()" style="font-size:10px;letter-spacing:1px">
+          <option value="">— Seç (TYT/AYT) —</option>
+          <optgroup label="── TYT ──">
+            <option value="TYT Mat">TYT Matematik</option>
+            <option value="TYT Fen">TYT Fen Bilimleri</option>
+            <option value="TYT Türk">TYT Türkçe</option>
+            <option value="TYT Sos">TYT Sosyal</option>
+          </optgroup>
+          <optgroup label="── AYT ──">
+            <option value="AYT Mat">AYT Matematik</option>
+            <option value="AYT Fiz">AYT Fizik</option>
+            <option value="AYT Kim">AYT Kimya</option>
+            <option value="AYT Bio">AYT Biyoloji</option>
+            <option value="AYT Edeb">AYT Edebiyat</option>
+            <option value="AYT Tarih">AYT Tarih</option>
+            <option value="AYT Coğ">AYT Coğrafya</option>
+            <option value="AYT Fel">AYT Felsefe</option>
+          </optgroup>
+          <optgroup label="── DİĞER ──">
+            <option value="İngilizce">İngilizce</option>
+            <option value="Genel Tekrar">Genel Tekrar</option>
+          </optgroup>
+        </select>
+      </div>
       <button class="btn fw" style="font-size:8px;color:var(--muted);border-color:var(--bd)" onclick="tog('timer-set-panel')">⚙ SÜRE: <span id="timer-cfg-lbl">90dk/20dk</span></button>
       <div id="timer-set-panel" style="display:none;margin-top:8px">
         <div class="irow">
@@ -427,6 +573,15 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <button class="btn" onclick="dmgBoss(10)">-10 HP</button>
         <button class="btn" onclick="dmgBoss(25)">-25 HP</button>
         <button class="btn primary" onclick="defeatBoss()" style="flex:1">⚔ YENİLDİ</button>
+      </div>
+      <div id="boss-aggro">
+        <b>⚠ BOSS AGRESİF</b><br>
+        <span id="boss-aggro-msg">Son focus üzerinden uzun süre geçti. Boss yakında saldıracak.</span>
+      </div>
+      <div id="boost-banner">
+        <span class="b-ico">⚡</span>
+        <div class="b-txt" id="boost-txt">2X XP BOOST AKTİF</div>
+        <span class="b-time" id="boost-time">--:--</span>
       </div>
     </div>
     <div id="mission-title" style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);text-transform:uppercase;letter-spacing:3px;margin-bottom:4px">AYT MATEMATİK</div>
@@ -485,6 +640,9 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <div style="margin-bottom:8px"><div class="ilabel">GÖREV ADI *</div><input class="inp" id="inp-task-title" placeholder="Örn: AYT Fizik — Kuvvet konusu"></div>
     <div class="irow mb8">
       <div class="igrp"><div class="ilabel">DEADLINE</div><input class="inp" id="inp-task-date" type="date"></div>
+      <div class="igrp"><div class="ilabel">🔔 HATIRLAT</div><input class="inp" id="inp-task-time" type="time" placeholder="--:--"></div>
+    </div>
+    <div class="irow mb8">
       <div class="igrp"><div class="ilabel">XP ÖDÜLÜ</div><input class="inp" id="inp-task-xp" type="number" min="10" max="500" value="50"></div>
       <div class="igrp"><div class="ilabel">ÖNCELİK</div>
         <select class="inp" id="inp-task-prio">
@@ -501,6 +659,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <button type="button" class="rec-btn" data-rec="weekday" onclick="setRecur(this,'weekday')">📅 HAFTA İÇİ</button>
       <button type="button" class="rec-btn" data-rec="weekly" onclick="setRecur(this,'weekly')">📆 HAFTALIK</button>
     </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase">💡 ALT GÖREVLERİ EKLEDIKTEN SONRA OLUŞTURULABİLİR (görev oluştur, sonra "alt görev" butonuyla parçala)</div>
     <button class="btn primary fw" onclick="addTask()">+ GÖREVE EKLE</button>
   </div>
   <div class="block">
@@ -521,16 +680,41 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
 <!-- ══════════ PAGE: STATS ══════════ -->
 <div id="page-stats" class="page">
+
+  <!-- HAFTALIK KARŞILAŞTIRMA -->
   <div class="block">
-    <div class="blabel">■ Haftalık Odaklanma</div>
+    <div class="blabel">■ Haftalık Karşılaştırma</div>
+    <div id="week-compare-cards" class="stat-grid" style="margin-top:0;margin-bottom:10px"></div>
     <div id="chart-wrap">
-      <canvas id="focus-chart" width="600" height="180"></canvas>
-      <div class="chart-legend">
-        <span>HAFTANIN GÜNLERİ</span>
-        <span>SAAT (FOCUS)</span>
+      <canvas id="focus-chart" width="600" height="160"></canvas>
+      <div class="chart-legend" id="focus-chart-legend">
+        <span>BU HAFTA</span><span>GEÇEN HAFTA</span><span>SAAT (FOCUS)</span>
       </div>
     </div>
   </div>
+
+  <!-- DERS BAZLI KIRILIM -->
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Ders Bazlı Kırılım</div>
+      <div style="display:flex;gap:4px">
+        <button class="fbtn active" id="sbr-7"  onclick="setSubjectRange(7,this)">7G</button>
+        <button class="fbtn"        id="sbr-30" onclick="setSubjectRange(30,this)">30G</button>
+        <button class="fbtn"        id="sbr-90" onclick="setSubjectRange(90,this)">90G</button>
+      </div>
+    </div>
+    <canvas id="subject-chart" style="width:100%;height:200px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div id="subject-legend" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+
+  <!-- AYLIK TREND -->
+  <div class="block">
+    <div class="blabel">■ Aylık Focus Trendi (30 Gün)</div>
+    <canvas id="monthly-chart" style="width:100%;height:130px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div class="chart-legend" style="margin-top:4px"><span>SON 30 GÜN</span><span>GÜN BAŞI ORTALAMA</span></div>
+  </div>
+
+  <!-- SÜREKLILIK & ZORLUK -->
   <div class="block">
     <div class="blabel">■ Süreklilik & Zorluk</div>
     <div class="stat-grid">
@@ -552,6 +736,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
     </div>
   </div>
+
+  <!-- TOPLAM İSTATİSTİKLER -->
   <div class="block">
     <div class="blabel">■ Toplam İstatistikler</div>
     <div class="stat-grid">
@@ -573,9 +759,55 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
     </div>
   </div>
+
+  <!-- EN VERİMLİ DERS -->
+  <div class="block">
+    <div class="blabel">■ Ders Raporu (Bu Hafta)</div>
+    <div id="subject-report-list"></div>
+    <div id="subject-report-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz ders seçilmemiş — timer'dan ders seç ve çalış.</div>
+  </div>
+
 </div>
 
-<!-- ══════════ PAGE: LOG ══════════ -->
+<!-- ══════════ PAGE: SHOP ══════════ -->
+<div id="page-shop" class="page">
+  <div class="block">
+    <div class="blabel">■ Coin Bakiyesi</div>
+    <div class="shop-balance">
+      <div>
+        <div class="shop-balance-lbl">⚡ Harcanabilir XP</div>
+        <div class="shop-balance-num" id="shop-balance">0</div>
+      </div>
+      <div style="text-align:right">
+        <div class="shop-balance-lbl">∑ Toplam Kazanılan</div>
+        <div style="font-family:'Orbitron',monospace;font-size:14px;color:var(--bright);margin-top:4px"><span id="shop-total-xp">0</span> XP</div>
+      </div>
+    </div>
+    <div style="font-size:8px;color:var(--gray);letter-spacing:1px;line-height:1.7">
+      Toplam kazandığın XP'nin <b style="color:var(--bright)">harcanmamış kısmını</b> burada kullan.<br>
+      Boost'lar geçici, temalar ve avatar süslemeleri kalıcıdır.
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Temalar</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Cihaz arayüzünün renk paletini değiştirir. Kalıcı, bir kere al — istediğin zaman aktif et.</div>
+    <div class="shop-grid" id="shop-themes"></div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Boost'lar (Geçici)</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Her satın alımda anında aktive olur. Tek seferlik.</div>
+    <div class="shop-grid" id="shop-boosts"></div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Avatar / Süsleme (Kalıcı)</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Level rozetinin üzerinde gösterilir. Bir kere al.</div>
+    <div class="shop-grid" id="shop-cosmetics"></div>
+  </div>
+</div>
+
 <div id="page-log" class="page">
   <div class="block">
     <div class="blabel">■ Boss Yenildi</div>
@@ -641,10 +873,68 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <div class="brow"><button class="btn danger" onclick="execFullReset()">✓ EVET SİL</button><button class="btn" onclick="hideEl('conf-full')">✕ İPTAL</button></div>
       </div>
     </div>
+    <div class="ssec">
+      <div class="slbl">Bildirim & Ses</div>
+      <div class="bio-item" onclick="toggleSound()" style="cursor:pointer">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">🔔 Session Zili</span>
+        <span id="sound-val" class="bio-val on">AÇIK</span>
+      </div>
+      <div class="bio-item" onclick="requestNotifPermission()" style="cursor:pointer">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📲 Tarayıcı Bildirimi</span>
+        <span id="notif-val" class="bio-val off">KAPALI</span>
+      </div>
+      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Zil: session/mola bitince + hatırlatıcı tetiklenince. Bildirim izni hatırlatıcılar için.</div>
+    </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v5.0 // TR-1<br>Samsung Galaxy Tab S9 FE optimize<br>Samsung Internet → Ana Ekrana Ekle</div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v6.0 // TR-1<br>Samsung Galaxy Tab S9 FE optimize<br>Samsung Internet → Ana Ekrana Ekle</div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: HABITS ══════════ -->
+<div id="page-habits" class="page">
+  <div class="block">
+    <div class="blabel">■ Alışkanlık Ekle</div>
+    <div style="margin-bottom:8px"><div class="ilabel">ALIŞKANLIK ADI *</div><input class="inp" id="inp-habit-name" placeholder="Örn: 5dk meditasyon, 20 şınav..." onkeydown="if(event.key==='Enter')addHabit()"></div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">XP ÖDÜLÜ</div><input class="inp" id="inp-habit-xp" type="number" min="5" max="200" value="30"></div>
+      <div class="igrp"><div class="ilabel">TİP</div>
+        <select class="inp" id="inp-habit-type" onchange="toggleHabitNumericOpts()">
+          <option value="boolean">✓/✕ Tik-Çarpı</option>
+          <option value="numeric">📊 Sayısal</option>
+        </select>
+      </div>
+    </div>
+    <div id="habit-numeric-opts" style="display:none" class="irow mb8">
+      <div class="igrp"><div class="ilabel">HEDEFİN ALTINDA İYİ? (örn. ekran süresi)</div>
+        <select class="inp" id="inp-habit-lower-better">
+          <option value="0">Hayır (daha fazla = iyi)</option>
+          <option value="1">Evet (daha az = iyi)</option>
+        </select>
+      </div>
+      <div class="igrp"><div class="ilabel">HEDEFLEDİĞİN DEĞER</div><input class="inp" id="inp-habit-target" type="number" min="1" value="60" placeholder="Örn: 60 dakika"></div>
+    </div>
+    <button class="btn primary fw" onclick="addHabit()">+ ALIŞKANLIK EKLE</button>
+  </div>
+  <div class="block">
+    <div class="fbet mb12">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Günlük Alışkanlıklar</div>
+      <div style="font-size:8px;color:var(--muted)">✓ <span id="habits-done-today">0</span> bugün</div>
+    </div>
+    <div id="habit-list"></div>
+    <div id="habit-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:16px 0;display:none">Alışkanlık yok — yukarıdan ekle.</div>
+  </div>
+  <!-- MONTHLY HABIT CALENDAR -->
+  <div class="block" id="habit-calendar-block" style="display:none">
+    <div class="blabel">■ Aylık Takip Takvimi</div>
+    <div id="habit-calendar-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div id="habit-calendar-grid"></div>
+  </div>
+  <!-- NUMERIC HABIT CHARTS -->
+  <div class="block" id="habit-charts-block" style="display:none">
+    <div class="blabel">■ Sayısal Alışkanlık Grafikleri</div>
+    <div id="habit-charts-container"></div>
   </div>
 </div>
 
@@ -695,7 +985,76 @@ const BADGES = [
   {id:'slayer',     icon:'⚔️', name:'BOSS SLAYER',    desc:'Toplam 3 boss yenildi', type:'permanent', trig:'auto'},
   {id:'scholar',    icon:'📚', name:'WAR SCHOLAR',    desc:'5 farklı konu çalış',   type:'permanent', trig:'auto'},
   {id:'tasklegend', icon:'🗂',  name:'TASK LEGEND',    desc:'Toplam 20 task bitti',  type:'permanent', trig:'auto'},
+  // Habit badges
+  {id:'habit7',     icon:'🔗', name:'CHAIN KEEPER',   desc:'7 gün üst üste habit',  type:'permanent', trig:'auto'},
+  {id:'habit21',    icon:'🧬', name:'NEURAL LOCK',    desc:'21 gün üst üste habit', type:'permanent', trig:'auto'},
+  {id:'habit30',    icon:'💎', name:'DIAMOND HABIT',  desc:'30 gün üst üste habit', type:'permanent', trig:'auto'},
+  {id:'habit5all',  icon:'🌐', name:'FULL SPECTRUM',  desc:'5+ habiti aynı gün yap',type:'permanent', trig:'auto'},
+  {id:'disciplined',icon:'⚙', name:'DISCIPLINED',    desc:'Tüm habitleri 3 gün art',type:'permanent', trig:'auto'},
+  {id:'screenguard',icon:'🛡', name:'SCREEN GUARD',   desc:'Ekran süresini 3 gün tut',type:'permanent',trig:'auto'},
 ];
+
+// ════════════════════════════════════════
+// SHOP CATALOG
+// ════════════════════════════════════════
+const SHOP_ITEMS = [
+  // THEMES (permanent palette swaps)
+  {id:'theme_crimson', cat:'theme', icon:'🩸', name:'CRIMSON', desc:'Kanlı kırmızı agresif palet',  cost:800},
+  {id:'theme_cyber',   cat:'theme', icon:'🔷', name:'CYBER',   desc:'Buz mavisi neon ton',          cost:1000},
+  {id:'theme_toxic',   cat:'theme', icon:'☢',  name:'TOXIC',   desc:'Zehir yeşili — radyoaktif',    cost:1200},
+  {id:'theme_amber',   cat:'theme', icon:'🟧', name:'AMBER',   desc:'Sıcak amber CRT terminali',    cost:900},
+  {id:'theme_violet',  cat:'theme', icon:'🟣', name:'VIOLET',  desc:'Derin mor — gece yarısı',      cost:1500},
+  // BOOSTS (one-shot, time-limited)
+  {id:'boost_xp1h',  cat:'boost', icon:'⚡',  name:'2X XP — 1H',  desc:'1 saat boyunca tüm XP 2 kat', cost:600,  duration:3600},
+  {id:'boost_xp30',  cat:'boost', icon:'🔥',  name:'2X XP — 30D', desc:'30 dk içinde kazanılan XP 2 katı', cost:350, duration:1800},
+  {id:'boost_shield',cat:'boost', icon:'🛡',  name:'KALKAN — 2H', desc:'2 saat boss saldırısını engelle', cost:500, duration:7200, shield:true},
+  // COSMETICS (permanent badge decoration)
+  {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Level rozeti yanında 💀', cost:700},
+  {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Level rozeti yanında ⚡', cost:550},
+  {id:'cos_crown',   cat:'cosmetic', icon:'👑', name:'TAÇ',          desc:'Level rozeti yanında 👑', cost:2000},
+  {id:'cos_diamond', cat:'cosmetic', icon:'💎', name:'ELMAS',        desc:'Level rozeti yanında 💎', cost:1500},
+];
+
+// ════════════════════════════════════════
+// AUDIO (Web Audio API — bell sound, no asset needed)
+// ════════════════════════════════════════
+let _audioCtx = null;
+function getAudioCtx(){
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    catch(e){ _audioCtx = null; }
+  }
+  return _audioCtx;
+}
+function playBell(kind){
+  // kind: 'focus_end' | 'break_end' | 'reminder' | 'aggro'
+  if (S.soundEnabled === false) return;
+  const ctx = getAudioCtx(); if (!ctx) return;
+  try {
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    // Profile by kind
+    let freqs, dur, type='sine';
+    if (kind === 'focus_end')   { freqs=[880, 1318]; dur=1.6; }    // A5 + E6 — bright pleasant bell
+    else if (kind === 'break_end') { freqs=[523, 659];  dur=1.4; } // C5 + E5 — softer
+    else if (kind === 'reminder')  { freqs=[1046, 1568]; dur=0.9; }// C6 + G6 — alert ding
+    else if (kind === 'aggro')     { freqs=[220, 196];  dur=1.2; type='triangle'; } // low growl
+    else { freqs=[800]; dur=0.6; }
+    freqs.forEach((f,i)=>{
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.value = f;
+      o.connect(g); g.connect(ctx.destination);
+      // bell-like envelope: quick attack, slow decay
+      g.gain.setValueAtTime(0, now + i*0.05);
+      g.gain.linearRampToValueAtTime(0.22, now + i*0.05 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.05 + dur);
+      o.start(now + i*0.05);
+      o.stop(now + i*0.05 + dur + 0.05);
+    });
+  } catch(e){ /* silent fail */ }
+}
 
 // ════════════════════════════════════════
 // STATE
@@ -717,12 +1076,30 @@ function defState() {
     logEntries:[], tasks:[],
     tasksDoneTotal:0, tasksDoneToday:0,
     lastDate:today(),
-    // NEW: streak system
+    // streak system
     dayStreak:0, bestStreak:0, lastGoalHitDate:null,
-    // NEW: focus history for analytics — array of {date,focusSecs}
+    // focus history for analytics
     focusHistory:[],
-    // NEW: today's focus accumulator (carried into history at day rollover)
     todayFocusSecs:0,
+    // habit tracker
+    habits:[],
+    // subject tracking
+    activeSubject:'',
+    subjectLog:{},
+    // ── NEW v6: BOSS AGGRESSION ──
+    bossDefeated:false,           // current boss defeated flag
+    lastFocusEnd:null,            // ms timestamp of last completed focus
+    bossAggroLastHit:null,        // ms timestamp of last boss aggression damage
+    // ── NEW v6: SHOP / INVENTORY ──
+    spentXp:0,                    // total XP spent in shop
+    inventory:[],                 // array of owned item ids
+    equippedTheme:'default',
+    equippedCosmetic:null,
+    boostUntil:null,              // ms timestamp; 2X XP boost expires at
+    soundEnabled:true,            // bell on/off
+    notifEnabled:false,           // browser notifications permission cached
+    // ── NEW v6: REMINDERS ──
+    remindersFired:{},            // {date: [taskId,...]} fired today
   };
 }
 
@@ -771,7 +1148,25 @@ function loadState() {
       // ── RECURRING TASK REGENERATION ──
       const dow = new Date().getDay(); // 0=Sun..6=Sat
       const isWeekday = (dow >= 1 && dow <= 5);
+      // ── HABIT STREAK RESET (missed yesterday = streak break) ──
+      const _yest = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+      S.habits = (saved.habits||[]).map(h => {
+        // migrate old habits that have no htype
+        if(!h.htype) h.htype='boolean';
+        if(!h.log) h.log={};
+        // if completed yesterday, copy to log
+        const _yest2=(()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+        if(h.lastCompleted===_yest2 && h.htype==='boolean' && !h.log[_yest2]) h.log[_yest2]=1;
+        if(h.streak > 0 && h.lastCompleted && h.lastCompleted !== _yest) {
+          return Object.assign({},h,{streak:0});
+        }
+        return h;
+      });
       S.tasks = (saved.tasks||[]).map(tk => {
+        // ── migrate: ensure subtasks array & subOpen flag exist ──
+        if (!Array.isArray(tk.subtasks)) tk.subtasks = [];
+        if (typeof tk.subOpen !== 'boolean') tk.subOpen = false;
+        if (typeof tk.reminderTime === 'undefined') tk.reminderTime = null;
         const rec = tk.recurring || 'none';
         let resetIt = false;
         if (tk.done && rec !== 'none') {
@@ -786,7 +1181,11 @@ function loadState() {
             }
           }
         }
-        if (resetIt) return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false});
+        if (resetIt) {
+          // also reset subtasks
+          const resetSubs = (tk.subtasks||[]).map(s=>Object.assign({},s,{done:false}));
+          return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false,subtasks:resetSubs});
+        }
         if (!tk.done && tk.deadline && tk.deadline < t && rec === 'none') return Object.assign({},tk,{overdue:true});
         return tk;
       });
@@ -826,6 +1225,12 @@ function goTab(btn, name) {
   g('content').scrollTop=0;
   // STATS tab: canvas needs a real size before drawing — defer
   if (name === 'stats') setTimeout(()=>{ try{ renderStats(); }catch(e){} }, 40);
+  // HABITS tab: charts need layout
+  if (name === 'habits') setTimeout(()=>{ try{ renderHabitCharts(); drawCalendar(_calHabitId); }catch(e){} }, 40);
+  // SHOP tab
+  if (name === 'shop') setTimeout(()=>{ try{ renderShop(); }catch(e){} }, 20);
+  // Resume audio context on tap (mobile policy)
+  try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
 }
 
 // ════════════════════════════════════════
@@ -852,10 +1257,19 @@ function addLog(msg){ S.logEntries.unshift({t:nowStr(),msg});if(S.logEntries.len
 // XP & LEVEL
 // ════════════════════════════════════════
 function addXP(amt, label) {
+  // ── 2X XP BOOST multiplier (if active) ──
+  let mul = 1;
+  if (S.boostUntil && Date.now() < S.boostUntil) {
+    mul = 2;
+  } else if (S.boostUntil && Date.now() >= S.boostUntil) {
+    // boost expired — clear silently
+    S.boostUntil = null;
+  }
+  const finalAmt = Math.round(amt * mul);
   const goal = getDailyGoal();
   const wasAtGoal = S.xp >= goal;
-  S.xp = Math.min(S.xp + amt, goal);
-  S.totalXp = (S.totalXp||0) + amt;
+  S.xp = Math.min(S.xp + finalAmt, goal);
+  S.totalXp = (S.totalXp||0) + finalAmt;
   // ── STREAK: just hit the goal? ──
   if (!wasAtGoal && S.xp >= goal) {
     if (S.lastGoalHitDate !== today()) {
@@ -866,8 +1280,8 @@ function addXP(amt, label) {
       addLog('Streak: '+S.dayStreak+' gün.');
     }
   }
-  save(); showXpPop(amt); renderXP(); renderStreak();
-  if(label) addLog(label+': +'+amt+' XP');
+  save(); showXpPop(finalAmt); renderXP(); renderStreak();
+  if(label) addLog(label+': +'+finalAmt+' XP'+(mul>1?' (2X)':''));
   if(S.xp >= goal) earnBadge('titan_b');
 }
 
@@ -885,7 +1299,13 @@ function renderXP() {
   g('xp-goal').textContent = goal;
   g('xp-bar').style.width = Math.min(S.xp/goal*100,100)+'%';
   const lv = getLevel(S.xp), idx = LEVELS.indexOf(lv);
-  g('level-num').textContent = idx+1;
+  // ── COSMETIC next to level number ──
+  let cosIcon = '';
+  if (S.equippedCosmetic) {
+    const c = SHOP_ITEMS.find(x=>x.id===S.equippedCosmetic);
+    if (c) cosIcon = ' '+c.icon;
+  }
+  g('level-num').textContent = (idx+1) + cosIcon;
   g('level-title').textContent = lv.title;
   g('level-next').textContent = lv.next ? 'Sonraki: '+lv.next+' ('+(lv.nextMin-S.xp)+' XP)' : '// MAX RANK';
   // ── Dynamic tier badge ──
@@ -930,6 +1350,7 @@ function renderCumulative() {
 // TIMER
 // ════════════════════════════════════════
 let timerRunning=false, isBreak=false, timerSecs=0, timerIv=null;
+let timerEndAt=null; // wall-clock ms when current countdown expires
 
 function initTimer(){ timerSecs=S.focusMin*60; syncTimerInputs(); renderTimer(); }
 
@@ -937,19 +1358,20 @@ function syncTimerInputs(){
   g('inp-focus').value=S.focusMin; g('inp-break').value=S.breakMin;
   g('set-focus').value=S.focusMin; g('set-break').value=S.breakMin;
   g('timer-cfg-lbl').textContent=S.focusMin+'dk/'+S.breakMin+'dk';
+  const ss=g('sel-subject'); if(ss) ss.value=S.activeSubject||'';
 }
 
 function toggleTimer(){
   if(timerRunning){
-    clearInterval(timerIv); timerRunning=false;
+    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
   } else {
-    // starting a new focus session cancels leak
     if (!isBreak) stopLeak();
     if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
     timerRunning=true;
+    timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
     g('btn-start').textContent='⏸ PAUSE';
     const fb=g('fs-btn-start'); if(fb) fb.textContent='⏸ PAUSE';
     setStatus(isBreak?'break':'active');
@@ -959,13 +1381,28 @@ function toggleTimer(){
 }
 
 function tickTimer(){
-  timerSecs--;
-  // accumulate today's focus seconds while in focus
-  if (!isBreak && timerRunning) {
-    S.todayFocusSecs = (S.todayFocusSecs||0) + 1;
+  // wall-clock based: immune to background throttling
+  const prev = timerSecs;
+  if(timerEndAt){
+    timerSecs = Math.max(0, Math.round((timerEndAt - Date.now()) / 1000));
+  } else {
+    timerSecs = Math.max(0, timerSecs - 1);
+  }
+  // credit focus seconds accurately (may be >1 if tabs were throttled)
+  if(!isBreak && timerRunning){
+    const elapsed = Math.max(0, prev - timerSecs);
+    if(elapsed > 0){
+      S.todayFocusSecs = (S.todayFocusSecs||0) + elapsed;
+      // subject-level logging
+      const subj = S.activeSubject||'Genel';
+      const t = today();
+      if(!S.subjectLog) S.subjectLog={};
+      if(!S.subjectLog[t]) S.subjectLog[t]={};
+      S.subjectLog[t][subj] = (S.subjectLog[t][subj]||0) + elapsed;
+    }
   }
   if(timerSecs<=0){
-    clearInterval(timerIv); timerRunning=false;
+    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     const fsBtn = g('fs-btn-start'); if (fsBtn) fsBtn.textContent='▶ START';
     if(!isBreak){
@@ -973,8 +1410,12 @@ function tickTimer(){
       S.sessions++; S.streak++; S.kills++;
       g('session-count').textContent=S.sessions;
       renderCumulative();
+      // ── BELL: focus session ended ──
+      playBell('focus_end');
+      // ── BOSS aggro reset: just worked ──
+      S.lastFocusEnd = Date.now();
       addXP(150,'Session tamamlandı');
-      notify('SESSION COMPLETE // +150 XP // MOLAYA GEÇ');
+      notify('🔔 SESSION COMPLETE // +150 XP // MOLAYA GEÇ');
       if(S.streak>=3) earnBadge('streak');
       if(S.sessions>=5) earnBadge('iron');
       if(S.sessions>=3) earnBadge('overdrive');
@@ -982,16 +1423,33 @@ function tickTimer(){
     } else {
       S.cumBreakSecs=(S.cumBreakSecs||0)+S.breakMin*60;
       renderCumulative();
-      notify('⚠ MOLA BİTTİ // YENİ OTURUM BAŞLAT');
+      // ── BELL: break ended ──
+      playBell('break_end');
+      notify('🔔 MOLA BİTTİ // YENİ OTURUM BAŞLAT');
       addLog('Mola tamamlandı.');
       isBreak=false; timerSecs=S.focusMin*60; setStatus('standby');
-      // ── DEBUFF: start leak countdown if no new session begins ──
       startLeak();
     }
     save();
   }
   renderTimer();
 }
+
+// ── BACKGROUND CATCH-UP ──
+// When app returns to foreground, sync timer to wall-clock and complete if expired
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && timerRunning && timerEndAt){
+    const remaining = Math.round((timerEndAt - Date.now()) / 1000);
+    if(remaining <= 0){
+      // timer finished in background — trigger completion now
+      timerSecs = 0;
+      tickTimer();
+    } else {
+      timerSecs = remaining;
+      renderTimer();
+    }
+  }
+});
 
 // ════════════════════════════════════════
 // DEBUFF / LEAK SYSTEM
@@ -1027,7 +1485,7 @@ function stopLeak(){
 }
 
 function resetTimer(){
-  clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0;
+  clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0; timerEndAt=null;
   stopLeak();
   timerSecs=S.focusMin*60;
   g('btn-start').textContent='▶ START';
@@ -1134,23 +1592,53 @@ function setBoss(){
   const n=g('inp-boss-name').value.trim(); if(!n)return;
   const h=Math.min(100,Math.max(0,parseInt(g('inp-boss-hp').value)||100));
   S.bossName=n.toUpperCase(); S.bossHp=h;
+  S.bossDefeated = (h<=0);           // new boss alive unless HP set to 0
+  S.bossAggroLastHit = null;
+  S.lastFocusEnd = Date.now();       // give grace period to start working
   g('inp-boss-name').value=''; g('inp-boss-hp').value='';
   hideEl('boss-edit'); renderBoss(); save(); addLog('Boss: '+n+' HP:'+h+'%');
 }
 
 function renderBoss(){
-  g('boss-name').textContent=S.bossName;
+  const panel = g('boss-panel');
+  g('boss-name').textContent=S.bossName + (S.bossDefeated ? ' ✓' : '');
   g('boss-hp-fill').style.width=S.bossHp+'%';
-  g('boss-hp-fill').style.background=S.bossHp>30?'var(--bright)':'var(--red)';
+  g('boss-hp-fill').style.background=S.bossDefeated?'var(--green)':(S.bossHp>30?'var(--bright)':'var(--red)');
   g('boss-hp-val').textContent=S.bossHp;
+  if (panel) {
+    if (S.bossDefeated) panel.classList.add('defeated');
+    else panel.classList.remove('defeated');
+  }
+  // hide aggro when defeated
+  if (S.bossDefeated) {
+    const aggro = g('boss-aggro'); if (aggro) aggro.classList.remove('show');
+  }
 }
 
-function dmgBoss(d){ S.bossHp=Math.max(0,S.bossHp-d); renderBoss(); save(); }
+function dmgBoss(d){
+  if (S.bossDefeated) { notify('Boss zaten yenildi.'); return; }
+  S.bossHp=Math.max(0,S.bossHp-d);
+  if (S.bossHp === 0) {
+    // auto-defeat trigger
+    defeatBoss();
+    return;
+  }
+  renderBoss(); save();
+}
 
 function defeatBoss(){
+  if (S.bossHp <= 0 && S.bossDefeated) {
+    notify('⚔ ZATEN YENİLDİ — YENİ BOSS BELİRLE');
+    return;
+  }
   const num=S.bossLog.length+1;
   S.bossLog.push({num,name:S.bossName,time:nowStr(),date:today()});
-  S.bossHp=0; renderBoss(); save();
+  S.bossHp=0;
+  S.bossDefeated=true;             // ── NEW: stop aggression damage ──
+  S.bossAggroLastHit=null;         // reset aggro timer
+  renderBoss(); save();
+  // hide any active aggro warning
+  const aggro = g('boss-aggro'); if (aggro) aggro.classList.remove('show');
   addXP(100,'Boss yenildi');
   notify('⚔ BOSS YENİLDİ: '+S.bossName);
   addLog('Boss yenildi: '+S.bossName);
@@ -1303,6 +1791,7 @@ function addTask(){
   const title=g('inp-task-title').value.trim();
   if(!title){notify('GÖREV ADI GİR!');return;}
   const deadline=g('inp-task-date').value;
+  const reminderTime = (g('inp-task-time')||{}).value || '';
   const xpAmt=Math.max(10,Math.min(500,parseInt(g('inp-task-xp').value)||50));
   const priority=g('inp-task-prio').value;
   const recurring = _recurChoice || 'none';
@@ -1310,19 +1799,74 @@ function addTask(){
   S.tasks.unshift({
     id:Date.now(), title,
     deadline: (recurring==='none' ? (deadline||null) : null),
+    reminderTime: reminderTime || null,
     xp:xpAmt, priority, recurring,
     done:false,
     overdue: !!(recurring==='none' && deadline && deadline<t),
     createdAt:t, doneAt:null, doneDate:null,
-    createdDow: new Date().getDay()
+    createdDow: new Date().getDay(),
+    subtasks: [],          // NEW: subtask list
+    subOpen: false,        // NEW: UI expanded state
   });
-  g('inp-task-title').value=''; g('inp-task-date').value=''; g('inp-task-xp').value='50'; g('inp-task-prio').value='med';
+  g('inp-task-title').value=''; g('inp-task-date').value='';
+  const ttEl = g('inp-task-time'); if (ttEl) ttEl.value='';
+  g('inp-task-xp').value='50'; g('inp-task-prio').value='med';
   // reset recur to "none"
   _recurChoice = 'none';
   document.querySelectorAll('.rec-btn').forEach(b=>{ b.classList.toggle('active', b.dataset.rec==='none'); });
+  // request notification permission on first reminder
+  if (reminderTime && 'Notification' in window && Notification.permission === 'default') {
+    requestNotifPermission();
+  }
   save(); renderTasks();
   const rlbl = recurring==='none' ? '' : ' ['+recurring.toUpperCase()+']';
-  addLog('Task: '+title+' ['+xpAmt+' XP]'+rlbl);
+  const rmlbl = reminderTime ? ' 🔔'+reminderTime : '';
+  addLog('Task: '+title+' ['+xpAmt+' XP]'+rlbl+rmlbl);
+}
+
+// ── SUB-TASKS ──
+function toggleSubtasksUI(id){
+  const tk = S.tasks.find(t=>t.id===id); if(!tk) return;
+  tk.subOpen = !tk.subOpen;
+  save(); renderTasks();
+}
+
+function addSubtask(taskId){
+  const inp = g('subtask-inp-'+taskId); if(!inp) return;
+  const title = inp.value.trim(); if(!title){notify('ALT GÖREV ADI GİR!');return;}
+  const tk = S.tasks.find(t=>t.id===taskId); if(!tk) return;
+  if (!tk.subtasks) tk.subtasks = [];
+  tk.subtasks.push({id:Date.now()+Math.floor(Math.random()*1000), title, done:false});
+  tk.subOpen = true;
+  inp.value = '';
+  save(); renderTasks();
+  // refocus input for fast entry
+  setTimeout(()=>{ const i=g('subtask-inp-'+taskId); if(i) i.focus(); }, 50);
+}
+
+function toggleSubtask(taskId, subId){
+  const tk = S.tasks.find(t=>t.id===taskId); if(!tk||!tk.subtasks) return;
+  const sub = tk.subtasks.find(s=>s.id===subId); if(!sub) return;
+  sub.done = !sub.done;
+  if (sub.done) {
+    // mini XP per subtask: 1/N of parent xp, rounded down (min 1)
+    const total = tk.subtasks.length || 1;
+    const xpEach = Math.max(1, Math.floor((tk.xp||50)/total/2)); // half-XP per sub; remainder on parent
+    addXP(xpEach, 'Alt görev: '+sub.title);
+  }
+  // auto-complete parent when all subtasks done
+  if (tk.subtasks.length>0 && tk.subtasks.every(s=>s.done) && !tk.done) {
+    notify('✦ TÜM ALT GÖREVLER TAMAM — Görev otomatik kapanıyor');
+    completeTask(taskId);
+    return;
+  }
+  save(); renderTasks();
+}
+
+function deleteSubtask(taskId, subId){
+  const tk = S.tasks.find(t=>t.id===taskId); if(!tk||!tk.subtasks) return;
+  tk.subtasks = tk.subtasks.filter(s=>s.id!==subId);
+  save(); renderTasks();
 }
 
 function completeTask(id){
@@ -1375,10 +1919,44 @@ function renderTasks(){
                 : rec==='weekday' ? '<span class="task-rec-tag weekday">📅 HAFTA İÇİ</span>'
                 : rec==='weekly' ? '<span class="task-rec-tag weekly">📆 HAFTALIK</span>'
                 : '';
+    const reminderTag = tk.reminderTime ? '<span class="task-reminder-tag">🔔 '+tk.reminderTime+'</span>' : '';
+    // ── SUBTASK SUMMARY ──
+    const subs = tk.subtasks || [];
+    const subDone = subs.filter(s=>s.done).length;
+    const subTotal = subs.length;
+    const subProgress = subTotal>0 ? '<span class="task-progress">'+subDone+'/'+subTotal+'</span>' : '';
+    const subPct = subTotal>0 ? Math.round(subDone/subTotal*100) : 0;
+    const subToggleLabel = (tk.subOpen?'▾':'▸') + ' ALT GÖREV ('+subTotal+')';
+    // ── SUBTASK UI ──
+    let subUI = '';
+    if (tk.subOpen) {
+      subUI = '<div class="subtask-wrap">';
+      if (subTotal>0) {
+        subUI += '<div class="subtask-bar"><div class="subtask-bar-fill" style="width:'+subPct+'%"></div></div>';
+        subUI += '<div class="subtask-list">';
+        subs.forEach(s=>{
+          subUI +=
+            '<div class="subtask-item'+(s.done?' done':'')+'">'+
+              '<div class="subtask-check'+(s.done?' done':'')+'" onclick="toggleSubtask('+tk.id+','+s.id+')">'+(s.done?'✓':'')+'</div>'+
+              '<div class="subtask-txt">'+escapeHtml(s.title)+'</div>'+
+              '<button class="subtask-del" onclick="deleteSubtask('+tk.id+','+s.id+')">✕</button>'+
+            '</div>';
+        });
+        subUI += '</div>';
+      }
+      if (!tk.done) {
+        subUI += '<div class="subtask-add-row">'+
+          '<input id="subtask-inp-'+tk.id+'" placeholder="+ Alt görev (ör: 10 test çöz)" onkeydown="if(event.key===\'Enter\')addSubtask('+tk.id+')">'+
+          '<button class="subtask-add-btn" onclick="addSubtask('+tk.id+')">EKLE</button>'+
+        '</div>';
+      }
+      subUI += '</div>';
+    }
     return '<div class="task-item '+cardCls+'">'+
       '<div class="task-hdr">'+
         '<div class="pdot '+prioCls+'"></div>'+
-        '<div class="task-txt'+(tk.done?' done-txt':'')+'">'+tk.title+'</div>'+
+        '<div class="task-txt'+(tk.done?' done-txt':'')+'">'+escapeHtml(tk.title)+'</div>'+
+        subProgress+
         '<span class="task-xp">'+tk.xp+' XP</span>'+
       '</div>'+
       '<div class="task-meta">'+
@@ -1386,14 +1964,25 @@ function renderTasks(){
         (dayTxt?'<span style="color:'+(days<0?'var(--red)':days<=1?'var(--yellow)':'var(--muted)')+'">'+dayTxt+'</span>':'')+
         (tk.done&&tk.doneAt?'<span>✓ '+tk.doneAt+'</span>':'')+
         (recTag?recTag:'')+
+        reminderTag+
         '<span class="task-st '+stCls+'">'+stLbl+'</span>'+
       '</div>'+
       '<div class="task-acts">'+
         (!tk.done?'<button class="task-btn ok" onclick="completeTask('+tk.id+')">✓ BİTTİ</button>':'')+
+        '<button class="task-toggle-sub" onclick="toggleSubtasksUI('+tk.id+')">'+subToggleLabel+'</button>'+
         '<button class="task-btn rm" onclick="deleteTask('+tk.id+')">✕ SİL</button>'+
       '</div>'+
+      subUI+
     '</div>';
   }).join('');
+}
+
+// Basic HTML escape for task & subtask titles (XSS guard)
+function escapeHtml(s){
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
 }
 
 // ════════════════════════════════════════
@@ -1485,8 +2074,661 @@ function execFullReset(){
   try{localStorage.removeItem(SK);}catch(e){}
   S=defState(); timerRunning=false; isBreak=false;
   clearInterval(timerIv); timerSecs=S.focusMin*60;
+  // reset theme
+  document.body.removeAttribute('data-theme');
   save(); renderAll(); hideEl('conf-full');
   notify('SİSTEM SIFIRLANDI');
+}
+
+// ════════════════════════════════════════
+// BOSS AGGRESSION (NEW v6)
+// ════════════════════════════════════════
+// Tunables
+const BOSS_AGGRO_WARN_HOURS = 4;   // start warning after N hours without focus
+const BOSS_AGGRO_HIT_HOURS  = 5;   // start damage after N hours without focus
+const BOSS_AGGRO_INTERVAL_MIN = 30; // hit every N minutes once active
+
+function bossAggroTick(){
+  // skip if boss already defeated or no boss configured (HP 0)
+  if (!S || S.bossDefeated || S.bossHp <= 0) {
+    const a = g('boss-aggro'); if (a) a.classList.remove('show');
+    return;
+  }
+  // skip if shield active
+  if (S.boostUntil && Date.now() < S.boostUntil && S.activeShield) {
+    return;
+  }
+  // skip if a focus is currently running (player IS working)
+  if (timerRunning && !isBreak) {
+    const a = g('boss-aggro'); if (a) a.classList.remove('show');
+    return;
+  }
+  const lastEnd = S.lastFocusEnd || null;
+  if (!lastEnd) {
+    // never worked yet — start grace period from app boot
+    S.lastFocusEnd = Date.now();
+    save();
+    return;
+  }
+  const hoursSince = (Date.now() - lastEnd) / 3600000;
+  const aggroEl = g('boss-aggro');
+  const aggroMsg = g('boss-aggro-msg');
+  // WARN phase
+  if (hoursSince >= BOSS_AGGRO_WARN_HOURS && hoursSince < BOSS_AGGRO_HIT_HOURS) {
+    if (aggroEl) aggroEl.classList.add('show');
+    if (aggroMsg) {
+      const remain = (BOSS_AGGRO_HIT_HOURS - hoursSince);
+      aggroMsg.innerHTML = 'Son focus üzerinden <b>'+hoursSince.toFixed(1)+'h</b> geçti. <b>'+remain.toFixed(1)+'h</b> sonra boss saldırmaya başlayacak.';
+    }
+    return;
+  }
+  // HIT phase
+  if (hoursSince >= BOSS_AGGRO_HIT_HOURS) {
+    if (aggroEl) aggroEl.classList.add('show');
+    const lastHit = S.bossAggroLastHit || lastEnd;
+    const minSinceHit = (Date.now() - lastHit) / 60000;
+    if (minSinceHit >= BOSS_AGGRO_INTERVAL_MIN) {
+      // Boss attacks: drain 30 XP + heal boss 5 HP (capped 100)
+      const drainAmt = 30;
+      const healAmt = 5;
+      drainXP(drainAmt, '⚔ BOSS SALDIRDI: -'+drainAmt+' XP');
+      S.bossHp = Math.min(100, S.bossHp + healAmt);
+      S.bossAggroLastHit = Date.now();
+      renderBoss(); save();
+      playBell('aggro');
+      notify('⚔ BOSS SALDIRDI! -'+drainAmt+' XP, boss +'+healAmt+' HP');
+      addLog('Boss saldırısı: -'+drainAmt+' XP, boss HP +'+healAmt);
+    }
+    if (aggroMsg) {
+      const nextIn = Math.max(0, BOSS_AGGRO_INTERVAL_MIN - minSinceHit);
+      aggroMsg.innerHTML = '<b>SALDIRI AKTİF.</b> Son saldırıdan <b>'+Math.round(minSinceHit)+'dk</b>. Sonraki saldırı: <b>'+Math.ceil(nextIn)+'dk</b>. Focus\'a başla, durdur!';
+    }
+    return;
+  }
+  // safe zone — hide
+  if (aggroEl) aggroEl.classList.remove('show');
+}
+
+// ════════════════════════════════════════
+// REMINDERS (NEW v6)
+// ════════════════════════════════════════
+function requestNotifPermission(){
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      S.notifEnabled = (p === 'granted');
+      save();
+      if (p === 'granted') notify('🔔 BİLDİRİMLER AÇILDI');
+    });
+  } else {
+    S.notifEnabled = (Notification.permission === 'granted');
+    save();
+  }
+}
+
+function fireReminder(task){
+  // record fired
+  const t = today();
+  if (!S.remindersFired) S.remindersFired = {};
+  if (!S.remindersFired[t]) S.remindersFired[t] = [];
+  if (S.remindersFired[t].includes(task.id)) return; // already fired
+  S.remindersFired[t].push(task.id);
+  save();
+  // play sound
+  playBell('reminder');
+  // in-app notify
+  notify('🔔 HATIRLATICI: '+task.title);
+  addLog('Hatırlatıcı: '+task.title+' ['+task.reminderTime+']');
+  // browser notification if permitted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('🔔 OVERCLOCK — '+task.title, {
+        body: 'Görev hatırlatması: ' + task.title + (task.deadline?'\nDeadline: '+task.deadline:''),
+        icon: 'data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>"),
+        tag: 'overclock-'+task.id,
+      });
+    } catch(e){}
+  }
+}
+
+function reminderTick(){
+  if (!S || !S.tasks) return;
+  const now = new Date();
+  const cur = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const t = today();
+  if (!S.remindersFired) S.remindersFired = {};
+  // clear old days from remindersFired
+  Object.keys(S.remindersFired).forEach(d => { if (d !== t) delete S.remindersFired[d]; });
+  S.tasks.forEach(tk => {
+    if (tk.done) return;
+    if (!tk.reminderTime) return;
+    if (tk.reminderTime !== cur) return;
+    // skip if fired today
+    if ((S.remindersFired[t]||[]).includes(tk.id)) return;
+    fireReminder(tk);
+  });
+}
+
+// ════════════════════════════════════════
+// SHOP / INVENTORY (NEW v6)
+// ════════════════════════════════════════
+function shopBalance(){ return Math.max(0, (S.totalXp||0) - (S.spentXp||0)); }
+
+function buyItem(id){
+  const item = SHOP_ITEMS.find(x=>x.id===id); if (!item) return;
+  // already owned (themes/cosmetics) → just equip
+  if (item.cat!=='boost' && (S.inventory||[]).includes(id)) {
+    if (item.cat === 'theme')    return equipTheme(id);
+    if (item.cat === 'cosmetic') return equipCosmetic(id);
+    return;
+  }
+  // afford check
+  if (shopBalance() < item.cost) {
+    notify('YETERSİZ XP // '+item.cost+' GEREKLİ');
+    return;
+  }
+  S.spentXp = (S.spentXp||0) + item.cost;
+  if (item.cat === 'boost') {
+    // activate immediately
+    const dur = item.duration || 3600;
+    S.boostUntil = Date.now() + dur*1000;
+    S.activeShield = !!item.shield;
+    notify('⚡ BOOST AKTİF: '+item.name);
+    addLog('Boost satın alındı: '+item.name);
+    playBell('reminder');
+  } else {
+    if (!S.inventory) S.inventory = [];
+    if (!S.inventory.includes(id)) S.inventory.push(id);
+    notify('✓ SATIN ALINDI: '+item.name);
+    addLog('Eşya: '+item.name+' (-'+item.cost+' XP)');
+    // auto-equip new theme/cosmetic
+    if (item.cat === 'theme')    equipTheme(id);
+    if (item.cat === 'cosmetic') equipCosmetic(id);
+  }
+  save(); renderShop(); renderXP(); renderBoostBanner();
+}
+
+function equipTheme(id){
+  if (id !== 'default' && !(S.inventory||[]).includes(id)) return;
+  S.equippedTheme = id;
+  applyTheme();
+  save(); renderShop();
+  notify('🎨 TEMA AKTİF');
+}
+
+function equipCosmetic(id){
+  if (id && !(S.inventory||[]).includes(id)) return;
+  S.equippedCosmetic = id || null;
+  save(); renderShop(); renderXP();
+}
+
+function applyTheme(){
+  const id = S.equippedTheme || 'default';
+  // strip prefix
+  const themeKey = id === 'default' ? '' : id.replace('theme_','');
+  if (themeKey) document.body.setAttribute('data-theme', themeKey);
+  else document.body.removeAttribute('data-theme');
+}
+
+function renderBoostBanner(){
+  const banner = g('boost-banner');
+  if (!banner) return;
+  if (!S.boostUntil || Date.now() >= S.boostUntil) {
+    banner.classList.remove('show');
+    if (S.boostUntil) { S.boostUntil = null; S.activeShield = false; save(); }
+    return;
+  }
+  const remainSec = Math.max(0, Math.round((S.boostUntil - Date.now())/1000));
+  const m = Math.floor(remainSec/60), s = remainSec%60;
+  const tEl = g('boost-time'); if (tEl) tEl.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const txtEl = g('boost-txt');
+  if (txtEl) txtEl.textContent = S.activeShield ? '🛡 KALKAN — BOSS SALDIRMAZ' : '⚡ 2X XP BOOST AKTİF';
+  banner.classList.add('show');
+}
+
+function renderShop(){
+  const balEl = g('shop-balance'); if (balEl) balEl.textContent = shopBalance();
+  const totEl = g('shop-total-xp'); if (totEl) totEl.textContent = S.totalXp||0;
+  const themesEl = g('shop-themes');
+  const boostsEl = g('shop-boosts');
+  const cosEl    = g('shop-cosmetics');
+  if (!themesEl || !boostsEl || !cosEl) return;
+
+  function renderItem(item){
+    const owned = (item.cat!=='boost') && (S.inventory||[]).includes(item.id);
+    const equipped = (item.cat==='theme' && S.equippedTheme===item.id) ||
+                     (item.cat==='cosmetic' && S.equippedCosmetic===item.id);
+    const canAfford = shopBalance() >= item.cost;
+    const cls = (equipped?'active-item':(owned?'owned':''));
+    let btnHtml='';
+    if (owned && item.cat==='theme') {
+      btnHtml = equipped
+        ? '<button class="shop-btn equipped" disabled>✓ AKTİF</button>'
+        : '<button class="shop-btn primary" onclick="equipTheme(\''+item.id+'\')">AKTİVE ET</button>';
+    } else if (owned && item.cat==='cosmetic') {
+      btnHtml = equipped
+        ? '<button class="shop-btn equipped" onclick="equipCosmetic(null)">✓ AKTİF — KALDIR</button>'
+        : '<button class="shop-btn primary" onclick="equipCosmetic(\''+item.id+'\')">TAK</button>';
+    } else {
+      // not owned (or boost — always available)
+      btnHtml = '<button class="shop-btn '+(canAfford?'primary':'locked')+'" '+(canAfford?'':'disabled ')+'onclick="buyItem(\''+item.id+'\')">'+(canAfford?'+ SATIN AL':'YETERSİZ XP')+'</button>';
+    }
+    let boostTag = '';
+    if (item.cat==='boost') {
+      const mins = Math.round((item.duration||3600)/60);
+      boostTag = '<div class="boost-tag">'+mins+'DK</div>';
+    }
+    // default "remove" entry for theme
+    return '<div class="shop-card '+cls+'">'+
+      boostTag+
+      '<div class="shop-icon">'+item.icon+'</div>'+
+      '<div class="shop-name">'+item.name+'</div>'+
+      '<div class="shop-desc">'+item.desc+'</div>'+
+      '<div class="shop-cost">'+item.cost+' XP</div>'+
+      btnHtml+
+    '</div>';
+  }
+
+  // default theme card (free, always available)
+  const defaultThemeCard = (()=>{
+    const eq = (S.equippedTheme==='default'||!S.equippedTheme);
+    return '<div class="shop-card owned '+(eq?'active-item':'')+'">'+
+      '<div class="shop-icon">⬛</div>'+
+      '<div class="shop-name">VARSAYILAN</div>'+
+      '<div class="shop-desc">Orijinal monokrom palet</div>'+
+      '<div class="shop-cost" style="color:var(--gray);border-color:var(--bd)">ÜCRETSİZ</div>'+
+      (eq
+        ? '<button class="shop-btn equipped" disabled>✓ AKTİF</button>'
+        : '<button class="shop-btn primary" onclick="equipTheme(\'default\')">AKTİVE ET</button>')+
+    '</div>';
+  })();
+
+  themesEl.innerHTML = defaultThemeCard + SHOP_ITEMS.filter(i=>i.cat==='theme').map(renderItem).join('');
+  boostsEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='boost').map(renderItem).join('') ||
+    '<div style="font-size:9px;color:var(--dim);padding:8px 0">Boost yok.</div>';
+  cosEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='cosmetic').map(renderItem).join('');
+}
+
+// ════════════════════════════════════════
+// HABITS
+// ════════════════════════════════════════
+function toggleHabitNumericOpts(){
+  const t=g('inp-habit-type').value;
+  g('habit-numeric-opts').style.display=(t==='numeric')?'flex':'none';
+}
+
+// selected calendar habit id
+let _calHabitId=null;
+
+function addHabit(){
+  const name = g('inp-habit-name').value.trim();
+  if(!name){ notify('ALIŞKANLIK ADI GİR!'); return; }
+  const xpAmt = Math.max(5, Math.min(200, parseInt(g('inp-habit-xp').value)||30));
+  const htype = g('inp-habit-type').value||'boolean';
+  if((S.habits||[]).some(h=>h.name.toLowerCase()===name.toLowerCase())){ notify('Bu alışkanlık zaten var!'); return; }
+  const h = {
+    id:Date.now(), name, xpReward:xpAmt, htype,
+    streak:0, bestStreak:0, lastCompleted:null,
+    // for numeric habits
+    target: htype==='numeric'?(parseInt(g('inp-habit-target').value)||60):null,
+    lowerBetter: htype==='numeric'?(g('inp-habit-lower-better').value==='1'):false,
+    log: {}, // date -> value
+  };
+  S.habits = [...(S.habits||[]), h];
+  g('inp-habit-name').value='';
+  g('inp-habit-xp').value='30';
+  g('inp-habit-type').value='boolean';
+  toggleHabitNumericOpts();
+  save(); renderHabits(); addLog('Alışkanlık eklendi: '+name);
+}
+
+function completeHabit(id){
+  const t = today();
+  const h = (S.habits||[]).find(h=>h.id===id);
+  if(!h || h.lastCompleted===t) return;
+  const _yest = yest();
+  if(h.lastCompleted===_yest) h.streak++;
+  else h.streak=1;
+  if(h.streak>(h.bestStreak||0)) h.bestStreak=h.streak;
+  h.lastCompleted=t;
+  if(!h.log) h.log={};
+  h.log[t]=1;
+  addXP(h.xpReward, 'Alışkanlık: '+h.name);
+  notify('✓ ALIŞKANLIK TAMAMLANDI // +'+h.xpReward+' XP');
+  checkHabitBadges(h);
+  save(); renderHabits();
+  addLog('Alışkanlık: '+h.name+' [streak: '+h.streak+']');
+}
+
+function submitNumericHabit(id){
+  const inp=g('habit-num-inp-'+id); if(!inp)return;
+  const val=parseFloat(inp.value);
+  if(isNaN(val)||val<0){ notify('GEÇERLİ BİR SAYI GİR!'); return; }
+  const t=today();
+  const h=(S.habits||[]).find(h=>h.id===id); if(!h)return;
+  if(!h.log) h.log={};
+  h.log[t]=val;
+  const _yest=yest();
+  if(h.lastCompleted!==t){
+    if(h.lastCompleted===_yest) h.streak++;
+    else h.streak=1;
+    if(h.streak>(h.bestStreak||0)) h.bestStreak=h.streak;
+    h.lastCompleted=t;
+    addXP(h.xpReward,'Alışkanlık: '+h.name);
+  }
+  // check screen guard badge if this habit is lower-better
+  if(h.lowerBetter){
+    let streak3=true;
+    for(let i=0;i<3;i++){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      const v=h.log[ds];
+      if(v===undefined||v>h.target) { streak3=false; break; }
+    }
+    if(streak3) earnBadge('screenguard');
+  }
+  checkHabitBadges(h);
+  notify('📊 KAYDEDİLDİ: '+val+(h.target?' / '+h.target:''));
+  save(); renderHabits(); renderHabitCharts();
+  addLog('Sayısal alışkanlık: '+h.name+' = '+val);
+}
+
+function yest(){
+  const d=new Date(); d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function checkHabitBadges(h){
+  if((h.streak||0)>=7)  earnBadge('habit7');
+  if((h.streak||0)>=21) earnBadge('habit21');
+  if((h.streak||0)>=30) earnBadge('habit30');
+  // Full spectrum: all boolean habits done today
+  const t=today();
+  const boolHabits=(S.habits||[]).filter(x=>x.htype==='boolean'||!x.htype);
+  if(boolHabits.length>=5 && boolHabits.every(x=>x.lastCompleted===t)) earnBadge('habit5all');
+  // Disciplined: all habits done 3 days in a row
+  let disc=true;
+  for(let i=0;i<3;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(!(S.habits||[]).every(x=>{
+      if(!x.log) return false;
+      if(x.htype==='boolean'||!x.htype) return x.log[ds]===1||(x.lastCompleted===ds);
+      return x.log[ds]!==undefined;
+    })){ disc=false; break; }
+  }
+  if(disc&&(S.habits||[]).length>=3) earnBadge('disciplined');
+}
+
+function deleteHabit(id){
+  S.habits=(S.habits||[]).filter(h=>h.id!==id);
+  if(_calHabitId===id) _calHabitId=null;
+  save(); renderHabits();
+  addLog('Alışkanlık silindi.'); notify('ALIŞKANLIK SİLİNDİ');
+}
+
+function renderHabits(){
+  const listEl=g('habit-list'); if(!listEl) return;
+  const emptyEl=g('habit-empty');
+  const habits=S.habits||[];
+  const t=today();
+  const doneCount=habits.filter(h=>h.lastCompleted===t).length;
+  const doneEl=g('habits-done-today'); if(doneEl) doneEl.textContent=doneCount;
+  if(!habits.length){
+    listEl.innerHTML=''; emptyEl.style.display='block';
+    g('habit-calendar-block').style.display='none';
+    g('habit-charts-block').style.display='none';
+    return;
+  }
+  emptyEl.style.display='none';
+
+  // habit list
+  listEl.innerHTML='';
+  habits.forEach(h=>{
+    const done=h.lastCompleted===t;
+    const fireStreak=(h.streak||0)>=3;
+    const isNum=h.htype==='numeric';
+    const todayVal=h.log?h.log[t]:undefined;
+    const item=document.createElement('div');
+    item.className='habit-item'+(done?' done':'');
+    let statusLine='';
+    if(isNum){
+      statusLine=todayVal!==undefined
+        ?'<span style="font-size:8px;color:var(--green);letter-spacing:1px">📊 '+todayVal+(h.target?' / '+h.target:'')+'</span>'
+        :'<span style="font-size:8px;color:var(--muted)">'+( h.target?'hedef: '+h.target:'')+'</span>';
+    }
+    item.innerHTML=
+      '<div class="habit-top">'+
+        '<div class="habit-check'+(done?' done':'')+'">'+( done?'✓':'')+'</div>'+
+        '<div class="habit-name">'+h.name+'<div style="font-size:8px;color:var(--muted);margin-top:3px;letter-spacing:1px">'+h.xpReward+' XP / gün &nbsp;'+(isNum?'📊 Sayısal':'')+'</div>'+statusLine+'</div>'+
+        '<div class="habit-streak">'+
+          '<div class="habit-streak-num'+(fireStreak?' fire':'')+'">'+( h.streak||0)+'</div>'+
+          '<div class="habit-streak-lbl">'+(fireStreak?'🔥 ':'')+'STREAK</div>'+
+        '</div>'+
+      '</div>'+
+      (isNum
+        ?(done&&todayVal!==undefined
+          ?'<div class="habit-num-row" style="padding:6px 14px"><span style="font-size:9px;color:var(--green);flex:1">✓ BUGÜN: '+todayVal+(h.target?' / '+h.target:'')+'</span><button class="habit-num-btn" onclick="deleteHabit('+h.id+')">✕ SİL</button></div>'
+          :'<div class="habit-num-row"><input id="habit-num-inp-'+h.id+'" type="number" min="0" placeholder="değer gir..." style="flex:1;font-family:\'Share Tech Mono\',monospace;font-size:11px;padding:6px 10px;background:var(--mid);border:1px solid var(--bd);color:var(--bright);outline:none;min-height:32px;text-align:center;letter-spacing:1px"><button class="habit-num-btn" onclick="submitNumericHabit('+h.id+')">✓ KAYDET</button><button class="habit-num-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteHabit('+h.id+')">✕</button></div>')
+        :'<div class="habit-btns">'+
+          (!done
+            ?'<button class="habit-act ok" onclick="completeHabit('+h.id+')">✓ TAMAMLA (+'+h.xpReward+' XP)</button>'
+            :'<span class="habit-act" style="color:var(--green);cursor:default">✓ BUGÜN TAMAMLANDI</span>')+
+          '<button class="habit-act del" onclick="deleteHabit('+h.id+')">✕ SİL</button>'+
+        '</div>');
+    listEl.appendChild(item);
+  });
+
+  // show / update calendar
+  renderHabitCalendar();
+  renderHabitCharts();
+}
+
+function renderHabitCalendar(){
+  const boolHabits=(S.habits||[]).filter(h=>h.htype==='boolean'||!h.htype);
+  const calBlock=g('habit-calendar-block');
+  if(!boolHabits.length){ if(calBlock) calBlock.style.display='none'; return; }
+  if(calBlock) calBlock.style.display='block';
+
+  // tabs
+  const tabsEl=g('habit-calendar-tabs');
+  if(!_calHabitId||(S.habits||[]).every(h=>h.id!==_calHabitId)) _calHabitId=boolHabits[0].id;
+  tabsEl.innerHTML=boolHabits.map(h=>
+    '<button class="hcal-tab'+(h.id===_calHabitId?' active':'')+'" onclick="selectCalHabit('+h.id+')">'+
+      h.name.substring(0,14)+(h.name.length>14?'…':'')+
+    '</button>'
+  ).join('');
+
+  drawCalendar(_calHabitId);
+}
+
+function selectCalHabit(id){
+  _calHabitId=id;
+  // re-render tabs
+  const boolHabits=(S.habits||[]).filter(h=>h.htype==='boolean'||!h.htype);
+  const tabsEl=g('habit-calendar-tabs');
+  tabsEl.innerHTML=boolHabits.map(h=>
+    '<button class="hcal-tab'+(h.id===id?' active':'')+'" onclick="selectCalHabit('+h.id+')">'+
+      h.name.substring(0,14)+(h.name.length>14?'…':'')+
+    '</button>'
+  ).join('');
+  drawCalendar(id);
+}
+
+function drawCalendar(hid){
+  const h=(S.habits||[]).find(x=>x.id===hid); if(!h) return;
+  const gridEl=g('habit-calendar-grid'); if(!gridEl) return;
+  const t=today();
+  const now=new Date();
+  const year=now.getFullYear(), month=now.getMonth();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const monthNames=['OCA','ŞUB','MAR','NİS','MAY','HAZ','TEM','AĞU','EYL','EKİ','KAS','ARA'];
+  const dayNames=['PZ','PT','SA','ÇA','PE','CU','CT'];
+
+  // build date string for each day of month
+  let rows='';
+  // column labels (1..daysInMonth)
+  let colLabels='<div class="hcal-col-labels">';
+  for(let d=1;d<=daysInMonth;d++){
+    colLabels+='<div class="hcal-col-lbl">'+d+'</div>';
+  }
+  colLabels+='</div>';
+
+  // single row per week of month — actually: 1 row = one week (7 cols)
+  // simpler: 1 row per week-row, columns = days 1..31
+  // Let's do: row = day of week (7 rows), col = week number
+  // like the image reference: columns = days of month, show tick/cross per day
+  // We'll do a simple horizontal scroll: one row per habit day (Mon-Sun header, cells = each day of month)
+
+  // Actually: simplest readable layout = columns are days 1-31, rows... just one row per habit
+  // But we only have 1 habit here. Show day-of-week sub-label under each cell.
+  // Layout: header row with day numbers, then one row with tick/cross cells.
+
+  rows='<div class="hcal-grid-outer"><div class="hcal-grid" style="min-width:'+(daysInMonth*22+26)+'px">';
+  // day-of-week row
+  rows+='<div class="hcal-row"><div class="hcal-day-lbl" style="min-width:22px"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dow=new Date(year,month,d).getDay();
+    rows+='<div class="hcal-col-lbl" style="width:20px;min-width:20px;text-align:center;font-size:6px;color:var(--dim)">'+dayNames[dow]+'</div>';
+  }
+  rows+='</div>';
+  // number row
+  rows+='<div class="hcal-row"><div class="hcal-day-lbl" style="min-width:22px;font-size:6px;color:var(--muted)">'+monthNames[month]+'</div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isFuture=ds>t;
+    const isToday=ds===t;
+    let cls='hcal-cell';
+    let lbl='';
+    if(isFuture){ cls+=' future'; }
+    else{
+      const logged=h.log&&h.log[ds]===1;
+      const wasCompleted=h.lastCompleted===ds; // fallback for old data
+      if(logged||wasCompleted){ cls+=' tick'; lbl='✓'; }
+      else{ cls+=' cross'; lbl='✕'; }
+    }
+    if(isToday) cls+=' today-cell';
+    rows+='<div class="'+cls+'">'+lbl+'</div>';
+  }
+  rows+='</div>';
+  rows+='</div></div>';
+
+  // streak info
+  const t2=today();
+  const doneThisMonth=(()=>{let c=0;for(let d=1;d<=daysInMonth;d++){const ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(ds<=t&&((h.log&&h.log[ds]===1)||(h.lastCompleted===ds)))c++;}return c;})();
+  const possible=Math.min(daysInMonth,now.getDate());
+  rows+='<div class="hcal-streak-info"><span>🔥 STREAK: '+( h.streak||0)+'</span><span>★ REKOR: '+(h.bestStreak||0)+'</span><span>'+doneThisMonth+'/'+possible+' GÜN ✓</span></div>';
+
+  gridEl.innerHTML=rows;
+}
+
+function renderHabitCharts(){
+  const numHabits=(S.habits||[]).filter(h=>h.htype==='numeric');
+  const block=g('habit-charts-block');
+  if(!numHabits.length){ if(block) block.style.display='none'; return; }
+  if(block) block.style.display='block';
+  const container=g('habit-charts-container'); if(!container) return;
+  container.innerHTML='';
+  numHabits.forEach(h=>{
+    const wrap=document.createElement('div');
+    wrap.className='hchart-wrap';
+    const cid='hcv_'+h.id;
+    wrap.innerHTML='<div class="hchart-title">'+h.name+'</div><canvas class="hchart-canvas" id="'+cid+'"></canvas><div class="hchart-meta"><span>son 30 gün</span><span>'+(h.target?'hedef: '+h.target:'')+'</span></div>';
+    container.appendChild(wrap);
+    // draw after append so canvas has layout
+    requestAnimationFrame(()=>drawNumericChart(h,cid));
+  });
+}
+
+function drawNumericChart(h,cid){
+  const cv=g(cid); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.clientHeight||100;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const t=today();
+  const pts=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const val=(h.log&&h.log[ds]!==undefined)?h.log[ds]:null;
+    pts.push({ds,val,isToday:ds===t});
+  }
+
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_bright=cs.getPropertyValue('--bright').trim();
+  const col_green=cs.getPropertyValue('--green').trim();
+  const col_red=cs.getPropertyValue('--red').trim();
+
+  const validVals=pts.filter(p=>p.val!==null).map(p=>p.val);
+  if(!validVals.length){
+    ctx.font="9px 'Share Tech Mono',monospace";
+    ctx.fillStyle=col_dim;
+    ctx.textAlign='center';
+    ctx.fillText('VERİ YOK — DEĞER GİR',W/2,H/2);
+    return;
+  }
+
+  const padL=28,padR=10,padT=8,padB=16;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const maxVal=Math.max(...validVals, h.target||0);
+  const minVal=Math.min(0,...validVals);
+  const range=maxVal-minVal||1;
+
+  // grid
+  ctx.strokeStyle=col_dim; ctx.lineWidth=1;
+  ctx.setLineDash([2,4]);
+  [0,.5,1].forEach(f=>{
+    const y=padT+ch*(1-f);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle=col_muted; ctx.font="7px 'Share Tech Mono',monospace";
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(Math.round(minVal+f*range),padL-3,y);
+  });
+  ctx.setLineDash([]);
+
+  // target line
+  if(h.target!=null){
+    const ty=padT+ch*(1-(h.target-minVal)/range);
+    ctx.strokeStyle='rgba(255,255,102,0.4)'; ctx.lineWidth=1;
+    ctx.setLineDash([3,6]);
+    ctx.beginPath(); ctx.moveTo(padL,ty); ctx.lineTo(W-padR,ty); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // line
+  const bw=cw/30;
+  const toY=v=>padT+ch*(1-(v-minVal)/range);
+  let prev=null;
+  ctx.strokeStyle=col_bright; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  pts.forEach((p,i)=>{
+    if(p.val===null){prev=null;return;}
+    const x=padL+i*bw+bw/2;
+    const y=toY(p.val);
+    if(prev===null) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    prev={x,y};
+  });
+  ctx.stroke();
+
+  // dots
+  pts.forEach((p,i)=>{
+    if(p.val===null) return;
+    const x=padL+i*bw+bw/2;
+    const y=toY(p.val);
+    const good=h.lowerBetter?(p.val<=(h.target||Infinity)):(p.val>=(h.target||0));
+    ctx.fillStyle=good?col_green:col_red;
+    ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+    if(p.isToday){
+      ctx.strokeStyle=col_bright; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.stroke();
+    }
+  });
 }
 
 // ════════════════════════════════════════
@@ -1495,7 +2737,8 @@ function execFullReset(){
 function renderAll(){
   renderXP(); renderStreak(); renderBoss(); renderEnemyGrid(); updateWaterUI();
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
-  renderStats();
+  renderHabits(); renderStats(); renderShop(); renderBoostBanner();
+  applyTheme();
   g('session-count').textContent=S.sessions;
   g('tasks-done-today').textContent=S.tasksDoneToday;
   syncTimerInputs();
@@ -1506,126 +2749,410 @@ function renderAll(){
   const sv=g('salt-val');
   if(S.waterCount>0&&S.waterCount%2===0){sv.textContent='EKLE ⚡';sv.className='bio-val warn';}
   else{sv.textContent='BEKLEMEDE';sv.className='bio-val off';}
+  // run boss aggression check right after rendering (handles long-time-away on reopen)
+  try { bossAggroTick(); } catch(e){}
 }
 
 // ════════════════════════════════════════
 // STATS / ANALYTICS
 // ════════════════════════════════════════
+let _subjectRange = 7;
+
+function setSubjectRange(n, btn){
+  _subjectRange = n;
+  document.querySelectorAll('#sbr-7,#sbr-30,#sbr-90').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  drawSubjectChart(_subjectRange);
+}
+
+// Returns an array of {date,focusSecs} for last N days (including today)
+function getFocusDays(n){
+  const t = today();
+  const result = [];
+  for(let i=n-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    let secs=0;
+    if(ds===t) secs=S.todayFocusSecs||0;
+    else { const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) secs=h.focusSecs||0; }
+    result.push({date:ds,secs,isToday:ds===t});
+  }
+  return result;
+}
+
+// Returns merged subjectLog for last N days: {subject: totalSecs}
+function getSubjectTotals(n){
+  const t=today();
+  const totals={};
+  for(let i=n-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const dayLog=(S.subjectLog||{})[ds]||{};
+    Object.entries(dayLog).forEach(([subj,secs])=>{
+      totals[subj]=(totals[subj]||0)+secs;
+    });
+    // also today live
+    if(ds===t && S.activeSubject && (S.todayFocusSecs||0)>0){
+      // already captured in subjectLog via tick
+    }
+  }
+  return totals;
+}
+
 function renderStats(){
-  // numeric stat cards
-  const sStreak = g('stat-streak'); if (sStreak) sStreak.textContent = S.dayStreak||0;
-  const sBest = g('stat-best-streak'); if (sBest) sBest.textContent = S.bestStreak||0;
-  const tier = getTier();
-  const tierIdx = TIERS.indexOf(tier);
-  const sTier = g('stat-tier'); if (sTier) sTier.textContent = ['I','II','III','IV','V'][tierIdx]||'I';
-  const sGoal = g('stat-goal'); if (sGoal) sGoal.textContent = tier.goal;
-  const sTotXp = g('stat-total-xp'); if (sTotXp) sTotXp.textContent = S.totalXp||0;
-  const sTotF = g('stat-total-focus'); if (sTotF) sTotF.textContent = fmtHM((S.cumFocusSecs||0));
-  const sTotT = g('stat-total-tasks'); if (sTotT) sTotT.textContent = S.tasksDoneTotal||0;
-  const sTotB = g('stat-total-bosses'); if (sTotB) sTotB.textContent = (S.bossLog||[]).length;
-  // chart
-  drawFocusChart();
+  // stat cards
+  const sStreak=g('stat-streak'); if(sStreak) sStreak.textContent=S.dayStreak||0;
+  const sBest=g('stat-best-streak'); if(sBest) sBest.textContent=S.bestStreak||0;
+  const tier=getTier(), tierIdx=TIERS.indexOf(tier);
+  const sTier=g('stat-tier'); if(sTier) sTier.textContent=['I','II','III','IV','V'][tierIdx]||'I';
+  const sGoal=g('stat-goal'); if(sGoal) sGoal.textContent=tier.goal;
+  const sTotXp=g('stat-total-xp'); if(sTotXp) sTotXp.textContent=S.totalXp||0;
+  const sTotF=g('stat-total-focus'); if(sTotF) sTotF.textContent=fmtHM(S.cumFocusSecs||0);
+  const sTotT=g('stat-total-tasks'); if(sTotT) sTotT.textContent=S.tasksDoneTotal||0;
+  const sTotB=g('stat-total-bosses'); if(sTotB) sTotB.textContent=(S.bossLog||[]).length;
+  // all charts
+  setTimeout(()=>{
+    drawFocusChart();
+    drawSubjectChart(_subjectRange);
+    drawMonthlyChart();
+    renderSubjectReport();
+    renderWeekCompare();
+  }, 40);
+}
+
+function renderWeekCompare(){
+  const el=g('week-compare-cards'); if(!el) return;
+  // this week Mon-Sun vs last week Mon-Sun
+  const thisW=getFocusDays(7).reduce((a,d)=>a+d.secs,0);
+  const lastW=(()=>{
+    let s=0;
+    for(let i=14;i>=8;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) s+=h.focusSecs||0;
+    }
+    return s;
+  })();
+  const diff=thisW-lastW;
+  const pct=lastW>0?Math.round((diff/lastW)*100):null;
+  const upDown=diff>=0?'▲':'▼';
+  const cls=diff>=0?'good':'hot';
+  el.innerHTML=
+    '<div class="stat-card '+cls+'">'+
+      '<div class="sv" style="font-size:15px">'+fmtHM(thisW)+'</div>'+
+      '<div class="sl">⏱ Bu Hafta</div>'+
+    '</div>'+
+    '<div class="stat-card">'+
+      '<div class="sv" style="font-size:15px">'+fmtHM(lastW)+'</div>'+
+      '<div class="sl">⏱ Geçen Hafta</div>'+
+    '</div>'+
+    '<div class="stat-card '+(diff>=0?'good':'hot')+'" style="grid-column:1/-1">'+
+      '<div class="sv" style="font-size:13px">'+upDown+' '+fmtHM(Math.abs(diff))+(pct!==null?' ('+Math.abs(pct)+'%)':'')+'</div>'+
+      '<div class="sl">'+(diff>=0?'GEÇEN HAFTADAN DAHA İYİ ⚡':'GEÇEN HAFTANIN GERİSİNDE ⚠')+'</div>'+
+    '</div>';
 }
 
 function drawFocusChart(){
-  const cv = g('focus-chart'); if (!cv) return;
-  const ctx = cv.getContext('2d');
-  // sharpen for retina
-  const dpr = window.devicePixelRatio || 1;
-  const wantW = cv.clientWidth || 600;
-  const wantH = cv.clientHeight || 180;
-  if (cv.width !== wantW*dpr || cv.height !== wantH*dpr) {
-    cv.width = wantW*dpr; cv.height = wantH*dpr;
-  }
+  const cv=g('focus-chart'); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||600, H=cv.clientHeight||160;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  const W = wantW, H = wantH;
   ctx.clearRect(0,0,W,H);
 
-  // build last-7-days data including today
-  const days = [];
-  const todayStr = today();
-  for (let i=6; i>=0; i--) {
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    let secs = 0;
-    if (ds === todayStr) {
-      secs = S.todayFocusSecs || 0;
-    } else {
-      const h = (S.focusHistory||[]).find(x=>x.date===ds);
-      if (h) secs = h.focusSecs || 0;
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_bright=cs.getPropertyValue('--bright').trim();
+  const col_white=cs.getPropertyValue('--white').trim();
+  const col_red=cs.getPropertyValue('--red').trim();
+  const col_green=cs.getPropertyValue('--green').trim();
+
+  const thisWeek=getFocusDays(7);
+  // last week same 7 days
+  const lastWeek=[];
+  for(let i=13;i>=7;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const h=(S.focusHistory||[]).find(x=>x.date===ds);
+    lastWeek.push({secs:h?h.focusSecs||0:0});
+  }
+
+  const padL=30,padR=10,padT=12,padB=20;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const maxSecs=Math.max(...thisWeek.map(d=>d.secs),...lastWeek.map(d=>d.secs),3600);
+  const yMax=Math.ceil(maxSecs/3600);
+  const dayLabels=['PZ','PT','SA','ÇA','PE','CU','CT'];
+
+  // grid
+  ctx.font="8px 'Share Tech Mono',monospace";
+  for(let h=0;h<=yMax;h++){
+    const y=padT+ch-(h/yMax)*ch;
+    ctx.strokeStyle=col_dim; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(h+'s',padL-3,y);
+  }
+
+  const bw=cw/7;
+  const bHalf=bw*0.22;
+  thisWeek.forEach((d,i)=>{
+    const x=padL+i*bw;
+    const dow=new Date(d.date).getDay();
+    const lbl=dayLabels[dow];
+    // last week bar (behind, dimmer)
+    const lsecs=lastWeek[i]?lastWeek[i].secs:0;
+    if(lsecs>0){
+      const lh=(lsecs/maxSecs)*ch;
+      ctx.fillStyle='rgba(100,100,100,0.35)';
+      ctx.fillRect(x+bHalf*0.1,padT+ch-lh,bHalf*1.6,lh);
     }
-    const dow = d.getDay();
-    const labels = ['PZ','PT','SA','ÇA','PE','CU','CT'];
-    days.push({label:labels[dow], secs, isToday: ds===todayStr});
-  }
-
-  // chart dims
-  const padL = 30, padR = 14, padT = 14, padB = 24;
-  const cw = W - padL - padR;
-  const ch = H - padT - padB;
-
-  // determine max (hours)
-  const maxSecs = Math.max.apply(null, days.map(d=>d.secs).concat([3600])); // at least 1h scale
-  const maxHrs = Math.ceil(maxSecs/3600);
-  const yMax = Math.max(1, maxHrs);
-
-  // styles via CSS vars
-  const cs = getComputedStyle(document.documentElement);
-  const col_dim = cs.getPropertyValue('--dim').trim() || '#333';
-  const col_bd = cs.getPropertyValue('--bd').trim() || '#2a2a2a';
-  const col_muted = cs.getPropertyValue('--muted').trim() || '#555';
-  const col_bright = cs.getPropertyValue('--bright').trim() || '#ccc';
-  const col_white = cs.getPropertyValue('--white').trim() || '#f0f0f0';
-  const col_red = cs.getPropertyValue('--red').trim() || '#ff6666';
-
-  // grid lines (every 1h)
-  ctx.strokeStyle = col_dim;
-  ctx.lineWidth = 1;
-  ctx.font = "9px 'Share Tech Mono', monospace";
-  ctx.fillStyle = col_muted;
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  for (let h=0; h<=yMax; h++) {
-    const y = padT + ch - (h/yMax)*ch;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W-padR, y); ctx.stroke();
-    ctx.fillText(h+'s', padL-4, y);
-  }
-
-  // bars
-  const bw = cw / days.length;
-  const innerPad = Math.min(8, bw*0.18);
-  days.forEach((d,i)=>{
-    const hrs = d.secs/3600;
-    const bh = (hrs/yMax)*ch;
-    const x = padL + i*bw + innerPad;
-    const w = bw - innerPad*2;
-    const y = padT + ch - bh;
-    // bar
-    ctx.fillStyle = d.isToday ? col_white : col_bright;
-    ctx.fillRect(x, y, w, bh);
-    // bar top glow line
-    if (bh > 2) {
-      ctx.fillStyle = d.isToday ? col_red : col_white;
-      ctx.fillRect(x, y, w, 2);
+    // this week bar
+    const hrs=d.secs/3600;
+    if(d.secs>0){
+      const bh=(d.secs/maxSecs)*ch;
+      ctx.fillStyle=d.isToday?col_white:col_bright;
+      ctx.fillRect(x+bHalf,padT+ch-bh,bHalf,bh);
+      if(bh>2){ ctx.fillStyle=d.isToday?col_red:col_green; ctx.fillRect(x+bHalf,padT+ch-bh,bHalf,2); }
+      // value
+      ctx.fillStyle=col_bright; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      const lv=hrs>=1?hrs.toFixed(1)+'s':Math.round(d.secs/60)+'d';
+      ctx.fillText(lv,x+bHalf*1.5,padT+ch-bh-1);
     }
     // x label
-    ctx.fillStyle = d.isToday ? col_white : col_muted;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(d.label, x+w/2, padT+ch+4);
-    // value above bar
-    if (hrs > 0) {
-      ctx.fillStyle = col_bright;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      const lbl = hrs >= 1 ? hrs.toFixed(1)+'s' : Math.round(d.secs/60)+'d';
-      ctx.fillText(lbl, x+w/2, y-2);
-    }
+    ctx.fillStyle=d.isToday?col_white:col_muted;
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(lbl,x+bw/2,padT+ch+3);
   });
 }
 
-// redraw chart on resize
-window.addEventListener('resize', ()=>{ drawFocusChart(); });
+// Subject colour palette
+const SUBJ_COLORS=[
+  '#8fff8f','#ffff66','#ff6666','#66ccff','#ffaa44',
+  '#cc88ff','#ff88cc','#44ffcc','#ff4466','#aaaaff',
+  '#ffcc44','#88ff44','#44aaff','#ff8844','#88ffaa',
+];
+function subjColor(i){ return SUBJ_COLORS[i%SUBJ_COLORS.length]; }
+
+function drawSubjectChart(days){
+  const cv=g('subject-chart'); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.clientHeight||200;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const totals=getSubjectTotals(days);
+  const entries=Object.entries(totals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const legendEl=g('subject-legend');
+
+  if(!entries.length){
+    ctx.font="9px 'Share Tech Mono',monospace";
+    ctx.fillStyle='#555'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('VERİ YOK — timer\'dan ders seç ve çalış',W/2,H/2);
+    if(legendEl) legendEl.innerHTML='';
+    return;
+  }
+
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_white=cs.getPropertyValue('--white').trim();
+
+  const maxSecs=entries[0][1];
+  const padL=80, padR=50, padT=12, padB=12;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const barH=Math.min(22, Math.floor((ch/entries.length)-4));
+  const gap=Math.floor((ch-barH*entries.length)/(entries.length+1));
+
+  ctx.font="8px 'Share Tech Mono',monospace";
+  entries.forEach(([subj,secs],i)=>{
+    const y=padT+gap*(i+1)+barH*i;
+    const bw=(secs/maxSecs)*cw;
+    const col=subjColor(i);
+    // bar
+    ctx.fillStyle=col+'33';
+    ctx.fillRect(padL,y,cw,barH);
+    ctx.fillStyle=col;
+    ctx.fillRect(padL,y,bw,barH);
+    // glow top line
+    ctx.fillStyle=col; ctx.fillRect(padL,y,bw,2);
+    // label left
+    ctx.fillStyle=col_white; ctx.textAlign='right'; ctx.textBaseline='middle';
+    const subjShort=subj.length>10?subj.substring(0,10)+'…':subj;
+    ctx.fillText(subjShort,padL-5,y+barH/2);
+    // value right
+    ctx.fillStyle=col_muted; ctx.textAlign='left';
+    ctx.fillText(fmtHM(secs),padL+bw+5,y+barH/2);
+  });
+
+  // legend dots
+  if(legendEl){
+    legendEl.innerHTML=entries.map(([s],i)=>
+      '<span style="font-size:7px;letter-spacing:1px;color:'+subjColor(i)+';display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;background:'+subjColor(i)+';display:inline-block;flex-shrink:0"></span>'+s+'</span>'
+    ).join('');
+  }
+}
+
+function drawMonthlyChart(){
+  const cv=g('monthly-chart'); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.clientHeight||130;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_bright=cs.getPropertyValue('--bright').trim();
+  const col_green=cs.getPropertyValue('--green').trim();
+  const col_white=cs.getPropertyValue('--white').trim();
+
+  const days=getFocusDays(30);
+  const padL=28,padR=10,padT=10,padB=16;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  const maxSecs=Math.max(...days.map(d=>d.secs),3600);
+  const avg=days.reduce((a,d)=>a+d.secs,0)/30;
+
+  // grid
+  ctx.font="7px 'Share Tech Mono',monospace";
+  [0,.5,1].forEach(f=>{
+    const y=padT+ch*(1-f);
+    ctx.strokeStyle=col_dim; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(fmtHM(f*maxSecs),padL-3,y);
+  });
+
+  // avg line
+  const avgY=padT+ch*(1-avg/maxSecs);
+  ctx.strokeStyle='rgba(255,255,102,0.4)'; ctx.lineWidth=1;
+  ctx.setLineDash([3,6]);
+  ctx.beginPath(); ctx.moveTo(padL,avgY); ctx.lineTo(W-padR,avgY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // area fill
+  const bw=cw/30;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT+ch);
+  days.forEach((d,i)=>{
+    const x=padL+i*bw+bw/2;
+    const y=padT+ch*(1-d.secs/maxSecs);
+    if(i===0) ctx.lineTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.lineTo(padL+29*bw+bw/2, padT+ch);
+  ctx.closePath();
+  ctx.fillStyle='rgba(204,204,204,0.07)';
+  ctx.fill();
+
+  // line
+  ctx.strokeStyle=col_bright; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  let first=true;
+  days.forEach((d,i)=>{
+    const x=padL+i*bw+bw/2;
+    const y=padT+ch*(1-d.secs/maxSecs);
+    if(first){ ctx.moveTo(x,y); first=false; } else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // dots for today and significant days
+  days.forEach((d,i)=>{
+    if(!d.isToday && d.secs===0) return;
+    const x=padL+i*bw+bw/2;
+    const y=padT+ch*(1-d.secs/maxSecs);
+    ctx.fillStyle=d.isToday?col_white:col_bright;
+    ctx.beginPath(); ctx.arc(x,y,d.isToday?3:1.5,0,Math.PI*2); ctx.fill();
+  });
+
+  // x axis: week labels
+  ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
+  [0,7,14,21,29].forEach(i=>{
+    const x=padL+i*bw+bw/2;
+    const d=days[i];
+    if(!d) return;
+    const dt=new Date(d.date);
+    ctx.fillText((dt.getDate())+'.'+(dt.getMonth()+1),x,padT+ch+3);
+  });
+}
+
+function renderSubjectReport(){
+  const listEl=g('subject-report-list');
+  const emptyEl=g('subject-report-empty');
+  if(!listEl) return;
+
+  const totals=getSubjectTotals(7);
+  const entries=Object.entries(totals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+  if(!entries.length){
+    listEl.innerHTML='';
+    if(emptyEl) emptyEl.style.display='block';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  const total=entries.reduce((a,[,v])=>a+v,0);
+  listEl.innerHTML=entries.map(([subj,secs],i)=>{
+    const pct=total>0?Math.round(secs/total*100):0;
+    const col=subjColor(i);
+    return '<div style="margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:3px">'+
+        '<span style="font-size:9px;color:'+col+';letter-spacing:1px">'+subj+'</span>'+
+        '<span style="font-size:9px;color:var(--bright)">'+fmtHM(secs)+' &nbsp;<span style="color:var(--muted)">'+pct+'%</span></span>'+
+      '</div>'+
+      '<div style="height:4px;background:var(--dim)">'+
+        '<div style="height:100%;width:'+pct+'%;background:'+col+';transition:width .4s"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// redraw charts on resize
+window.addEventListener('resize', ()=>{
+  try{ drawFocusChart(); drawSubjectChart(_subjectRange); drawMonthlyChart(); }catch(e){}
+});
+
+// ════════════════════════════════════════
+// SOUND TOGGLE
+// ════════════════════════════════════════
+function toggleSound(){
+  S.soundEnabled = !(S.soundEnabled!==false);
+  const v=g('sound-val'); if(v){ v.textContent = S.soundEnabled?'AÇIK':'KAPALI'; v.className = 'bio-val '+(S.soundEnabled?'on':'off'); }
+  save();
+  if (S.soundEnabled) {
+    // play a sample ding so user can confirm
+    playBell('reminder');
+  }
+}
+function refreshNotifSwitch(){
+  const v=g('notif-val'); if(!v) return;
+  if (!('Notification' in window)) { v.textContent='YOK'; v.className='bio-val off'; return; }
+  if (Notification.permission === 'granted') { v.textContent='AÇIK'; v.className='bio-val on'; }
+  else if (Notification.permission === 'denied') { v.textContent='REDDEDİLDİ'; v.className='bio-val off'; }
+  else { v.textContent='KAPALI'; v.className='bio-val off'; }
+  const s=g('sound-val'); if(s){ const on = S.soundEnabled!==false; s.textContent = on?'AÇIK':'KAPALI'; s.className = 'bio-val '+(on?'on':'off'); }
+}
+
+// ════════════════════════════════════════
+// BACKGROUND LOOPS (boss aggro + reminders + boost timer)
+// ════════════════════════════════════════
+setInterval(()=>{
+  try {
+    bossAggroTick();
+    reminderTick();
+    renderBoostBanner();
+    refreshNotifSwitch();
+  } catch(e){ console.warn(e); }
+}, 30000);  // every 30s for normal background
+
+// finer-grain boost-banner countdown updater
+setInterval(()=>{
+  try { renderBoostBanner(); } catch(e){}
+}, 1000);
 
 // ════════════════════════════════════════
 // SERVICE WORKER
@@ -1640,8 +3167,12 @@ if('serviceWorker' in navigator){
 // ════════════════════════════════════════
 loadState();
 timerSecs=S.focusMin*60;
+applyTheme();
 renderAll();
-addLog('OVERCLOCK v5.0 başlatıldı.');
+refreshNotifSwitch();
+// initial reminder & aggro check on open
+try { reminderTick(); bossAggroTick(); } catch(e){}
+addLog('OVERCLOCK v6.0 başlatıldı.');
 </script>
 </body>
 </html>
