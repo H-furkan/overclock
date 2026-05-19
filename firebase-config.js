@@ -21,10 +21,11 @@
    (localStorage) çalışır — hiçbir şey bozulmaz. Doldurunca senkron açılır.
    ════════════════════════════════════════════════════════════════════ */
 window.FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyBqwMn7vTxk0j81QLOPxpWVQjSgPmUMnYU",
+  authDomain: "hakan-72bbb.firebaseapp.com",
+  projectId: "hakan-72bbb",
+  storageBucket: "hakan-72bbb.firebasestorage.app",
+  messagingSenderId: "1031992015959",
+  appId: "1:1031992015959:web:80230d247df4ef2f7d3712",
+  measurementId: "G-HV0WV043BV"
 };
