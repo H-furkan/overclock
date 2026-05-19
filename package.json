@@ -1,0 +1,20 @@
+{
+  "name": "overclock-apk",
+  "version": "7.1.0",
+  "private": true,
+  "description": "OVERCLOCK // TR-1 — Capacitor native shell (loads the GitHub Pages PWA, adds reliable native notifications)",
+  "scripts": {
+    "cap:add": "cap add android",
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/local-notifications": "^6.1.0",
+    "@capacitor/app": "^6.0.2"
+  }
+}

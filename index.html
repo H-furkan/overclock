@@ -15,6 +15,11 @@ const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standa
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<!-- Cross-device sync (optional — inert until firebase-config.js is filled) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <style>
 :root{
   --black:#000;--deep:#080808;--dark:#111;--mid:#1a1a1a;
@@ -418,6 +423,23 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <button class="btn primary" style="flex:1" onclick="saveNotes()">💾 KAYDET</button>
       <button class="btn" onclick="closeNotes()">↩ KAPAT</button>
     </div>
+  </div>
+</div>
+
+<!-- SYNC LOGIN OVERLAY -->
+<div id="auth-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:22px">
+    <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--white);letter-spacing:3px;text-align:center">⚡ OVERCLOCK SYNC</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;text-align:center;margin:6px 0 18px;text-transform:uppercase">Telefon ↔ Tablet otomatik senkron</div>
+    <div class="ilabel" style="margin-bottom:4px">E-POSTA</div>
+    <input class="inp" id="auth-email" type="email" autocomplete="username" placeholder="ornek@mail.com" style="margin-bottom:10px">
+    <div class="ilabel" style="margin-bottom:4px">ŞİFRE</div>
+    <input class="inp" id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••" style="margin-bottom:14px">
+    <div id="auth-msg" style="font-size:8px;color:var(--red,#ff6b6b);letter-spacing:1px;min-height:12px;margin-bottom:10px"></div>
+    <button class="btn primary fw mb8" id="auth-login-btn" onclick="authLogin()">↪ GİRİŞ YAP</button>
+    <button class="btn fw mb8" onclick="authRegister()">+ YENİ HESAP OLUŞTUR</button>
+    <button class="btn fw" style="border-color:var(--bd);color:var(--muted)" onclick="authSkip()">⏭ ÇEVRİMDIŞI DEVAM ET (senkron yok)</button>
+    <div style="font-size:7px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:14px;text-align:center">Aynı e-posta/şifre ile iki cihazda giriş yap → veriler otomatik senkronlanır.</div>
   </div>
 </div>
 
@@ -966,6 +988,13 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
     </div>
     <div class="ssec">
+      <div class="slbl">Hesap & Senkron</div>
+      <div id="sync-status" style="font-size:9px;color:var(--gray);letter-spacing:1px;line-height:1.8;margin-bottom:10px">Senkron yapılandırılmadı.</div>
+      <button class="btn fw mb8" id="sync-login-open" style="display:none" onclick="showAuth()">🔑 GİRİŞ YAP / HESAP</button>
+      <button class="btn fw" id="sync-logout" style="display:none" onclick="authLogout()">⎋ ÇIKIŞ YAP</button>
+      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:8px;line-height:1.6">Aynı hesapla telefon ve tablette giriş yap; veriler bulutta otomatik birleşir (son değişiklik kazanır).</div>
+    </div>
+    <div class="ssec">
       <div class="slbl">Bildirim & Ses</div>
       <div class="bio-item" onclick="toggleSound()" style="cursor:pointer">
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">🔔 Session Zili</span>
@@ -979,7 +1008,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.1 // TR-1<br>Arkaplan bildirimi · Net takip · JSON yedek<br><b style="color:var(--bright)">Ana Ekrana Ekle + Bildirim izni</b> şart</div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.2 // TR-1<br>Cihaz senkron · Native APK · Arkaplan bildirimi<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1202,6 +1231,8 @@ function defState() {
     notifEnabled:false,           // browser notifications permission cached
     // ── NEW v6: REMINDERS ──
     remindersFired:{},            // {date: [taskId,...]} fired today
+    // ── NEW v7: CLOUD SYNC ──
+    _updatedAt:0,                 // ms of last local change pushed to cloud
     // ── NEW v7: EXAM / NET TRACKING ──
     exams:[],                     // [{id,date,type,name,nets:{},total}]
     topicProgress:{},             // {subjectKey: pct 0-100}
@@ -1216,6 +1247,7 @@ let S = defState();
 // ════════════════════════════════════════
 function save() {
   try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
+  try { if (window._syncPush) window._syncPush(); } catch(e) {}
 }
 
 function loadState() {
@@ -1557,7 +1589,9 @@ function toggleTimer(){
     if (!isBreak) stopLeak();
     if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
     // ask for notification permission on the first start (user gesture)
-    if (('Notification' in window) && Notification.permission === 'default') {
+    if (_isNative()) {
+      ensureNativeNotifPerm();
+    } else if (('Notification' in window) && Notification.permission === 'default') {
       try { requestNotifPermission(); } catch(e){}
     }
     timerRunning=true;
@@ -2404,46 +2438,72 @@ function swPost(msg){
 }
 
 // Schedule the alert for the currently-running countdown
+// ── Native (Capacitor APK) notification bridge ──
+// In the APK these are real OS alarms (exact, screen-off proof). On the web
+// we fall back to the service-worker Notification Triggers path.
+const _NID_TIMER = 1001, _NID_BOSS = 1002;
+function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
+function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
+let _capPermAsked = false;
+function ensureNativeNotifPerm(){
+  const LN=_capNotif(); if(!LN || _capPermAsked) return;
+  _capPermAsked = true;
+  try { LN.requestPermissions(); } catch(e){}
+}
+function _nativeSchedule(id, at, title, body){
+  const LN=_capNotif(); if(!LN) return;
+  try{
+    LN.cancel({ notifications:[{id}] }).catch(()=>{});
+    LN.schedule({ notifications:[{
+      id, title, body,
+      schedule:{ at:new Date(at), allowWhileIdle:true },
+      smallIcon:'ic_stat_icon'
+    }]});
+  }catch(e){}
+}
+function _nativeCancel(id){
+  const LN=_capNotif(); if(!LN) return;
+  try{ LN.cancel({ notifications:[{id}] }); }catch(e){}
+}
+
 function scheduleTimerNotification(){
   if (!timerRunning || !timerEndAt) return;
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const focusEnd = !isBreak;
+  const title = focusEnd ? '🔔 SESSION COMPLETE' : '🔔 MOLA BİTTİ';
+  const body  = focusEnd ? 'Odak süresi doldu — molaya geç. (Uygulamayı aç, XP işlensin.)'
+                         : 'Mola bitti — yeni oturum başlat.';
+  if (_isNative()){ _nativeSchedule(_NID_TIMER, timerEndAt, title, body); return; }
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
   swPost({
-    type:'schedule',
-    at: timerEndAt,
-    tag:'overclock-timer',
+    type:'schedule', at: timerEndAt, tag:'overclock-timer',
     kind: focusEnd ? 'focus_end' : 'break_end',
-    title: focusEnd ? '🔔 SESSION COMPLETE' : '🔔 MOLA BİTTİ',
-    body:  focusEnd ? 'Odak süresi doldu — molaya geç. (Uygulamayı aç, XP işlensin.)'
-                    : 'Mola bitti — yeni oturum başlat.',
-    icon:_NOTIF_ICON,
+    title, body, icon:_NOTIF_ICON,
   });
 }
 
 function cancelTimerNotification(){
+  if (_isNative()){ _nativeCancel(_NID_TIMER); return; }
   swPost({ type:'cancel', tag:'overclock-timer' });
 }
 
 // Schedule a boss-attack heads-up while the app is in the background
 function scheduleBossNotification(){
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
   if (!S || S.bossDefeated || S.bossHp <= 0) return;
   if (S.boostUntil && Date.now() < S.boostUntil && S.activeShield) return;
   if (timerRunning && !isBreak) return; // actively working — boss is calm
   const lastEnd = S.lastFocusEnd || Date.now();
   const hitAt = lastEnd + BOSS_AGGRO_HIT_HOURS*3600000;
   if (hitAt <= Date.now()) return; // already in hit phase; handled on resume
-  swPost({
-    type:'schedule',
-    at: hitAt,
-    tag:'overclock-boss',
-    kind:'aggro',
-    title:'⚔ BOSS SALDIRIYOR',
-    body:'Uzun süredir odak yok. Boss saldırmaya başladı — uygulamayı aç ve focus başlat.',
-    icon:_NOTIF_ICON,
-  });
+  const title='⚔ BOSS SALDIRIYOR';
+  const body='Uzun süredir odak yok. Boss saldırmaya başladı — uygulamayı aç ve focus başlat.';
+  if (_isNative()){ _nativeSchedule(_NID_BOSS, hitAt, title, body); return; }
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  swPost({ type:'schedule', at: hitAt, tag:'overclock-boss', kind:'aggro', title, body, icon:_NOTIF_ICON });
 }
-function cancelBossNotification(){ swPost({ type:'cancel', tag:'overclock-boss' }); }
+function cancelBossNotification(){
+  if (_isNative()){ _nativeCancel(_NID_BOSS); return; }
+  swPost({ type:'cancel', tag:'overclock-boss' });
+}
 
 // ── Silent-audio keepalive ──
 // Keeps the audio graph alive so the in-app bell can still fire near real time
@@ -3723,6 +3783,150 @@ if('serviceWorker' in navigator){
 }
 
 // ════════════════════════════════════════
+// CLOUD SYNC  (Firebase Auth + Firestore) — telefon ↔ tablet
+// Tamamen opsiyonel: firebase-config.js boşsa uygulama eskisi gibi
+// sadece localStorage ile çalışır (regresyon yok).
+// ════════════════════════════════════════
+const _sync = { ready:false, auth:null, db:null, uid:null, applying:false,
+                lastRemoteTs:0, pushT:null, skipped:false };
+
+function syncConfigured(){
+  try{ return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FIREBASE_CONFIG.projectId && window.firebase); }
+  catch(e){ return false; }
+}
+function _deviceId(){
+  let d=localStorage.getItem('oc_device');
+  if(!d){ d='dev-'+Math.random().toString(36).slice(2,9); localStorage.setItem('oc_device',d); }
+  return d;
+}
+function setSyncStatus(txt){ const e=g('sync-status'); if(e) e.textContent=txt; }
+
+function showAuth(){ const o=g('auth-overlay'); if(o) o.style.display='flex'; }
+function hideAuth(){ const o=g('auth-overlay'); if(o) o.style.display='none'; }
+function _authMsg(t){ const e=g('auth-msg'); if(e) e.textContent=t||''; }
+function authSkip(){ _sync.skipped=true; try{localStorage.setItem('oc_sync_skip','1');}catch(e){} hideAuth(); }
+
+function authLogin(){
+  if(!_sync.auth) return;
+  const em=(g('auth-email')||{}).value||'', pw=(g('auth-pass')||{}).value||'';
+  if(!em||!pw){ _authMsg('E-posta ve şifre gerekli.'); return; }
+  _authMsg('Giriş yapılıyor…');
+  _sync.auth.signInWithEmailAndPassword(em.trim(), pw)
+    .then(()=>_authMsg(''))
+    .catch(e=>_authMsg('Hata: '+(e.code||e.message)));
+}
+function authRegister(){
+  if(!_sync.auth) return;
+  const em=(g('auth-email')||{}).value||'', pw=(g('auth-pass')||{}).value||'';
+  if(!em||pw.length<6){ _authMsg('Şifre en az 6 karakter olmalı.'); return; }
+  _authMsg('Hesap oluşturuluyor…');
+  _sync.auth.createUserWithEmailAndPassword(em.trim(), pw)
+    .then(()=>_authMsg(''))
+    .catch(e=>_authMsg('Hata: '+(e.code||e.message)));
+}
+function authLogout(){
+  if(!_sync.auth) return;
+  if(_sync.unsub){ try{_sync.unsub();}catch(e){} _sync.unsub=null; }
+  _sync.auth.signOut().catch(()=>{});
+}
+
+function _applyRemote(data){
+  if(!data || typeof data!=='object' || typeof data.totalXp==='undefined') return;
+  _sync.applying = true;
+  try{
+    const dev=data._device, ts=data._updatedAt||0;
+    S = Object.assign(defState(), data);
+    delete S._streakSaved;
+    try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
+    _sync.lastRemoteTs = ts;
+    timerSecs = (isBreak?S.breakMin:S.focusMin)*60;
+    applyTheme(); renderAll();
+    addLog('☁ Veri başka cihazdan senkronlandı.');
+  }catch(e){}
+  setTimeout(()=>{ _sync.applying=false; }, 50);
+}
+
+function _cloudPush(){
+  if(!_sync.ready || !_sync.uid || _sync.applying) return;
+  try{
+    const ts = Date.now();
+    S._updatedAt = ts;
+    try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
+    const data = JSON.parse(JSON.stringify(S));
+    data._device = _deviceId();
+    _sync.lastRemoteTs = ts;
+    _sync.db.collection('users').doc(_sync.uid).set(data)
+      .then(()=>{ setSyncStatus('☁ Senkron aktif — '+( _sync.email||'' )+' (son: şimdi)'); })
+      .catch(e=>{ setSyncStatus('⚠ Senkron beklemede (çevrimdışı?)'); });
+  }catch(e){}
+}
+window._syncPush = function(){
+  if(!_sync.ready || !_sync.uid || _sync.applying) return;
+  clearTimeout(_sync.pushT);
+  _sync.pushT = setTimeout(_cloudPush, 1500);
+};
+
+function _onSignedIn(user){
+  _sync.uid = user.uid; _sync.email = user.email;
+  hideAuth();
+  const ref = _sync.db.collection('users').doc(user.uid);
+  ref.get().then(snap=>{
+    const remote = snap.exists ? snap.data() : null;
+    const localTs = (S && S._updatedAt) || 0;
+    const remoteTs = (remote && remote._updatedAt) || 0;
+    if (!remote) {
+      _cloudPush();                                  // first run on this account
+    } else if (localTs === 0) {
+      // never synced on this device — don't blindly lose local progress:
+      // keep whichever has more total XP
+      if ((S.totalXp||0) > (remote.totalXp||0)) _cloudPush();
+      else _applyRemote(remote);
+    } else if (remoteTs > localTs) {
+      _applyRemote(remote);                          // cloud is newer
+    } else {
+      _cloudPush();                                  // local is newer
+    }
+    // realtime updates from the other device
+    _sync.unsub = ref.onSnapshot(s=>{
+      if(!s.exists) return;
+      const d=s.data();
+      if(d._device === _deviceId()) return;            // our own write echo
+      if((d._updatedAt||0) <= _sync.lastRemoteTs) return;
+      _applyRemote(d);
+    }, ()=>{});
+  }).catch(()=>{ setSyncStatus('⚠ Buluta erişilemedi.'); });
+  const lo=g('sync-logout'); if(lo) lo.style.display='block';
+  const op=g('sync-login-open'); if(op) op.style.display='none';
+  setSyncStatus('☁ Senkron aktif — '+(user.email||''));
+}
+function _onSignedOut(){
+  _sync.uid=null; _sync.email=null;
+  const lo=g('sync-logout'); if(lo) lo.style.display='none';
+  const op=g('sync-login-open'); if(op) op.style.display='block';
+  setSyncStatus('Oturum kapalı — giriş yapınca senkron başlar.');
+  let skip=false; try{ skip=localStorage.getItem('oc_sync_skip')==='1'; }catch(e){}
+  if(!skip && !_sync.skipped) showAuth();
+}
+
+function initSync(){
+  if(!syncConfigured()){
+    setSyncStatus('Senkron kapalı — firebase-config.js doldurulmadı (uygulama yerel çalışıyor).');
+    return;
+  }
+  try{
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    _sync.auth = firebase.auth();
+    _sync.db   = firebase.firestore();
+    try{ _sync.db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
+    try{ _sync.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
+    _sync.ready = true;
+    _sync.auth.onAuthStateChanged(u=>{ if(u) _onSignedIn(u); else _onSignedOut(); });
+  }catch(e){
+    setSyncStatus('⚠ Senkron başlatılamadı: '+(e.message||e));
+  }
+}
+
+// ════════════════════════════════════════
 // BOOT
 // ════════════════════════════════════════
 loadState();
@@ -3732,7 +3936,9 @@ renderAll();
 refreshNotifSwitch();
 // initial reminder & aggro check on open
 try { reminderTick(); bossAggroTick(); } catch(e){}
-addLog('OVERCLOCK v7.1 başlatıldı.');
+try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
+try { initSync(); } catch(e){}
+addLog('OVERCLOCK v7.2 başlatıldı.');
 </script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+{
+  "appId": "com.hfurkan.overclock",
+  "appName": "OVERCLOCK",
+  "webDir": "capacitor-www",
+  "server": {
+    "url": "https://h-furkan.github.io/overclock/",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#F0F0F0"
+    }
+  }
+}
