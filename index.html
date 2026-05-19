@@ -1008,7 +1008,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.2 // TR-1<br>Cihaz senkron · Native APK · Arkaplan bildirimi<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.3 // TR-1<br>Kesin zamanlı zil+bildirim · Cihaz senkron · APK<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1164,25 +1164,28 @@ function playBell(kind){
     if (ctx.state === 'suspended') ctx.resume();
     const now = ctx.currentTime;
     // Profile by kind
-    let freqs, dur, type='sine';
-    if (kind === 'focus_end')   { freqs=[880, 1318]; dur=1.6; }    // A5 + E6 — bright pleasant bell
-    else if (kind === 'break_end') { freqs=[523, 659];  dur=1.4; } // C5 + E5 — softer
+    let freqs, dur, type='sine', reps=1, gap=0, vol=0.22;
+    if (kind === 'focus_end')   { freqs=[880, 1318]; dur=1.0; reps=3; gap=0.85; vol=0.32; } // bright alarm, 3×
+    else if (kind === 'break_end') { freqs=[523, 659];  dur=0.9; reps=3; gap=0.8; vol=0.30; } // softer, 3×
     else if (kind === 'reminder')  { freqs=[1046, 1568]; dur=0.9; }// C6 + G6 — alert ding
     else if (kind === 'aggro')     { freqs=[220, 196];  dur=1.2; type='triangle'; } // low growl
     else { freqs=[800]; dur=0.6; }
-    freqs.forEach((f,i)=>{
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.value = f;
-      o.connect(g); g.connect(ctx.destination);
-      // bell-like envelope: quick attack, slow decay
-      g.gain.setValueAtTime(0, now + i*0.05);
-      g.gain.linearRampToValueAtTime(0.22, now + i*0.05 + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.05 + dur);
-      o.start(now + i*0.05);
-      o.stop(now + i*0.05 + dur + 0.05);
-    });
+    for (let r=0; r<reps; r++){
+      const base = now + r*(dur+gap);
+      freqs.forEach((f,i)=>{
+        const o = ctx.createOscillator();
+        const gn = ctx.createGain();
+        o.type = type;
+        o.frequency.value = f;
+        o.connect(gn); gn.connect(ctx.destination);
+        // bell-like envelope: quick attack, slow decay
+        gn.gain.setValueAtTime(0, base + i*0.05);
+        gn.gain.linearRampToValueAtTime(vol, base + i*0.05 + 0.02);
+        gn.gain.exponentialRampToValueAtTime(0.0001, base + i*0.05 + dur);
+        o.start(base + i*0.05);
+        o.stop(base + i*0.05 + dur + 0.05);
+      });
+    }
   } catch(e){ /* silent fail */ }
 }
 
@@ -1633,8 +1636,11 @@ function tickTimer(){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     const fsBtn = g('fs-btn-start'); if (fsBtn) fsBtn.textContent='▶ START';
-    cancelTimerNotification(); stopKeepAlive();
-    try { if (navigator.vibrate) navigator.vibrate([400,150,400,150,600]); } catch(e){}
+    // clear the page fallback timer only — do NOT cancel the SW notification
+    // here, otherwise it would dismiss the very "session bitti" alert we want
+    clearTimeout(_endTO); _endTO = null;
+    stopKeepAlive();
+    try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
     if(!isBreak){
       S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
       S.sessions++; S.streak++; S.kills++;
@@ -2466,22 +2472,64 @@ function _nativeCancel(id){
   try{ LN.cancel({ notifications:[{id}] }); }catch(e){}
 }
 
+let _endTO = null;
+function _timerNotifText(){
+  const focusEnd = !isBreak;
+  return {
+    focusEnd,
+    title: focusEnd ? '🔔 SESSION BİTTİ' : '🔔 MOLA BİTTİ',
+    body:  focusEnd ? 'Odak süresi doldu — molaya geç.'
+                    : 'Mola bitti — yeni oturum başlat.',
+  };
+}
+
+// Precise in-page fallback: fires exactly at the end while the tab is alive
+// (foreground, or background until the OS freezes it). This is what makes the
+// alert land at the RIGHT time instead of at session start.
+function _armEndFallback(){
+  clearTimeout(_endTO); _endTO = null;
+  if (!timerRunning || !timerEndAt) return;
+  const ms = timerEndAt - Date.now();
+  _endTO = setTimeout(_fireEndFallback, Math.max(0, ms));
+}
+function _fireEndFallback(){
+  if (!timerRunning || !timerEndAt) return;
+  const remaining = timerEndAt - Date.now();
+  if (remaining > 1200){ _armEndFallback(); return; }   // woke early → re-arm
+  const { title, body } = _timerNotifText();
+  // If the user isn't looking at the app, push an OS notification NOW
+  // (with system sound + vibration) so they hear it without watching.
+  if (document.hidden || !document.hasFocus()){
+    if (!_isNative() && ('Notification' in window) && Notification.permission==='granted'){
+      swPost({ type:'notify', tag:'overclock-timer', title, body, icon:_NOTIF_ICON });
+    }
+    try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
+  }
+  // process completion (plays the bell, awards XP, switches to break)
+  timerSecs = 0;
+  tickTimer();
+}
+
 function scheduleTimerNotification(){
   if (!timerRunning || !timerEndAt) return;
-  const focusEnd = !isBreak;
-  const title = focusEnd ? '🔔 SESSION COMPLETE' : '🔔 MOLA BİTTİ';
-  const body  = focusEnd ? 'Odak süresi doldu — molaya geç. (Uygulamayı aç, XP işlensin.)'
-                         : 'Mola bitti — yeni oturum başlat.';
+  const { focusEnd, title, body } = _timerNotifText();
   if (_isNative()){ _nativeSchedule(_NID_TIMER, timerEndAt, title, body); return; }
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  swPost({
-    type:'schedule', at: timerEndAt, tag:'overclock-timer',
-    kind: focusEnd ? 'focus_end' : 'break_end',
-    title, body, icon:_NOTIF_ICON,
-  });
+  // always arm the precise page-side fallback
+  _armEndFallback();
+  // additionally, if real Notification Triggers exist, schedule a true
+  // background notification (SW ignores this when triggers are unsupported,
+  // so it can no longer fire at the wrong time)
+  if (('Notification' in window) && Notification.permission==='granted'){
+    swPost({
+      type:'schedule', at: timerEndAt, tag:'overclock-timer',
+      kind: focusEnd ? 'focus_end' : 'break_end',
+      title, body, icon:_NOTIF_ICON,
+    });
+  }
 }
 
 function cancelTimerNotification(){
+  clearTimeout(_endTO); _endTO = null;
   if (_isNative()){ _nativeCancel(_NID_TIMER); return; }
   swPost({ type:'cancel', tag:'overclock-timer' });
 }
@@ -3938,7 +3986,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.2 başlatıldı.');
+addLog('OVERCLOCK v7.3 başlatıldı.');
 </script>
 </body>
 </html>

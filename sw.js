@@ -1,5 +1,5 @@
 // OVERCLOCK service worker — offline cache + scheduled (background) notifications
-const CACHE = 'overclock-v7';
+const CACHE = 'overclock-v72';
 
 self.addEventListener('install', e => self.skipWaiting());
 
@@ -25,23 +25,31 @@ self.addEventListener('fetch', e => {
 self.addEventListener('message', async (e) => {
   const d = e.data || {};
   const reg = self.registration;
+  const baseOpts = (d) => ({
+    body: d.body || '',
+    tag: d.tag || 'overclock-timer',
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [500, 200, 500, 200, 700],
+    silent: false,            // play the system notification sound (the "zil")
+    icon: d.icon,
+    badge: d.icon,
+    data: { kind: d.kind || 'timer' },
+  });
   if (d.type === 'schedule') {
+    // ONLY schedule when real Notification Triggers exist. Without it, showing
+    // here would fire immediately (the bug) — so we skip and let the page's
+    // precise setTimeout fallback handle it instead.
+    if (!('showTrigger' in Notification.prototype) || !d.at) return;
     try {
-      const opts = {
-        body: d.body || '',
-        tag: d.tag || 'overclock-timer',
-        renotify: true,
-        requireInteraction: true,
-        vibrate: [400, 150, 400, 150, 600],
-        icon: d.icon,
-        badge: d.icon,
-        data: { kind: d.kind || 'timer' },
-      };
-      if ('showTrigger' in Notification.prototype && d.at) {
-        opts.showTrigger = new TimestampTrigger(d.at);
-      }
+      const opts = baseOpts(d);
+      opts.showTrigger = new TimestampTrigger(d.at);
       await reg.showNotification(d.title || 'OVERCLOCK', opts);
-    } catch (err) { /* trigger unsupported — page handles fallback */ }
+    } catch (err) { /* trigger failed — page fallback covers it */ }
+  } else if (d.type === 'notify') {
+    // fire NOW (used by the page fallback at the real end moment)
+    try { await reg.showNotification(d.title || 'OVERCLOCK', baseOpts(d)); }
+    catch (err) {}
   } else if (d.type === 'cancel') {
     const tag = d.tag || 'overclock-timer';
     const list = await reg.getNotifications({ tag, includeTriggered: true });
