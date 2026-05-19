@@ -11,7 +11,7 @@
 <title>OVERCLOCK</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>">
 <script>
-const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standalone",background_color:"#000000",theme_color:"#000000",orientation:"portrait",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000'/><text x='96' y='140' font-size='120' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standalone",start_url:"./",scope:"./",background_color:"#000000",theme_color:"#000000",orientation:"portrait",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000'/><text x='96' y='140' font-size='120' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -975,11 +975,11 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📲 Tarayıcı Bildirimi</span>
         <span id="notif-val" class="bio-val off">KAPALI</span>
       </div>
-      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Zil: session/mola bitince + hatırlatıcı tetiklenince. Bildirim izni hatırlatıcılar için.</div>
+      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Bildirim izni <b style="color:var(--bright)">açık olmalı</b>: sayaç bitince uygulama arkaplandayken / ekran kapalıyken bile sistem bildirimi + titreşim gelir. İzin kapalıysa ses sadece uygulamayı açınca çalar.</div>
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.0 // TR-1<br>Net takip · Streak koruyucu · JSON yedek<br>Samsung Internet → Ana Ekrana Ekle</div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.1 // TR-1<br>Arkaplan bildirimi · Net takip · JSON yedek<br><b style="color:var(--bright)">Ana Ekrana Ekle + Bildirim izni</b> şart</div>
     </div>
   </div>
 </div>
@@ -1552,9 +1552,14 @@ function toggleTimer(){
     g('btn-start').textContent='▶ START';
     const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
+    cancelTimerNotification(); stopKeepAlive();
   } else {
     if (!isBreak) stopLeak();
     if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
+    // ask for notification permission on the first start (user gesture)
+    if (('Notification' in window) && Notification.permission === 'default') {
+      try { requestNotifPermission(); } catch(e){}
+    }
     timerRunning=true;
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
     g('btn-start').textContent='⏸ PAUSE';
@@ -1562,6 +1567,10 @@ function toggleTimer(){
     setStatus(isBreak?'break':'active');
     timerIv=setInterval(tickTimer,1000);
     addLog(isBreak?'Mola başladı.':'Focus başladı — '+S.focusMin+'dk.');
+    // arrange a background alert that fires even if the app is closed / screen off
+    setTimeout(scheduleTimerNotification, 300);
+    startKeepAlive();
+    cancelBossNotification(); // working again → no boss heads-up needed
   }
 }
 
@@ -1590,6 +1599,8 @@ function tickTimer(){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     const fsBtn = g('fs-btn-start'); if (fsBtn) fsBtn.textContent='▶ START';
+    cancelTimerNotification(); stopKeepAlive();
+    try { if (navigator.vibrate) navigator.vibrate([400,150,400,150,600]); } catch(e){}
     if(!isBreak){
       S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
       S.sessions++; S.streak++; S.kills++;
@@ -1624,7 +1635,15 @@ function tickTimer(){
 // ── BACKGROUND CATCH-UP ──
 // When app returns to foreground, sync timer to wall-clock and complete if expired
 document.addEventListener('visibilitychange', function(){
-  if(!document.hidden && timerRunning && timerEndAt){
+  if(document.hidden){
+    // going to background: make sure the OS-level alerts are armed
+    if (timerRunning && timerEndAt) scheduleTimerNotification();
+    scheduleBossNotification();
+    return;
+  }
+  // back in foreground
+  cancelBossNotification();
+  if(timerRunning && timerEndAt){
     const remaining = Math.round((timerEndAt - Date.now()) / 1000);
     if(remaining <= 0){
       // timer finished in background — trigger completion now
@@ -1635,7 +1654,15 @@ document.addEventListener('visibilitychange', function(){
       renderTimer();
     }
   }
+  // recompute boss aggression for the time we were away
+  try { bossAggroTick(); } catch(e){}
 });
+
+// extra safety: arm alerts right before the page is frozen/hidden on Android
+['pagehide','freeze','blur'].forEach(ev=>window.addEventListener(ev,function(){
+  if (timerRunning && timerEndAt) scheduleTimerNotification();
+  scheduleBossNotification();
+}));
 
 // ════════════════════════════════════════
 // DEBUFF / LEAK SYSTEM
@@ -1673,6 +1700,7 @@ function stopLeak(){
 function resetTimer(){
   clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0; timerEndAt=null;
   stopLeak();
+  cancelTimerNotification(); stopKeepAlive();
   timerSecs=S.focusMin*60;
   g('btn-start').textContent='▶ START';
   const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
@@ -2344,12 +2372,99 @@ function requestNotifPermission(){
     Notification.requestPermission().then(p => {
       S.notifEnabled = (p === 'granted');
       save();
-      if (p === 'granted') notify('🔔 BİLDİRİMLER AÇILDI');
+      if (p === 'granted') {
+        notify('🔔 BİLDİRİMLER AÇILDI');
+        try { refreshNotifSwitch(); }catch(e){}
+        // a timer may already be running — schedule its background alert now
+        if (timerRunning) setTimeout(scheduleTimerNotification, 200);
+      }
     });
   } else {
     S.notifEnabled = (Notification.permission === 'granted');
     save();
   }
+}
+
+// ════════════════════════════════════════
+// BACKGROUND TIMER ALERTS  (v7.1)
+// Fires the session/break end alert even when the app is backgrounded
+// or the tablet screen is off — via Notification Triggers (TimestampTrigger)
+// delivered by the service worker. Falls back to silent-audio keepalive +
+// foreground catch-up where triggers aren't supported.
+// ════════════════════════════════════════
+const _NOTIF_ICON = 'data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>");
+
+function swPost(msg){
+  try{
+    const c = (navigator.serviceWorker && navigator.serviceWorker.controller) ||
+              (_swReg && _swReg.active);
+    if (c) { c.postMessage(msg); return true; }
+  }catch(e){}
+  return false;
+}
+
+// Schedule the alert for the currently-running countdown
+function scheduleTimerNotification(){
+  if (!timerRunning || !timerEndAt) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const focusEnd = !isBreak;
+  swPost({
+    type:'schedule',
+    at: timerEndAt,
+    tag:'overclock-timer',
+    kind: focusEnd ? 'focus_end' : 'break_end',
+    title: focusEnd ? '🔔 SESSION COMPLETE' : '🔔 MOLA BİTTİ',
+    body:  focusEnd ? 'Odak süresi doldu — molaya geç. (Uygulamayı aç, XP işlensin.)'
+                    : 'Mola bitti — yeni oturum başlat.',
+    icon:_NOTIF_ICON,
+  });
+}
+
+function cancelTimerNotification(){
+  swPost({ type:'cancel', tag:'overclock-timer' });
+}
+
+// Schedule a boss-attack heads-up while the app is in the background
+function scheduleBossNotification(){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!S || S.bossDefeated || S.bossHp <= 0) return;
+  if (S.boostUntil && Date.now() < S.boostUntil && S.activeShield) return;
+  if (timerRunning && !isBreak) return; // actively working — boss is calm
+  const lastEnd = S.lastFocusEnd || Date.now();
+  const hitAt = lastEnd + BOSS_AGGRO_HIT_HOURS*3600000;
+  if (hitAt <= Date.now()) return; // already in hit phase; handled on resume
+  swPost({
+    type:'schedule',
+    at: hitAt,
+    tag:'overclock-boss',
+    kind:'aggro',
+    title:'⚔ BOSS SALDIRIYOR',
+    body:'Uzun süredir odak yok. Boss saldırmaya başladı — uygulamayı aç ve focus başlat.',
+    icon:_NOTIF_ICON,
+  });
+}
+function cancelBossNotification(){ swPost({ type:'cancel', tag:'overclock-boss' }); }
+
+// ── Silent-audio keepalive ──
+// Keeps the audio graph alive so the in-app bell can still fire near real time
+// in the background on browsers without Notification Triggers. Best-effort.
+let _kaSrc = null;
+function startKeepAlive(){
+  try{
+    const ctx = getAudioCtx(); if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    stopKeepAlive();
+    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const g0 = ctx.createGain(); g0.gain.value = 0.0001;
+    src.connect(g0); g0.connect(ctx.destination);
+    src.start(0);
+    _kaSrc = src;
+  }catch(e){}
+}
+function stopKeepAlive(){
+  try{ if (_kaSrc){ _kaSrc.stop(); _kaSrc.disconnect(); _kaSrc=null; } }catch(e){}
 }
 
 function fireReminder(task){
@@ -3598,9 +3713,13 @@ setInterval(()=>{
 // ════════════════════════════════════════
 // SERVICE WORKER
 // ════════════════════════════════════════
+let _swReg = null;
 if('serviceWorker' in navigator){
-  const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>clients.claim());self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(()=>{});
+  // Real same-origin SW file (blob-URL SWs can't schedule background notifications)
+  navigator.serviceWorker.register('sw.js').then(reg=>{
+    _swReg = reg;
+    return navigator.serviceWorker.ready;
+  }).then(reg=>{ _swReg = reg; }).catch(()=>{});
 }
 
 // ════════════════════════════════════════
@@ -3613,7 +3732,7 @@ renderAll();
 refreshNotifSwitch();
 // initial reminder & aggro check on open
 try { reminderTick(); bossAggroTick(); } catch(e){}
-addLog('OVERCLOCK v6.0 başlatıldı.');
+addLog('OVERCLOCK v7.1 başlatıldı.');
 </script>
 </body>
 </html>
