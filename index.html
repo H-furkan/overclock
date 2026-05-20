@@ -1004,11 +1004,11 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📲 Tarayıcı Bildirimi</span>
         <span id="notif-val" class="bio-val off">KAPALI</span>
       </div>
-      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Bildirim izni <b style="color:var(--bright)">açık olmalı</b>: sayaç bitince uygulama arkaplandayken / ekran kapalıyken bile sistem bildirimi + titreşim gelir. İzin kapalıysa ses sadece uygulamayı açınca çalar.</div>
+      <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Bildirim izni <b style="color:var(--bright)">açık olmalı</b>: sayaç bitince uygulama arkaplandayken / ekran kapalıyken bile sistem bildirimi + titreşim gelir.<br><b style="color:var(--bright)">Bildirim sessizse:</b> Android Ayarları → Uygulamalar → (tarayıcı: Samsung Internet / Chrome) → Bildirimler → kanalı (Sites/Genel) aç ve <b>Ses</b>'i etkinleştir. Web tarafında bildirim sesini OS yönetir; APK'da bu sorun yok (yüksek-öncelikli kendi kanalımız var).</div>
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.3 // TR-1<br>Kesin zamanlı zil+bildirim · Cihaz senkron · APK<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.4 // TR-1<br>Yüksek-öncelikli APK bildirim kanalı · Sesli alarm<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -2448,22 +2448,46 @@ function swPost(msg){
 // In the APK these are real OS alarms (exact, screen-off proof). On the web
 // we fall back to the service-worker Notification Triggers path.
 const _NID_TIMER = 1001, _NID_BOSS = 1002;
+const _NCH_TIMER = 'overclock-timer'; // high-importance Android channel id (sound + heads-up)
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
 function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
-let _capPermAsked = false;
+let _capPermAsked = false, _capChannelReady = false;
 function ensureNativeNotifPerm(){
-  const LN=_capNotif(); if(!LN || _capPermAsked) return;
-  _capPermAsked = true;
-  try { LN.requestPermissions(); } catch(e){}
+  const LN=_capNotif(); if(!LN) return;
+  if(!_capPermAsked){ _capPermAsked = true; try { LN.requestPermissions(); } catch(e){} }
+  ensureNotifChannel();
+}
+// Create a high-importance Android channel so the notification is AUDIBLE
+// (default sound + vibration) even when the screen is locked. Without this
+// Capacitor falls back to a low-importance default channel on some devices,
+// which is why the alarm dropped silently.
+function ensureNotifChannel(){
+  const LN=_capNotif(); if(!LN || _capChannelReady) return;
+  _capChannelReady = true;
+  try {
+    LN.createChannel({
+      id: _NCH_TIMER,
+      name: 'OVERCLOCK Sayaç',
+      description: 'Session ve mola bitişi alarmları',
+      importance: 5,        // IMPORTANCE_HIGH → heads-up + sound on lock screen
+      visibility: 1,        // PUBLIC
+      vibration: true,
+      // sound omitted → uses the system default notification sound
+    });
+  } catch(e){}
 }
 function _nativeSchedule(id, at, title, body){
   const LN=_capNotif(); if(!LN) return;
+  ensureNotifChannel();
   try{
     LN.cancel({ notifications:[{id}] }).catch(()=>{});
     LN.schedule({ notifications:[{
       id, title, body,
       schedule:{ at:new Date(at), allowWhileIdle:true },
-      smallIcon:'ic_stat_icon'
+      smallIcon:'ic_stat_icon',
+      channelId: _NCH_TIMER,         // route through the audible channel
+      sound: 'default',              // best-effort: use system default sound
+      autoCancel: false,
     }]});
   }catch(e){}
 }
@@ -3986,7 +4010,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.3 başlatıldı.');
+addLog('OVERCLOCK v7.4 başlatıldı.');
 </script>
 </body>
 </html>
