@@ -414,6 +414,19 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div>
 
+<!-- REST DAY CONFIRM MODAL -->
+<div id="restday-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:320px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
+    <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:6px">🎟 İZİN GÜNÜ?</div>
+    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.7;text-align:center;margin:8px 0 16px">
+      Bugünü <b>rest day</b> olarak işaretlersen: streak korunur, ekonomi cezası yok. <b>1 jeton harcanır.</b> Onaylıyor musun?
+    </div>
+    <div id="restday-stock-msg" style="font-size:8px;color:var(--muted);text-align:center;margin-bottom:14px"></div>
+    <button class="btn primary fw mb8" onclick="confirmRestDay()">✓ EVET — JETON HARCA</button>
+    <button class="btn fw" onclick="closeRestDayModal()">✕ İPTAL</button>
+  </div>
+</div>
+
 <!-- NOTES MODAL -->
 <div id="notes-modal">
   <div id="notes-box">
@@ -462,6 +475,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   <button class="navitem" onclick="goTab(this,'tasks')">📋 GÖREVLER</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
+  <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
   <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
   <button class="navitem" onclick="goTab(this,'shop')">📦 MARKET</button>
   <button class="navitem" onclick="goTab(this,'log')">🗒 LOG</button>
@@ -530,6 +544,20 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <div id="streak-lbl">GÜN STREAK</div>
       </div>
       <div id="streak-msg">HEDEFE ULAŞ — ZİNCİRİ BAŞLAT</div>
+      <button id="restday-chip" onclick="askRestDay()" title="Rest Day jetonu" style="background:var(--mid);border:1px solid var(--bd2);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px">🎟 <span id="restday-count">0</span></button>
+    </div>
+
+    <!-- DAY MARK STRIP — Rev A visual differentiation -->
+    <div id="day-strip-wrap" style="display:flex;align-items:center;gap:6px;margin-top:8px">
+      <span style="font-size:7px;color:var(--muted);letter-spacing:2px">SON 14 G</span>
+      <div id="day-strip" style="display:flex;gap:2px;flex:1"></div>
+      <span style="font-size:7px;color:var(--muted);letter-spacing:1px">⬜boş ❄frozen 🎟rest ▮aktif</span>
+    </div>
+
+    <!-- REST DAY BANNER -->
+    <div id="rest-banner" style="display:none;background:var(--mid);border:1px solid var(--bd2);border-left:3px solid var(--yellow);padding:12px 14px;margin-top:10px;font-size:10px;color:var(--bright);letter-spacing:1px;line-height:1.6">
+      🎟 <b style="color:var(--white)">DİNLENME MODU AKTİF</b> — Bugün izin günün. Görevler/sayaç ekonomisi kilitli, streak korunuyor.
+      <button class="btn" style="margin-top:8px;min-height:28px" onclick="cancelRestDay()">✕ DİNLENMEYİ İPTAL ET</button>
     </div>
   </div>
 
@@ -837,9 +865,16 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
   <div class="block">
     <div class="blabel">■ Streak Koruyucu</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Pahalı bilerek — her gün kullanılmasın diye. Bir gün hedefi kaçırırsan otomatik harcanır, streak'in kırılmaz. Stoklanabilir.</div>
-    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:10px">📦 Stokta: <b id="streak-stock" style="color:var(--white)">0</b> adet</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Fiyat üstel artar (10K tavan). Stok max <b>2</b>. 4 gün almazsan fiyat kademeli olarak 2.5K'ya geri iner.</div>
+    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:10px">📦 Stokta: <b id="streak-stock" style="color:var(--white)">0</b>/2 &nbsp; · &nbsp; 💰 Şu an: <b id="streak-cost" style="color:var(--yellow)">2500</b> XP</div>
     <div class="shop-grid" id="shop-streak"></div>
+  </div>
+
+  <div class="block">
+    <div class="blabel">■ Çalışma Sinkleri (XP Eritici)</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">XP biriktirmek için değil, çalışmaya yönlendirmek için. Konu Sigortası ve Hedef Sözleşmesi tekrar alınabilir.</div>
+    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:10px">🛡️ Konu Sigortası stok: <b id="ins-stock" style="color:var(--white)">0</b> &nbsp; · &nbsp; 📜 Sözleşme: <span id="contract-state" style="color:var(--bright)">pasif</span></div>
+    <div class="shop-grid" id="shop-sink"></div>
   </div>
 
   <div class="block">
@@ -866,6 +901,14 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <div style="margin-bottom:8px"><div class="ilabel">DENEME ADI (ops.)</div><input class="inp" id="exam-name" placeholder="Örn: 3D Yayınları TYT-12"></div>
     <div id="exam-net-inputs"></div>
     <div id="exam-total-preview" style="font-size:10px;color:var(--bright);letter-spacing:1px;margin:8px 0">TOPLAM NET: <b style="color:var(--white)">0.00</b></div>
+    <div class="ilabel" style="margin-bottom:4px">YANLIŞ KONULAR (ops.)</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <input class="inp" id="exam-wrong-input" list="wrong-topics-dl" placeholder="Örn: Optik (yaz, listeden seç veya yeni ekle)" onkeydown="if(event.key==='Enter'){event.preventDefault();addExamWrongChip()}">
+      <button class="btn" style="min-height:34px" onclick="addExamWrongChip()">+ EKLE</button>
+    </div>
+    <datalist id="wrong-topics-dl"></datalist>
+    <div id="exam-wrong-chips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;min-height:6px"></div>
+    <div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">Eklenen konular kaydedince <b style="color:var(--bright)">Deneme Ağacı</b> sekmesinde görünür. Listeden seçtiğinde aynı isim yazım hatası dahil tekleştirilir.</div>
     <button class="btn primary fw" onclick="addExam()">💾 DENEMEYİ KAYDET</button>
   </div>
 
@@ -878,19 +921,15 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
     </div>
     <canvas id="net-chart" style="width:100%;height:190px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div id="net-chart-legend" style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase">— ham net &nbsp;&nbsp; <span style="color:var(--yellow)">···</span> 5'li hareketli ortalama</div>
     <div id="net-chart-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:8px">Bu tür için henüz deneme girilmedi.</div>
+    <div id="plateau-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
   </div>
 
   <div class="block">
     <div class="blabel">■ Deneme Geçmişi</div>
     <div id="exam-history-list"></div>
     <div id="exam-history-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz deneme kaydı yok.</div>
-  </div>
-
-  <div class="block">
-    <div class="blabel">■ Konu Bitirme Yüzdeleri</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Her ders için müfredatın ne kadarını bitirdiğini işaretle.</div>
-    <div id="topic-progress-list"></div>
   </div>
 
   <div class="block">
@@ -907,6 +946,23 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <div id="q-stats-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz soru kaydı yok.</div>
   </div>
 
+</div>
+
+<!-- ══════════ PAGE: DENEME AĞACI ══════════ -->
+<div id="page-tree" class="page">
+  <div class="block">
+    <div class="blabel">■ Deneme Ağacı</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+      Denemede etiketlediğin yanlış konular burada toplanır. Her konu için başlangıç hedefi <b style="color:var(--bright)">15 soru</b>. <b>Düzeltildi</b> işaretlenmeden tekrar etiketlenirse hedef boss gibi yükselir (20 → 25 → 30 → tavan 32). Düzeltildi işaretleyince hedef kadar XP kazanırsın.
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button class="fbtn active" id="tt-active" onclick="setTreeFilter('active',this)">AKTİF</button>
+      <button class="fbtn" id="tt-fixed" onclick="setTreeFilter('fixed',this)">DÜZELTİLDİ</button>
+      <button class="fbtn" id="tt-all" onclick="setTreeFilter('all',this)">TÜMÜ</button>
+    </div>
+    <div id="tree-list"></div>
+    <div id="tree-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:14px 0">Henüz etiketlenmiş konu yok. Denemende yanlış konuları ekle.</div>
+  </div>
 </div>
 
 <div id="page-log" class="page">
@@ -1008,7 +1064,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.4 // TR-1<br>Yüksek-öncelikli APK bildirim kanalı · Sesli alarm<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.5 // TR-1<br>Deneme Ağacı · Plato uyarısı · Rest Day · XP decay<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1136,14 +1192,36 @@ const SHOP_ITEMS = [
   {id:'boost_xp1h',  cat:'boost', icon:'⚡',  name:'2X XP — 1H',  desc:'1 saat boyunca tüm XP 2 kat', cost:1500,  duration:3600},
   {id:'boost_xp30',  cat:'boost', icon:'🔥',  name:'2X XP — 30D', desc:'30 dk içinde kazanılan XP 2 katı', cost:900, duration:1800},
   {id:'boost_shield',cat:'boost', icon:'🛡',  name:'KALKAN — 2H', desc:'2 saat boss saldırısını engelle', cost:500, duration:7200, shield:true},
-  // STREAK PROTECTOR (consumable — auto-consumed on a missed day)
-  {id:'streak_shield', cat:'streak', icon:'❄️', name:'STREAK KORUYUCU', desc:'Bir gün hedefi kaçırsan bile streak kırılmaz. Otomatik harcanır. Stoklanabilir.', cost:2500},
+  // STREAK PROTECTOR (consumable — auto-consumed on a missed day; cost is dynamic)
+  {id:'streak_shield', cat:'streak', icon:'❄️', name:'STREAK KORUYUCU', desc:'Bir gün hedefi kaçırsan bile streak kırılmaz. Otomatik harcanır. Stok max 2.', cost:2500},
+  // ── XP SINKS (Rev D) — study-directing modules ──
+  {id:'sink_topic_insurance', cat:'sink', icon:'🛡️', name:'KONU SİGORTASI', desc:'Bir yanlış-konu etiketinin SEVİYE ATLAMASINI engeller. Etiketlendiğinde otomatik harcanır.', cost:800},
+  {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Bugün focus dakika hedefini +30 yükselt. Tutarsan +200 XP iadesi, tutmazsan -100 XP ceza.', cost:600},
+  {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince +250 XP.', cost:1200},
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Level rozeti yanında 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Level rozeti yanında ⚡', cost:550},
   {id:'cos_crown',   cat:'cosmetic', icon:'👑', name:'TAÇ',          desc:'Level rozeti yanında 👑', cost:2000},
   {id:'cos_diamond', cat:'cosmetic', icon:'💎', name:'ELMAS',        desc:'Level rozeti yanında 💎', cost:1500},
 ];
+
+// ── Streak Protector dynamic pricing (Rev B) ──
+// Base 2500 → doubles each buy (2500/5000/10000); 10K hard cap; stock max 2;
+// after 4 days without buying, each additional day reduces effective buys by 1
+// (slow slide back down toward 2500).
+const STREAK_SHIELD_BASE = 2500;
+const STREAK_SHIELD_CAP  = 10000;
+const STREAK_SHIELD_MAX_STOCK = 2;
+function getStreakShieldCost(){
+  const buys = S.streakShieldBuys||0;
+  let eff = buys;
+  if (S.streakShieldLastBuyAt){
+    const days = Math.floor((Date.now() - S.streakShieldLastBuyAt) / 86400000);
+    if (days > 4) eff = Math.max(0, buys - (days - 4));
+  }
+  const c = Math.round(STREAK_SHIELD_BASE * Math.pow(2, eff));
+  return Math.min(STREAK_SHIELD_CAP, Math.max(STREAK_SHIELD_BASE, c));
+}
 
 // ════════════════════════════════════════
 // AUDIO (Web Audio API — bell sound, no asset needed)
@@ -1237,9 +1315,21 @@ function defState() {
     // ── NEW v7: CLOUD SYNC ──
     _updatedAt:0,                 // ms of last local change pushed to cloud
     // ── NEW v7: EXAM / NET TRACKING ──
-    exams:[],                     // [{id,date,type,name,nets:{},total}]
-    topicProgress:{},             // {subjectKey: pct 0-100}
+    exams:[],                     // [{id,date,type,name,nets:{},total,wrongTopics:[normKey]}]
+    topicProgress:{},             // (deprecated v7.5)
     questionLog:{},               // {subject: totalCount}
+    // ── NEW v7.5: ECONOMY / ECONOMY / REST DAYS / DAY MARKS ──
+    dayMarks:{},                  // {date: 'active'|'frozen'|'rest'}
+    streakShieldBuys:0,           // number of buys (drives the escalating cost curve)
+    streakShieldLastBuyAt:0,      // ms timestamp of last buy
+    streakShieldLastUseDate:null, // date string of last auto-consumption
+    restDayTokens:0,              // ticket count (max 2)
+    restDayLastGrant:0,           // last dayStreak value at which a token was granted
+    restDayActiveDate:null,       // if === today() → rest mode UI is active
+    wrongTopics:{},               // {normKey: {name,level,target,solved,fixed,history,lastSeenExam}}
+    topicInsurances:0,            // Konu Sigortası stock (sink)
+    studyContract:null,           // {date, focusTarget, resolved}
+    decayLog:[],                  // [{date, amount}]
   };
 }
 
@@ -1266,23 +1356,76 @@ function loadState() {
       // If yesterday's XP reached goal (lastGoalHitDate === saved.lastDate),
       // and saved.lastDate is exactly yesterday, keep chain. Otherwise reset.
       const yesterdayStr = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-      const dayBeforeStr = (()=>{const d=new Date();d.setDate(d.getDate()-2);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
       const hitYesterday = (saved.lastGoalHitDate === saved.lastDate);
-      const lastWasYesterday = (saved.lastDate === yesterdayStr);
-      if (!(hitYesterday && lastWasYesterday)) {
-        // ── STREAK PROTECTOR: cover a single missed day ──
-        // single-day lapse = active yesterday but missed goal, OR skipped exactly yesterday
-        const singleDayLapse =
-          (lastWasYesterday && !hitYesterday) ||
-          (saved.lastDate === dayBeforeStr && hitYesterday);
-        if (singleDayLapse && (saved.dayStreak||0) > 0 && (saved.streakProtectors||0) > 0) {
-          S.streakProtectors = (saved.streakProtectors||0) - 1;
-          S.dayStreak = saved.dayStreak;            // chain preserved
-          S.lastGoalHitDate = yesterdayStr;         // bridge the gap so chain continues today
-          S._streakSaved = true;                    // flag for a one-time notice
+      // ── COVERAGE WALK (v7.5) ──
+      // Walk every day between saved.lastDate (exclusive) and today (exclusive).
+      // Cover order per day: REST DAY token (already pre-marked) → STREAK PROTECTOR
+      // (auto-consume → 'frozen' mark + XP decay). Any uncovered gap resets streak.
+      const _diff = Math.max(0, Math.round(
+        (new Date(t).getTime() - new Date(saved.lastDate).getTime()) / 86400000));
+      const _emptyDays = [];
+      for(let i=1;i<_diff;i++){
+        const dt=new Date(saved.lastDate); dt.setDate(dt.getDate()+i);
+        _emptyDays.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
+      }
+      const _dayMarks = Object.assign({}, saved.dayMarks||{});
+      let _prot = saved.streakProtectors||0;
+      let _frozen = 0, _decayDays = 0, _resetIt = false;
+      // Don't burn protectors on a non-existent streak
+      const _protectActive = (saved.dayStreak||0) > 0;
+      // (a) cover saved.lastDate if no goal there
+      if(!hitYesterday && _diff>=1){
+        if(_prot>0 && _protectActive){ _prot--; _frozen++; _dayMarks[saved.lastDate]='frozen'; }
+        else { _resetIt = true; }
+      } else if(hitYesterday){
+        _dayMarks[saved.lastDate] = _dayMarks[saved.lastDate]||'active';
+      }
+      // (b) full empty calendar days
+      for(const d of _emptyDays){
+        if(_dayMarks[d]==='rest') continue;      // user pre-spent a rest token
+        if(_dayMarks[d]==='active') continue;
+        if(_prot>0 && !_resetIt && _protectActive){
+          _prot--; _frozen++; _dayMarks[d]='frozen'; _decayDays++;
         } else {
-          S.dayStreak = 0;
+          _resetIt = true; _decayDays++;
         }
+      }
+      S.dayMarks = _dayMarks;
+      S.streakProtectors = _prot;
+      if(_resetIt){
+        S.dayStreak = 0;
+      } else {
+        S.dayStreak = saved.dayStreak || 0;
+        S.lastGoalHitDate = yesterdayStr;
+        if(_frozen>0){
+          S.streakShieldLastUseDate = t;
+          S._streakSaved = true;
+        }
+      }
+      // ── Rev E: XP DECAY for inactive (frozen + uncovered) days ──
+      if(_decayDays>0){
+        let totalDrain = 0;
+        for(let k=0;k<_decayDays;k++){
+          const amt = Math.max(20, Math.round(0.03*((S.totalXp||0) - totalDrain)));
+          totalDrain += amt;
+        }
+        const before = S.totalXp||0;
+        S.totalXp = Math.max(0, before - totalDrain);
+        S.decayLog = (S.decayLog||[]).concat([{date:t, amount: before - S.totalXp, days:_decayDays}]);
+        if(S.decayLog.length>40) S.decayLog = S.decayLog.slice(-40);
+        S._decayApplied = before - S.totalXp;
+      }
+      // ── Hedef Sözleşmesi rollover evaluation ──
+      if(S.studyContract && S.studyContract.date===saved.lastDate && !S.studyContract.resolved){
+        const focusMin = (saved.todayFocusSecs||0)/60;
+        if(focusMin >= S.studyContract.focusTarget){
+          S.totalXp = (S.totalXp||0) + 200;
+          S._contractWin = true;
+        } else {
+          S.totalXp = Math.max(0, (S.totalXp||0) - 100);
+          S._contractLoss = true;
+        }
+        S.studyContract.resolved = true;
       }
       // ── PUSH YESTERDAY'S FOCUS INTO HISTORY ──
       if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
@@ -1386,6 +1529,7 @@ function goTab(btn, name) {
   if (name === 'shop') setTimeout(()=>{ try{ renderShop(); }catch(e){} }, 20);
   // EXAM tab
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
+  if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
   // Resume audio context on tap (mobile policy)
   try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
 }
@@ -1494,8 +1638,25 @@ function addXP(amt, label) {
       S.dayStreak = (S.dayStreak||0) + 1;
       S.lastGoalHitDate = today();
       if (S.dayStreak > (S.bestStreak||0)) S.bestStreak = S.dayStreak;
+      // mark today as a real "active" day for Rev A
+      S.dayMarks = S.dayMarks||{};
+      S.dayMarks[today()] = 'active';
       notify('🔥 STREAK +1 // '+S.dayStreak+' GÜN');
       addLog('Streak: '+S.dayStreak+' gün.');
+      // ── F3: grant a Rest Day token every 6 consecutive days ──
+      const lastGrant = S.restDayLastGrant||0;
+      if (S.dayStreak >= lastGrant + 6) {
+        S.restDayLastGrant = S.dayStreak - (S.dayStreak % 6);
+        const cap = 2;
+        if ((S.restDayTokens||0) < cap){
+          S.restDayTokens = (S.restDayTokens||0) + 1;
+          notify('🎟 REST DAY JETONU KAZANILDI // STOK: '+S.restDayTokens);
+          addLog('Rest Day jetonu +1 (stok: '+S.restDayTokens+')');
+        } else {
+          notify('🎟 JETON YANDI — kapasite dolu ('+cap+')');
+          addLog('Rest Day jetonu kapasiteye takıldı — yandı.');
+        }
+      }
     }
   }
   save(); showXpPop(finalAmt); renderXP(); renderStreak();
@@ -1557,7 +1718,15 @@ function renderStreak(){
   else if (n < 30)  msg.textContent = '⚡ '+n+' GÜN — TITAN PROTOKOLÜ AKTİF';
   else              msg.textContent = '👑 '+n+' GÜN — EFSANEVİ';
   const sp = S.streakProtectors||0;
-  if (sp > 0) msg.textContent += ' // ❄️×'+sp;
+  const rd = S.restDayTokens||0;
+  let extra = '';
+  if (sp > 0) extra += ' // ❄️×'+sp;
+  if (rd > 0) extra += ' // 🎟×'+rd;
+  if (isRestDayActive()) extra += ' // 🎟 DİNLENME';
+  if (extra) msg.textContent += extra;
+  // restday-chip color hint
+  const chip = g('restday-chip');
+  if (chip){ chip.style.opacity = (rd>0 || isRestDayActive()) ? '1' : '.45'; }
 }
 
 function renderCumulative() {
@@ -1894,6 +2063,7 @@ function defeatBoss(){
   // hide any active aggro warning
   const aggro = g('boss-aggro'); if (aggro) aggro.classList.remove('show');
   addXP(100,'Boss yenildi');
+  if (S._summonBonus){ S._summonBonus = false; addXP(250,'Boss Daveti bonusu'); }
   notify('⚔ BOSS YENİLDİ: '+S.bossName);
   addLog('Boss yenildi: '+S.bossName);
   renderLog();
@@ -2650,23 +2820,64 @@ function shopBalance(){ return Math.max(0, (S.totalXp||0) - (S.spentXp||0)); }
 function buyItem(id){
   const item = SHOP_ITEMS.find(x=>x.id===id); if (!item) return;
   // already owned (themes/cosmetics) → just equip
-  if (item.cat!=='boost' && (S.inventory||[]).includes(id)) {
+  if (item.cat!=='boost' && item.cat!=='streak' && item.cat!=='sink' && (S.inventory||[]).includes(id)) {
     if (item.cat === 'theme')    return equipTheme(id);
     if (item.cat === 'cosmetic') return equipCosmetic(id);
     return;
   }
+  // streak shield uses dynamic pricing + stock cap
+  let effectiveCost = item.cost;
+  if (item.id === 'streak_shield') {
+    if ((S.streakProtectors||0) >= STREAK_SHIELD_MAX_STOCK) {
+      notify('STOK DOLU // MAX '+STREAK_SHIELD_MAX_STOCK+' KORUYUCU');
+      return;
+    }
+    effectiveCost = getStreakShieldCost();
+  }
   // afford check
-  if (shopBalance() < item.cost) {
-    notify('YETERSİZ XP // '+item.cost+' GEREKLİ');
+  if (shopBalance() < effectiveCost) {
+    notify('YETERSİZ XP // '+effectiveCost+' GEREKLİ');
     return;
   }
-  S.spentXp = (S.spentXp||0) + item.cost;
+  S.spentXp = (S.spentXp||0) + effectiveCost;
   if (item.cat === 'streak') {
     S.streakProtectors = (S.streakProtectors||0) + 1;
-    notify('❄️ STREAK KORUYUCU ALINDI // STOK: '+S.streakProtectors);
-    addLog('Streak koruyucu alındı (-'+item.cost+' XP) // stok: '+S.streakProtectors);
+    S.streakShieldBuys = (S.streakShieldBuys||0) + 1;
+    S.streakShieldLastBuyAt = Date.now();
+    notify('❄️ STREAK KORUYUCU ALINDI ('+effectiveCost+' XP) // STOK: '+S.streakProtectors);
+    addLog('Streak koruyucu alındı (-'+effectiveCost+' XP) // stok: '+S.streakProtectors);
     playBell('reminder');
     save(); renderShop(); renderXP(); renderStreak();
+    return;
+  }
+  if (item.cat === 'sink') {
+    if (item.id === 'sink_topic_insurance') {
+      S.topicInsurances = (S.topicInsurances||0) + 1;
+      notify('🛡️ KONU SİGORTASI ALINDI // STOK: '+S.topicInsurances);
+      addLog('Konu Sigortası alındı (-'+effectiveCost+' XP)');
+    } else if (item.id === 'sink_contract') {
+      if (S.studyContract && S.studyContract.date===today()){
+        notify('BUGÜN ZATEN BİR SÖZLEŞME VAR');
+        S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);   // refund
+        return;
+      }
+      S.studyContract = { date: today(), focusTarget: S.focusMin + 30, resolved:false };
+      notify('📜 HEDEF SÖZLEŞMESİ AKTİF // Bugün '+S.studyContract.focusTarget+' dk focus hedefi');
+      addLog('Hedef Sözleşmesi: '+S.studyContract.focusTarget+' dk');
+    } else if (item.id === 'sink_boss_summon') {
+      const topName = (function(){
+        const list = Object.values(S.wrongTopics||{}).filter(w=>!w.fixed).sort((a,b)=>b.level-a.level);
+        return list[0] ? list[0].name : (S.bossName||'TÜREV BOSS');
+      })();
+      S.bossName = 'BOSS: '+topName.toUpperCase();
+      S.bossHp = 100;
+      S.bossDefeated = false;
+      S._summonBonus = true; // tickTimer/defeat path can grant +250
+      notify('⚔ BOSS DAVET EDİLDİ: '+S.bossName);
+      addLog('Boss daveti: '+S.bossName+' (yenince +250 XP)');
+    }
+    playBell('reminder');
+    save(); renderShop(); renderXP(); renderBoss();
     return;
   }
   if (item.cat === 'boost') {
@@ -2734,14 +2945,26 @@ function renderShop(){
   const boostsEl = g('shop-boosts');
   const cosEl    = g('shop-cosmetics');
   const streakEl = g('shop-streak');
+  const sinkEl   = g('shop-sink');
   const stockEl  = g('streak-stock'); if (stockEl) stockEl.textContent = S.streakProtectors||0;
+  const costEl   = g('streak-cost');  if (costEl)  costEl.textContent  = getStreakShieldCost();
+  const insEl    = g('ins-stock');    if (insEl)   insEl.textContent   = S.topicInsurances||0;
+  const cstEl    = g('contract-state');
+  if (cstEl){
+    if (S.studyContract && S.studyContract.date===today() && !S.studyContract.resolved)
+      cstEl.textContent = 'AKTİF · hedef '+S.studyContract.focusTarget+' dk';
+    else cstEl.textContent = 'pasif';
+  }
   if (!themesEl || !boostsEl || !cosEl) return;
 
   function renderItem(item){
-    const owned = (item.cat!=='boost') && (S.inventory||[]).includes(item.id);
+    const isStreak = item.id==='streak_shield';
+    const cost = isStreak ? getStreakShieldCost() : item.cost;
+    const stockFull = isStreak && (S.streakProtectors||0) >= STREAK_SHIELD_MAX_STOCK;
+    const owned = (item.cat!=='boost' && item.cat!=='streak' && item.cat!=='sink') && (S.inventory||[]).includes(item.id);
     const equipped = (item.cat==='theme' && S.equippedTheme===item.id) ||
                      (item.cat==='cosmetic' && S.equippedCosmetic===item.id);
-    const canAfford = shopBalance() >= item.cost;
+    const canAfford = shopBalance() >= cost;
     const cls = (equipped?'active-item':(owned?'owned':''));
     let btnHtml='';
     if (owned && item.cat==='theme') {
@@ -2752,8 +2975,9 @@ function renderShop(){
       btnHtml = equipped
         ? '<button class="shop-btn equipped" onclick="equipCosmetic(null)">✓ AKTİF — KALDIR</button>'
         : '<button class="shop-btn primary" onclick="equipCosmetic(\''+item.id+'\')">TAK</button>';
+    } else if (stockFull) {
+      btnHtml = '<button class="shop-btn locked" disabled>STOK DOLU</button>';
     } else {
-      // not owned (or boost — always available)
       btnHtml = '<button class="shop-btn '+(canAfford?'primary':'locked')+'" '+(canAfford?'':'disabled ')+'onclick="buyItem(\''+item.id+'\')">'+(canAfford?'+ SATIN AL':'YETERSİZ XP')+'</button>';
     }
     let boostTag = '';
@@ -2761,13 +2985,12 @@ function renderShop(){
       const mins = Math.round((item.duration||3600)/60);
       boostTag = '<div class="boost-tag">'+mins+'DK</div>';
     }
-    // default "remove" entry for theme
     return '<div class="shop-card '+cls+'">'+
       boostTag+
       '<div class="shop-icon">'+item.icon+'</div>'+
       '<div class="shop-name">'+item.name+'</div>'+
       '<div class="shop-desc">'+item.desc+'</div>'+
-      '<div class="shop-cost">'+item.cost+' XP</div>'+
+      '<div class="shop-cost">'+cost+' XP</div>'+
       btnHtml+
     '</div>';
   }
@@ -2791,6 +3014,7 @@ function renderShop(){
     '<div style="font-size:9px;color:var(--dim);padding:8px 0">Boost yok.</div>';
   cosEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='cosmetic').map(renderItem).join('');
   if (streakEl) streakEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='streak').map(renderItem).join('');
+  if (sinkEl)   sinkEl.innerHTML   = SHOP_ITEMS.filter(i=>i.cat==='sink').map(renderItem).join('');
 }
 
 // ════════════════════════════════════════
@@ -2849,15 +3073,20 @@ function addExam(){
   });
   if(!any){ notify('EN AZ BİR DERS NETİ GİR!'); return; }
   S.exams = S.exams||[];
-  S.exams.push({id:Date.now(), date, type, name, nets, total:Math.round(total*100)/100});
+  const examId = Date.now();
+  // freeze the tagged wrong topics into the exam record + register into the tree
+  const wrongTopicKeys = (_examWrongChips||[]).slice();
+  S.exams.push({id:examId, date, type, name, nets, total:Math.round(total*100)/100, wrongTopics:wrongTopicKeys});
   S.exams.sort((a,b)=> (a.date<b.date?-1:a.date>b.date?1:a.id-b.id));
+  wrongTopicKeys.forEach(key => registerWrongTopic(key, examId, date));
+  _examWrongChips = [];
   save();
   // clear net inputs
   examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); if(el) el.value=''; });
   const nm=g('exam-name'); if(nm) nm.value='';
   updateExamPreview();
-  notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET');
-  addLog('Deneme: '+type+(name?' ('+name+')':'')+' — '+total.toFixed(2)+' net');
+  notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET'+(wrongTopicKeys.length?' // +'+wrongTopicKeys.length+' yanlış konu':''));
+  addLog('Deneme: '+type+(name?' ('+name+')':'')+' — '+total.toFixed(2)+' net'+(wrongTopicKeys.length?' ['+wrongTopicKeys.length+' konu]':''));
   _netChartType=type; document.querySelectorAll('#ng-TYT,#ng-AYT').forEach(b=>b.classList.toggle('active',b.id==='ng-'+type));
   renderExam();
 }
@@ -2922,6 +3151,23 @@ function drawNetChart(){
     ctx.fillStyle=col_bright; ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText(e.total.toFixed(1), x, y-5);
   });
+  // ── Rev C: 5-point moving average overlay ──
+  if (n >= 3){
+    const win = Math.min(5, n);
+    const ma = [];
+    for (let i=0;i<n;i++){
+      const s = Math.max(0, i-win+1);
+      const slice = data.slice(s, i+1);
+      ma.push(slice.reduce((a,e)=>a+(e.total||0),0)/slice.length);
+    }
+    const col_yellow = cs.getPropertyValue('--yellow').trim() || '#FFFF66';
+    ctx.strokeStyle = col_yellow; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ma.forEach((v,i)=>{ const x=xOf(i),y=yOf(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
   // x labels (first / mid / last date)
   ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
   const idxs = n<=4 ? data.map((_,i)=>i) : [0,Math.floor((n-1)/2),n-1];
@@ -3023,9 +3269,310 @@ function renderExam(){
   if(!g('exam-net-inputs').children.length) renderExamInputs();
   renderQuestionSubjects();
   renderExamHistory();
-  renderTopicProgress();
+  renderWrongTopicsAutocomplete();
+  renderExamWrongChips();
+  renderPlateauWarnings();
   renderQuestionStats();
   setTimeout(()=>{ try{ drawNetChart(); }catch(e){} }, 40);
+}
+
+// ════════════════════════════════════════
+// WRONG-TOPIC TAGGING + DENEME AĞACI  (F1)
+// ════════════════════════════════════════
+let _examWrongChips = [];     // normalized keys for the deneme being entered
+let _treeFilter = 'active';
+
+// normalize: lowercase, trim, collapse spaces, strip simple punctuation
+function _he(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function normalizeTopic(s){
+  return (s||'')
+    .toString()
+    .toLowerCase()
+    .replace(/[“”"'`’]/g,'')
+    .replace(/[.,;:!?_/\\(){}\[\]]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function titleCaseTopic(s){
+  return (s||'').toString().trim().replace(/\s+/g,' ').split(' ').map(w=>{
+    if(!w) return w;
+    // keep all-caps short tokens, otherwise title-case
+    if (w.length<=3 && w===w.toUpperCase()) return w;
+    return w[0].toLocaleUpperCase('tr-TR')+w.slice(1).toLocaleLowerCase('tr-TR');
+  }).join(' ');
+}
+
+function topicTargetForLevel(level){
+  // 0→15, 1→20, 2→25, 3→30, 4+→32 (hard cap)
+  const seq = [15,20,25,30,32];
+  return seq[Math.min(level, seq.length-1)];
+}
+
+function renderWrongTopicsAutocomplete(){
+  const dl = g('wrong-topics-dl'); if(!dl) return;
+  const wt = S.wrongTopics || {};
+  const names = Object.values(wt).map(w=>w.name).sort((a,b)=>a.localeCompare(b,'tr'));
+  dl.innerHTML = names.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'"></option>').join('');
+}
+
+function addExamWrongChip(){
+  const inp = g('exam-wrong-input'); if(!inp) return;
+  const raw = inp.value;
+  const key = normalizeTopic(raw); if(!key){ inp.value=''; return; }
+  if(_examWrongChips.includes(key)){ notify('Bu konu zaten eklendi'); inp.value=''; return; }
+  // resolve display name: existing wrongTopic preserves canonical name, else title-case input
+  const existing = (S.wrongTopics||{})[key];
+  if(!existing){
+    // pre-register name in catalog so autocomplete shows it next time even before save
+    S.wrongTopics = S.wrongTopics || {};
+    S.wrongTopics[key] = { name: titleCaseTopic(raw), level:0, solved:0, fixed:false, history:[], _pending:true };
+    save();
+  }
+  _examWrongChips.push(key);
+  inp.value='';
+  renderExamWrongChips();
+  renderWrongTopicsAutocomplete();
+}
+
+function removeExamWrongChip(key){
+  _examWrongChips = _examWrongChips.filter(k=>k!==key);
+  // if it was a _pending preview-only entry never used, leave catalog alone (cheap)
+  renderExamWrongChips();
+}
+
+function renderExamWrongChips(){
+  const box = g('exam-wrong-chips'); if(!box) return;
+  box.innerHTML = _examWrongChips.map(k=>{
+    const w = (S.wrongTopics||{})[k];
+    const name = w ? w.name : k;
+    return '<span style="background:var(--mid);border:1px solid var(--bd2);padding:4px 8px;font-size:9px;color:var(--bright);letter-spacing:1px;display:inline-flex;align-items:center;gap:6px">'+
+      _he(name)+
+      ' <button class="btn" style="min-height:18px;padding:0 6px;font-size:8px;border:none;background:transparent;color:var(--muted)" onclick="removeExamWrongChip(\''+k.replace(/'/g,"\\'")+'\')">✕</button>'+
+    '</span>';
+  }).join('');
+}
+
+function registerWrongTopic(key, examId, date){
+  S.wrongTopics = S.wrongTopics || {};
+  let w = S.wrongTopics[key];
+  if(!w){
+    w = { name: titleCaseTopic(key), level:0, solved:0, fixed:false, history:[] };
+    S.wrongTopics[key] = w;
+  }
+  delete w._pending;
+  w.history = w.history || [];
+  w.history.push({date, examId});
+  // tagging again while not fixed → escalate (level + target up); insurance can absorb
+  if (!w.fixed){
+    // If it has any history beyond the first, level up — capped at 4 (→ target 32)
+    if (w.history.length > 1){
+      if ((S.topicInsurances||0) > 0){
+        S.topicInsurances--;
+        addLog('🛡️ Konu Sigortası kullanıldı: '+w.name+' seviye atlamadı');
+      } else {
+        w.level = Math.min(4, (w.level||0) + 1);
+      }
+    }
+    w.target = topicTargetForLevel(w.level||0);
+  } else {
+    // reopened after being fixed → level up by 1, unfixed
+    if ((S.topicInsurances||0) > 0){
+      S.topicInsurances--;
+      addLog('🛡️ Konu Sigortası kullanıldı: '+w.name+' kapalı kaldı');
+      w.history.pop(); // ignore this hit (insurance fully protected)
+    } else {
+      w.fixed = false;
+      w.level = Math.min(4, (w.level||0) + 1);
+      w.target = topicTargetForLevel(w.level);
+      w.solved = 0;
+    }
+  }
+  if (!w.target) w.target = topicTargetForLevel(w.level||0);
+}
+
+function setTreeFilter(f, btn){
+  _treeFilter = f;
+  document.querySelectorAll('#tt-active,#tt-fixed,#tt-all').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderTree();
+}
+
+function treeAddSolved(key, n){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  w.solved = Math.max(0, (w.solved||0) + n);
+  if (w.solved >= (w.target||15) && !w.fixed){
+    notify('🌳 '+w.name+' — hedefe ulaştın! "Düzeltildi" işaretleyebilirsin.');
+  }
+  save(); renderTree();
+}
+
+function markTopicFixed(key){
+  const w = (S.wrongTopics||{})[key]; if(!w || w.fixed) return;
+  if((w.solved||0) < (w.target||15)){
+    notify('Henüz '+(w.target - (w.solved||0))+' soru daha çözmen lazım');
+    return;
+  }
+  w.fixed = true;
+  w.fixedAt = today();
+  const reward = w.target||15;
+  addXP(reward, 'Düzeltildi: '+w.name);
+  addLog('🌳 Konu düzeltildi: '+w.name+' (+'+reward+' XP)');
+  save(); renderTree();
+}
+
+function deleteTopic(key){
+  if(!confirm('"'+(S.wrongTopics||{})[key]?.name+'" konusu silinsin mi?')) return;
+  delete (S.wrongTopics||{})[key];
+  save(); renderTree();
+}
+
+function renderTree(){
+  const list = g('tree-list'), emp = g('tree-empty'); if(!list) return;
+  const wt = S.wrongTopics || {};
+  let entries = Object.entries(wt).filter(([,w])=>!w._pending);
+  if (_treeFilter==='active') entries = entries.filter(([,w])=>!w.fixed);
+  else if (_treeFilter==='fixed') entries = entries.filter(([,w])=>w.fixed);
+  entries.sort((a,b)=> (b[1].level||0)-(a[1].level||0) || (b[1].history?.length||0)-(a[1].history?.length||0));
+  if (emp) emp.style.display = entries.length ? 'none' : 'block';
+  list.innerHTML = entries.map(([key,w])=>{
+    const target = w.target || topicTargetForLevel(w.level||0);
+    const solved = Math.min(target, w.solved||0);
+    const pct = target ? Math.round((solved/target)*100) : 0;
+    const lvl = w.level||0;
+    const tagCount = (w.history||[]).length;
+    const safeKey = key.replace(/'/g,"\\'");
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(w.fixed?'var(--green)':'var(--bright)')+';padding:10px 12px;margin-bottom:8px">'+
+      '<div class="fbet" style="margin-bottom:4px">'+
+        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px">'+(w.fixed?'✓ ':'')+_he(w.name)+'</span>'+
+        '<span style="font-size:8px;color:var(--muted);letter-spacing:1px">SEV '+lvl+' · '+tagCount+'×</span>'+
+      '</div>'+
+      '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">Hedef: <b style="color:var(--bright)">'+target+'</b> soru &nbsp; · &nbsp; Çözülen: <b style="color:var(--bright)">'+(w.solved||0)+'</b></div>'+
+      '<div style="height:6px;background:var(--dim);margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(w.fixed?'var(--green)':'var(--bright)')+'"></div></div>'+
+      (w.fixed
+        ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑 SİL</button></div>'
+        : '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',5)">+5</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',10)">+10</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',-1)">−1</button>'+
+            '<button class="btn primary" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" '+(solved>=target?'':'disabled ')+'onclick="markTopicFixed(\''+safeKey+'\')">✓ DÜZELTİLDİ (+'+target+' XP)</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑</button>'+
+          '</div>')+
+    '</div>';
+  }).join('');
+}
+
+// ════════════════════════════════════════
+// PLATEAU WARNINGS  (F2)
+// ════════════════════════════════════════
+function renderPlateauWarnings(){
+  const el = g('plateau-warnings'); if(!el) return;
+  const exams = (S.exams||[]).filter(e=>e.type===_netChartType).slice(-6);
+  const out = [];
+  // overall total plateau
+  if (exams.length >= 4){
+    const totals = exams.slice(-4).map(e=>e.total||0);
+    const mx=Math.max(...totals), mn=Math.min(...totals), avg=totals.reduce((a,b)=>a+b,0)/totals.length;
+    if (mx-mn <= Math.max(1.5, avg*0.04)){
+      out.push({lvl:'warn', txt:'Son 4 denemede toplam net <b>'+avg.toFixed(1)+'</b> bandında sabit — trend durgun.'});
+    }
+  }
+  // per-subject plateau (use nets, last 4 exams of this type)
+  if (exams.length >= 4){
+    const defs = EXAM_DEFS[_netChartType]||[];
+    const last4 = exams.slice(-4);
+    defs.forEach(s=>{
+      const arr = last4.map(e=>(e.nets&&e.nets[s.key])||0);
+      const mx=Math.max(...arr), mn=Math.min(...arr), avg=arr.reduce((a,b)=>a+b,0)/arr.length;
+      // plateau = tiny range AND not already saturated (< 70% of max possible)
+      if (arr.length===4 && (mx-mn) <= 1.0 && avg < s.max*0.7){
+        out.push({lvl:'info', txt:'Son 4 denemede <b>'+s.label+'</b> netleri <b>'+avg.toFixed(1)+'</b> ('+(Math.round(avg/s.max*100))+'%) seviyesinde yatay — bu derse yüklen.'});
+      }
+    });
+  }
+  // declining last 3 of overall
+  if (exams.length >= 3){
+    const t = exams.slice(-3).map(e=>e.total||0);
+    if (t[0] > t[1] && t[1] > t[2]){
+      out.push({lvl:'down', txt:'Son 3 denemede toplam net <b>düşüş</b> trendinde: '+t.map(x=>x.toFixed(1)).join(' → ')+'.'});
+    }
+  }
+  el.innerHTML = out.map(w=>{
+    const c = w.lvl==='down'?'var(--red,#ff6b6b)':(w.lvl==='warn'?'var(--yellow)':'var(--bright)');
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+c+';padding:8px 10px;font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.5">⚠ '+w.txt+'</div>';
+  }).join('') || '<div style="font-size:8px;color:var(--dim);letter-spacing:1px">Uyarı yok — yeterli veri toplandıkça erken uyarılar burada görünecek.</div>';
+}
+
+// ════════════════════════════════════════
+// REST DAY  (F3)
+// ════════════════════════════════════════
+function isRestDayActive(){ return S.restDayActiveDate === today(); }
+
+function askRestDay(){
+  const m = g('restday-modal'); if(!m) return;
+  if (isRestDayActive()){
+    if (confirm('Bugünün dinlenme modu zaten aktif. İptal edilsin mi? (Jeton iade edilir.)')) cancelRestDay();
+    return;
+  }
+  const tokens = S.restDayTokens||0;
+  const sm = g('restday-stock-msg');
+  if (sm) sm.textContent = 'Stoktaki jeton: '+tokens+' / 2';
+  if (tokens <= 0){
+    notify('Stoğunda jeton yok. Her 6 günlük streak ile 1 jeton kazanırsın.');
+    return;
+  }
+  m.style.display = 'flex';
+}
+function closeRestDayModal(){ const m=g('restday-modal'); if(m) m.style.display='none'; }
+function confirmRestDay(){
+  if ((S.restDayTokens||0) <= 0){ closeRestDayModal(); notify('Jeton yok'); return; }
+  S.restDayTokens -= 1;
+  S.dayMarks = S.dayMarks||{};
+  S.dayMarks[today()] = 'rest';
+  S.restDayActiveDate = today();
+  closeRestDayModal();
+  notify('🎟 DİNLENME MODU AKTİF — bugün izin günü');
+  addLog('Rest Day aktif edildi (jeton -1, kalan: '+S.restDayTokens+')');
+  save(); renderRestDayUI(); renderStreak();
+}
+function cancelRestDay(){
+  if (!isRestDayActive()) return;
+  // refund only if same day
+  S.restDayTokens = (S.restDayTokens||0) + 1;
+  if (S.dayMarks && S.dayMarks[today()] === 'rest') delete S.dayMarks[today()];
+  S.restDayActiveDate = null;
+  notify('Dinlenme iptal edildi — jeton iade');
+  addLog('Rest Day iptal (jeton iade, stok: '+S.restDayTokens+')');
+  save(); renderRestDayUI();
+}
+
+function renderRestDayUI(){
+  const cnt = g('restday-count'); if (cnt) cnt.textContent = S.restDayTokens||0;
+  const banner = g('rest-banner'); if (banner) banner.style.display = isRestDayActive() ? 'block':'none';
+  renderDayStrip();
+}
+
+// Rev A — last-14-days visual strip differentiating active/frozen/rest/empty
+function renderDayStrip(){
+  const el = g('day-strip'); if(!el) return;
+  const marks = S.dayMarks || {};
+  const t = today();
+  const cells = [];
+  for (let i=13;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    let mark = marks[ds] || 'empty';
+    if (ds===t){
+      if (isRestDayActive()) mark='rest';
+      else if (S.lastGoalHitDate===ds) mark='active';
+    }
+    let bg='var(--dim)', txt='⬜', title=ds+' • boş';
+    if (mark==='active'){ bg='var(--bright)'; txt=''; title=ds+' • aktif (hedef tutuldu)'; }
+    else if (mark==='frozen'){ bg='#5fa8ff'; txt='❄'; title=ds+' • frozen (koruyucu)'; }
+    else if (mark==='rest'){ bg='var(--yellow)'; txt='🎟'; title=ds+' • rest day (jeton)'; }
+    cells.push('<div title="'+title+'" style="flex:1;height:14px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:8px;color:#000">'+txt+'</div>');
+  }
+  el.innerHTML = cells.join('');
 }
 
 // ════════════════════════════════════════
@@ -3417,6 +3964,7 @@ function renderAll(){
   renderXP(); renderStreak(); renderBoss(); renderEnemyGrid(); updateWaterUI();
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
+  renderRestDayUI();
   applyTheme();
   g('session-count').textContent=S.sessions;
   g('tasks-done-today').textContent=S.tasksDoneToday;
@@ -3436,6 +3984,22 @@ function renderAll(){
       addLog('Streak koruyucu harcandı — zincir korundu. Kalan: '+(S.streakProtectors||0));
       save();
     }, 600);
+  }
+  if (S._decayApplied){
+    const a = S._decayApplied; S._decayApplied = 0;
+    setTimeout(()=>{
+      notify('📉 XP DECAY: -'+a+' XP (çalışmadığın gün/günler için)');
+      addLog('XP decay: -'+a+' XP');
+      save();
+    }, 900);
+  }
+  if (S._contractWin){
+    S._contractWin = false;
+    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTTUN: +200 XP iade'); addLog('Hedef Sözleşmesi: başarılı (+200 XP)'); save(); }, 1100);
+  }
+  if (S._contractLoss){
+    S._contractLoss = false;
+    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTAMADIN: -100 XP'); addLog('Hedef Sözleşmesi: başarısız (-100 XP)'); save(); }, 1100);
   }
   // run boss aggression check right after rendering (handles long-time-away on reopen)
   try { bossAggroTick(); } catch(e){}
@@ -4010,7 +4574,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.4 başlatıldı.');
+addLog('OVERCLOCK v7.5 başlatıldı.');
 </script>
 </body>
 </html>
