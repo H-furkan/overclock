@@ -264,7 +264,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #fs-mission{font-family:'Orbitron',monospace;font-size:13px;color:var(--white);letter-spacing:3px;margin-top:6px;text-align:center;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #fs-controls{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;justify-content:center}
 #fs-controls .btn{min-width:120px}
-#fs-exit{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);right:14px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:8px 12px;border:1px solid var(--bd2);background:var(--deep);color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:38px}
+#fs-exit{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);right:14px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 16px;border:1px solid var(--bright);background:var(--deep);color:var(--white);cursor:pointer;text-transform:uppercase;min-height:44px;min-width:74px;z-index:9760;pointer-events:auto;touch-action:manipulation;box-shadow:0 0 10px rgba(255,255,255,.15)}
+#fs-exit:active{background:var(--mid)}
 #fs-status{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);left:14px;font-family:'Orbitron',monospace;font-weight:900;font-size:10px;letter-spacing:3px;padding:4px 10px;border:1px solid var(--bd2);color:var(--gray)}
 #fs-status.active{color:var(--green);border-color:var(--green);text-shadow:0 0 10px var(--green);animation:pg 2s ease-in-out infinite}
 #fs-status.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);animation:py 2s ease-in-out infinite}
@@ -414,6 +415,33 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div>
 
+<!-- TOPIC MATCHER MODAL -->
+<div id="matcher-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--bd2);padding:18px">
+    <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:10px">🔎 KONUYU EŞLEŞTİR</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">YKS kataloğundan en yakın konuyu seç. OGM linki ve PDF özellikleri bu eşleşmeyle çalışır.</div>
+    <input class="inp" id="matcher-input" placeholder="ara: optik, türev, hücre..." oninput="renderMatcherSuggestions(this.value)" style="margin-bottom:10px">
+    <div id="matcher-list" style="overflow-y:auto;flex:1;min-height:240px;max-height:50vh"></div>
+    <button class="btn fw" style="margin-top:8px" onclick="closeMatcherModal()">✕ İPTAL</button>
+  </div>
+</div>
+
+<!-- CONTRACT (Hedef Sözleşmesi) MODAL -->
+<div id="contract-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
+    <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:6px">📜 HEDEF SÖZLEŞMESİ</div>
+    <div style="font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.7;margin:8px 0 14px">
+      Bugün toplam <b>kaç dakika focus</b> çalışacağına söz veriyorsun?<br>
+      <b style="color:var(--green)">Tutarsan:</b> çalışılan dk × 1.5 kadar XP.<br>
+      <b style="color:var(--red)">Tutmazsan:</b> eksik kalan dk kadar XP düşer.
+    </div>
+    <div class="ilabel" style="margin-bottom:4px">HEDEF (DK)</div>
+    <input class="inp" id="contract-mins" type="number" min="10" max="600" value="120" style="margin-bottom:14px">
+    <button class="btn primary fw mb8" onclick="signContract()">✓ İMZALA</button>
+    <button class="btn fw" onclick="closeContractModal()">✕ İPTAL</button>
+  </div>
+</div>
+
 <!-- REST DAY CONFIRM MODAL -->
 <div id="restday-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:320px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
@@ -502,6 +530,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   <div id="fs-controls">
     <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
     <button class="btn" onclick="resetTimer()">↺ RESET</button>
+    <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
   </div>
   <div id="fs-tier">TIER I // STD GOAL</div>
 </div>
@@ -578,7 +607,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <div class="bgrid mb8">
         <button class="btn primary" id="btn-start" onclick="toggleTimer()">▶ START</button>
         <button class="btn" onclick="resetTimer()">↺ RESET</button>
-        <button class="btn" onclick="addXP(50,'Manuel')">+50 XP</button>
+        <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
         <button class="btn" onclick="addXP(100,'Manuel')">+100 XP</button>
       </div>
       <div style="margin-bottom:8px">
@@ -1064,7 +1093,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.5 // TR-1<br>Deneme Ağacı · Plato uyarısı · Rest Day · XP decay<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.6 // TR-1<br>YKS katalog · OGM/PDF · Erken bitirme · WakeLock<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1196,8 +1225,8 @@ const SHOP_ITEMS = [
   {id:'streak_shield', cat:'streak', icon:'❄️', name:'STREAK KORUYUCU', desc:'Bir gün hedefi kaçırsan bile streak kırılmaz. Otomatik harcanır. Stok max 2.', cost:2500},
   // ── XP SINKS (Rev D) — study-directing modules ──
   {id:'sink_topic_insurance', cat:'sink', icon:'🛡️', name:'KONU SİGORTASI', desc:'Bir yanlış-konu etiketinin SEVİYE ATLAMASINI engeller. Etiketlendiğinde otomatik harcanır.', cost:800},
-  {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Bugün focus dakika hedefini +30 yükselt. Tutarsan +200 XP iadesi, tutmazsan -100 XP ceza.', cost:600},
-  {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince +250 XP.', cost:1200},
+  {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Ücretsiz. İMZALA, dakika hedefini gir. Tutarsan çalışılan sürenin 1.5× XP ödülü; tutmazsan eksik kalan dk kadar XP düşer.', cost:0},
+  {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince +250 XP.', cost:200},
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Level rozeti yanında 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Level rozeti yanında ⚡', cost:550},
@@ -1417,13 +1446,16 @@ function loadState() {
       }
       // ── Hedef Sözleşmesi rollover evaluation ──
       if(S.studyContract && S.studyContract.date===saved.lastDate && !S.studyContract.resolved){
-        const focusMin = (saved.todayFocusSecs||0)/60;
-        if(focusMin >= S.studyContract.focusTarget){
-          S.totalXp = (S.totalXp||0) + 200;
-          S._contractWin = true;
+        const workedMin = (saved.todayFocusSecs||0)/60;
+        const tgt = S.studyContract.focusTarget;
+        if(workedMin >= tgt){
+          const bonus = Math.round(workedMin * 1.5);
+          S.totalXp = (S.totalXp||0) + bonus;
+          S._contractWin = bonus;
         } else {
-          S.totalXp = Math.max(0, (S.totalXp||0) - 100);
-          S._contractLoss = true;
+          const deficit = Math.max(0, Math.round(tgt - workedMin));
+          S.totalXp = Math.max(0, (S.totalXp||0) - deficit);
+          S._contractLoss = deficit;
         }
         S.studyContract.resolved = true;
       }
@@ -1916,6 +1948,50 @@ function resetTimer(){
   setStatus('standby'); renderTimer(); save(); addLog('Timer sıfırlandı.');
 }
 
+// End the current FOCUS session early — award proportional XP and credit cumulative
+// focus time. Does not switch to break (user can decide). Break sessions just reset.
+function finishTimerEarly(){
+  if (!timerRunning){
+    notify('Zaten çalışmıyor');
+    return;
+  }
+  if (isBreak){
+    // skip break — go straight back to standby
+    if (!confirm('Molayı şimdi bitir (XP yok)?')) return;
+    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
+    cancelTimerNotification(); stopKeepAlive();
+    isBreak=false; timerSecs=S.focusMin*60;
+    g('btn-start').textContent='▶ START';
+    const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
+    setStatus('standby'); renderTimer(); save();
+    addLog('Mola erken bitti.');
+    return;
+  }
+  // FOCUS early-finish: compute elapsed from the original target
+  const elapsedSec = Math.max(0, (S.focusMin*60) - timerSecs);
+  const elapsedMin = Math.max(0, Math.round(elapsedSec/60));
+  if (elapsedMin < 1){
+    notify('Henüz 1 dk geçmedi — XP yok');
+    return;
+  }
+  if (!confirm('Şimdi bitirilsin mi? Geçen ~'+elapsedMin+' dk için kısmi XP alacaksın (tam bitirme bonusu yok).')) return;
+  clearInterval(timerIv); timerRunning=false; timerEndAt=null;
+  cancelTimerNotification(); stopKeepAlive();
+  g('btn-start').textContent='▶ START';
+  const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
+  // partial reward (proportional, slightly lower than full-session rate)
+  const sxp = Math.max(5, Math.round(elapsedMin * 1.7));
+  S.cumFocusSecs = (S.cumFocusSecs||0) + elapsedSec;
+  renderCumulative();
+  S.lastFocusEnd = Date.now();
+  addXP(sxp, 'Session erken bitti ('+elapsedMin+'dk)');
+  notify('⏹ ERKEN BİTİŞ // +'+sxp+' XP ('+elapsedMin+' dk)');
+  addLog('Session erken bitti — '+elapsedMin+' dk, +'+sxp+' XP');
+  // back to standby with a fresh focus countdown
+  isBreak=false; timerSecs=S.focusMin*60;
+  setStatus('standby'); renderTimer(); save();
+}
+
 function renderTimer(){
   const total=(isBreak?S.breakMin:S.focusMin)*60;
   const frac = timerSecs/total;
@@ -1965,6 +2041,28 @@ function setStatus(mode){
 // ════════════════════════════════════════
 // FULLSCREEN TIMER
 // ════════════════════════════════════════
+// Wake Lock — keeps the screen on (OS may still dim brightness, like clock apps)
+let _wakeLock = null;
+async function _acquireWakeLock(){
+  try {
+    if ('wakeLock' in navigator && navigator.wakeLock.request){
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener && _wakeLock.addEventListener('release', ()=>{ _wakeLock = null; });
+    }
+  } catch(e){}
+}
+function _releaseWakeLock(){
+  try { if (_wakeLock && _wakeLock.release) _wakeLock.release(); } catch(e){}
+  _wakeLock = null;
+}
+// Reacquire wake lock when the app becomes visible again while fullscreen is open
+document.addEventListener('visibilitychange', ()=>{
+  const fs = document.getElementById('fs-timer');
+  if (!document.hidden && fs && fs.classList.contains('show') && !_wakeLock){
+    _acquireWakeLock();
+  }
+});
+
 function enterFullscreen(){
   const fs = g('fs-timer');
   if (!fs) return;
@@ -1972,12 +2070,22 @@ function enterFullscreen(){
   const fb = g('fs-btn-start');
   if (fb) fb.textContent = timerRunning ? '⏸ PAUSE' : '▶ START';
   renderTimer();
+  _acquireWakeLock();
 }
 
 function exitFullscreen(){
   const fs = g('fs-timer');
   if (fs) fs.classList.remove('show');
+  _releaseWakeLock();
 }
+
+// Escape key also exits — extra safety net
+document.addEventListener('keydown', (e)=>{
+  if (e.key === 'Escape'){
+    const fs = document.getElementById('fs-timer');
+    if (fs && fs.classList.contains('show')) exitFullscreen();
+  }
+});
 
 function applyTimer(){
   const f=Math.max(1,Math.min(240,parseInt(g('inp-focus').value)||90));
@@ -2856,14 +2964,14 @@ function buyItem(id){
       notify('🛡️ KONU SİGORTASI ALINDI // STOK: '+S.topicInsurances);
       addLog('Konu Sigortası alındı (-'+effectiveCost+' XP)');
     } else if (item.id === 'sink_contract') {
-      if (S.studyContract && S.studyContract.date===today()){
-        notify('BUGÜN ZATEN BİR SÖZLEŞME VAR');
-        S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);   // refund
+      // contract has no cost — refund the (zero) spentXp we added and open the sign modal
+      S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);
+      if (S.studyContract && S.studyContract.date===today() && !S.studyContract.resolved){
+        notify('Bugün için zaten imzalı bir sözleşme var');
         return;
       }
-      S.studyContract = { date: today(), focusTarget: S.focusMin + 30, resolved:false };
-      notify('📜 HEDEF SÖZLEŞMESİ AKTİF // Bugün '+S.studyContract.focusTarget+' dk focus hedefi');
-      addLog('Hedef Sözleşmesi: '+S.studyContract.focusTarget+' dk');
+      openContractModal();
+      return;
     } else if (item.id === 'sink_boss_summon') {
       const topName = (function(){
         const list = Object.values(S.wrongTopics||{}).filter(w=>!w.fixed).sort((a,b)=>b.level-a.level);
@@ -2977,6 +3085,11 @@ function renderShop(){
         : '<button class="shop-btn primary" onclick="equipCosmetic(\''+item.id+'\')">TAK</button>';
     } else if (stockFull) {
       btnHtml = '<button class="shop-btn locked" disabled>STOK DOLU</button>';
+    } else if (item.id === 'sink_contract') {
+      const active = (S.studyContract && S.studyContract.date===today() && !S.studyContract.resolved);
+      btnHtml = active
+        ? '<button class="shop-btn equipped" disabled>✓ AKTİF · '+S.studyContract.focusTarget+' dk</button>'
+        : '<button class="shop-btn primary" onclick="buyItem(\'sink_contract\')">📜 İMZALA</button>';
     } else {
       btnHtml = '<button class="shop-btn '+(canAfford?'primary':'locked')+'" '+(canAfford?'':'disabled ')+'onclick="buyItem(\''+item.id+'\')">'+(canAfford?'+ SATIN AL':'YETERSİZ XP')+'</button>';
     }
@@ -2985,12 +3098,14 @@ function renderShop(){
       const mins = Math.round((item.duration||3600)/60);
       boostTag = '<div class="boost-tag">'+mins+'DK</div>';
     }
+    const costLabel = (cost===0) ? 'ÜCRETSİZ' : (cost+' XP');
+    const costStyle = (cost===0) ? ' style="color:var(--green);border-color:var(--green)"' : '';
     return '<div class="shop-card '+cls+'">'+
       boostTag+
       '<div class="shop-icon">'+item.icon+'</div>'+
       '<div class="shop-name">'+item.name+'</div>'+
       '<div class="shop-desc">'+item.desc+'</div>'+
-      '<div class="shop-cost">'+cost+' XP</div>'+
+      '<div class="shop-cost"'+costStyle+'>'+costLabel+'</div>'+
       btnHtml+
     '</div>';
   }
@@ -3285,6 +3400,226 @@ let _treeFilter = 'active';
 // normalize: lowercase, trim, collapse spaces, strip simple punctuation
 function _he(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// ── Curated YKS (Sayısal) topic catalog ──
+// Lets us prevent the "mustafa" problem: every chip is fuzzy-matched against
+// this list. Resolved chips unlock OGM link + practice-sheet PDF; unresolved
+// ones get a warning and a "match" button.
+const YKS_TOPICS = [
+  // TYT MATEMATİK
+  ['TYT Matematik','Temel Kavramlar'],['TYT Matematik','Sayı Basamakları'],['TYT Matematik','Bölme ve Bölünebilme'],
+  ['TYT Matematik','Asal Çarpanlar'],['TYT Matematik','EBOB-EKOK'],['TYT Matematik','Rasyonel Sayılar'],
+  ['TYT Matematik','Basit Eşitsizlikler'],['TYT Matematik','Mutlak Değer'],['TYT Matematik','Üslü Sayılar'],
+  ['TYT Matematik','Köklü Sayılar'],['TYT Matematik','Çarpanlara Ayırma'],['TYT Matematik','Oran-Orantı'],
+  ['TYT Matematik','Birinci Dereceden Denklemler'],['TYT Matematik','Sayı Problemleri'],['TYT Matematik','Kesir Problemleri'],
+  ['TYT Matematik','Yaş Problemleri'],['TYT Matematik','Hız Problemleri'],['TYT Matematik','İşçi Problemleri'],
+  ['TYT Matematik','Yüzde Problemleri'],['TYT Matematik','Kar-Zarar Problemleri'],['TYT Matematik','Karışım Problemleri'],
+  ['TYT Matematik','Grafik Problemleri'],['TYT Matematik','Kümeler'],['TYT Matematik','Mantık'],
+  ['TYT Matematik','Fonksiyonlar'],['TYT Matematik','Polinomlar'],['TYT Matematik','İkinci Dereceden Denklemler'],
+  ['TYT Matematik','Permütasyon'],['TYT Matematik','Kombinasyon'],['TYT Matematik','Olasılık'],
+  ['TYT Matematik','İstatistik'],['TYT Matematik','Veri Analizi'],
+  // TYT GEOMETRİ
+  ['TYT Geometri','Doğruda Açılar'],['TYT Geometri','Üçgende Açılar'],['TYT Geometri','Açıortay'],
+  ['TYT Geometri','Kenarortay'],['TYT Geometri','Üçgende Alan'],['TYT Geometri','Eşkenar Üçgen'],
+  ['TYT Geometri','İkizkenar Üçgen'],['TYT Geometri','Dik Üçgen'],['TYT Geometri','Pisagor'],
+  ['TYT Geometri','Öklid'],['TYT Geometri','Benzerlik'],['TYT Geometri','Dörtgenler'],
+  ['TYT Geometri','Paralelkenar'],['TYT Geometri','Eşkenar Dörtgen'],['TYT Geometri','Yamuk'],
+  ['TYT Geometri','Deltoid'],['TYT Geometri','Çemberde Açı'],['TYT Geometri','Çemberde Uzunluk'],
+  ['TYT Geometri','Daire Alan'],['TYT Geometri','Analitik Geometri'],['TYT Geometri','Katı Cisimler'],
+  // TYT FİZİK
+  ['TYT Fizik','Madde ve Özellikleri'],['TYT Fizik','Fiziksel Nicelikler'],['TYT Fizik','Sıvıların Kaldırma Kuvveti'],
+  ['TYT Fizik','Basınç'],['TYT Fizik','Kuvvet ve Hareket'],['TYT Fizik','Sürtünme'],
+  ['TYT Fizik','Newton Hareket Yasaları'],['TYT Fizik','İş Enerji Güç'],['TYT Fizik','Isı ve Sıcaklık'],
+  ['TYT Fizik','Genleşme'],['TYT Fizik','Hal Değişimi'],['TYT Fizik','Elektrik'],
+  ['TYT Fizik','Elektrik Devresi'],['TYT Fizik','Manyetizma'],['TYT Fizik','Dalgalar'],
+  ['TYT Fizik','Yay Dalgaları'],['TYT Fizik','Su Dalgaları'],['TYT Fizik','Ses Dalgaları'],
+  ['TYT Fizik','Deprem Dalgaları'],['TYT Fizik','Optik'],['TYT Fizik','Aydınlanma'],
+  ['TYT Fizik','Gölge'],['TYT Fizik','Düzlem Aynalar'],['TYT Fizik','Küresel Aynalar'],
+  ['TYT Fizik','Kırılma'],['TYT Fizik','Mercekler'],
+  // TYT KİMYA
+  ['TYT Kimya','Kimya Bilimi'],['TYT Kimya','Atom Modelleri'],['TYT Kimya','Periyodik Sistem'],
+  ['TYT Kimya','Kimyasal Türler Arası Etkileşim'],['TYT Kimya','Bileşikler'],['TYT Kimya','Kimyasal Tepkimeler'],
+  ['TYT Kimya','Asit Baz Tuz'],['TYT Kimya','Karışımlar'],['TYT Kimya','Endüstride Kimya'],
+  ['TYT Kimya','Doğa ve Kimya'],
+  // TYT BİYOLOJİ
+  ['TYT Biyoloji','Canlıların Ortak Özellikleri'],['TYT Biyoloji','Temel Bileşikler'],
+  ['TYT Biyoloji','Hücre'],['TYT Biyoloji','Hücre Zarı'],['TYT Biyoloji','Mitoz'],['TYT Biyoloji','Mayoz'],
+  ['TYT Biyoloji','Canlıların Sınıflandırılması'],['TYT Biyoloji','Bakteriler'],['TYT Biyoloji','Arkeler'],
+  ['TYT Biyoloji','Protistalar'],['TYT Biyoloji','Mantarlar'],['TYT Biyoloji','Bitkiler'],
+  ['TYT Biyoloji','Hayvanlar'],['TYT Biyoloji','Ekosistem Ekoloji'],['TYT Biyoloji','Madde Döngüleri'],
+  ['TYT Biyoloji','Güncel Çevre Sorunları'],
+  // AYT MATEMATİK
+  ['AYT Matematik','Polinomlar'],['AYT Matematik','2. Dereceden Denklemler ve Eşitsizlikler'],
+  ['AYT Matematik','Karmaşık Sayılar'],['AYT Matematik','Logaritma'],['AYT Matematik','Diziler'],
+  ['AYT Matematik','Limit ve Süreklilik'],['AYT Matematik','Türev'],['AYT Matematik','Türev Uygulamaları'],
+  ['AYT Matematik','İntegral'],['AYT Matematik','İntegral Uygulamaları'],['AYT Matematik','Trigonometri'],
+  ['AYT Matematik','Trigonometrik Denklemler'],['AYT Matematik','Toplam Fark Formülleri'],
+  ['AYT Matematik','Yarım Açı'],['AYT Matematik','Matris ve Determinant'],
+  // AYT GEOMETRİ
+  ['AYT Geometri','Çemberde Açılar'],['AYT Geometri','Çemberde Uzunluk'],['AYT Geometri','Dairede Alan'],
+  ['AYT Geometri','Vektörler'],['AYT Geometri','Doğrunun Analitiği'],
+  ['AYT Geometri','Çemberin Analitik İncelenmesi'],['AYT Geometri','Konikler'],
+  ['AYT Geometri','Katı Cisimler'],['AYT Geometri','Uzay Geometri'],
+  // AYT FİZİK
+  ['AYT Fizik','Vektörler'],['AYT Fizik','Kuvvet ve Hareket'],['AYT Fizik','Düzgün Çembersel Hareket'],
+  ['AYT Fizik','Tork ve Denge'],['AYT Fizik','Basit Makineler'],['AYT Fizik','Atışlar'],
+  ['AYT Fizik','İtme Momentum'],['AYT Fizik','Elektriksel Kuvvet ve Elektrik Alan'],
+  ['AYT Fizik','Elektriksel Potansiyel'],['AYT Fizik','Kondansatörler'],['AYT Fizik','Manyetizma'],
+  ['AYT Fizik','Manyetik Alan'],['AYT Fizik','İndüksiyon'],['AYT Fizik','Alternatif Akım'],
+  ['AYT Fizik','Transformatörler'],['AYT Fizik','Basit Harmonik Hareket'],['AYT Fizik','Dalga Mekaniği'],
+  ['AYT Fizik','Atomun Yapısı'],['AYT Fizik','Radyoaktivite'],['AYT Fizik','Kuantum Fiziği'],
+  ['AYT Fizik','Modern Fizik'],['AYT Fizik','Görüntüleme Teknolojileri'],
+  // AYT KİMYA
+  ['AYT Kimya','Modern Atom Teorisi'],['AYT Kimya','Gazlar'],['AYT Kimya','Sıvı Çözeltiler ve Çözünürlük'],
+  ['AYT Kimya','Termokimya'],['AYT Kimya','Kimyasal Tepkimelerde Hız'],['AYT Kimya','Kimyasal Tepkimelerde Denge'],
+  ['AYT Kimya','Asit-Baz Dengesi'],['AYT Kimya','Çözünürlük Dengesi'],['AYT Kimya','Kimya ve Elektrik'],
+  ['AYT Kimya','Karbon Kimyası'],['AYT Kimya','Organik Bileşikler'],['AYT Kimya','Hidrokarbonlar'],
+  ['AYT Kimya','Alkollerden Esterlere'],['AYT Kimya','Organik Reaksiyonlar'],
+  // AYT BİYOLOJİ
+  ['AYT Biyoloji','Sinir Sistemi'],['AYT Biyoloji','Endokrin Sistem'],['AYT Biyoloji','Duyu Organları'],
+  ['AYT Biyoloji','Destek ve Hareket Sistemi'],['AYT Biyoloji','Sindirim Sistemi'],
+  ['AYT Biyoloji','Dolaşım ve Bağışıklık Sistemi'],['AYT Biyoloji','Solunum Sistemi'],
+  ['AYT Biyoloji','Üriner Sistem'],['AYT Biyoloji','Üreme Sistemi ve Embriyonik Gelişme'],
+  ['AYT Biyoloji','Komünite'],['AYT Biyoloji','Popülasyon'],['AYT Biyoloji','Ekosistem'],
+  ['AYT Biyoloji','Genden Proteine'],['AYT Biyoloji','Mendel Genetiği'],
+  ['AYT Biyoloji','Modern Genetik Uygulamaları'],['AYT Biyoloji','Bitkilerin Yapısı'],
+  ['AYT Biyoloji','Fotosentez'],['AYT Biyoloji','Bitkilerde Solunum'],['AYT Biyoloji','Bitkilerde Hormonlar'],
+  ['AYT Biyoloji','Canlılar ve Çevre'],
+].map(([ders,name])=>({ders,name}));
+
+let _yksCatalog = null;
+function yksCatalog(){
+  if (_yksCatalog) return _yksCatalog;
+  _yksCatalog = YKS_TOPICS.map(t=>({...t, norm: normalizeTopic(t.name), dersNorm: normalizeTopic(t.ders)}));
+  return _yksCatalog;
+}
+
+// Token-overlap + substring fuzzy match
+function _scoreMatch(qa, qb){
+  if (!qa || !qb) return 0;
+  if (qa === qb) return 100;
+  if (qb.includes(qa) || qa.includes(qb)) return 80;
+  const ta = qa.split(' ').filter(w=>w.length>1);
+  const tb = qb.split(' ').filter(w=>w.length>1);
+  if (!ta.length || !tb.length) return 0;
+  let inter=0;
+  ta.forEach(w=>{ if (tb.includes(w)) inter++; });
+  return Math.round(100 * inter / Math.max(ta.length, tb.length));
+}
+function resolveTopicMatch(raw){
+  const norm = normalizeTopic(raw);
+  if (!norm) return {score:0, entry:null};
+  let best={score:0, entry:null};
+  for (const t of yksCatalog()){
+    const s = _scoreMatch(norm, t.norm);
+    if (s > best.score) best = {score:s, entry:t};
+  }
+  return best;
+}
+
+// ── OGM linkleme ──
+function openOGMForTopic(key){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  // OGM Soru Bankası SPA — no public deep-link search; we open the catalog root
+  // and copy the topic name to clipboard so the user can paste it into OGM search.
+  try { navigator.clipboard && navigator.clipboard.writeText(w.name); } catch(e){}
+  notify('🔗 OGM açıldı · "'+w.name+'" panoya kopyalandı, arama kutusuna yapıştır');
+  window.open('https://ogmmateryal.eba.gov.tr/soru-bankasi','_blank','noopener');
+}
+
+// ── Yazdırılabilir PDF çalışma yaprağı ──
+// Tarayıcının "Print → Save as PDF" özelliğiyle PDF üretilir. Telif sorunu olmasın
+// diye OGM içeriği TAŞIMIYORUZ — yaprakta yalnızca konu/hedef + OGM linki var,
+// kullanıcı OGM'den soru çözerken yanına basıp not almak için kullanır.
+function openPracticeSheet(key){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  const target = w.target || topicTargetForLevel(w.level||0);
+  const dateStr = new Date().toLocaleDateString('tr-TR');
+  const rows = [];
+  for (let i=1;i<=target;i++){
+    rows.push('<tr><td class="n">'+i+'</td><td class="a"></td><td class="r"></td><td class="note"></td></tr>');
+  }
+  const html = '<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>'+_he(w.name)+' — Çalışma Yaprağı</title>'+
+    '<style>'+
+    '@page{margin:14mm}'+
+    'body{font-family:Arial,sans-serif;color:#000;font-size:11pt;line-height:1.4}'+
+    'h1{font-size:18pt;margin:0 0 4pt}'+
+    'h2{font-size:13pt;margin:0 0 12pt;color:#444}'+
+    '.meta{font-size:9pt;color:#555;margin-bottom:10pt}'+
+    '.meta b{color:#000}'+
+    'table{width:100%;border-collapse:collapse;margin-top:6pt}'+
+    'th,td{border:1px solid #888;padding:6pt 4pt;vertical-align:middle}'+
+    'th{background:#eee;font-size:9pt;text-align:left}'+
+    'td.n{width:34pt;text-align:center;font-weight:700}'+
+    'td.a{width:60pt;height:18pt}'+
+    'td.r{width:50pt}'+
+    'td.note{}'+
+    '.footer{margin-top:14pt;font-size:8pt;color:#666;border-top:1px solid #ccc;padding-top:6pt}'+
+    '.tip{font-size:9pt;color:#444;margin:8pt 0 0}'+
+    '@media print{.noprint{display:none}}'+
+    '.btnp{margin:14pt 0;text-align:center}.btnp button{padding:8pt 18pt;font-size:11pt}'+
+    '</style></head><body>'+
+    '<h1>OVERCLOCK · Çalışma Yaprağı</h1>'+
+    '<h2>'+_he(w.name)+(w.ders?(' <span style="color:#888;font-weight:400;font-size:10pt">— '+_he(w.ders)+'</span>'):'')+'</h2>'+
+    '<div class="meta">Tarih: <b>'+dateStr+'</b> &nbsp;·&nbsp; Hedef: <b>'+target+' soru</b> &nbsp;·&nbsp; Etiketlenme: <b>'+((w.history||[]).length)+'×</b> &nbsp;·&nbsp; Seviye: <b>'+(w.level||0)+'</b></div>'+
+    '<div class="tip">Soru kaynağı: <b>OGM Materyal — Soru Bankası</b>: https://ogmmateryal.eba.gov.tr/soru-bankasi · Arama kutusuna <b>"'+_he(w.name)+'"</b> yaz, çıkan soruları aşağıdaki tabloya işle.</div>'+
+    '<table><thead><tr><th>#</th><th>Cevap</th><th>D/Y</th><th>Not / Yanıltıcı</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
+    '<div class="footer">Hedefi tamamladığında uygulamadaki Deneme Ağacı kartından "DÜZELTİLDİ" işaretle → '+target+' XP. · OVERCLOCK</div>'+
+    '<div class="btnp noprint"><button onclick="window.print()">🖨 PDF olarak kaydet / Yazdır</button></div>'+
+    '<script>window.addEventListener("load",function(){setTimeout(function(){try{window.print();}catch(e){}},400);});<\/script>'+
+    '</body></html>';
+  const win = window.open('', '_blank');
+  if (!win){ notify('Popup engellendi — tarayıcı ayarlarından izin ver'); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+}
+
+// ── Manuel eşleştirme modali ──
+let _matcherKey = null;
+function openTopicMatcher(key){
+  _matcherKey = key;
+  const m = g('matcher-modal'); if(!m) return;
+  const inp = g('matcher-input'); if(inp){ inp.value=''; inp.focus(); }
+  renderMatcherSuggestions('');
+  m.style.display = 'flex';
+}
+function closeMatcherModal(){ const m=g('matcher-modal'); if(m) m.style.display='none'; _matcherKey=null; }
+function renderMatcherSuggestions(q){
+  const el = g('matcher-list'); if(!el) return;
+  const qn = normalizeTopic(q);
+  const items = yksCatalog().map(t=>({...t, score:_scoreMatch(qn, t.norm)}))
+    .sort((a,b)=> b.score-a.score || a.name.localeCompare(b.name,'tr'))
+    .slice(0, 30);
+  el.innerHTML = items.map((t,i)=>
+    '<button class="btn fw mb8" style="text-align:left;font-size:10px;padding:8px 10px" '+
+    'onclick="applyTopicMatch('+i+',\''+t.ders.replace(/'/g,"\\'")+'\',\''+t.name.replace(/'/g,"\\'")+'\')">'+
+    _he(t.name)+' <span style="color:var(--muted);font-size:8px;letter-spacing:1px">· '+_he(t.ders)+'</span></button>'
+  ).join('');
+}
+function applyTopicMatch(_i, ders, name){
+  if (!_matcherKey) return;
+  const wt = (S.wrongTopics||{});
+  const w = wt[_matcherKey]; if(!w){ closeMatcherModal(); return; }
+  const newKey = normalizeTopic(name);
+  // if newKey already exists (other entry), merge: bump that entry, remove old
+  if (newKey !== _matcherKey && wt[newKey]){
+    const dst = wt[newKey];
+    dst.history = (dst.history||[]).concat(w.history||[]);
+    dst.level = Math.max(dst.level||0, w.level||0);
+    dst.solved = (dst.solved||0) + (w.solved||0);
+    dst.unresolved = false; dst.ders = ders; dst.name = name;
+    if (!dst.target) dst.target = topicTargetForLevel(dst.level||0);
+    delete wt[_matcherKey];
+  } else {
+    w.name = name; w.ders = ders; w.unresolved = false;
+    if (newKey !== _matcherKey){ wt[newKey] = w; delete wt[_matcherKey]; }
+  }
+  S.wrongTopics = wt;
+  save();
+  closeMatcherModal();
+  notify('✓ Konu eşleştirildi: '+name);
+  renderTree();
+  renderWrongTopicsAutocomplete();
+}
+
 function normalizeTopic(s){
   return (s||'')
     .toString()
@@ -3312,25 +3647,40 @@ function topicTargetForLevel(level){
 function renderWrongTopicsAutocomplete(){
   const dl = g('wrong-topics-dl'); if(!dl) return;
   const wt = S.wrongTopics || {};
-  const names = Object.values(wt).map(w=>w.name).sort((a,b)=>a.localeCompare(b,'tr'));
+  const set = new Set();
+  Object.values(wt).forEach(w=> set.add(w.name));
+  yksCatalog().forEach(t=> set.add(t.name+' — '+t.ders));
+  const names = Array.from(set).sort((a,b)=>a.localeCompare(b,'tr'));
   dl.innerHTML = names.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'"></option>').join('');
 }
 
 function addExamWrongChip(){
   const inp = g('exam-wrong-input'); if(!inp) return;
-  const raw = inp.value;
-  const key = normalizeTopic(raw); if(!key){ inp.value=''; return; }
+  const raw = (inp.value||'').split(' — ')[0]; // strip the " — Ders" suffix if datalist picked
+  // first try fuzzy-match against YKS catalog so dupes/typos collapse
+  let canonicalName = '', ders = '', unresolved = false;
+  const m = resolveTopicMatch(raw);
+  if (m.entry && m.score >= 60){
+    canonicalName = m.entry.name;
+    ders = m.entry.ders;
+  } else {
+    canonicalName = titleCaseTopic(raw);
+    unresolved = true;
+  }
+  const key = normalizeTopic(canonicalName); if(!key){ inp.value=''; return; }
   if(_examWrongChips.includes(key)){ notify('Bu konu zaten eklendi'); inp.value=''; return; }
-  // resolve display name: existing wrongTopic preserves canonical name, else title-case input
   const existing = (S.wrongTopics||{})[key];
   if(!existing){
-    // pre-register name in catalog so autocomplete shows it next time even before save
     S.wrongTopics = S.wrongTopics || {};
-    S.wrongTopics[key] = { name: titleCaseTopic(raw), level:0, solved:0, fixed:false, history:[], _pending:true };
+    S.wrongTopics[key] = { name: canonicalName, ders, unresolved, level:0, solved:0, fixed:false, history:[], _pending:true };
     save();
+  } else if (existing.unresolved && !unresolved){
+    // upgrade an existing unresolved entry now that we matched it
+    existing.name = canonicalName; existing.ders = ders; existing.unresolved = false; save();
   }
   _examWrongChips.push(key);
   inp.value='';
+  if (unresolved) notify('⚠ "'+canonicalName+'" YKS kataloğunda eşleşmedi — Deneme Ağacı\'nda "Eşleştir" ile düzeltebilirsin');
   renderExamWrongChips();
   renderWrongTopicsAutocomplete();
 }
@@ -3442,13 +3792,23 @@ function renderTree(){
     const lvl = w.level||0;
     const tagCount = (w.history||[]).length;
     const safeKey = key.replace(/'/g,"\\'");
-    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(w.fixed?'var(--green)':'var(--bright)')+';padding:10px 12px;margin-bottom:8px">'+
-      '<div class="fbet" style="margin-bottom:4px">'+
-        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px">'+(w.fixed?'✓ ':'')+_he(w.name)+'</span>'+
+    const dersBadge = w.ders
+      ? '<span style="font-size:7px;color:var(--bright);letter-spacing:1px;background:var(--dim);padding:1px 6px;margin-left:6px">'+_he(w.ders)+'</span>'
+      : (w.unresolved
+          ? '<span style="font-size:7px;color:var(--yellow);letter-spacing:1px;background:rgba(255,255,102,.08);padding:1px 6px;margin-left:6px;border:1px solid var(--yellow)">⚠ EŞLEŞMEDİ</span>'
+          : '');
+    const studyButtons = w.unresolved
+      ? '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--yellow);color:var(--yellow)" onclick="openTopicMatcher(\''+safeKey+'\')">🔎 EŞLEŞTİR</button>'
+      : '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="openOGMForTopic(\''+safeKey+'\')">🔗 OGM</button>'+
+        '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="openPracticeSheet(\''+safeKey+'\')">📄 PDF</button>';
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(w.fixed?'var(--green)':(w.unresolved?'var(--yellow)':'var(--bright)'))+';padding:10px 12px;margin-bottom:8px">'+
+      '<div class="fbet" style="margin-bottom:4px;flex-wrap:wrap;gap:4px">'+
+        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px">'+(w.fixed?'✓ ':'')+_he(w.name)+dersBadge+'</span>'+
         '<span style="font-size:8px;color:var(--muted);letter-spacing:1px">SEV '+lvl+' · '+tagCount+'×</span>'+
       '</div>'+
       '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">Hedef: <b style="color:var(--bright)">'+target+'</b> soru &nbsp; · &nbsp; Çözülen: <b style="color:var(--bright)">'+(w.solved||0)+'</b></div>'+
       '<div style="height:6px;background:var(--dim);margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(w.fixed?'var(--green)':'var(--bright)')+'"></div></div>'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">'+studyButtons+'</div>'+
       (w.fixed
         ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑 SİL</button></div>'
         : '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
@@ -3501,6 +3861,25 @@ function renderPlateauWarnings(){
     const c = w.lvl==='down'?'var(--red,#ff6b6b)':(w.lvl==='warn'?'var(--yellow)':'var(--bright)');
     return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+c+';padding:8px 10px;font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.5">⚠ '+w.txt+'</div>';
   }).join('') || '<div style="font-size:8px;color:var(--dim);letter-spacing:1px">Uyarı yok — yeterli veri toplandıkça erken uyarılar burada görünecek.</div>';
+}
+
+// ════════════════════════════════════════
+// HEDEF SÖZLEŞMESİ MODAL
+// ════════════════════════════════════════
+function openContractModal(){
+  const m=g('contract-modal'); if(!m) return;
+  const inp=g('contract-mins'); if(inp && !inp.value) inp.value=120;
+  m.style.display='flex';
+}
+function closeContractModal(){ const m=g('contract-modal'); if(m) m.style.display='none'; }
+function signContract(){
+  const inp=g('contract-mins'); const mins=Math.max(10, Math.min(600, parseInt(inp&&inp.value)||0));
+  if(!mins){ notify('Geçerli bir dakika gir'); return; }
+  S.studyContract = { date: today(), focusTarget: mins, resolved:false };
+  closeContractModal();
+  notify('📜 SÖZLEŞME İMZALANDI // Bugün hedef: '+mins+' dk');
+  addLog('Hedef Sözleşmesi imzalandı: '+mins+' dk');
+  save(); renderShop();
 }
 
 // ════════════════════════════════════════
@@ -3994,12 +4373,12 @@ function renderAll(){
     }, 900);
   }
   if (S._contractWin){
-    S._contractWin = false;
-    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTTUN: +200 XP iade'); addLog('Hedef Sözleşmesi: başarılı (+200 XP)'); save(); }, 1100);
+    const b = S._contractWin; S._contractWin = 0;
+    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTTUN: +'+b+' XP'); addLog('Hedef Sözleşmesi: başarılı (+'+b+' XP)'); save(); }, 1100);
   }
   if (S._contractLoss){
-    S._contractLoss = false;
-    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTAMADIN: -100 XP'); addLog('Hedef Sözleşmesi: başarısız (-100 XP)'); save(); }, 1100);
+    const d = S._contractLoss; S._contractLoss = 0;
+    setTimeout(()=>{ notify('📜 SÖZLEŞMEYİ TUTAMADIN: -'+d+' XP'); addLog('Hedef Sözleşmesi: başarısız (-'+d+' XP)'); save(); }, 1100);
   }
   // run boss aggression check right after rendering (handles long-time-away on reopen)
   try { bossAggroTick(); } catch(e){}
@@ -4574,7 +4953,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.5 başlatıldı.');
+addLog('OVERCLOCK v7.6 başlatıldı.');
 </script>
 </body>
 </html>
