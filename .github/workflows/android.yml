@@ -120,13 +120,16 @@ jobs:
           name: overclock-apk
           path: overclock.apk
 
-      - name: Publish to "apk-latest" release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: apk-latest
-          name: OVERCLOCK APK (son sürüm)
-          body: |
-            En güncel OVERCLOCK Android APK'sı.
-            Telefon ve tablete kur (bilinmeyen kaynaklara izin ver). Aynı Firebase hesabıyla giriş yapınca veriler otomatik senkronlanır.
-          files: overclock.apk
-          prerelease: false
+      - name: Publish to "apk-latest" release (gh CLI)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG=apk-latest
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" overclock.apk --clobber
+          else
+            gh release create "$TAG" overclock.apk \
+              --title "OVERCLOCK APK (son sürüm)" \
+              --notes "En güncel OVERCLOCK Android APK'sı. Telefon ve tablete kur (bilinmeyen kaynaklara izin ver). Aynı Firebase hesabıyla giriş yapınca veriler otomatik senkronlanır."
+          fi
