@@ -56,12 +56,16 @@ jobs:
           fi
           ls android/app/src/main/java/com/hfurkan/overclock/
 
-      - name: Register OGMPlugin in MainActivity
+      # cap add android (Capacitor 6) ships a Java MainActivity. Our plugin is
+      # Kotlin, so we (a) drop the Java file, (b) write a Kotlin MainActivity that
+      # registers OGMPlugin, (c) make sure the Kotlin Gradle plugin is applied in
+      # the app module so the .kt files actually compile.
+      - name: Convert MainActivity to Kotlin and register OGMPlugin
         run: |
-          MA=android/app/src/main/java/com/hfurkan/overclock/MainActivity.kt
-          # If the class body is empty (default cap add template) replace it
-          if grep -q 'class MainActivity : BridgeActivity()' "$MA"; then
-            cat > "$MA" <<'EOF'
+          set -euxo pipefail
+          PKG_DIR=android/app/src/main/java/com/hfurkan/overclock
+          rm -f "$PKG_DIR/MainActivity.java"
+          cat > "$PKG_DIR/MainActivity.kt" <<'EOF'
           package com.hfurkan.overclock
 
           import android.os.Bundle
@@ -74,9 +78,29 @@ jobs:
               }
           }
           EOF
-          fi
           echo "── MainActivity.kt ──"
-          cat "$MA"
+          cat "$PKG_DIR/MainActivity.kt"
+          echo "── PKG_DIR contents ──"
+          ls -la "$PKG_DIR"
+
+      - name: Enable Kotlin in app module
+        run: |
+          set -euxo pipefail
+          APP_GRADLE=android/app/build.gradle
+          if ! grep -q "kotlin-android" "$APP_GRADLE"; then
+            sed -i "s|apply plugin: 'com.android.application'|apply plugin: 'com.android.application'\napply plugin: 'kotlin-android'|" "$APP_GRADLE"
+          fi
+          # add kotlin-stdlib dependency if missing
+          if ! grep -q "kotlin-stdlib" "$APP_GRADLE"; then
+            sed -i "s|dependencies {|dependencies {\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib:1.9.10\"|" "$APP_GRADLE"
+          fi
+          # ensure kotlin gradle plugin is in classpath at project level
+          ROOT_GRADLE=android/build.gradle
+          if ! grep -q "kotlin-gradle-plugin" "$ROOT_GRADLE"; then
+            sed -i "s|classpath 'com.android.tools.build:gradle.*|&\n        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10'|" "$ROOT_GRADLE"
+          fi
+          echo "── app/build.gradle (head) ──"
+          head -40 "$APP_GRADLE"
 
       - name: Sync Capacitor
         run: npx cap sync android
