@@ -36,8 +36,47 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Our committed android/ contains only OGMPlugin.kt; stash it so cap add
+      # can generate the full project skeleton, then restore the plugin.
+      - name: Stash custom android overrides
+        run: |
+          if [ -d android ]; then
+            mkdir -p /tmp/android-overrides
+            cp -r android/* /tmp/android-overrides/ || true
+            rm -rf android
+          fi
+
       - name: Add Android platform
         run: npx cap add android
+
+      - name: Merge OGMPlugin into android project
+        run: |
+          if [ -d /tmp/android-overrides ]; then
+            cp -rv /tmp/android-overrides/* android/
+          fi
+          ls android/app/src/main/java/com/hfurkan/overclock/
+
+      - name: Register OGMPlugin in MainActivity
+        run: |
+          MA=android/app/src/main/java/com/hfurkan/overclock/MainActivity.kt
+          # If the class body is empty (default cap add template) replace it
+          if grep -q 'class MainActivity : BridgeActivity()' "$MA"; then
+            cat > "$MA" <<'EOF'
+          package com.hfurkan.overclock
+
+          import android.os.Bundle
+          import com.getcapacitor.BridgeActivity
+
+          class MainActivity : BridgeActivity() {
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  registerPlugin(OGMPlugin::class.java)
+                  super.onCreate(savedInstanceState)
+              }
+          }
+          EOF
+          fi
+          echo "── MainActivity.kt ──"
+          cat "$MA"
 
       - name: Sync Capacitor
         run: npx cap sync android

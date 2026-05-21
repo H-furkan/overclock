@@ -415,17 +415,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div>
 
-<!-- TOPIC MATCHER MODAL -->
-<div id="matcher-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
-  <div style="width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--bd2);padding:18px">
-    <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:10px">🔎 KONUYU EŞLEŞTİR</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">YKS kataloğundan en yakın konuyu seç. OGM linki ve PDF özellikleri bu eşleşmeyle çalışır.</div>
-    <input class="inp" id="matcher-input" placeholder="ara: optik, türev, hücre..." oninput="renderMatcherSuggestions(this.value)" style="margin-bottom:10px">
-    <div id="matcher-list" style="overflow-y:auto;flex:1;min-height:240px;max-height:50vh"></div>
-    <button class="btn fw" style="margin-top:8px" onclick="closeMatcherModal()">✕ İPTAL</button>
-  </div>
-</div>
-
 <!-- CONTRACT (Hedef Sözleşmesi) MODAL -->
 <div id="contract-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
@@ -992,6 +981,41 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <div id="tree-list"></div>
     <div id="tree-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:14px 0">Henüz etiketlenmiş konu yok. Denemende yanlış konuları ekle.</div>
   </div>
+
+  <!-- OGM TEST OLUŞTUR PANEL -->
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ OGM Test Oluştur</div>
+      <span style="font-size:8px;color:var(--muted)" id="ogm-status">—</span>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+      Her yanlış konuyu bir kere OGM kazanımları ile eşleştir (ders → sınıf → kazanım seçimi). Sonrasında <b style="color:var(--bright)">PDF Oluştur</b> tek tıkla çalışır — APK'da WebView üzerinden OGM soru sayfasını PDF'e çevirir.
+    </div>
+    <div id="ogm-list"></div>
+    <div id="ogm-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:8px 0">Aktif yanlış konu yok.</div>
+  </div>
+</div>
+
+<!-- OGM MAPPING MODAL -->
+<div id="ogm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--bd2);border-radius:14px 14px 0 0;padding:18px">
+    <div class="fbet" style="margin-bottom:10px">
+      <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">🎯 OGM KAZANIM SEÇ</span>
+      <button class="btn" style="min-height:28px;padding:2px 10px" onclick="closeOGMModal()">✕</button>
+    </div>
+    <div id="ogm-modal-topic" style="font-size:10px;color:var(--bright);letter-spacing:1px;background:var(--mid);padding:6px 10px;border:1px solid var(--bd);margin-bottom:12px"></div>
+    <div class="ilabel" style="margin-bottom:4px">DERS</div>
+    <select class="inp" id="ogm-ders" onchange="onOGMDersChange()" style="margin-bottom:10px"><option value="">— Seç —</option></select>
+    <div class="ilabel" style="margin-bottom:4px">SINIF</div>
+    <div id="ogm-sinif-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+    <div class="ilabel" style="margin-bottom:4px">KAZANIMLAR <span style="color:var(--bright)" id="ogm-kazanim-counter">(0)</span></div>
+    <div id="ogm-kazanim-list" style="flex:1;min-height:140px;max-height:42vh;overflow-y:auto;border:1px solid var(--bd);padding:6px;margin-bottom:8px;background:var(--mid)"></div>
+    <div id="ogm-kazanim-fallback" style="display:none;margin-bottom:8px">
+      <div class="ilabel" style="margin-bottom:4px;color:var(--yellow)">OGM yüklenemedi — ID'leri elle gir (virgülle ayır)</div>
+      <input class="inp" id="ogm-manual-ids" placeholder="örn: 3460, 3461, 3462">
+    </div>
+    <button class="btn primary fw" onclick="saveOGMMappingFromModal()">💾 KAYDET</button>
+  </div>
 </div>
 
 <div id="page-log" class="page">
@@ -1093,7 +1117,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.6 // TR-1<br>YKS katalog · OGM/PDF · Erken bitirme · WakeLock<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.7 // TR-1<br>OGM Test Paneli · Native PDF eklentisi · APK<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1561,7 +1585,7 @@ function goTab(btn, name) {
   if (name === 'shop') setTimeout(()=>{ try{ renderShop(); }catch(e){} }, 20);
   // EXAM tab
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
-  if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
+  if (name === 'tree') setTimeout(()=>{ try{ renderTree(); renderOGMPanel(); }catch(e){} }, 20);
   // Resume audio context on tap (mobile policy)
   try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
 }
@@ -3397,229 +3421,9 @@ function renderExam(){
 let _examWrongChips = [];     // normalized keys for the deneme being entered
 let _treeFilter = 'active';
 
-// normalize: lowercase, trim, collapse spaces, strip simple punctuation
 function _he(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-// ── Curated YKS (Sayısal) topic catalog ──
-// Lets us prevent the "mustafa" problem: every chip is fuzzy-matched against
-// this list. Resolved chips unlock OGM link + practice-sheet PDF; unresolved
-// ones get a warning and a "match" button.
-const YKS_TOPICS = [
-  // TYT MATEMATİK
-  ['TYT Matematik','Temel Kavramlar'],['TYT Matematik','Sayı Basamakları'],['TYT Matematik','Bölme ve Bölünebilme'],
-  ['TYT Matematik','Asal Çarpanlar'],['TYT Matematik','EBOB-EKOK'],['TYT Matematik','Rasyonel Sayılar'],
-  ['TYT Matematik','Basit Eşitsizlikler'],['TYT Matematik','Mutlak Değer'],['TYT Matematik','Üslü Sayılar'],
-  ['TYT Matematik','Köklü Sayılar'],['TYT Matematik','Çarpanlara Ayırma'],['TYT Matematik','Oran-Orantı'],
-  ['TYT Matematik','Birinci Dereceden Denklemler'],['TYT Matematik','Sayı Problemleri'],['TYT Matematik','Kesir Problemleri'],
-  ['TYT Matematik','Yaş Problemleri'],['TYT Matematik','Hız Problemleri'],['TYT Matematik','İşçi Problemleri'],
-  ['TYT Matematik','Yüzde Problemleri'],['TYT Matematik','Kar-Zarar Problemleri'],['TYT Matematik','Karışım Problemleri'],
-  ['TYT Matematik','Grafik Problemleri'],['TYT Matematik','Kümeler'],['TYT Matematik','Mantık'],
-  ['TYT Matematik','Fonksiyonlar'],['TYT Matematik','Polinomlar'],['TYT Matematik','İkinci Dereceden Denklemler'],
-  ['TYT Matematik','Permütasyon'],['TYT Matematik','Kombinasyon'],['TYT Matematik','Olasılık'],
-  ['TYT Matematik','İstatistik'],['TYT Matematik','Veri Analizi'],
-  // TYT GEOMETRİ
-  ['TYT Geometri','Doğruda Açılar'],['TYT Geometri','Üçgende Açılar'],['TYT Geometri','Açıortay'],
-  ['TYT Geometri','Kenarortay'],['TYT Geometri','Üçgende Alan'],['TYT Geometri','Eşkenar Üçgen'],
-  ['TYT Geometri','İkizkenar Üçgen'],['TYT Geometri','Dik Üçgen'],['TYT Geometri','Pisagor'],
-  ['TYT Geometri','Öklid'],['TYT Geometri','Benzerlik'],['TYT Geometri','Dörtgenler'],
-  ['TYT Geometri','Paralelkenar'],['TYT Geometri','Eşkenar Dörtgen'],['TYT Geometri','Yamuk'],
-  ['TYT Geometri','Deltoid'],['TYT Geometri','Çemberde Açı'],['TYT Geometri','Çemberde Uzunluk'],
-  ['TYT Geometri','Daire Alan'],['TYT Geometri','Analitik Geometri'],['TYT Geometri','Katı Cisimler'],
-  // TYT FİZİK
-  ['TYT Fizik','Madde ve Özellikleri'],['TYT Fizik','Fiziksel Nicelikler'],['TYT Fizik','Sıvıların Kaldırma Kuvveti'],
-  ['TYT Fizik','Basınç'],['TYT Fizik','Kuvvet ve Hareket'],['TYT Fizik','Sürtünme'],
-  ['TYT Fizik','Newton Hareket Yasaları'],['TYT Fizik','İş Enerji Güç'],['TYT Fizik','Isı ve Sıcaklık'],
-  ['TYT Fizik','Genleşme'],['TYT Fizik','Hal Değişimi'],['TYT Fizik','Elektrik'],
-  ['TYT Fizik','Elektrik Devresi'],['TYT Fizik','Manyetizma'],['TYT Fizik','Dalgalar'],
-  ['TYT Fizik','Yay Dalgaları'],['TYT Fizik','Su Dalgaları'],['TYT Fizik','Ses Dalgaları'],
-  ['TYT Fizik','Deprem Dalgaları'],['TYT Fizik','Optik'],['TYT Fizik','Aydınlanma'],
-  ['TYT Fizik','Gölge'],['TYT Fizik','Düzlem Aynalar'],['TYT Fizik','Küresel Aynalar'],
-  ['TYT Fizik','Kırılma'],['TYT Fizik','Mercekler'],
-  // TYT KİMYA
-  ['TYT Kimya','Kimya Bilimi'],['TYT Kimya','Atom Modelleri'],['TYT Kimya','Periyodik Sistem'],
-  ['TYT Kimya','Kimyasal Türler Arası Etkileşim'],['TYT Kimya','Bileşikler'],['TYT Kimya','Kimyasal Tepkimeler'],
-  ['TYT Kimya','Asit Baz Tuz'],['TYT Kimya','Karışımlar'],['TYT Kimya','Endüstride Kimya'],
-  ['TYT Kimya','Doğa ve Kimya'],
-  // TYT BİYOLOJİ
-  ['TYT Biyoloji','Canlıların Ortak Özellikleri'],['TYT Biyoloji','Temel Bileşikler'],
-  ['TYT Biyoloji','Hücre'],['TYT Biyoloji','Hücre Zarı'],['TYT Biyoloji','Mitoz'],['TYT Biyoloji','Mayoz'],
-  ['TYT Biyoloji','Canlıların Sınıflandırılması'],['TYT Biyoloji','Bakteriler'],['TYT Biyoloji','Arkeler'],
-  ['TYT Biyoloji','Protistalar'],['TYT Biyoloji','Mantarlar'],['TYT Biyoloji','Bitkiler'],
-  ['TYT Biyoloji','Hayvanlar'],['TYT Biyoloji','Ekosistem Ekoloji'],['TYT Biyoloji','Madde Döngüleri'],
-  ['TYT Biyoloji','Güncel Çevre Sorunları'],
-  // AYT MATEMATİK
-  ['AYT Matematik','Polinomlar'],['AYT Matematik','2. Dereceden Denklemler ve Eşitsizlikler'],
-  ['AYT Matematik','Karmaşık Sayılar'],['AYT Matematik','Logaritma'],['AYT Matematik','Diziler'],
-  ['AYT Matematik','Limit ve Süreklilik'],['AYT Matematik','Türev'],['AYT Matematik','Türev Uygulamaları'],
-  ['AYT Matematik','İntegral'],['AYT Matematik','İntegral Uygulamaları'],['AYT Matematik','Trigonometri'],
-  ['AYT Matematik','Trigonometrik Denklemler'],['AYT Matematik','Toplam Fark Formülleri'],
-  ['AYT Matematik','Yarım Açı'],['AYT Matematik','Matris ve Determinant'],
-  // AYT GEOMETRİ
-  ['AYT Geometri','Çemberde Açılar'],['AYT Geometri','Çemberde Uzunluk'],['AYT Geometri','Dairede Alan'],
-  ['AYT Geometri','Vektörler'],['AYT Geometri','Doğrunun Analitiği'],
-  ['AYT Geometri','Çemberin Analitik İncelenmesi'],['AYT Geometri','Konikler'],
-  ['AYT Geometri','Katı Cisimler'],['AYT Geometri','Uzay Geometri'],
-  // AYT FİZİK
-  ['AYT Fizik','Vektörler'],['AYT Fizik','Kuvvet ve Hareket'],['AYT Fizik','Düzgün Çembersel Hareket'],
-  ['AYT Fizik','Tork ve Denge'],['AYT Fizik','Basit Makineler'],['AYT Fizik','Atışlar'],
-  ['AYT Fizik','İtme Momentum'],['AYT Fizik','Elektriksel Kuvvet ve Elektrik Alan'],
-  ['AYT Fizik','Elektriksel Potansiyel'],['AYT Fizik','Kondansatörler'],['AYT Fizik','Manyetizma'],
-  ['AYT Fizik','Manyetik Alan'],['AYT Fizik','İndüksiyon'],['AYT Fizik','Alternatif Akım'],
-  ['AYT Fizik','Transformatörler'],['AYT Fizik','Basit Harmonik Hareket'],['AYT Fizik','Dalga Mekaniği'],
-  ['AYT Fizik','Atomun Yapısı'],['AYT Fizik','Radyoaktivite'],['AYT Fizik','Kuantum Fiziği'],
-  ['AYT Fizik','Modern Fizik'],['AYT Fizik','Görüntüleme Teknolojileri'],
-  // AYT KİMYA
-  ['AYT Kimya','Modern Atom Teorisi'],['AYT Kimya','Gazlar'],['AYT Kimya','Sıvı Çözeltiler ve Çözünürlük'],
-  ['AYT Kimya','Termokimya'],['AYT Kimya','Kimyasal Tepkimelerde Hız'],['AYT Kimya','Kimyasal Tepkimelerde Denge'],
-  ['AYT Kimya','Asit-Baz Dengesi'],['AYT Kimya','Çözünürlük Dengesi'],['AYT Kimya','Kimya ve Elektrik'],
-  ['AYT Kimya','Karbon Kimyası'],['AYT Kimya','Organik Bileşikler'],['AYT Kimya','Hidrokarbonlar'],
-  ['AYT Kimya','Alkollerden Esterlere'],['AYT Kimya','Organik Reaksiyonlar'],
-  // AYT BİYOLOJİ
-  ['AYT Biyoloji','Sinir Sistemi'],['AYT Biyoloji','Endokrin Sistem'],['AYT Biyoloji','Duyu Organları'],
-  ['AYT Biyoloji','Destek ve Hareket Sistemi'],['AYT Biyoloji','Sindirim Sistemi'],
-  ['AYT Biyoloji','Dolaşım ve Bağışıklık Sistemi'],['AYT Biyoloji','Solunum Sistemi'],
-  ['AYT Biyoloji','Üriner Sistem'],['AYT Biyoloji','Üreme Sistemi ve Embriyonik Gelişme'],
-  ['AYT Biyoloji','Komünite'],['AYT Biyoloji','Popülasyon'],['AYT Biyoloji','Ekosistem'],
-  ['AYT Biyoloji','Genden Proteine'],['AYT Biyoloji','Mendel Genetiği'],
-  ['AYT Biyoloji','Modern Genetik Uygulamaları'],['AYT Biyoloji','Bitkilerin Yapısı'],
-  ['AYT Biyoloji','Fotosentez'],['AYT Biyoloji','Bitkilerde Solunum'],['AYT Biyoloji','Bitkilerde Hormonlar'],
-  ['AYT Biyoloji','Canlılar ve Çevre'],
-].map(([ders,name])=>({ders,name}));
-
-let _yksCatalog = null;
-function yksCatalog(){
-  if (_yksCatalog) return _yksCatalog;
-  _yksCatalog = YKS_TOPICS.map(t=>({...t, norm: normalizeTopic(t.name), dersNorm: normalizeTopic(t.ders)}));
-  return _yksCatalog;
-}
-
-// Token-overlap + substring fuzzy match
-function _scoreMatch(qa, qb){
-  if (!qa || !qb) return 0;
-  if (qa === qb) return 100;
-  if (qb.includes(qa) || qa.includes(qb)) return 80;
-  const ta = qa.split(' ').filter(w=>w.length>1);
-  const tb = qb.split(' ').filter(w=>w.length>1);
-  if (!ta.length || !tb.length) return 0;
-  let inter=0;
-  ta.forEach(w=>{ if (tb.includes(w)) inter++; });
-  return Math.round(100 * inter / Math.max(ta.length, tb.length));
-}
-function resolveTopicMatch(raw){
-  const norm = normalizeTopic(raw);
-  if (!norm) return {score:0, entry:null};
-  let best={score:0, entry:null};
-  for (const t of yksCatalog()){
-    const s = _scoreMatch(norm, t.norm);
-    if (s > best.score) best = {score:s, entry:t};
-  }
-  return best;
-}
-
-// ── OGM linkleme ──
-function openOGMForTopic(key){
-  const w = (S.wrongTopics||{})[key]; if(!w) return;
-  // OGM Soru Bankası SPA — no public deep-link search; we open the catalog root
-  // and copy the topic name to clipboard so the user can paste it into OGM search.
-  try { navigator.clipboard && navigator.clipboard.writeText(w.name); } catch(e){}
-  notify('🔗 OGM açıldı · "'+w.name+'" panoya kopyalandı, arama kutusuna yapıştır');
-  window.open('https://ogmmateryal.eba.gov.tr/soru-bankasi','_blank','noopener');
-}
-
-// ── Yazdırılabilir PDF çalışma yaprağı ──
-// Tarayıcının "Print → Save as PDF" özelliğiyle PDF üretilir. Telif sorunu olmasın
-// diye OGM içeriği TAŞIMIYORUZ — yaprakta yalnızca konu/hedef + OGM linki var,
-// kullanıcı OGM'den soru çözerken yanına basıp not almak için kullanır.
-function openPracticeSheet(key){
-  const w = (S.wrongTopics||{})[key]; if(!w) return;
-  const target = w.target || topicTargetForLevel(w.level||0);
-  const dateStr = new Date().toLocaleDateString('tr-TR');
-  const rows = [];
-  for (let i=1;i<=target;i++){
-    rows.push('<tr><td class="n">'+i+'</td><td class="a"></td><td class="r"></td><td class="note"></td></tr>');
-  }
-  const html = '<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>'+_he(w.name)+' — Çalışma Yaprağı</title>'+
-    '<style>'+
-    '@page{margin:14mm}'+
-    'body{font-family:Arial,sans-serif;color:#000;font-size:11pt;line-height:1.4}'+
-    'h1{font-size:18pt;margin:0 0 4pt}'+
-    'h2{font-size:13pt;margin:0 0 12pt;color:#444}'+
-    '.meta{font-size:9pt;color:#555;margin-bottom:10pt}'+
-    '.meta b{color:#000}'+
-    'table{width:100%;border-collapse:collapse;margin-top:6pt}'+
-    'th,td{border:1px solid #888;padding:6pt 4pt;vertical-align:middle}'+
-    'th{background:#eee;font-size:9pt;text-align:left}'+
-    'td.n{width:34pt;text-align:center;font-weight:700}'+
-    'td.a{width:60pt;height:18pt}'+
-    'td.r{width:50pt}'+
-    'td.note{}'+
-    '.footer{margin-top:14pt;font-size:8pt;color:#666;border-top:1px solid #ccc;padding-top:6pt}'+
-    '.tip{font-size:9pt;color:#444;margin:8pt 0 0}'+
-    '@media print{.noprint{display:none}}'+
-    '.btnp{margin:14pt 0;text-align:center}.btnp button{padding:8pt 18pt;font-size:11pt}'+
-    '</style></head><body>'+
-    '<h1>OVERCLOCK · Çalışma Yaprağı</h1>'+
-    '<h2>'+_he(w.name)+(w.ders?(' <span style="color:#888;font-weight:400;font-size:10pt">— '+_he(w.ders)+'</span>'):'')+'</h2>'+
-    '<div class="meta">Tarih: <b>'+dateStr+'</b> &nbsp;·&nbsp; Hedef: <b>'+target+' soru</b> &nbsp;·&nbsp; Etiketlenme: <b>'+((w.history||[]).length)+'×</b> &nbsp;·&nbsp; Seviye: <b>'+(w.level||0)+'</b></div>'+
-    '<div class="tip">Soru kaynağı: <b>OGM Materyal — Soru Bankası</b>: https://ogmmateryal.eba.gov.tr/soru-bankasi · Arama kutusuna <b>"'+_he(w.name)+'"</b> yaz, çıkan soruları aşağıdaki tabloya işle.</div>'+
-    '<table><thead><tr><th>#</th><th>Cevap</th><th>D/Y</th><th>Not / Yanıltıcı</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>'+
-    '<div class="footer">Hedefi tamamladığında uygulamadaki Deneme Ağacı kartından "DÜZELTİLDİ" işaretle → '+target+' XP. · OVERCLOCK</div>'+
-    '<div class="btnp noprint"><button onclick="window.print()">🖨 PDF olarak kaydet / Yazdır</button></div>'+
-    '<script>window.addEventListener("load",function(){setTimeout(function(){try{window.print();}catch(e){}},400);});<\/script>'+
-    '</body></html>';
-  const win = window.open('', '_blank');
-  if (!win){ notify('Popup engellendi — tarayıcı ayarlarından izin ver'); return; }
-  win.document.open(); win.document.write(html); win.document.close();
-}
-
-// ── Manuel eşleştirme modali ──
-let _matcherKey = null;
-function openTopicMatcher(key){
-  _matcherKey = key;
-  const m = g('matcher-modal'); if(!m) return;
-  const inp = g('matcher-input'); if(inp){ inp.value=''; inp.focus(); }
-  renderMatcherSuggestions('');
-  m.style.display = 'flex';
-}
-function closeMatcherModal(){ const m=g('matcher-modal'); if(m) m.style.display='none'; _matcherKey=null; }
-function renderMatcherSuggestions(q){
-  const el = g('matcher-list'); if(!el) return;
-  const qn = normalizeTopic(q);
-  const items = yksCatalog().map(t=>({...t, score:_scoreMatch(qn, t.norm)}))
-    .sort((a,b)=> b.score-a.score || a.name.localeCompare(b.name,'tr'))
-    .slice(0, 30);
-  el.innerHTML = items.map((t,i)=>
-    '<button class="btn fw mb8" style="text-align:left;font-size:10px;padding:8px 10px" '+
-    'onclick="applyTopicMatch('+i+',\''+t.ders.replace(/'/g,"\\'")+'\',\''+t.name.replace(/'/g,"\\'")+'\')">'+
-    _he(t.name)+' <span style="color:var(--muted);font-size:8px;letter-spacing:1px">· '+_he(t.ders)+'</span></button>'
-  ).join('');
-}
-function applyTopicMatch(_i, ders, name){
-  if (!_matcherKey) return;
-  const wt = (S.wrongTopics||{});
-  const w = wt[_matcherKey]; if(!w){ closeMatcherModal(); return; }
-  const newKey = normalizeTopic(name);
-  // if newKey already exists (other entry), merge: bump that entry, remove old
-  if (newKey !== _matcherKey && wt[newKey]){
-    const dst = wt[newKey];
-    dst.history = (dst.history||[]).concat(w.history||[]);
-    dst.level = Math.max(dst.level||0, w.level||0);
-    dst.solved = (dst.solved||0) + (w.solved||0);
-    dst.unresolved = false; dst.ders = ders; dst.name = name;
-    if (!dst.target) dst.target = topicTargetForLevel(dst.level||0);
-    delete wt[_matcherKey];
-  } else {
-    w.name = name; w.ders = ders; w.unresolved = false;
-    if (newKey !== _matcherKey){ wt[newKey] = w; delete wt[_matcherKey]; }
-  }
-  S.wrongTopics = wt;
-  save();
-  closeMatcherModal();
-  notify('✓ Konu eşleştirildi: '+name);
-  renderTree();
-  renderWrongTopicsAutocomplete();
-}
-
+// normalize: lowercase, trim, collapse spaces, strip simple punctuation
 function normalizeTopic(s){
   return (s||'')
     .toString()
@@ -3647,40 +3451,23 @@ function topicTargetForLevel(level){
 function renderWrongTopicsAutocomplete(){
   const dl = g('wrong-topics-dl'); if(!dl) return;
   const wt = S.wrongTopics || {};
-  const set = new Set();
-  Object.values(wt).forEach(w=> set.add(w.name));
-  yksCatalog().forEach(t=> set.add(t.name+' — '+t.ders));
-  const names = Array.from(set).sort((a,b)=>a.localeCompare(b,'tr'));
+  const names = Object.values(wt).map(w=>w.name).sort((a,b)=>a.localeCompare(b,'tr'));
   dl.innerHTML = names.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'"></option>').join('');
 }
 
 function addExamWrongChip(){
   const inp = g('exam-wrong-input'); if(!inp) return;
-  const raw = (inp.value||'').split(' — ')[0]; // strip the " — Ders" suffix if datalist picked
-  // first try fuzzy-match against YKS catalog so dupes/typos collapse
-  let canonicalName = '', ders = '', unresolved = false;
-  const m = resolveTopicMatch(raw);
-  if (m.entry && m.score >= 60){
-    canonicalName = m.entry.name;
-    ders = m.entry.ders;
-  } else {
-    canonicalName = titleCaseTopic(raw);
-    unresolved = true;
-  }
-  const key = normalizeTopic(canonicalName); if(!key){ inp.value=''; return; }
+  const raw = inp.value;
+  const key = normalizeTopic(raw); if(!key){ inp.value=''; return; }
   if(_examWrongChips.includes(key)){ notify('Bu konu zaten eklendi'); inp.value=''; return; }
   const existing = (S.wrongTopics||{})[key];
   if(!existing){
     S.wrongTopics = S.wrongTopics || {};
-    S.wrongTopics[key] = { name: canonicalName, ders, unresolved, level:0, solved:0, fixed:false, history:[], _pending:true };
+    S.wrongTopics[key] = { name: titleCaseTopic(raw), level:0, solved:0, fixed:false, history:[], _pending:true };
     save();
-  } else if (existing.unresolved && !unresolved){
-    // upgrade an existing unresolved entry now that we matched it
-    existing.name = canonicalName; existing.ders = ders; existing.unresolved = false; save();
   }
   _examWrongChips.push(key);
   inp.value='';
-  if (unresolved) notify('⚠ "'+canonicalName+'" YKS kataloğunda eşleşmedi — Deneme Ağacı\'nda "Eşleştir" ile düzeltebilirsin');
   renderExamWrongChips();
   renderWrongTopicsAutocomplete();
 }
@@ -3778,6 +3565,7 @@ function deleteTopic(key){
 }
 
 function renderTree(){
+  try { renderOGMPanel(); } catch(e){}
   const list = g('tree-list'), emp = g('tree-empty'); if(!list) return;
   const wt = S.wrongTopics || {};
   let entries = Object.entries(wt).filter(([,w])=>!w._pending);
@@ -3792,23 +3580,13 @@ function renderTree(){
     const lvl = w.level||0;
     const tagCount = (w.history||[]).length;
     const safeKey = key.replace(/'/g,"\\'");
-    const dersBadge = w.ders
-      ? '<span style="font-size:7px;color:var(--bright);letter-spacing:1px;background:var(--dim);padding:1px 6px;margin-left:6px">'+_he(w.ders)+'</span>'
-      : (w.unresolved
-          ? '<span style="font-size:7px;color:var(--yellow);letter-spacing:1px;background:rgba(255,255,102,.08);padding:1px 6px;margin-left:6px;border:1px solid var(--yellow)">⚠ EŞLEŞMEDİ</span>'
-          : '');
-    const studyButtons = w.unresolved
-      ? '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--yellow);color:var(--yellow)" onclick="openTopicMatcher(\''+safeKey+'\')">🔎 EŞLEŞTİR</button>'
-      : '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="openOGMForTopic(\''+safeKey+'\')">🔗 OGM</button>'+
-        '<button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="openPracticeSheet(\''+safeKey+'\')">📄 PDF</button>';
-    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(w.fixed?'var(--green)':(w.unresolved?'var(--yellow)':'var(--bright)'))+';padding:10px 12px;margin-bottom:8px">'+
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(w.fixed?'var(--green)':'var(--bright)')+';padding:10px 12px;margin-bottom:8px">'+
       '<div class="fbet" style="margin-bottom:4px;flex-wrap:wrap;gap:4px">'+
-        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px">'+(w.fixed?'✓ ':'')+_he(w.name)+dersBadge+'</span>'+
+        '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px">'+(w.fixed?'✓ ':'')+_he(w.name)+'</span>'+
         '<span style="font-size:8px;color:var(--muted);letter-spacing:1px">SEV '+lvl+' · '+tagCount+'×</span>'+
       '</div>'+
       '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">Hedef: <b style="color:var(--bright)">'+target+'</b> soru &nbsp; · &nbsp; Çözülen: <b style="color:var(--bright)">'+(w.solved||0)+'</b></div>'+
       '<div style="height:6px;background:var(--dim);margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(w.fixed?'var(--green)':'var(--bright)')+'"></div></div>'+
-      '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">'+studyButtons+'</div>'+
       (w.fixed
         ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑 SİL</button></div>'
         : '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
@@ -3820,6 +3598,266 @@ function renderTree(){
           '</div>')+
     '</div>';
   }).join('');
+}
+
+// ════════════════════════════════════════
+// OGM TEST PANEL  (v7.7)
+// Source-of-truth files (for a future React port) live at:
+//   src/utils/ogmIntegration.ts
+//   src/components/OGMTestPanel.jsx
+//   android/app/src/main/java/com/hfurkan/overclock/OGMPlugin.kt
+// This block is the vanilla-JS adaptation that runs in the current index.html.
+// ════════════════════════════════════════
+const OGM_DERSLER = [
+  ['matematik','Matematik'],['fizik','Fizik'],['kimya','Kimya'],['biyoloji','Biyoloji'],
+  ['tarih','Tarih'],['cografya','Coğrafya'],['tde','Türk Dili ve Edebiyatı'],['felsefe','Felsefe'],
+  ['ingilizce','İngilizce'],
+  ['fl-matematik','Fen Lisesi Matematik'],['fl-fizik','Fen Lisesi Fizik'],
+  ['fl-kimya','Fen Lisesi Kimya'],['fl-biyoloji','Fen Lisesi Biyoloji'],
+].map(([slug,label])=>({slug,label}));
+const OGM_SINIF_DERS_IDS = {
+  matematik:[
+    {sinifAdi:'9. Sınıf',sinifId:6,dersId:48},
+    {sinifAdi:'10. Sınıf',sinifId:7,dersId:49},
+    {sinifAdi:'11. Sınıf',sinifId:8,dersId:50},
+    {sinifAdi:'12. Sınıf',sinifId:9,dersId:51},
+  ],
+  fizik:[
+    {sinifAdi:'9. Sınıf',sinifId:6,dersId:52},
+    {sinifAdi:'10. Sınıf',sinifId:7,dersId:53},
+    {sinifAdi:'11. Sınıf',sinifId:8,dersId:54},
+    {sinifAdi:'12. Sınıf',sinifId:9,dersId:55},
+  ],
+  kimya:[
+    {sinifAdi:'9. Sınıf',sinifId:6,dersId:56},
+    {sinifAdi:'10. Sınıf',sinifId:7,dersId:57},
+    {sinifAdi:'11. Sınıf',sinifId:8,dersId:58},
+    {sinifAdi:'12. Sınıf',sinifId:9,dersId:59},
+  ],
+  biyoloji:[
+    {sinifAdi:'9. Sınıf',sinifId:6,dersId:5},
+    {sinifAdi:'10. Sınıf',sinifId:7,dersId:6},
+    {sinifAdi:'11. Sınıf',sinifId:8,dersId:7},
+    {sinifAdi:'12. Sınıf',sinifId:9,dersId:8},
+  ],
+};
+
+function getOGMMapping(){
+  try { return JSON.parse(localStorage.getItem('ogm_mapping')||'{}'); }
+  catch(e){ return {}; }
+}
+function saveOGMMappingStore(map){
+  try { localStorage.setItem('ogm_mapping', JSON.stringify(map)); } catch(e){}
+}
+function _ogmDersLabel(slug){ const d=OGM_DERSLER.find(x=>x.slug===slug); return d?d.label:slug; }
+function _ogmSinifLabel(slug, sinifId){
+  const arr = OGM_SINIF_DERS_IDS[slug]||[];
+  const s = arr.find(x=>x.sinifId===sinifId);
+  return s ? s.sinifAdi : '';
+}
+
+// ── Panel rendering inside Deneme Ağacı page ──
+function renderOGMPanel(){
+  const list = g('ogm-list'), emp = g('ogm-empty'); if(!list) return;
+  const wt = S.wrongTopics || {};
+  const topics = Object.entries(wt)
+    .filter(([,v])=>!v.fixed && !v._pending)
+    .map(([key,v])=>({key, name:v.name||key, level:v.level||0, solved:v.solved||0, target:v.target||15}))
+    .sort((a,b)=> a.solved-b.solved);
+  emp && (emp.style.display = topics.length ? 'none':'block');
+  const map = getOGMMapping();
+  const statusEl = g('ogm-status');
+  if (statusEl){
+    const mapped = topics.filter(t=>map[t.key]).length;
+    statusEl.textContent = mapped+'/'+topics.length+' eşleşti';
+  }
+  list.innerHTML = topics.map(t=>{
+    const m = map[t.key];
+    const pct = t.target>0 ? Math.round((t.solved/t.target)*100) : 0;
+    const safeKey = t.key.replace(/'/g,"\\'");
+    const mapInfo = m
+      ? '<div style="font-size:8px;color:var(--green);letter-spacing:1px;margin-bottom:6px">✅ '+_ogmDersLabel(m.dersSlug)+' · '+_ogmSinifLabel(m.dersSlug,m.sinifId)+' · '+(m.kazanimIds||[]).length+' kazanım</div>'
+      : '<div style="font-size:8px;color:var(--yellow);letter-spacing:1px;margin-bottom:6px">⚠️ OGM kazanımı henüz eşleştirilmedi</div>';
+    const pdfBtn = m
+      ? '<button class="btn primary" style="flex:2;min-height:30px;padding:4px 8px;font-size:9px" onclick="generateOGMPDF(\''+safeKey+'\')">📄 PDF OLUŞTUR</button>'
+      : '';
+    return '<div style="background:var(--mid);border:1px solid var(--bd);padding:10px 12px;margin-bottom:8px">'+
+      '<div class="fbet" style="margin-bottom:4px;flex-wrap:wrap;gap:4px">'+
+        '<span style="font-family:\'Orbitron\',monospace;font-size:11px;font-weight:900;color:var(--white);letter-spacing:1px">'+_he(t.name)+'</span>'+
+        '<span style="font-size:8px;color:var(--muted);letter-spacing:1px">'+t.solved+'/'+t.target+' soru · SEV '+t.level+' · '+pct+'%</span>'+
+      '</div>'+
+      mapInfo+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+        '<button class="btn" style="flex:1;min-height:30px;padding:4px 8px;font-size:9px" onclick="openOGMModal(\''+safeKey+'\')">'+(m?'✏️ DEĞİŞTİR':'🔗 OGM EŞLEŞTİR')+'</button>'+
+        pdfBtn+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ── Modal state ──
+let _ogmModalKey = null, _ogmModalDers = '', _ogmModalSinifIdx = 0, _ogmModalKazanimlar = [], _ogmModalSelected = [];
+function openOGMModal(key){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  _ogmModalKey = key; _ogmModalDers=''; _ogmModalSinifIdx=0; _ogmModalKazanimlar=[]; _ogmModalSelected=[];
+  // preload from existing mapping if any
+  const cur = getOGMMapping()[key];
+  if (cur){ _ogmModalDers = cur.dersSlug; _ogmModalSelected = (cur.kazanimIds||[]).slice();
+    const arr = OGM_SINIF_DERS_IDS[cur.dersSlug]||[];
+    _ogmModalSinifIdx = arr.findIndex(s=>s.sinifId===cur.sinifId);
+    if (_ogmModalSinifIdx<0) _ogmModalSinifIdx=0;
+  }
+  const dersSel = g('ogm-ders');
+  if (dersSel){
+    dersSel.innerHTML = '<option value="">— Seç —</option>'+OGM_DERSLER.map(d=>'<option value="'+d.slug+'">'+_he(d.label)+'</option>').join('');
+    dersSel.value = _ogmModalDers;
+  }
+  const t = g('ogm-modal-topic'); if (t) t.textContent = 'Konu: '+w.name;
+  renderOGMSinifRow();
+  g('ogm-modal').style.display = 'flex';
+  if (_ogmModalDers) fetchAndRenderKazanimlar();
+  else g('ogm-kazanim-list').innerHTML = '<div style="color:var(--muted);font-size:9px;padding:14px;text-align:center">Önce ders seç</div>';
+  g('ogm-kazanim-fallback').style.display='none';
+  updateOGMKazanimCounter();
+}
+function closeOGMModal(){ const m=g('ogm-modal'); if(m) m.style.display='none'; _ogmModalKey=null; }
+function onOGMDersChange(){
+  _ogmModalDers = g('ogm-ders').value;
+  _ogmModalSinifIdx = 0;
+  _ogmModalKazanimlar = [];
+  _ogmModalSelected = [];
+  renderOGMSinifRow();
+  if (_ogmModalDers) fetchAndRenderKazanimlar();
+  else g('ogm-kazanim-list').innerHTML='';
+  updateOGMKazanimCounter();
+}
+function renderOGMSinifRow(){
+  const row = g('ogm-sinif-row'); if(!row) return;
+  const arr = OGM_SINIF_DERS_IDS[_ogmModalDers] || [];
+  row.innerHTML = arr.map((s,i)=>{
+    const active = i===_ogmModalSinifIdx;
+    return '<button class="btn" style="min-height:28px;padding:4px 10px;font-size:9px;'+(active?'border-color:var(--bright);color:var(--white);background:var(--dim)':'')+'" onclick="selectOGMSinif('+i+')">'+_he(s.sinifAdi)+'</button>';
+  }).join('') || '<span style="font-size:9px;color:var(--muted)">Bu ders için sınıf bilgisi yok.</span>';
+}
+function selectOGMSinif(i){
+  _ogmModalSinifIdx = i;
+  _ogmModalKazanimlar = []; _ogmModalSelected = [];
+  renderOGMSinifRow();
+  fetchAndRenderKazanimlar();
+  updateOGMKazanimCounter();
+}
+async function fetchAndRenderKazanimlar(){
+  const arr = OGM_SINIF_DERS_IDS[_ogmModalDers]; if(!arr || !arr[_ogmModalSinifIdx]) return;
+  const sinif = arr[_ogmModalSinifIdx];
+  const url = 'https://ogmmateryal.eba.gov.tr/soru-bankasi-kazanim/'+encodeURIComponent(_ogmModalDers)+'?s='+sinif.sinifId+'&d='+sinif.dersId+'&u=0&k=0';
+  const listEl = g('ogm-kazanim-list');
+  const fallback = g('ogm-kazanim-fallback');
+  listEl.innerHTML = '<div style="color:var(--muted);font-size:9px;padding:14px;text-align:center">⏳ Kazanımlar yükleniyor…</div>';
+  fallback.style.display = 'none';
+  try {
+    const res = await fetch(url);
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html,'text/html');
+    const items = [];
+    const push = (id, label)=>{
+      if (id>0 && !items.find(x=>x.id===id)) items.push({id, ad: label.trim().slice(0,160)});
+    };
+    doc.querySelectorAll('input[type="checkbox"][value]').forEach(cb=>{
+      const id = parseInt(cb.value);
+      const label = cb.closest('label')?.textContent?.trim()
+                 || cb.parentElement?.textContent?.trim()
+                 || ('Kazanım '+id);
+      push(id, label);
+    });
+    if (!items.length){
+      doc.querySelectorAll('li').forEach(li=>{
+        const a = li.querySelector('a'); const href = a?.getAttribute('href')||'';
+        const km = href.match(/[?&]k=(\d+)/);
+        if (km){
+          const id = parseInt(km[1]);
+          const t = (li.textContent||'').trim();
+          if (t.length>5) push(id, t);
+        }
+      });
+    }
+    _ogmModalKazanimlar = items;
+    if (!items.length){
+      listEl.innerHTML = '<div style="color:var(--yellow);font-size:9px;padding:14px;text-align:center">⚠ OGM listesi çekilemedi (CORS/SPA) — ID\'leri manuel gir.</div>';
+      fallback.style.display = 'block';
+      return;
+    }
+    renderOGMKazanimList();
+  } catch(e){
+    listEl.innerHTML = '<div style="color:var(--yellow);font-size:9px;padding:14px;text-align:center">⚠ Yüklenemedi: '+_he(e.message||String(e))+'</div>';
+    fallback.style.display = 'block';
+  }
+}
+function renderOGMKazanimList(){
+  const listEl = g('ogm-kazanim-list'); if(!listEl) return;
+  listEl.innerHTML = _ogmModalKazanimlar.map(k=>{
+    const sel = _ogmModalSelected.includes(k.id);
+    return '<label style="display:flex;gap:6px;padding:6px 8px;border-bottom:1px solid var(--bd);cursor:pointer;font-size:9px;color:var(--bright)">'+
+      '<input type="checkbox" '+(sel?'checked ':'')+'onchange="toggleOGMKazanim('+k.id+')" style="accent-color:var(--green)"> '+
+      '<span style="flex:1;line-height:1.4">'+_he(k.ad)+'</span>'+
+    '</label>';
+  }).join('');
+}
+function toggleOGMKazanim(id){
+  const i = _ogmModalSelected.indexOf(id);
+  if (i>=0) _ogmModalSelected.splice(i,1); else _ogmModalSelected.push(id);
+  updateOGMKazanimCounter();
+}
+function updateOGMKazanimCounter(){
+  const el = g('ogm-kazanim-counter'); if (el) el.textContent = '('+_ogmModalSelected.length+' seçili)';
+}
+function saveOGMMappingFromModal(){
+  if (!_ogmModalKey){ closeOGMModal(); return; }
+  const arr = OGM_SINIF_DERS_IDS[_ogmModalDers]; const sinif = arr && arr[_ogmModalSinifIdx];
+  if (!_ogmModalDers || !sinif){ notify('Ders ve sınıf seç'); return; }
+  let ids = _ogmModalSelected.slice();
+  if (!ids.length){
+    const manual = (g('ogm-manual-ids')||{}).value||'';
+    ids = manual.split(/[,\s]+/).map(x=>parseInt(x)).filter(x=>x>0);
+  }
+  if (!ids.length){ notify('En az 1 kazanım seç veya ID gir'); return; }
+  const map = getOGMMapping();
+  map[_ogmModalKey] = { dersSlug:_ogmModalDers, sinifId:sinif.sinifId, dersId:sinif.dersId, kazanimIds: ids };
+  saveOGMMappingStore(map);
+  notify('✓ OGM kazanımı kaydedildi ('+ids.length+' adet)');
+  addLog('OGM mapping: '+_ogmModalKey+' → '+_ogmDersLabel(_ogmModalDers)+' · '+ids.length+' kazanım');
+  closeOGMModal(); renderOGMPanel();
+}
+
+// ── PDF üretim çağrısı ──
+// Native (Capacitor APK) → OGMPlugin.generateTestPDF kullanılır.
+// Web (PWA) → native eklenti yok; OGM URL'sini yeni sekmede açar (kullanıcı tarayıcı print → PDF).
+function generateOGMPDF(key){
+  const m = getOGMMapping()[key]; if(!m){ notify('Önce kazanım eşleştir'); return; }
+  const w = (S.wrongTopics||{})[key];
+  const testAdi = (w?w.name:key) + ' — OGM Soruları';
+  const LN = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.OGMPlugin);
+  if (LN && typeof LN.generateTestPDF === 'function'){
+    notify('⏳ OGM PDF üretiliyor…');
+    LN.generateTestPDF({
+      kazanimIds: m.kazanimIds,
+      dersSlug:   m.dersSlug,
+      sinifId:    m.sinifId,
+      dersId:     m.dersId,
+      testAdi:    testAdi,
+    }).then(res=>{
+      notify('📄 '+(res && res.message ? res.message : 'PDF dialog açıldı'));
+      addLog('OGM PDF iş: '+testAdi+' · job '+(res && res.jobId||'?'));
+    }).catch(err=>{
+      notify('Hata: '+(err && err.message||err));
+    });
+    return;
+  }
+  // Web fallback: open OGM test page in a new tab with k[] params
+  const kParam = m.kazanimIds.map(id=>'k[]='+id).join('&');
+  const url = 'https://ogmmateryal.eba.gov.tr/soru-bankasi/'+encodeURIComponent(m.dersSlug)+'/test-olustur?s='+m.sinifId+'&d='+m.dersId+'&'+kParam;
+  notify('🌐 APK\'da değilsin — OGM sayfası yeni sekmede açılıyor (orada Yazdır → PDF)');
+  addLog('OGM web fallback: '+url);
+  window.open(url, '_blank', 'noopener');
 }
 
 // ════════════════════════════════════════
@@ -4953,7 +4991,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.6 başlatıldı.');
+addLog('OVERCLOCK v7.7 başlatıldı.');
 </script>
 </body>
 </html>
