@@ -124,12 +124,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -e
+          set +e
           TAG=apk-latest
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" overclock.apk --clobber
-          else
-            gh release create "$TAG" overclock.apk \
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
               --title "OVERCLOCK APK (son sürüm)" \
-              --notes "En güncel OVERCLOCK Android APK'sı. Telefon ve tablete kur (bilinmeyen kaynaklara izin ver). Aynı Firebase hesabıyla giriş yapınca veriler otomatik senkronlanır."
+              --notes "En güncel OVERCLOCK Android APK'sı. Aynı Firebase hesabıyla giriş yapınca veriler otomatik senkronlanır."
           fi
+          # Drop any existing asset (ignore 404), then upload fresh.
+          gh release delete-asset "$TAG" overclock.apk --yes 2>/dev/null || true
+          gh release upload "$TAG" overclock.apk
+          # verify
+          gh release view "$TAG" --json assets -q '.assets[].name' | grep -q overclock.apk
