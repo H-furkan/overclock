@@ -42,6 +42,24 @@ jobs:
       - name: Generate Android icons & splash from resources/
         run: npx capacitor-assets generate --android
 
+      # Android 12+ needs SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM permissions for
+      # LocalNotifications to fire AT EXACT TIMES (rather than batched / Doze-delayed).
+      # Without these, long-scheduled session alarms (2h+) can drift or drop.
+      - name: Inject exact-alarm permissions into AndroidManifest
+        run: |
+          set -eux
+          MF=android/app/src/main/AndroidManifest.xml
+          if ! grep -q "SCHEDULE_EXACT_ALARM" "$MF"; then
+            sed -i 's|<manifest |<manifest xmlns:tools="http://schemas.android.com/tools" |' "$MF" || true
+            sed -i 's|<uses-permission android:name="android.permission.WAKE_LOCK"\s*/>|<uses-permission android:name="android.permission.WAKE_LOCK"/>\n    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>|' "$MF" || true
+            # if WAKE_LOCK line did not exist, add the permissions before </manifest>
+            if ! grep -q "SCHEDULE_EXACT_ALARM" "$MF"; then
+              sed -i 's|</manifest>|    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>\n</manifest>|' "$MF"
+            fi
+          fi
+          echo "── AndroidManifest.xml ──"
+          cat "$MF"
+
       - name: Sync Capacitor
         run: npx cap sync android
 

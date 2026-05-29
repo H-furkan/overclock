@@ -412,6 +412,17 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div>
 
+<!-- SUBJECT PICKER MODAL -->
+<div id="subj-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:380px;max-height:80vh;display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--bd2);padding:18px">
+    <div class="fbet mb12">
+      <span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">📚 AKTİF DERS SEÇ</span>
+      <button class="btn" style="min-height:28px;padding:2px 10px" onclick="closeSubjectPicker()">✕</button>
+    </div>
+    <div id="subj-grid" style="overflow-y:auto;flex:1"></div>
+  </div>
+</div>
+
 <!-- REST DAY CONFIRM MODAL -->
 <div id="restday-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:320px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
@@ -544,31 +555,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <button class="btn primary" id="btn-start" onclick="toggleTimer()">▶ START</button>
         <button class="btn" onclick="resetTimer()">↺ RESET</button>
         <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
-        <button class="btn" onclick="addXP(100,'Manuel')">+100 XP</button>
-      </div>
-      <div style="margin-bottom:8px">
-        <div class="ilabel" style="margin-bottom:4px">📚 AKTİF DERS</div>
-        <select class="inp" id="sel-subject" onchange="S.activeSubject=this.value;save()" style="font-size:10px;letter-spacing:1px">
-          <option value="">— Seç (TYT/AYT) —</option>
-          <optgroup label="── TYT ──">
-            <option value="TYT Mat">TYT Matematik</option>
-            <option value="TYT Fizik">TYT Fizik</option>
-            <option value="TYT Kimya">TYT Kimya</option>
-            <option value="TYT Biyoloji">TYT Biyoloji</option>
-            <option value="TYT Türk">TYT Türkçe</option>
-            <option value="TYT Sos">TYT Sosyal</option>
-          </optgroup>
-          <optgroup label="── AYT ──">
-            <option value="AYT Mat">AYT Matematik</option>
-            <option value="AYT Fiz">AYT Fizik</option>
-            <option value="AYT Kim">AYT Kimya</option>
-            <option value="AYT Bio">AYT Biyoloji</option>
-          </optgroup>
-          <optgroup label="── DİĞER ──">
-            <option value="İngilizce">İngilizce</option>
-            <option value="Genel Tekrar">Genel Tekrar</option>
-          </optgroup>
-        </select>
+        <button class="btn" id="btn-subject" onclick="openSubjectPicker()" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📚 DERS SEÇ</button>
       </div>
       <button class="btn fw" style="font-size:8px;color:var(--muted);border-color:var(--bd)" onclick="tog('timer-set-panel')">⚙ SÜRE: <span id="timer-cfg-lbl">90dk/20dk</span></button>
       <div id="timer-set-panel" style="display:none;margin-top:8px">
@@ -578,7 +565,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         </div>
         <button class="btn primary fw mt8" onclick="applyTimer()">UYGULA</button>
       </div>
-      <div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-top:8px">Piyano Molasına Kalan: <span id="break-rem" style="color:var(--yellow)">90:00</span></div>
       <div id="leak-banner">
         <span class="leak-ico">⚠</span>
         <div class="leak-txt">SIZINTI TESPİT EDİLDİ // SİSTEM SOĞUYOR</div>
@@ -627,10 +613,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   <!-- BIOMETRICS -->
   <div class="block">
     <div class="blabel">■ Biometric Stats</div>
-    <div class="bio-item" onclick="toggleFasting()">
-      <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">⚡ Açlık Modu</span>
-      <span id="fasting-val" class="bio-val on">AKTİF</span>
-    </div>
     <div style="background:var(--mid);border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px">
       <div class="fbet mb8">
         <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">💧 Hidrasyon</span>
@@ -638,10 +620,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       </div>
       <div style="height:3px;background:var(--dim);margin-bottom:8px"><div id="water-bar" style="height:100%;width:0%;background:var(--bright);transition:width .4s"></div></div>
       <div class="brow"><button class="btn" style="flex:1" onclick="addWater()">+ İÇ (250ml)</button><button class="btn" onclick="resetWater()">↺</button></div>
-    </div>
-    <div class="bio-item" style="cursor:default">
-      <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">🧂 Himalaya Tuzu</span>
-      <span id="salt-val" class="bio-val off">BEKLEMEDE</span>
     </div>
   </div>
 </div><!-- /cockpit -->
@@ -1090,7 +1068,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.10 // TR-1<br>Daily Planner · Reminders · Native bildirim<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.11 // TR-1<br>Streak/XP rollover · Bar chart · Exact alarms<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1378,150 +1356,144 @@ function loadState() {
     S = Object.assign(defState(), saved);
     const t = today();
     if (saved.lastDate !== t) {
-      const dids = BADGES.filter(b=>b.type==='daily').map(b=>b.id);
-      // ── STREAK CHAIN LOGIC ──
-      // If yesterday's XP reached goal (lastGoalHitDate === saved.lastDate),
-      // and saved.lastDate is exactly yesterday, keep chain. Otherwise reset.
-      const yesterdayStr = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-      const hitYesterday = (saved.lastGoalHitDate === saved.lastDate);
-      // ── COVERAGE WALK (v7.5) ──
-      // Walk every day between saved.lastDate (exclusive) and today (exclusive).
-      // Cover order per day: REST DAY token (already pre-marked) → STREAK PROTECTOR
-      // (auto-consume → 'frozen' mark + XP decay). Any uncovered gap resets streak.
-      const _diff = Math.max(0, Math.round(
-        (new Date(t).getTime() - new Date(saved.lastDate).getTime()) / 86400000));
-      const _emptyDays = [];
-      for(let i=1;i<_diff;i++){
-        const dt=new Date(saved.lastDate); dt.setDate(dt.getDate()+i);
-        _emptyDays.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
-      }
-      const _dayMarks = Object.assign({}, saved.dayMarks||{});
-      let _prot = saved.streakProtectors||0;
-      let _frozen = 0, _decayDays = 0, _resetIt = false;
-      // Don't burn protectors on a non-existent streak
-      const _protectActive = (saved.dayStreak||0) > 0;
-      // (a) cover saved.lastDate if no goal there
-      if(!hitYesterday && _diff>=1){
-        if(_prot>0 && _protectActive){ _prot--; _frozen++; _dayMarks[saved.lastDate]='frozen'; }
-        else { _resetIt = true; }
-      } else if(hitYesterday){
-        _dayMarks[saved.lastDate] = _dayMarks[saved.lastDate]||'active';
-      }
-      // (b) full empty calendar days
-      for(const d of _emptyDays){
-        if(_dayMarks[d]==='rest') continue;      // user pre-spent a rest token
-        if(_dayMarks[d]==='active') continue;
-        if(_prot>0 && !_resetIt && _protectActive){
-          _prot--; _frozen++; _dayMarks[d]='frozen'; _decayDays++;
-        } else {
-          _resetIt = true; _decayDays++;
-        }
-      }
-      S.dayMarks = _dayMarks;
-      S.streakProtectors = _prot;
-      if(_resetIt){
-        S.dayStreak = 0;
-      } else {
-        S.dayStreak = saved.dayStreak || 0;
-        S.lastGoalHitDate = yesterdayStr;
-        if(_frozen>0){
-          S.streakShieldLastUseDate = t;
-          S._streakSaved = true;
-        }
-      }
-      // ── Rev E: XP DECAY for inactive (frozen + uncovered) days ──
-      if(_decayDays>0){
-        let totalDrain = 0;
-        for(let k=0;k<_decayDays;k++){
-          const amt = Math.max(20, Math.round(0.03*((S.totalXp||0) - totalDrain)));
-          totalDrain += amt;
-        }
-        const before = S.totalXp||0;
-        S.totalXp = Math.max(0, before - totalDrain);
-        S.decayLog = (S.decayLog||[]).concat([{date:t, amount: before - S.totalXp, days:_decayDays}]);
-        if(S.decayLog.length>40) S.decayLog = S.decayLog.slice(-40);
-        S._decayApplied = before - S.totalXp;
-      }
-      // ── Hedef Sözleşmesi rollover evaluation ──
-      if(S.studyContract && S.studyContract.date===saved.lastDate && !S.studyContract.resolved){
-        const workedMin = (saved.todayFocusSecs||0)/60;
-        const tgt = S.studyContract.focusTarget;
-        if(workedMin >= tgt){
-          const bonus = Math.round(workedMin * 1.5);
-          S.totalXp = (S.totalXp||0) + bonus;
-          S._contractWin = bonus;
-        } else {
-          const deficit = Math.max(0, Math.round(tgt - workedMin));
-          S.totalXp = Math.max(0, (S.totalXp||0) - deficit);
-          S._contractLoss = deficit;
-        }
-        S.studyContract.resolved = true;
-      }
-      // ── PUSH YESTERDAY'S FOCUS INTO HISTORY ──
-      if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
-        S.focusHistory = (saved.focusHistory||[]).filter(h=>h.date!==saved.lastDate);
-        S.focusHistory.push({date:saved.lastDate, focusSecs:saved.todayFocusSecs||0});
-        // keep last 30 days
-        if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
-      }
-      S.todayFocusSecs = 0;
-      // ── DAILY RESETS ──
-      S.xp=0; S.sessions=0; S.streak=0; S.kills=0;
-      S.waterCount=0; S.tasksDoneToday=0;
-      S.earnedBadges = (saved.earnedBadges||['lgs']).filter(id=>!dids.includes(id));
-      S.errors = {};
-      S.logEntries = [];
-      S.lastDate = t;
-      // ── RECURRING TASK REGENERATION ──
-      const dow = new Date().getDay(); // 0=Sun..6=Sat
-      const isWeekday = (dow >= 1 && dow <= 5);
-      // ── HABIT STREAK RESET (missed yesterday = streak break) ──
-      const _yest = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-      S.habits = (saved.habits||[]).map(h => {
-        // migrate old habits that have no htype
-        if(!h.htype) h.htype='boolean';
-        if(!h.log) h.log={};
-        // if completed yesterday, copy to log
-        const _yest2=(()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-        if(h.lastCompleted===_yest2 && h.htype==='boolean' && !h.log[_yest2]) h.log[_yest2]=1;
-        if(h.streak > 0 && h.lastCompleted && h.lastCompleted !== _yest) {
-          return Object.assign({},h,{streak:0});
-        }
-        return h;
-      });
-      S.tasks = (saved.tasks||[]).map(tk => {
-        // ── migrate: ensure subtasks array & subOpen flag exist ──
-        if (!Array.isArray(tk.subtasks)) tk.subtasks = [];
-        if (typeof tk.subOpen !== 'boolean') tk.subOpen = false;
-        if (typeof tk.reminderTime === 'undefined') tk.reminderTime = null;
-        const rec = tk.recurring || 'none';
-        let resetIt = false;
-        if (tk.done && rec !== 'none') {
-          if (rec === 'daily') resetIt = true;
-          else if (rec === 'weekday' && isWeekday) resetIt = true;
-          else if (rec === 'weekly') {
-            // reset if 7+ days passed since last completion (doneDate)
-            if (tk.doneDate) {
-              const d1 = new Date(tk.doneDate), d2 = new Date(t);
-              const diff = Math.round((d2-d1)/86400000);
-              if (diff >= 7) resetIt = true;
-            }
-          }
-        }
-        if (resetIt) {
-          // also reset subtasks
-          const resetSubs = (tk.subtasks||[]).map(s=>Object.assign({},s,{done:false}));
-          return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false,subtasks:resetSubs});
-        }
-        if (!tk.done && tk.deadline && tk.deadline < t && rec === 'none') return Object.assign({},tk,{overdue:true});
-        return tk;
-      });
-      save();
+      applyDailyRollover(saved);
       checkOverdue(true);
     } else {
       checkOverdue(false);
     }
   } catch(e) { console.warn(e); }
+}
+
+// Daily rollover — runs the coverage walk + daily resets. Called from loadState
+// at boot, and from the 1-sec clock interval when the calendar day flips while
+// the app is open (fixes "1500xp dolu, kapatip acinca sifirlaniyor" bug).
+function applyDailyRollover(saved){
+  if (!saved) saved = JSON.parse(JSON.stringify(S));
+  const t = today();
+  if (saved.lastDate === t) return; // already today — nothing to do
+  const dids = BADGES.filter(b=>b.type==='daily').map(b=>b.id);
+  const yesterdayStr = (()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+  const hitYesterday = (saved.lastGoalHitDate === saved.lastDate);
+  const _diff = Math.max(0, Math.round(
+    (new Date(t).getTime() - new Date(saved.lastDate).getTime()) / 86400000));
+  const _emptyDays = [];
+  for(let i=1;i<_diff;i++){
+    const dt=new Date(saved.lastDate); dt.setDate(dt.getDate()+i);
+    _emptyDays.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
+  }
+  const _dayMarks = Object.assign({}, saved.dayMarks||{});
+  let _prot = saved.streakProtectors||0;
+  let _frozen = 0, _decayDays = 0, _resetIt = false;
+  const _protectActive = (saved.dayStreak||0) > 0;
+  // Treat any day with logged focus seconds as "active" (work happened), even if
+  // the user didn't hit the daily XP goal. This stops the protector from
+  // burning on days when the user clearly used the app but fell short.
+  const workedYesterday = (saved.todayFocusSecs||0) >= 60;
+  // (a) cover saved.lastDate
+  if (workedYesterday || hitYesterday){
+    _dayMarks[saved.lastDate] = _dayMarks[saved.lastDate] || (hitYesterday?'active':'partial');
+  } else if (_diff>=1){
+    if(_prot>0 && _protectActive){ _prot--; _frozen++; _dayMarks[saved.lastDate]='frozen'; }
+    else { _resetIt = true; }
+  }
+  // (b) full empty calendar days
+  for(const d of _emptyDays){
+    if(_dayMarks[d]==='rest') continue;
+    if(_dayMarks[d]==='active' || _dayMarks[d]==='partial') continue;
+    if(_prot>0 && !_resetIt && _protectActive){
+      _prot--; _frozen++; _dayMarks[d]='frozen'; _decayDays++;
+    } else {
+      _resetIt = true; _decayDays++;
+    }
+  }
+  S.dayMarks = _dayMarks;
+  S.streakProtectors = _prot;
+  if(_resetIt){
+    S.dayStreak = 0;
+  } else {
+    S.dayStreak = saved.dayStreak || 0;
+    // bridge the chain so today picks up cleanly — only when goal was hit
+    if (hitYesterday) S.lastGoalHitDate = saved.lastDate;
+    else if (_frozen>0) S.lastGoalHitDate = yesterdayStr;
+    if(_frozen>0){ S.streakShieldLastUseDate = t; S._streakSaved = true; }
+  }
+  // Rev E: XP DECAY for fully-empty (uncovered + frozen) days
+  if(_decayDays>0){
+    let totalDrain = 0;
+    for(let k=0;k<_decayDays;k++){
+      const amt = Math.max(20, Math.round(0.03*((S.totalXp||0) - totalDrain)));
+      totalDrain += amt;
+    }
+    const before = S.totalXp||0;
+    S.totalXp = Math.max(0, before - totalDrain);
+    S.decayLog = (S.decayLog||[]).concat([{date:t, amount: before - S.totalXp, days:_decayDays}]);
+    if(S.decayLog.length>40) S.decayLog = S.decayLog.slice(-40);
+    S._decayApplied = before - S.totalXp;
+  }
+  // Hedef Sözleşmesi rollover
+  if(S.studyContract && S.studyContract.date===saved.lastDate && !S.studyContract.resolved){
+    const workedMin = (saved.todayFocusSecs||0)/60;
+    const tgt = S.studyContract.focusTarget;
+    if(workedMin >= tgt){
+      const bonus = Math.round(workedMin * 1.5);
+      S.totalXp = (S.totalXp||0) + bonus;
+      S._contractWin = bonus;
+    } else {
+      const deficit = Math.max(0, Math.round(tgt - workedMin));
+      S.totalXp = Math.max(0, (S.totalXp||0) - deficit);
+      S._contractLoss = deficit;
+    }
+    S.studyContract.resolved = true;
+  }
+  // Archive yesterday's focus into history
+  if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
+    S.focusHistory = (saved.focusHistory||[]).filter(h=>h.date!==saved.lastDate);
+    S.focusHistory.push({date:saved.lastDate, focusSecs:saved.todayFocusSecs||0});
+    if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
+  }
+  S.todayFocusSecs = 0;
+  // Daily resets
+  S.xp=0; S.sessions=0; S.streak=0; S.kills=0;
+  S.waterCount=0; S.tasksDoneToday=0;
+  S.earnedBadges = (saved.earnedBadges||['lgs']).filter(id=>!dids.includes(id));
+  S.errors = {};
+  S.logEntries = [];
+  S.lastDate = t;
+  // Recurring tasks
+  const dow = new Date().getDay();
+  const isWeekday = (dow >= 1 && dow <= 5);
+  const _yest = yesterdayStr;
+  S.habits = (saved.habits||[]).map(h => {
+    if(!h.htype) h.htype='boolean';
+    if(!h.log) h.log={};
+    if(h.lastCompleted===_yest && h.htype==='boolean' && !h.log[_yest]) h.log[_yest]=1;
+    if(h.streak > 0 && h.lastCompleted && h.lastCompleted !== _yest) return Object.assign({},h,{streak:0});
+    return h;
+  });
+  S.tasks = (saved.tasks||[]).map(tk => {
+    if (!Array.isArray(tk.subtasks)) tk.subtasks = [];
+    if (typeof tk.subOpen !== 'boolean') tk.subOpen = false;
+    if (typeof tk.reminderTime === 'undefined') tk.reminderTime = null;
+    const rec = tk.recurring || 'none';
+    let resetIt = false;
+    if (tk.done && rec !== 'none') {
+      if (rec === 'daily') resetIt = true;
+      else if (rec === 'weekday' && isWeekday) resetIt = true;
+      else if (rec === 'weekly' && tk.doneDate) {
+        const d1 = new Date(tk.doneDate), d2 = new Date(t);
+        if (Math.round((d2-d1)/86400000) >= 7) resetIt = true;
+      }
+    }
+    if (resetIt) {
+      const resetSubs = (tk.subtasks||[]).map(s=>Object.assign({},s,{done:false}));
+      return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false,subtasks:resetSubs});
+    }
+    if (!tk.done && tk.deadline && tk.deadline < t && rec === 'none') return Object.assign({},tk,{overdue:true});
+    return tk;
+  });
+  save();
+  try { renderAll(); } catch(e){}
+  try { rescheduleAllReminders(); } catch(e){}
 }
 
 // ════════════════════════════════════════
@@ -1632,10 +1604,8 @@ function closeNav(){
 setInterval(()=>{
   const d=new Date();
   g('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
-  if(S.fastingOverride===null){
-    const on=d.getHours()<12;
-    const fv=g('fasting-val'); fv.textContent=on?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(on?'on':'off');
-  }
+  // midnight rollover detection — runs the daily reset if the calendar day flipped
+  try { if (S && S.lastDate && S.lastDate !== today()) applyDailyRollover(); } catch(e){}
 },1000);
 
 // ════════════════════════════════════════
@@ -1778,7 +1748,6 @@ function syncTimerInputs(){
   g('inp-focus').value=S.focusMin; g('inp-break').value=S.breakMin;
   g('set-focus').value=S.focusMin; g('set-break').value=S.breakMin;
   g('timer-cfg-lbl').textContent=S.focusMin+'dk/'+S.breakMin+'dk';
-  const ss=g('sel-subject'); if(ss) ss.value=S.activeSubject||'';
 }
 
 function toggleTimer(){
@@ -1881,18 +1850,17 @@ document.addEventListener('visibilitychange', function(){
   // back in foreground
   cancelBossNotification();
   if(timerRunning && timerEndAt){
-    const remaining = Math.round((timerEndAt - Date.now()) / 1000);
-    if(remaining <= 0){
-      // timer finished in background — trigger completion now
-      timerSecs = 0;
-      tickTimer();
-    } else {
-      timerSecs = remaining;
-      renderTimer();
-    }
+    // Let tickTimer credit the elapsed time properly. It compares `prev` (the
+    // last known timerSecs) with the new wall-clock value and adds the diff
+    // into S.todayFocusSecs. Manually overwriting timerSecs here (the old code
+    // path) skipped that accrual — that's the "6h worked but stats show 4.7h"
+    // bug.
+    tickTimer();
   }
   // recompute boss aggression for the time we were away
   try { bossAggroTick(); } catch(e){}
+  // midnight may have happened while we were hidden
+  try { if (S && S.lastDate && S.lastDate !== today()) applyDailyRollover(); } catch(e){}
 });
 
 // extra safety: arm alerts right before the page is frozen/hidden on Android
@@ -1997,7 +1965,6 @@ function renderTimer(){
   g('timer-num').style.color=isBreak?'var(--yellow)':'var(--white)';
   g('timer-unit').textContent=isBreak?'MOLA':'FOCUS';
   g('timer-mode-lbl').textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
-  g('break-rem').textContent=fmtSecs(timerSecs);
 }
 
 function setStatus(mode){
@@ -2128,23 +2095,14 @@ function defeatBoss(){
 // ════════════════════════════════════════
 // BIOMETRICS
 // ════════════════════════════════════════
-function toggleFasting(){
-  const cur=S.fastingOverride!==null?S.fastingOverride:new Date().getHours()<12;
-  S.fastingOverride=!cur;
-  const fv=g('fasting-val'); fv.textContent=S.fastingOverride?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(S.fastingOverride?'on':'off');
-  save();
-}
-
 function addWater(){
   S.waterCount=Math.min(S.waterCount+1,8); updateWaterUI();
-  if(S.waterCount%2===0){ const sv=g('salt-val');sv.textContent='EKLE ⚡';sv.className='bio-val warn';notify('🧂 HIMALAYA TUZU EKLE'); }
   if(S.waterCount>=8) earnBadge('hydra');
   save(); addLog('Su: '+S.waterCount+'/8');
 }
 
 function resetWater(){
-  S.waterCount=0; updateWaterUI();
-  const sv=g('salt-val');sv.textContent='BEKLEMEDE';sv.className='bio-val off'; save();
+  S.waterCount=0; updateWaterUI(); save();
 }
 
 function updateWaterUI(){
@@ -2577,7 +2535,11 @@ function swPost(msg){
 // In the APK these are real OS alarms (exact, screen-off proof). On the web
 // we fall back to the service-worker Notification Triggers path.
 const _NID_TIMER = 1001, _NID_BOSS = 1002;
-const _NCH_TIMER = 'overclock-timer'; // high-importance Android channel id (sound + heads-up)
+// Channel ID bumped to v3 so devices that had the old channel muted (or created
+// without a sound by older Capacitor builds) get a fresh HIGH-importance one.
+// A channel's sound/importance is FROZEN once created, so changing the ID is
+// the only way to reset it on existing installs.
+const _NCH_TIMER = 'overclock-timer-v3';
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
 function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
 let _capPermAsked = false, _capChannelReady = false;
@@ -2615,7 +2577,9 @@ function _nativeSchedule(id, at, title, body){
       schedule:{ at:new Date(at), allowWhileIdle:true },
       smallIcon:'ic_stat_icon',
       channelId: _NCH_TIMER,         // route through the audible channel
-      sound: 'default',              // best-effort: use system default sound
+      // No `sound` field — Android uses the channel's sound. Passing the
+      // string 'default' was treated as a filename by some Capacitor versions
+      // and resulted in NO sound at all on long-scheduled alarms.
       autoCancel: false,
     }]});
   }catch(e){}
@@ -3538,6 +3502,59 @@ function signContract(){
 // ════════════════════════════════════════
 // REST DAY  (F3)
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// SUBJECT PICKER  (HQ — replaces the old +100 XP button)
+// ════════════════════════════════════════
+const SUBJECT_OPTIONS = [
+  ['TYT',[
+    ['TYT Mat','TYT Matematik'],
+    ['TYT Fizik','TYT Fizik'],
+    ['TYT Kimya','TYT Kimya'],
+    ['TYT Biyoloji','TYT Biyoloji'],
+    ['TYT Türk','TYT Türkçe'],
+    ['TYT Sos','TYT Sosyal'],
+  ]],
+  ['AYT (Sayısal)',[
+    ['AYT Mat','AYT Matematik'],
+    ['AYT Fiz','AYT Fizik'],
+    ['AYT Kim','AYT Kimya'],
+    ['AYT Bio','AYT Biyoloji'],
+  ]],
+  ['DİĞER',[
+    ['İngilizce','İngilizce'],
+    ['Genel Tekrar','Genel Tekrar'],
+  ]],
+];
+function renderSubjectBtn(){
+  const b=g('btn-subject'); if(!b) return;
+  b.textContent = S.activeSubject ? ('📚 '+S.activeSubject) : '📚 DERS SEÇ';
+  b.style.color = S.activeSubject ? 'var(--white)' : 'var(--bright)';
+  b.style.borderColor = S.activeSubject ? 'var(--bright)' : 'var(--bd2)';
+}
+function openSubjectPicker(){
+  const m=g('subj-modal'); if(!m) return;
+  const grid=g('subj-grid');
+  let html='';
+  SUBJECT_OPTIONS.forEach(([group, items])=>{
+    html += '<div style="font-size:8px;color:var(--muted);letter-spacing:3px;margin:6px 0 6px;text-transform:uppercase">── '+_he(group)+' ──</div>';
+    items.forEach(([val, lbl])=>{
+      const active = (S.activeSubject === val);
+      html += '<button class="btn fw mb8" style="text-align:left;font-size:10px;padding:10px 12px'+(active?';border-color:var(--bright);color:var(--white);background:var(--dim)':'')+'" onclick="pickSubject(\''+val.replace(/'/g,"\\'")+'\')">'+(active?'✓ ':'')+_he(lbl)+'</button>';
+    });
+  });
+  html += '<button class="btn fw mt8" style="color:var(--muted)" onclick="pickSubject(\'\')">🗑 SEÇİMİ KALDIR</button>';
+  grid.innerHTML = html;
+  m.style.display='flex';
+}
+function closeSubjectPicker(){ const m=g('subj-modal'); if(m) m.style.display='none'; }
+function pickSubject(val){
+  S.activeSubject = val || '';
+  save();
+  closeSubjectPicker();
+  renderSubjectBtn();
+  if (val) notify('📚 AKTİF DERS: '+val);
+}
+
 function isRestDayActive(){ return S.restDayActiveDate === today(); }
 
 function askRestDay(){
@@ -4198,11 +4215,7 @@ function renderAll(){
   syncTimerInputs();
   g('mission-title').textContent=S.missionTitle;
   g('mission-sub').textContent=S.missionSub;
-  const fa=S.fastingOverride!==null?S.fastingOverride:new Date().getHours()<12;
-  const fv=g('fasting-val'); fv.textContent=fa?'AKTİF':'DEVRE DIŞI'; fv.className='bio-val '+(fa?'on':'off');
-  const sv=g('salt-val');
-  if(S.waterCount>0&&S.waterCount%2===0){sv.textContent='EKLE ⚡';sv.className='bio-val warn';}
-  else{sv.textContent='BEKLEMEDE';sv.className='bio-val off';}
+  renderSubjectBtn();
   // ── STREAK PROTECTOR consumed last night → notify once ──
   if (S._streakSaved) {
     S._streakSaved = false;
@@ -4361,7 +4374,11 @@ function drawFocusChart(){
   const padL=30,padR=10,padT=12,padB=20;
   const cw=W-padL-padR, ch=H-padT-padB;
   const maxSecs=Math.max(...thisWeek.map(d=>d.secs),...lastWeek.map(d=>d.secs),3600);
-  const yMax=Math.ceil(maxSecs/3600);
+  // Round y-axis UP to the next integer hour so the bars align with the labels.
+  // (Bug fix: previously bars used `maxSecs` as scale while labels used `yMax*3600`,
+  //  which meant a 4.7h bar visually touched the "5" line.)
+  const yMax=Math.max(1, Math.ceil(maxSecs/3600));
+  const yScale = yMax*3600;
   const dayLabels=['PZ','PT','SA','ÇA','PE','CU','CT'];
 
   // grid
@@ -4383,14 +4400,14 @@ function drawFocusChart(){
     // last week bar (behind, dimmer)
     const lsecs=lastWeek[i]?lastWeek[i].secs:0;
     if(lsecs>0){
-      const lh=(lsecs/maxSecs)*ch;
+      const lh=(lsecs/yScale)*ch;
       ctx.fillStyle='rgba(100,100,100,0.35)';
       ctx.fillRect(x+bHalf*0.1,padT+ch-lh,bHalf*1.6,lh);
     }
     // this week bar
     const hrs=d.secs/3600;
     if(d.secs>0){
-      const bh=(d.secs/maxSecs)*ch;
+      const bh=(d.secs/yScale)*ch;
       ctx.fillStyle=d.isToday?col_white:col_bright;
       ctx.fillRect(x+bHalf,padT+ch-bh,bHalf,bh);
       if(bh>2){ ctx.fillStyle=d.isToday?col_red:col_green; ctx.fillRect(x+bHalf,padT+ch-bh,bHalf,2); }
@@ -4803,7 +4820,7 @@ try { reminderTick(); bossAggroTick(); } catch(e){}
 try { rescheduleAllReminders(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.10 başlatıldı.');
+addLog('OVERCLOCK v7.11 başlatıldı.');
 </script>
 </body>
 </html>
