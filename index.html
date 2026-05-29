@@ -57,6 +57,12 @@ html{height:100%;overflow:hidden}
 body{height:100%;overflow:hidden;background:var(--black);color:var(--bright);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);user-select:none;-webkit-user-select:none;position:relative}
 /* Kullanıcı arkaplanı: full-screen cover, body'nin arkasında. JS, var(--bg-img) ile günceller. */
 #app-bg{position:fixed;inset:0;z-index:-1;background-color:#000;background-image:var(--bg-img,none);background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none}
+/* Arkaplan resmi üzerine karartma katmanı — yazıların okunması için.
+   Yoğunluk var(--bg-dim) ile kontrol edilir (modal'daki slider). Varsayılan .65 */
+#app-bg::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,var(--bg-dim,.65));pointer-events:none}
+/* Arkaplan aktifken UI yazılarına hafif text-shadow → açık bg üzerinde de okunur */
+body.has-bg #content,body.has-bg #statusbar,body.has-bg #sidebar{text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 8px rgba(0,0,0,.6)}
+body.has-bg .blabel,body.has-bg .slbl,body.has-bg .ilabel,body.has-bg .stat-card .sl,body.has-bg .stat-card .sv{text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.5)}
 /* Arkaplan aktif → arkaplanın görünmesi için bloklar/kart/sidebar SAYDAM olur.
    Sadece TUŞLARIN ARKASINA blur uygulanır (kullanıcı isteği). */
 body.has-bg{background:transparent}
@@ -510,6 +516,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <select class="inp" id="bg-target" onchange="bgUpdatePreview()" style="margin-bottom:10px"></select>
     <div class="ilabel" style="margin-bottom:4px">MEVCUT</div>
     <div id="bg-preview" style="height:110px;background-color:#000;background-size:cover;background-position:center;border:1px solid var(--bd);margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:10px;border-radius:8px">Yüklü değil</div>
+    <div class="ilabel" style="margin-bottom:4px;display:flex;justify-content:space-between"><span>KARARTMA (yazılar için)</span><span id="bg-dim-val">65%</span></div>
+    <input type="range" id="bg-dim" min="0" max="90" value="65" oninput="bgOnDim(this.value)" style="width:100%;margin-bottom:10px">
     <input type="file" id="bg-file" accept="image/*" style="display:none" onchange="bgOnFile(this.files[0])">
     <button class="btn primary fw mb8" onclick="bgPickFile()">📁 RESİM SEÇ</button>
     <button class="btn fw mb8" onclick="bgRemove()" style="border-color:var(--red);color:var(--red)">🗑 BU HEDEFTEN KALDIR</button>
@@ -1006,6 +1014,13 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <span>📚 AKADEMİ: <b id="spd-akademi" style="color:var(--white)">0</b></span>
       <span>🎮 EĞLENCE: <b id="spd-eglence" style="color:var(--white)">0</b></span>
     </div>
+  </div>
+
+  <!-- STAT DECAY WARNINGS -->
+  <div class="block" id="decay-warn-block" style="display:none">
+    <div class="blabel" style="color:var(--red)">⚠ STAT DECAY UYARILARI</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.7">Bir kategoriye 3 günden fazla giriş yapmazsan bağlı statlar azalmaya başlar.</div>
+    <div id="decay-warn-list"></div>
   </div>
 
   <!-- DAILY ACTIONS -->
@@ -1548,7 +1563,7 @@ function defState() {
     studyContract:null,           // {date, focusTarget, resolved}
     decayLog:[],                  // [{date, amount}]
     // ── v7.12: CUSTOM BACKGROUNDS ──
-    background:{ global:null, perTab:{} },   // dataURL'lar
+    background:{ global:null, perTab:{}, dim:0.65 },   // dataURL'lar + karartma (0-0.9)
     // ── v7.12: CHARACTER STATS ──
     character:{
       photo:null, name:'Karakter',
@@ -1719,6 +1734,7 @@ function applyDailyRollover(saved){
     return tk;
   });
   save();
+  try { applyStatDecay(); } catch(e){}
   try { renderAll(); } catch(e){}
   try { rescheduleAllReminders(); } catch(e){}
 }
@@ -3158,6 +3174,9 @@ function applyBackground(tab){
   const per = bg.perTab||{};
   const url = per[_currentTab] || bg.global || '';
   const root = document.documentElement;
+  // Karartma yoğunluğu (modal slider)
+  const dim = (typeof bg.dim === 'number') ? bg.dim : 0.65;
+  root.style.setProperty('--bg-dim', String(Math.max(0, Math.min(0.95, dim))));
   if (url){
     root.style.setProperty('--bg-img', 'url("'+url.replace(/"/g,'\\"')+'")');
     document.body.classList.add('has-bg');
@@ -3165,6 +3184,15 @@ function applyBackground(tab){
     root.style.removeProperty('--bg-img');
     document.body.classList.remove('has-bg');
   }
+}
+
+function bgOnDim(v){
+  const f = Math.max(0, Math.min(90, parseFloat(v)||0)) / 100;
+  if (!S.background) S.background = { global:null, perTab:{}, dim:f };
+  S.background.dim = f;
+  save();
+  applyBackground();
+  const lbl = g('bg-dim-val'); if (lbl) lbl.textContent = Math.round(f*100) + '%';
 }
 
 function openBgModal(){
@@ -3191,6 +3219,11 @@ function openBgModal(){
     sel.value = _currentTab || 'global';
   }
   bgUpdatePreview();
+  // dim slider'ı senkronize et
+  const ds = g('bg-dim'), dv = g('bg-dim-val');
+  const curDim = (S.background && typeof S.background.dim === 'number') ? S.background.dim : 0.65;
+  if (ds) ds.value = Math.round(curDim * 100);
+  if (dv) dv.textContent = Math.round(curDim * 100) + '%';
   m.style.display='flex';
 }
 function closeBgModal(){ const m=g('bg-modal'); if(m) m.style.display='none'; }
@@ -3247,6 +3280,15 @@ function bgClearAll(){
 // CHARACTER STATS (v7.12)
 // ══════════════════════════════════════════
 const CHAR_STAT_KEYS = ['zeka','irade','guc','azim','motivasyon','sabir','ikna','karizma'];
+// Spider kategorisi → o kategoriye bağlı karakter statları (decay için)
+const CAT_STAT_MAP = {
+  ruhsal:  ['irade','sabir'],
+  zeka:    ['ikna','zeka'],
+  spor:    ['guc','azim','karizma'],
+  akademi: ['motivasyon','zeka'],
+  // eğlence kasti — decay yok
+};
+const STAT_DECAY_GRACE_DAYS = 3;   // 3 günden fazla eylem yoksa decay başlar
 const CHAR_STAT_MAX = 20;
 const SPIDER_KEYS = ['ruhsal','zeka','spor','akademi','eglence'];
 const SPIDER_ICONS = { ruhsal:'🧘', zeka:'🧠', spor:'💪', akademi:'📚', eglence:'🎮' };
@@ -3257,9 +3299,58 @@ function _char(){
     S.character = { photo:null, name:'Karakter', charXp:0, statPoints:0,
       stats:{zeka:0,irade:0,guc:0,azim:0,motivasyon:0,sabir:0,ikna:0,karizma:0},
       statLabels:{zeka:'Zeka',irade:'İrade',guc:'Güç',azim:'Azim',motivasyon:'Motivasyon',sabir:'Sabır',ikna:'İkna',karizma:'Karizma'},
-      spider:{ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0}, spiderLog:[] };
+      spider:{ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0}, spiderLog:[],
+      lastDecayApplied:{} };
   }
+  if (!S.character.lastDecayApplied) S.character.lastDecayApplied = {};
   return S.character;
+}
+
+// Kategori başına en son eylem tarihini bulur (boş → null)
+function _lastActionDate(cat){
+  const c = _char();
+  let latest = null;
+  for (const x of (c.spiderLog||[])){
+    if (x.cat !== cat || !x.date) continue;
+    if (!latest || x.date > latest) latest = x.date;
+  }
+  return latest;
+}
+
+// 3 günden fazla eylem yoksa bağlı statlardan 1 azalt (her gün için tek sefer)
+function applyStatDecay(){
+  const c = _char();
+  c.lastDecayApplied = c.lastDecayApplied || {};
+  const t = today();
+  const tMs = new Date(t).getTime();
+  const decayed = [];
+  Object.keys(CAT_STAT_MAP).forEach(cat => {
+    const latest = _lastActionDate(cat);
+    if (!latest) return;  // hiç eylem girilmemiş → decay yok
+    const daysSince = Math.floor((tMs - new Date(latest).getTime()) / 86400000);
+    if (daysSince <= STAT_DECAY_GRACE_DAYS) return;
+    if (c.lastDecayApplied[cat] === t) return; // bugün uygulandı
+    c.lastDecayApplied[cat] = t;
+    const stats = CAT_STAT_MAP[cat];
+    const dropped = [];
+    stats.forEach(k => {
+      if ((c.stats[k]||0) > 0){
+        c.stats[k] = c.stats[k] - 1;
+        dropped.push((c.statLabels[k]||k));
+      }
+    });
+    if (dropped.length){
+      decayed.push({cat, days:daysSince, dropped});
+    }
+  });
+  if (decayed.length){
+    decayed.forEach(d => {
+      addLog('Stat decay ('+d.cat+' '+d.days+' gün): -1 '+d.dropped.join(', -1 '));
+    });
+    save();
+    return decayed.length;
+  }
+  return 0;
 }
 
 // Level eğrisi: lvl 1→2 = 100 XP, 2→3 = 200, ..., (N→N+1) = 100*N
@@ -3492,8 +3583,44 @@ function renderCharacter(){
   }
   // Karakter Özeti banner (sağ sütundaki boş alanı doldurur)
   renderCharBanner();
+  // Decay uyarıları
+  renderDecayWarnings();
   // draw spider
   setTimeout(drawSpider, 30);
+}
+
+function renderDecayWarnings(){
+  const block = g('decay-warn-block');
+  const list = g('decay-warn-list');
+  if (!block || !list) return;
+  const c = _char();
+  const tMs = new Date(today()).getTime();
+  const warnings = [];
+  Object.keys(CAT_STAT_MAP).forEach(cat => {
+    const latest = _lastActionDate(cat);
+    const stats = CAT_STAT_MAP[cat].map(k => c.statLabels[k]||k).join(', ');
+    const ic = SPIDER_ICONS[cat]||'•';
+    const lb = SPIDER_LABELS[cat]||cat;
+    if (!latest){
+      warnings.push({ cat, lb, ic, stats, status:'never', txt:'Hiç eylem girmedin (decay henüz başlamaz)' });
+      return;
+    }
+    const days = Math.floor((tMs - new Date(latest).getTime())/86400000);
+    if (days >= STAT_DECAY_GRACE_DAYS){
+      warnings.push({ cat, lb, ic, stats, status:'active', txt:'⛔ '+days+' gündür eylem yok — '+stats+' AZALIYOR' });
+    } else if (days >= STAT_DECAY_GRACE_DAYS - 1){
+      warnings.push({ cat, lb, ic, stats, status:'warn', txt:'⚠ '+(STAT_DECAY_GRACE_DAYS - days)+' gün sonra '+stats+' azalmaya başlar' });
+    }
+  });
+  // Sadece warn/active olanları göster (never'ı saklamak istersen; "hiç" olanları göster ki kullanıcı bilsin)
+  const visible = warnings.filter(w => w.status !== 'never');
+  if (!visible.length){ block.style.display='none'; return; }
+  block.style.display='block';
+  list.innerHTML = visible.map(w=>{
+    const col = w.status==='active' ? 'var(--red)' : 'var(--yellow)';
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+col+';border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.5">'+
+      '<b style="color:'+col+'">'+w.ic+' '+_he(w.lb)+'</b> — '+w.txt+'</div>';
+  }).join('');
 }
 
 const CHAR_QUOTES = [
@@ -5819,6 +5946,8 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 // schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
 try { rescheduleAllReminders(); } catch(e){}
+// Stat decay: 3+ gün eylem yok ise bağlı statlar azalır (boot'ta bir kez)
+try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
 addLog('OVERCLOCK v7.12 başlatıldı.');
