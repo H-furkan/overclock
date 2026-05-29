@@ -385,13 +385,13 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .char-photo{width:240px;height:240px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
 .char-photo:hover{border-color:var(--bright)}
 /* Animasyonlu Çerçeve — Frost (Steam APNG, 80 kare).
-   inset:-90px → 240+180=420 ::before. Source 224 → 420 ölçek 1.875x.
+   inset:-30px → 240+180=420 ::before. Source 224 → 420 ölçek 1.875x.
    Çerçevenin şeffaf merkezi (~155px source) avatara nokta atışı oturur. */
 .char-photo.acc-glasses{border-color:transparent}
 .char-photo.acc-glasses::before{
   content:'';
   position:absolute;
-  inset:-90px;
+  inset:-30px;
   background-image:url('frame-frost.png');
   background-size:100% 100%;
   background-repeat:no-repeat;
@@ -403,7 +403,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .char-photo.glow::before{
   content:'';
   position:absolute;
-  inset:-90px;
+  inset:-30px;
   background-image:url('frame-flame.png');
   background-size:100% 100%;
   background-repeat:no-repeat;
