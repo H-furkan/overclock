@@ -384,23 +384,25 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
 .char-photo{width:170px;height:340px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
 .char-photo:hover{border-color:var(--bright)}
-/* Static dark-blue "alev" çerçeve (was: gözlük) — animasyonsuz, katmanlı mavi parlama */
-.char-photo.acc-glasses{
-  border:3px solid #1d4ed8;
-  box-shadow:
-    inset 0 0 0 1px #0a1638,
-    inset 0 0 22px rgba(59,130,246,.55),
-    0 0 0 2px #1e3a8a,
-    0 0 14px #3b82f6,
-    0 0 30px rgba(59,130,246,.7),
-    0 0 55px rgba(96,165,250,.45),
-    0 0 90px rgba(30,64,175,.28)
+/* Animasyonlu Çerçeve I — Alev (Steam-style flame frame, hafif titreşen) */
+@keyframes flameFlicker{
+  0%,100%{opacity:.94;transform:scale(1);filter:drop-shadow(0 0 6px rgba(140,40,200,.55)) hue-rotate(0deg) brightness(1)}
+  35%{opacity:1;transform:scale(1.015);filter:drop-shadow(0 0 14px rgba(190,60,255,.85)) hue-rotate(-6deg) brightness(1.12)}
+  65%{opacity:.88;transform:scale(.992);filter:drop-shadow(0 0 10px rgba(110,30,180,.7)) hue-rotate(10deg) brightness(.96)}
 }
-/* Steam-style RGB animated frame (was: glow) — sürekli dönen renkli çerçeve */
-@keyframes rgbFrame{to{transform:rotate(360deg)}}
-.char-photo.glow{border-color:transparent}
-.char-photo.glow::before{content:'';position:absolute;inset:-5px;border-radius:14px;background:conic-gradient(from 0deg,#ff0080,#ff8c00,#ffd700,#00ff44,#00d4ff,#0066ff,#a000ff,#ff0080);z-index:-1;animation:rgbFrame 3.2s linear infinite;filter:blur(2.5px)}
-.char-photo.glow::after{content:'';position:absolute;inset:-1px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,.18);pointer-events:none}
+.char-photo.acc-glasses{border-color:transparent}
+.char-photo.acc-glasses::before{content:'';position:absolute;inset:-18px;background-image:url('frame-flame.png');background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:2;animation:flameFlicker 2.3s ease-in-out infinite}
+/* Animasyonlu Çerçeve II — Frost (Steam-style kar/buz çerçeve, parlayıp dönen) */
+@keyframes frostShimmer{
+  0%,100%{opacity:.88;transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 8px rgba(120,180,255,.45)) brightness(1)}
+  50%{opacity:1;transform:scale(1.02) rotate(1.2deg);filter:drop-shadow(0 0 18px rgba(190,220,255,.85)) brightness(1.18)}
+}
+@keyframes frostSparkle{
+  0%,100%{box-shadow:0 0 0 0 rgba(170,210,255,0)}
+  50%{box-shadow:0 0 25px 4px rgba(170,210,255,.45)}
+}
+.char-photo.glow{border-color:transparent;animation:frostSparkle 3.4s ease-in-out infinite;border-radius:10px}
+.char-photo.glow::before{content:'';position:absolute;inset:-18px;background-image:url('frame-frost.png');background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:2;animation:frostShimmer 3.6s ease-in-out infinite}
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:30px;letter-spacing:0;line-height:1.15}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -3669,9 +3671,9 @@ function renderCosmeticToggles(){
     items.push('<button class="btn fw" style="min-height:32px;font-size:9px;padding:4px 10px;'+(isOn?'border-color:var(--green);color:var(--green)':'border-color:var(--bd);color:var(--muted)')+'" onclick="toggleCosmetic(\''+key+'\')">'+
       (isOn?'✓ ':'⚪ ')+label+'</button>');
   }
-  if (hasPixel)   row('pixelFont',  '📟 Pixel Font',                 !!cs.pixelFont);
-  if (hasBorder)  row('glowBorder', '🌈 RGB Animasyonlu Çerçeve',   cs.avatarBorder === 'glow');
-  if (hasGlasses) row('glasses',    '🧊 Mavi Alev Çerçeve',          Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
+  if (hasPixel)   row('pixelFont',  '📟 Pixel Font',                       !!cs.pixelFont);
+  if (hasBorder)  row('glowBorder', '❄ Animasyonlu Çerçeve (Frost)',     cs.avatarBorder === 'glow');
+  if (hasGlasses) row('glasses',    '🔥 Animasyonlu Çerçeve (Alev)',      Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   if (!items.length){
     el.innerHTML = '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:4px">Kasalardan görsel ödül kazanınca burada aç/kapat çıkar.</div>';
   } else {
@@ -3859,9 +3861,9 @@ const CASE_ITEMS_GOLD = [
   { id:'g_premiumbk', weight:25,   tier:'common',    icon:'☕', name:'30dk Premium Break',    desc:'Mevcut session XP cezasız biter + 30dk mola', fx:()=>{ _cs().premiumBreakReady=true; notify('☕ Premium Break hazır — sayaç ekranından kullan'); } },
   { id:'g_nodisrupt', weight:10,   tier:'uncommon',  icon:'🛑', name:'2sa No-Distraction Challenge', desc:'Uygulamadan ÇIKARSAN fail; başarılı = 6x ödül', fx:()=>{ _cs().challengePending=true; notify('🛑 Challenge davetiyesi — sayaç ekranından başlat'); } },
   { id:'g_nightowl',  weight:8,    tier:'uncommon',  icon:'🦉', name:'"Night Owl" Unvanı',    desc:'Profil unvanına eklenir'                , fx:()=>{ if(!_cs().profileTitles.includes('Night Owl')) _cs().profileTitles.push('Night Owl'); notify('🦉 Unvan: Night Owl'); } },
-  { id:'g_accessory', weight:4,    tier:'rare',      icon:'🧊', name:'Mavi Alev Çerçeve',      desc:'Karakter fotoğrafının etrafında sabit koyu mavi ateşli çerçeve (animasyonsuz). Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarAccessory = c.avatarAccessory || []; if(!c.avatarAccessory.includes('glasses')) c.avatarAccessory.push('glasses'); c.unlocked=c.unlocked||{}; c.unlocked.glasses=true; notify('🧊 Mavi Alev Çerçeve aktif — Character sekmesinde foto kenarında'); } },
+  { id:'g_accessory', weight:4,    tier:'rare',      icon:'🔥', name:'Animasyonlu Çerçeve',    desc:'Alev temalı animasyonlu çerçeve — karakter fotoğrafının etrafında titreşen mor alev. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarAccessory = c.avatarAccessory || []; if(!c.avatarAccessory.includes('glasses')) c.avatarAccessory.push('glasses'); c.unlocked=c.unlocked||{}; c.unlocked.glasses=true; notify('🔥 Animasyonlu Çerçeve (alev) aktif — Character sekmesinde foto kenarında'); } },
   { id:'g_rerollstd', weight:1.5,  tier:'rare',      icon:'🎲', name:'Reroll Token',          desc:'+1 Standard Kasa'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa'); } },
-  { id:'g_border',    weight:0.8,  tier:'epic',      icon:'🌈', name:'RGB Animasyonlu Çerçeve', desc:'Steam-tarzı sürekli dönen RGB ışıklı çerçeve. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarBorder='glow'; c.unlocked=c.unlocked||{}; c.unlocked.glowBorder=true; notify('🌈 RGB animasyonlu çerçeve aktif — Character sekmesinde foto kenarında'); } },
+  { id:'g_border',    weight:0.8,  tier:'epic',      icon:'❄', name:'Animasyonlu Çerçeve',     desc:'Frost/kış temalı animasyonlu çerçeve — kar taneli, parlayıp hafifçe dönen Steam-stili çerçeve. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarBorder='glow'; c.unlocked=c.unlocked||{}; c.unlocked.glowBorder=true; notify('❄ Animasyonlu Çerçeve (frost) aktif — Character sekmesinde foto kenarında'); } },
   { id:'g_halfday',   weight:0.5,  tier:'epic',      icon:'⏭', name:'Yarım Gün Pass',        desc:'Bir öğleden sonrayı streak kırılmadan atla', fx:()=>{ _cs().halfDayPass=(_cs().halfDayPass||0)+1; notify('⏭ Half-Day Pass +1'); } },
   { id:'g_forgive',   weight:0.15, tier:'legendary', icon:'🛡', name:'"Forgive and Forget"',  desc:'Önceki günden kırık streak\'i geri yükler', fx:()=>{ _cs().forgiveTokens=(_cs().forgiveTokens||0)+1; notify('🛡 Forgive token +1'); } },
   { id:'g_permmul',   weight:0.05, tier:'legendary', icon:'⚛', name:'1.2x Kalıcı XP Çarpanı', desc:'Tüm session XP kalıcı +20%'             , fx:()=>{ _cs().xpMultiplier = Math.max(_cs().xpMultiplier||1, 1.2); notify('⚛ Kalıcı 1.2x XP çarpanı!'); } },
@@ -6062,7 +6064,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.12.4 başlatıldı.');
+addLog('OVERCLOCK v7.12.5 başlatıldı.');
 </script>
 </body>
 </html>
