@@ -57,16 +57,24 @@ html{height:100%;overflow:hidden}
 body{height:100%;overflow:hidden;background:var(--black);color:var(--bright);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);user-select:none;-webkit-user-select:none;position:relative}
 /* Kullanıcı arkaplanı: full-screen cover, body'nin arkasında. JS, var(--bg-img) ile günceller. */
 #app-bg{position:fixed;inset:0;z-index:-1;background-color:#000;background-image:var(--bg-img,none);background-size:cover;background-position:center;background-repeat:no-repeat;pointer-events:none}
-/* Arkaplan aktifken bloklar/butonlar/menüler okunabilir kalsın diye yarı saydam zemin + blur. */
-body.has-bg .block{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:10px}
-body.has-bg .btn{background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-body.has-bg .btn.primary{background:rgba(40,40,40,.6)}
-body.has-bg .navitem{background:rgba(0,0,0,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-body.has-bg .navitem.active{background:rgba(60,60,60,.65)}
-body.has-bg #sidebar{background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-body.has-bg #statusbar{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-body.has-bg .inp{background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-body.has-bg .shop-card,body.has-bg .plan-card{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* Arkaplan aktif → arkaplanın görünmesi için bloklar/kart/sidebar SAYDAM olur.
+   Sadece TUŞLARIN ARKASINA blur uygulanır (kullanıcı isteği). */
+body.has-bg{background:transparent}
+body.has-bg .block{background:transparent;border-color:rgba(255,255,255,.18)}
+body.has-bg #content{background:transparent}
+body.has-bg #sidebar,body.has-bg #statusbar{background:rgba(0,0,0,.35)}
+body.has-bg .ssec,body.has-bg .shop-card,body.has-bg .plan-card,body.has-bg .bio-item{background:transparent}
+/* Sadece tuşlar: backdrop-filter + sağlam yarı saydam zemin → açık arkaplanda bile okunur.
+   border-radius'lu köşeler için background-clip:padding-box kullanılır → rounded köşede leak olmaz. */
+body.has-bg .btn,body.has-bg .fbtn,body.has-bg .shop-btn,body.has-bg .plan-act,body.has-bg .navitem{
+  background:rgba(0,0,0,.55) !important;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background-clip:padding-box;
+  -webkit-background-clip:padding-box;
+}
+body.has-bg .btn.primary{background:rgba(40,40,40,.75) !important}
+body.has-bg .navitem.active{background:rgba(80,80,80,.7) !important}
+body.has-bg .inp{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background-clip:padding-box;-webkit-background-clip:padding-box}
 input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radius:0;-webkit-appearance:none;appearance:none;user-select:text;-webkit-user-select:text}
 ::-webkit-scrollbar{width:2px}::-webkit-scrollbar-thumb{background:var(--dim)}
 
@@ -79,6 +87,20 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #statuslabel.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);background:rgba(255,255,102,.05);animation:py 2s ease-in-out infinite}
 @keyframes pg{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes caseFlash{0%{transform:scale(.6);opacity:0}40%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:1}}
+/* CSGO-style case roulette */
+.case-roulette-frame{background:#000;border:1px solid #444;border-radius:14px;padding:18px 14px;max-width:520px;width:95vw}
+.case-roulette-title{font-family:'Orbitron',monospace;font-size:13px;color:#fff;letter-spacing:3px;text-align:center;margin-bottom:12px}
+.roulette-viewport{position:relative;height:128px;overflow:hidden;background:linear-gradient(180deg,#000,#0a0a0a,#000);border:1px solid #333;border-radius:10px;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.roulette-track{display:flex;gap:8px;padding:8px 0;will-change:transform;height:100%}
+.roulette-card{flex:0 0 100px;width:100px;height:108px;background:#161616;border:2px solid #888;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;flex-shrink:0;box-sizing:border-box}
+.roulette-card .rc-ico{font-size:30px;line-height:1}
+.roulette-card .rc-nm{font-size:7px;letter-spacing:1px;color:#ccc;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+.roulette-card.winner-reveal{animation:winnerPulse 1.2s ease-out infinite alternate}
+@keyframes winnerPulse{0%{transform:scale(1)}100%{transform:scale(1.1)}}
+.roulette-selector{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:linear-gradient(180deg,transparent 0%,#ffff66 18%,#ffff66 82%,transparent 100%);box-shadow:0 0 14px #ffff66,0 0 5px #fff;transform:translateX(-50%);pointer-events:none;z-index:5}
+.roulette-selector::before,.roulette-selector::after{content:'';position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent}
+.roulette-selector::before{top:-3px;border-top:9px solid #ffff66;filter:drop-shadow(0 0 6px #ffff66)}
+.roulette-selector::after{bottom:-3px;border-bottom:9px solid #ffff66;filter:drop-shadow(0 0 6px #ffff66)}
 @keyframes py{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes xpf{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-55px)}}
 
@@ -367,6 +389,15 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .char-stat-row .plus:disabled{opacity:.25;cursor:not-allowed}
 .char-stat-row .pencil{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px}
 .char-stat-row .pencil:hover{color:var(--bright)}
+/* Karakter Özeti — sağ sütunda stats'ın altındaki boş alanı doldurur */
+.char-banner{margin-top:14px;padding:14px 12px;background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(255,255,102,.05));border:1px solid var(--bd2);border-left:3px solid var(--yellow);border-radius:8px}
+.char-banner .cb-title{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--yellow);margin-bottom:8px;text-transform:uppercase}
+.char-banner .cb-row{display:flex;justify-content:space-between;align-items:center;font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px dashed rgba(255,255,255,.07)}
+.char-banner .cb-row:last-child{margin-bottom:0;border-bottom:none}
+.char-banner .cb-row b{color:var(--white);font-family:'Orbitron',monospace;font-weight:700}
+.char-banner .cb-titles{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.char-banner .cb-tag{font-size:7px;letter-spacing:2px;background:rgba(255,170,68,.15);border:1px solid var(--yellow);color:var(--yellow);padding:2px 7px;border-radius:10px;text-transform:uppercase}
+.char-banner .cb-quote{font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-top:8px;font-style:italic;text-align:center}
 .char-act-card{background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:9px;color:var(--bright);letter-spacing:1px;display:flex;align-items:center;gap:8px}
 .char-act-card .ico{font-size:14px}
 .char-act-card .txt{flex:1}
@@ -443,6 +474,25 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <input class="inp" id="contract-mins" type="number" min="10" max="600" value="120" style="margin-bottom:14px">
     <button class="btn primary fw mb8" onclick="signContract()">✓ İMZALA</button>
     <button class="btn fw" onclick="closeContractModal()">✕ İPTAL</button>
+  </div>
+</div>
+
+<!-- CHARACTER PHOTO CROP MODAL -->
+<div id="crop-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9990;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--deep);border:1px solid var(--bd2);padding:18px;border-radius:14px;max-width:320px;width:100%">
+    <div style="font-family:'Orbitron',monospace;font-size:13px;color:#fff;letter-spacing:2px;text-align:center;margin-bottom:8px">📷 KIRP & KONUMLANDIR</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-align:center;margin-bottom:12px;line-height:1.6">Çerçeveye sürükle · yakınlık ayarla · KAYDET'e bas</div>
+    <div id="crop-frame" style="width:170px;height:340px;margin:0 auto 14px;overflow:hidden;position:relative;border:2px solid var(--bright);border-radius:10px;background:#000;cursor:move;touch-action:none"
+         onmousedown="cropPtrStart(event)" onmousemove="cropPtrMove(event)" onmouseup="cropPtrEnd()" onmouseleave="cropPtrEnd()"
+         ontouchstart="cropPtrStart(event)" ontouchmove="cropPtrMove(event)" ontouchend="cropPtrEnd()">
+      <img id="crop-img" src="" alt="" style="position:absolute;left:50%;top:50%;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none">
+    </div>
+    <div class="ilabel" style="margin-bottom:4px;display:flex;justify-content:space-between"><span>YAKINLIK</span><span id="crop-zoom-val">100%</span></div>
+    <input type="range" id="crop-zoom" min="50" max="400" value="100" oninput="cropOnZoom(this.value)" style="width:100%;margin-bottom:12px">
+    <div class="brow">
+      <button class="btn primary" style="flex:1" onclick="cropSave()">💾 KAYDET</button>
+      <button class="btn" onclick="cropCancel()">✕ İPTAL</button>
+    </div>
   </div>
 </div>
 
@@ -927,6 +977,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <!-- RIGHT: stats grid -->
       <div class="char-right">
         <div id="char-stats-list"></div>
+        <!-- Karakter özeti — boş alanı doldurur, sağ sütunda stats'ın altına otur -->
+        <div id="char-banner" class="char-banner"></div>
       </div>
     </div>
   </div>
@@ -3248,9 +3300,94 @@ function charOnPhoto(file){
   if (!file) return;
   if (!file.type.startsWith('image/')){ notify('Sadece resim'); return; }
   const r=new FileReader();
-  r.onload=()=>{ _char().photo = r.result; save(); renderCharacter(); notify('📷 Fotoğraf güncellendi'); };
+  r.onload=()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      _crop = { img, x:0, y:0, scale:1, frameW:170, frameH:340 };
+      const sx = _crop.frameW / img.naturalWidth;
+      const sy = _crop.frameH / img.naturalHeight;
+      _crop.scale = Math.max(sx, sy);  // cover (fill frame)
+      const ci = g('crop-img');
+      if (ci) ci.src = r.result;
+      const cz = g('crop-zoom'); if (cz) cz.value = 100;
+      const cv = g('crop-zoom-val'); if (cv) cv.textContent = '100%';
+      cropApply();
+      g('crop-modal').style.display = 'flex';
+    };
+    img.src = r.result;
+  };
   r.readAsDataURL(file);
   const inp=g('char-photo-input'); if(inp) inp.value='';
+}
+
+// ── Image cropper ──
+let _crop = null;
+let _cropDrag = null;
+function cropApply(){
+  const img = g('crop-img'); if (!img || !_crop) return;
+  img.style.width = _crop.img.naturalWidth + 'px';
+  img.style.height = _crop.img.naturalHeight + 'px';
+  img.style.transform = 'translate(-50%,-50%) translate(' + _crop.x + 'px,' + _crop.y + 'px) scale(' + _crop.scale + ')';
+  img.style.transformOrigin = 'center center';
+}
+function _cropClamp(){
+  if (!_crop) return;
+  const w = _crop.img.naturalWidth * _crop.scale;
+  const h = _crop.img.naturalHeight * _crop.scale;
+  const maxX = Math.max(0, (w - _crop.frameW)/2);
+  const maxY = Math.max(0, (h - _crop.frameH)/2);
+  _crop.x = Math.max(-maxX, Math.min(maxX, _crop.x));
+  _crop.y = Math.max(-maxY, Math.min(maxY, _crop.y));
+}
+function cropOnZoom(v){
+  if (!_crop) return;
+  const z = parseFloat(v) / 100;
+  const sx = _crop.frameW / _crop.img.naturalWidth;
+  const sy = _crop.frameH / _crop.img.naturalHeight;
+  const base = Math.max(sx, sy);
+  _crop.scale = base * z;
+  const lbl = g('crop-zoom-val'); if (lbl) lbl.textContent = Math.round(v) + '%';
+  _cropClamp(); cropApply();
+}
+function cropPtrStart(e){
+  if (!_crop) return;
+  e.preventDefault();
+  const p = e.touches ? e.touches[0] : e;
+  _cropDrag = { sx: p.clientX, sy: p.clientY, x0: _crop.x, y0: _crop.y };
+}
+function cropPtrMove(e){
+  if (!_cropDrag || !_crop) return;
+  e.preventDefault();
+  const p = e.touches ? e.touches[0] : e;
+  _crop.x = _cropDrag.x0 + (p.clientX - _cropDrag.sx);
+  _crop.y = _cropDrag.y0 + (p.clientY - _cropDrag.sy);
+  _cropClamp(); cropApply();
+}
+function cropPtrEnd(){ _cropDrag = null; }
+function cropCancel(){
+  g('crop-modal').style.display='none';
+  _crop = null;
+}
+function cropSave(){
+  if (!_crop) return;
+  const dpr = 2;
+  const cv = document.createElement('canvas');
+  cv.width = _crop.frameW * dpr;
+  cv.height = _crop.frameH * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,cv.width,cv.height);
+  const iw = _crop.img.naturalWidth * _crop.scale;
+  const ih = _crop.img.naturalHeight * _crop.scale;
+  const dx = (_crop.frameW - iw)/2 + _crop.x;
+  const dy = (_crop.frameH - ih)/2 + _crop.y;
+  ctx.drawImage(_crop.img, dx*dpr, dy*dpr, iw*dpr, ih*dpr);
+  const url = cv.toDataURL('image/jpeg', 0.86);
+  _char().photo = url;
+  save();
+  g('crop-modal').style.display='none';
+  _crop = null;
+  renderCharacter();
+  notify('📷 Fotoğraf kaydedildi');
 }
 function charRemovePhoto(){
   if (!confirm('Karakter fotoğrafı silinsin mi?')) return;
@@ -3353,8 +3490,45 @@ function renderCharacter(){
       return '<div class="char-act-card"><span class="ico">'+ic+'</span><span class="txt">'+_he(x.text)+' <span style="color:var(--muted);font-size:8px">· '+_he(lb)+'</span></span><button class="x" onclick="deleteCharAction('+x.id+')">✕</button></div>';
     }).join('');
   }
+  // Karakter Özeti banner (sağ sütundaki boş alanı doldurur)
+  renderCharBanner();
   // draw spider
   setTimeout(drawSpider, 30);
+}
+
+const CHAR_QUOTES = [
+  '"Disiplin, dünün motivasyonunun şimdiki halidir."',
+  '"Yapabileceğinin %1 fazlası, bugün."',
+  '"Her oturum bir tuğla. Duvar yarın görünür."',
+  '"Hız değil yön. Süreklilik kazanır."',
+  '"Bugünün en iyi versiyonu yarının ortalama versiyonudur."',
+  '"Konsantrasyon — bir kas. Çalış."',
+  '"Plan B yok çünkü plan A: çalışmak."',
+];
+function _quoteToday(){
+  const d = new Date();
+  const idx = (d.getFullYear()*1000 + (d.getMonth()+1)*40 + d.getDate()) % CHAR_QUOTES.length;
+  return CHAR_QUOTES[idx];
+}
+function renderCharBanner(){
+  const el = g('char-banner'); if(!el) return;
+  const c = _char();
+  const totalStat = CHAR_STAT_KEYS.reduce((s,k)=>s+(c.stats[k]||0),0);
+  const buildPct = Math.round(totalStat/(CHAR_STAT_KEYS.length*CHAR_STAT_MAX)*100);
+  const lifetimeXp = c.charXp || 0;
+  const titles = (S.cases && S.cases.profileTitles) || [];
+  const acts7 = (c.spiderLog||[]).filter(x=>{
+    if (!x.date) return false;
+    const d=new Date(x.date); const t=new Date(today());
+    return (t-d)/86400000 < 7;
+  }).length;
+  el.innerHTML =
+    '<div class="cb-title">★ Karakter Özeti</div>'+
+    '<div class="cb-row"><span>Build skoru</span><b>'+totalStat+' / '+(CHAR_STAT_KEYS.length*CHAR_STAT_MAX)+' &nbsp; ('+buildPct+'%)</b></div>'+
+    '<div class="cb-row"><span>Toplam XP</span><b>'+lifetimeXp.toLocaleString('tr-TR')+'</b></div>'+
+    '<div class="cb-row"><span>Son 7 gün eylem</span><b>'+acts7+'</b></div>'+
+    (titles.length ? ('<div class="cb-titles">'+titles.map(t=>'<span class="cb-tag">'+_he(t)+'</span>').join('')+'</div>') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px">Henüz unvan yok — Gold kasalardan çıkar.</div>')+
+    '<div class="cb-quote">'+_he(_quoteToday())+'</div>';
 }
 
 function drawSpider(){
@@ -3509,32 +3683,137 @@ function maybeGrantGoldCase(){
 
 function openCase(type){
   const cs=_cs();
-  if (type==='standard' && cs.standard<=0){ notify('Standard kasa yok'); return; }
-  if (type==='gold' && cs.gold<=0){ notify('Gold kasa yok'); return; }
+  if (type==='standard' && cs.standard<=0){ notify('Standard kasa yok — Market\'ten al veya günlük kasanı bekle'); return; }
+  if (type==='gold' && cs.gold<=0){ notify('Gold kasa yok — Market\'ten al veya 7-gün streak yap'); return; }
   const items = (type==='gold') ? CASE_ITEMS_GOLD : CASE_ITEMS_STANDARD;
   const item = _rollWithPity(items, cs);
   if (type==='gold') cs.gold--; else cs.standard--;
   cs.openedLog = cs.openedLog || [];
   cs.openedLog.unshift({ date:today(), time:nowStr(), type, id:item.id, tier:item.tier, name:item.name, icon:item.icon });
   if (cs.openedLog.length > 30) cs.openedLog = cs.openedLog.slice(0,30);
-  try { item.fx(); } catch(e){}
+  // Efekti animasyon bitiminde uygula ki kullanıcı önce ne çıktığını görsün
   save(); renderShop();
-  showCaseReveal(item, type);
+  showCaseRoulette(items, item, type, ()=>{
+    try { item.fx(); } catch(e){}
+    save(); renderShop();
+  });
   addLog('Kasa açıldı ('+(type==='gold'?'GOLD':'STD')+'): '+item.name+' ['+item.tier+']');
 }
 
-function showCaseReveal(item, type){
-  const m = g('case-reveal');
-  if (!m) return;
+// CSGO-style horizontal roulette. Sticker'lar hızlıca akar, ease-out ile durur,
+// kazanan kart selector çizgisinin altında (rastgele küçük offset'le) son bulur.
+const ROULETTE_CARD_W = 100;   // px
+const ROULETTE_GAP    = 8;     // px
+const ROULETTE_LEN    = 60;    // toplam kart
+const ROULETTE_WIN_IDX = 52;   // kazananın indeksi (~%87)
+
+function _generateRouletteSequence(allItems, winner){
+  // Filler için ağırlıkları kasanın gerçek ağırlıkları üzerinden uygula (rare drop'lar nadir görünür)
+  const seq = [];
+  for (let i = 0; i < ROULETTE_LEN; i++){
+    if (i === ROULETTE_WIN_IDX) seq.push(winner);
+    else seq.push(_weightedPick(allItems));
+  }
+  return seq;
+}
+
+function showCaseRoulette(allItems, winner, type, onComplete){
+  const m = g('case-reveal'); if (!m) return;
+  const sequence = _generateRouletteSequence(allItems, winner);
+  const cardsHTML = sequence.map((it, i) => {
+    const c = TIER_COLORS[it.tier] || '#888';
+    return '<div class="roulette-card" data-i="'+i+'" style="border-color:'+c+';box-shadow:0 0 10px '+c+'55">'+
+      '<div class="rc-ico">'+it.icon+'</div>'+
+      '<div class="rc-nm">'+_he(it.name)+'</div>'+
+    '</div>';
+  }).join('');
   m.innerHTML =
-    '<div style="background:'+TIER_COLORS[item.tier]+'15;border:2px solid '+TIER_COLORS[item.tier]+';border-radius:14px;padding:24px 22px;text-align:center;max-width:300px;box-shadow:0 0 40px '+TIER_COLORS[item.tier]+'66;animation:caseFlash 1.2s ease-out">'+
-      '<div style="font-size:7px;letter-spacing:4px;color:'+TIER_COLORS[item.tier]+';margin-bottom:8px">'+(type==='gold'?'GOLD':'STANDARD')+' · '+item.tier.toUpperCase()+'</div>'+
-      '<div style="font-size:60px;line-height:1;margin-bottom:10px">'+item.icon+'</div>'+
-      '<div style="font-family:\'Orbitron\',monospace;font-size:14px;font-weight:900;color:#fff;letter-spacing:2px;margin-bottom:6px">'+_he(item.name)+'</div>'+
-      '<div style="font-size:9px;color:#ccc;letter-spacing:1px;line-height:1.5;margin-bottom:14px">'+_he(item.desc)+'</div>'+
-      '<button class="btn primary fw" onclick="document.getElementById(\'case-reveal\').style.display=\'none\'">TAMAM</button>'+
+    '<div class="case-roulette-frame">'+
+      '<div class="case-roulette-title">'+(type==='gold'?'✨ GOLD KASA':'📦 STANDARD KASA')+' — AÇILIYOR…</div>'+
+      '<div class="roulette-viewport" id="roulette-vp">'+
+        '<div class="roulette-track" id="roulette-track">'+cardsHTML+'</div>'+
+        '<div class="roulette-selector"></div>'+
+      '</div>'+
+      '<div id="reveal-result" style="display:none;text-align:center;margin-top:14px"></div>'+
     '</div>';
   m.style.display='flex';
+  // Sound effect: ticking sweep
+  try { playRouletteTick(); } catch(e){}
+
+  // Spin
+  setTimeout(()=>{
+    const vp = document.getElementById('roulette-vp');
+    const track = document.getElementById('roulette-track');
+    if (!vp || !track) return;
+    const vpW = vp.clientWidth || 360;
+    const step = ROULETTE_CARD_W + ROULETTE_GAP;
+    // Slight random offset within the winner card (±35% of card width)
+    const offset = (Math.random() - 0.5) * ROULETTE_CARD_W * 0.7;
+    // Winner card's center should land at vpW/2:
+    // translateX = vpW/2 - (WINNER_IDX * step + ROULETTE_CARD_W/2)
+    const targetTx = vpW/2 - (ROULETTE_WIN_IDX*step + ROULETTE_CARD_W/2) + offset;
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0px)';
+    void track.offsetWidth;
+    // ease-out cubic — fast start, dramatic slowdown
+    track.style.transition = 'transform 6.5s cubic-bezier(.05,.55,.12,1)';
+    track.style.transform = 'translateX('+targetTx+'px)';
+    // Reveal
+    setTimeout(()=>{
+      const wc = track.querySelectorAll('.roulette-card')[ROULETTE_WIN_IDX];
+      if (wc){
+        wc.classList.add('winner-reveal');
+        wc.style.color = TIER_COLORS[winner.tier] || '#fff';
+      }
+      const res = document.getElementById('reveal-result');
+      const c = TIER_COLORS[winner.tier] || '#fff';
+      res.innerHTML =
+        '<div style="font-size:7px;letter-spacing:4px;color:'+c+';margin-bottom:6px">KAZANDI · '+winner.tier.toUpperCase()+'</div>'+
+        '<div style="font-family:\'Orbitron\',monospace;font-size:16px;font-weight:900;color:#fff;letter-spacing:2px;margin-bottom:4px">'+winner.icon+' '+_he(winner.name)+'</div>'+
+        '<div style="font-size:9px;color:#ccc;letter-spacing:1px;line-height:1.6;margin-bottom:14px">'+_he(winner.desc)+'</div>'+
+        '<button class="btn primary fw" onclick="document.getElementById(\'case-reveal\').style.display=\'none\'">TAMAM</button>';
+      res.style.display='block';
+      if (typeof onComplete === 'function') onComplete();
+    }, 6800);
+  }, 60);
+}
+
+// Roulette spin sesi — yavaşlayan tick'ler
+function playRouletteTick(){
+  if (S.soundEnabled === false) return;
+  const ctx = getAudioCtx(); if (!ctx) return;
+  try { if (ctx.state==='suspended') ctx.resume(); } catch(e){}
+  const now = ctx.currentTime;
+  // 50 tick spaced with exp slowdown: t_i = totalDur * (1 - (1-i/N)^2.5)
+  const N = 45, total = 6.4;
+  for (let i = 0; i < N; i++){
+    const frac = i / N;
+    const t = now + total * (1 - Math.pow(1 - frac, 2.4));
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'square';
+    o.frequency.value = 600 + frac * 200;
+    o.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.04, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.start(t); o.stop(t + 0.06);
+  }
+}
+
+// XP ile satın alma fiyatları (günlük/streak ödülleri de geçerli kalır)
+const CASE_PRICE_STANDARD = 2500;
+const CASE_PRICE_GOLD     = 12000;
+
+function buyCase(type){
+  const cost = (type==='gold') ? CASE_PRICE_GOLD : CASE_PRICE_STANDARD;
+  if (shopBalance() < cost){ notify('YETERSİZ XP // '+cost+' gerekli'); return; }
+  S.spentXp = (S.spentXp||0) + cost;
+  const cs = _cs();
+  if (type==='gold') cs.gold++; else cs.standard++;
+  save(); renderShop(); renderXP();
+  notify((type==='gold'?'✨ Gold':'📦 Standard')+' Kasa satın alındı (-'+cost+' XP)');
+  addLog('Kasa satın alındı: '+(type==='gold'?'GOLD':'STD')+' (-'+cost+' XP)');
 }
 
 function renderCases(){
@@ -3547,20 +3826,34 @@ function renderCases(){
     dBtn.textContent = dailyClaimed ? '✓ BUGÜN ALINDI' : '📅 GÜNLÜK KASA';
     dBtn.style.opacity = dailyClaimed?'.45':'1';
   }
-  const standardCard = '<div class="shop-card" style="border:1px solid #888;border-radius:12px">'+
-    '<div class="shop-icon">📦</div>'+
-    '<div class="shop-name">STANDARD KASA</div>'+
-    '<div class="shop-desc">Günlük login + reroll ile birikir</div>'+
-    '<div class="shop-cost" style="border-color:#888;color:#bbb">STOK: '+cs.standard+'</div>'+
-    '<button class="shop-btn '+(cs.standard>0?'primary':'locked')+'" '+(cs.standard>0?'':'disabled ')+'onclick="openCase(\'standard\')">AÇ</button>'+
-  '</div>';
-  const goldCard = '<div class="shop-card" style="border:1px solid #ffaa44;border-radius:12px;background:rgba(255,170,68,.06)">'+
-    '<div class="shop-icon">✨</div>'+
-    '<div class="shop-name" style="color:#ffd28a">GOLD KASA</div>'+
-    '<div class="shop-desc">7-gün streak ödülü</div>'+
-    '<div class="shop-cost" style="color:#ffaa44;border-color:#ffaa44">STOK: '+cs.gold+'</div>'+
-    '<button class="shop-btn '+(cs.gold>0?'primary':'locked')+'" '+(cs.gold>0?'':'disabled ')+'onclick="openCase(\'gold\')">AÇ</button>'+
-  '</div>';
+  const bal = shopBalance();
+  function buildCard(opts){
+    const canAfford = bal >= opts.cost;
+    const hasStock = opts.stock > 0;
+    return '<div class="shop-card" style="border:1px solid '+opts.border+';border-radius:12px;'+(opts.bg?'background:'+opts.bg+';':'')+'">'+
+      '<div class="shop-icon">'+opts.icon+'</div>'+
+      '<div class="shop-name" style="color:'+(opts.nameColor||'var(--bright)')+'">'+opts.name+'</div>'+
+      '<div class="shop-desc">'+opts.desc+'</div>'+
+      '<div class="shop-cost" style="border-color:'+opts.border+';color:'+opts.border+'">'+opts.cost+' XP</div>'+
+      '<div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin:4px 0">STOK: <b style="color:var(--white)">'+opts.stock+'</b></div>'+
+      '<div style="display:flex;gap:4px;width:100%">'+
+        '<button class="shop-btn '+(canAfford?'primary':'locked')+'" style="flex:1" '+(canAfford?'':'disabled ')+'onclick="buyCase(\''+opts.type+'\')">+ SATIN AL</button>'+
+        '<button class="shop-btn '+(hasStock?'primary':'locked')+'" style="flex:1" '+(hasStock?'':'disabled ')+'onclick="openCase(\''+opts.type+'\')">AÇ</button>'+
+      '</div>'+
+    '</div>';
+  }
+  const standardCard = buildCard({
+    type:'standard', icon:'📦', name:'STANDARD KASA',
+    desc:'Günlük login + 2500 XP ile alınır',
+    cost: CASE_PRICE_STANDARD, stock: cs.standard,
+    border:'#888',
+  });
+  const goldCard = buildCard({
+    type:'gold', icon:'✨', name:'GOLD KASA',
+    desc:'7-gün streak + 12K XP ile alınır',
+    cost: CASE_PRICE_GOLD, stock: cs.gold,
+    border:'#ffaa44', nameColor:'#ffd28a', bg:'rgba(255,170,68,.06)',
+  });
   grid.innerHTML = standardCard + goldCard;
   // recent log
   const log=g('cases-log');
