@@ -396,14 +396,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     0 0 55px rgba(96,165,250,.45),
     0 0 90px rgba(30,64,175,.28)
 }
-/* Animasyonlu Çerçeve — Steam alev PNG'i avatara düzgünce oturur.
-   Büyüme/küçülme yok; sadece hafif renk titreşmesi (doğal alev hissi). */
-@keyframes flameHueFlicker{
-  0%,100%{filter:brightness(1) hue-rotate(0deg) saturate(1)}
-  30%{filter:brightness(1.12) hue-rotate(-8deg) saturate(1.15)}
-  60%{filter:brightness(.94) hue-rotate(6deg) saturate(.95)}
-  85%{filter:brightness(1.06) hue-rotate(-3deg) saturate(1.05)}
-}
+/* Animasyonlu Çerçeve — Steam APNG (21 kareli) tarayıcı kendisi oynar.
+   Ekstra CSS animasyonu YOK; APNG'nin kendi kare animasyonu kullanılır. */
 .char-photo.glow{border-color:transparent}
 .char-photo.glow::before{
   content:'';
@@ -414,7 +408,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   background-repeat:no-repeat;
   pointer-events:none;
   z-index:2;
-  animation:flameHueFlicker 2.6s ease-in-out infinite;
 }
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:30px;letter-spacing:0;line-height:1.15}
@@ -6077,7 +6070,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.12.6 başlatıldı.');
+addLog('OVERCLOCK v7.12.7 başlatıldı.');
 </script>
 </body>
 </html>
