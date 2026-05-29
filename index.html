@@ -380,9 +380,9 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 /* CHARACTER STATS */
 .char-top{display:grid;grid-template-columns:auto 1fr;gap:14px}
 @media (max-width:520px){.char-top{grid-template-columns:1fr}}
-.char-left{display:flex;flex-direction:column;width:170px}
+.char-left{display:flex;flex-direction:column;width:240px}
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
-.char-photo{width:170px;height:340px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
+.char-photo{width:240px;height:240px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
 .char-photo:hover{border-color:var(--bright)}
 /* Sabit Mavi Çerçeve — animasyonsuz, katmanlı koyu mavi parlama */
 .char-photo.acc-glasses{
@@ -517,7 +517,7 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
   <div style="background:var(--deep);border:1px solid var(--bd2);padding:18px;border-radius:14px;max-width:320px;width:100%">
     <div style="font-family:'Orbitron',monospace;font-size:13px;color:#fff;letter-spacing:2px;text-align:center;margin-bottom:8px">📷 KIRP & KONUMLANDIR</div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-align:center;margin-bottom:12px;line-height:1.6">Çerçeveye sürükle · yakınlık ayarla · KAYDET'e bas</div>
-    <div id="crop-frame" style="width:170px;height:340px;margin:0 auto 14px;overflow:hidden;position:relative;border:2px solid var(--bright);border-radius:10px;background:#000;cursor:move;touch-action:none"
+    <div id="crop-frame" style="width:240px;height:240px;margin:0 auto 14px;overflow:hidden;position:relative;border:2px solid var(--bright);border-radius:10px;background:#000;cursor:move;touch-action:none"
          onmousedown="cropPtrStart(event)" onmousemove="cropPtrMove(event)" onmouseup="cropPtrEnd()" onmouseleave="cropPtrEnd()"
          ontouchstart="cropPtrStart(event)" ontouchmove="cropPtrMove(event)" ontouchend="cropPtrEnd()">
       <img id="crop-img" src="" alt="" style="position:absolute;left:50%;top:50%;user-select:none;-webkit-user-drag:none;pointer-events:none;max-width:none">
@@ -3417,7 +3417,7 @@ function charOnPhoto(file){
   r.onload=()=>{
     const img = new Image();
     img.onload = ()=>{
-      _crop = { img, x:0, y:0, scale:1, frameW:170, frameH:340 };
+      _crop = { img, x:0, y:0, scale:1, frameW:240, frameH:240 };
       const sx = _crop.frameW / img.naturalWidth;
       const sy = _crop.frameH / img.naturalHeight;
       _crop.scale = Math.max(sx, sy);  // cover (fill frame)
@@ -6071,7 +6071,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.12.8 başlatıldı.');
+addLog('OVERCLOCK v7.13.0 başlatıldı.');
 </script>
 </body>
 </html>
