@@ -238,30 +238,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #leak-banner .leak-txt{flex:1;font-size:9px;color:var(--red);letter-spacing:2px;text-transform:uppercase;line-height:1.4}
 #leak-banner .leak-rate{font-family:'Orbitron',monospace;font-size:10px;color:var(--red);font-weight:700}
 
-/* fullscreen timer */
-#fs-timer{display:none;position:fixed;inset:0;z-index:9750;background:var(--black);flex-direction:column;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0) 16px env(safe-area-inset-bottom,0)}
-#fs-timer.show{display:flex}
-#fs-timer-svg{transform:rotate(-90deg);max-width:88vw;max-height:55vh;width:340px;height:340px}
-#fs-timer-ring-bg{fill:none;stroke:var(--dim);stroke-width:2}
-#fs-timer-ring{fill:none;stroke:var(--bright);stroke-width:2;stroke-dasharray:912;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 8px rgba(255,255,255,.55))}
-#fs-timer-wrap{position:relative;display:flex;align-items:center;justify-content:center}
-#fs-timer-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-#fs-timer-num{font-family:'Orbitron',monospace;font-size:62px;font-weight:900;color:var(--white);letter-spacing:4px;text-shadow:0 0 20px rgba(255,255,255,.5);line-height:1}
-#fs-timer-unit{font-size:11px;color:var(--muted);letter-spacing:6px;margin-top:8px}
-#fs-mode-lbl{font-family:'Orbitron',monospace;font-size:10px;color:var(--gray);letter-spacing:4px;margin-top:20px;text-transform:uppercase}
-#fs-mission{font-family:'Orbitron',monospace;font-size:13px;color:var(--white);letter-spacing:3px;margin-top:6px;text-align:center;max-width:90vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#fs-controls{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;justify-content:center}
-#fs-controls .btn{min-width:120px}
-#fs-exit{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);right:14px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 16px;border:1px solid var(--bright);background:var(--deep);color:var(--white);cursor:pointer;text-transform:uppercase;min-height:44px;min-width:74px;z-index:9760;pointer-events:auto;touch-action:manipulation;box-shadow:0 0 10px rgba(255,255,255,.15)}
-#fs-exit:active{background:var(--mid)}
-#fs-status{position:absolute;top:calc(env(safe-area-inset-top,0) + 14px);left:14px;font-family:'Orbitron',monospace;font-weight:900;font-size:10px;letter-spacing:3px;padding:4px 10px;border:1px solid var(--bd2);color:var(--gray)}
-#fs-status.active{color:var(--green);border-color:var(--green);text-shadow:0 0 10px var(--green);animation:pg 2s ease-in-out infinite}
-#fs-status.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);animation:py 2s ease-in-out infinite}
-#fs-tier{position:absolute;bottom:calc(env(safe-area-inset-bottom,0) + 14px);font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
-
-/* fullscreen toggle btn */
-.fs-btn{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:7px 10px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:32px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
-.fs-btn:active{background:var(--dim)}
 
 /* recurring task UI */
 .rec-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -361,6 +337,23 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #boss-panel.defeated #boss-name{color:var(--green);text-shadow:0 0 8px var(--green)}
 .boss-defeated-tag{display:inline-block;font-size:7px;padding:2px 6px;letter-spacing:2px;color:var(--green);border:1px solid var(--green);margin-left:6px;text-transform:uppercase}
 
+/* DAILY PLANNER — 2:1 horizontal split (stacks on narrow screens) */
+.planner-split{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+@media (max-width:600px){.planner-split{grid-template-columns:1fr}}
+.planner-left,.planner-right{margin:0}
+.plan-card{background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--dim);padding:9px 11px;margin-bottom:6px;font-size:10px}
+.plan-card.high{border-left-color:var(--red)}
+.plan-card.med{border-left-color:var(--yellow)}
+.plan-card.low{border-left-color:var(--green)}
+.plan-card.done{opacity:.65}
+.plan-card.done .plan-title{text-decoration:line-through;color:var(--gray)}
+.plan-card-row{display:flex;align-items:center;gap:8px}
+.plan-title{flex:1;color:var(--bright);font-size:10px;letter-spacing:1px;line-height:1.4}
+.plan-xp{font-family:'Orbitron',monospace;font-size:9px;color:var(--yellow);letter-spacing:1px}
+.plan-act{background:transparent;border:1px solid var(--bd2);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:4px 8px;min-height:28px;cursor:pointer;text-transform:uppercase}
+.plan-act.del{color:var(--red);border-color:var(--red)}
+.plan-act.done{color:var(--green);border-color:var(--green)}
+
 /* SHOP / INVENTORY */
 .shop-balance{display:flex;align-items:center;justify-content:space-between;background:var(--mid);border:1px solid var(--bd2);padding:12px 14px;margin-bottom:12px}
 .shop-balance-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--accent,var(--white));text-shadow:0 0 10px rgba(204,204,204,.3)}
@@ -397,7 +390,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 <div id="error-modal">
   <div id="error-box">
     <h2>⚠ ERROR!</h2>
-    <div class="err-sub">TAMAMLANMAMIŞ GÖREVLER<br>TR-1 PROTOKOL İHLALİ</div>
+    <div class="err-sub">TAMAMLANMAMIŞ HATIRLATICILAR<br>TR-1 PROTOKOL İHLALİ</div>
     <div id="error-list"></div>
     <button class="btn danger fw" onclick="closeErrModal()">⏎ KABUL ET &amp; DEVAM</button>
   </div>
@@ -465,7 +458,8 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     <button onclick="closeNav()" aria-label="Kapat">✕</button>
   </div>
   <button class="navitem active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
-  <button class="navitem" onclick="goTab(this,'tasks')">📋 GÖREVLER</button>
+  <button class="navitem" onclick="goTab(this,'tasks')">🔔 HATIRLATICILAR</button>
+  <button class="navitem" onclick="goTab(this,'planner')">📅 DAILY PLANNER</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
@@ -476,29 +470,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   <button class="navitem" onclick="goTab(this,'settings')">⚙ SİSTEM</button>
 </nav>
 
-<!-- FULLSCREEN TIMER OVERLAY -->
-<div id="fs-timer">
-  <div id="fs-status">● STANDBY</div>
-  <button id="fs-exit" onclick="exitFullscreen()">⛶ ÇIK</button>
-  <div id="fs-timer-wrap">
-    <svg id="fs-timer-svg" viewBox="0 0 320 320">
-      <circle id="fs-timer-ring-bg" cx="160" cy="160" r="145"/>
-      <circle id="fs-timer-ring" cx="160" cy="160" r="145" stroke-dasharray="911"/>
-    </svg>
-    <div id="fs-timer-inner">
-      <div id="fs-timer-num">90:00</div>
-      <div id="fs-timer-unit">FOCUS</div>
-    </div>
-  </div>
-  <div id="fs-mode-lbl">Focus — 90dk</div>
-  <div id="fs-mission">AYT MATEMATİK</div>
-  <div id="fs-controls">
-    <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
-    <button class="btn" onclick="resetTimer()">↺ RESET</button>
-    <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
-  </div>
-  <div id="fs-tier">TIER I // STD GOAL</div>
-</div>
 
 <div id="content">
 
@@ -608,7 +579,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
         <button class="btn primary fw mt8" onclick="applyTimer()">UYGULA</button>
       </div>
       <div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-top:8px">Piyano Molasına Kalan: <span id="break-rem" style="color:var(--yellow)">90:00</span></div>
-      <button class="fs-btn fw mt8" onclick="enterFullscreen()">⛶ TAM EKRAN MODU</button>
       <div id="leak-banner">
         <span class="leak-ico">⚠</span>
         <div class="leak-txt">SIZINTI TESPİT EDİLDİ // SİSTEM SOĞUYOR</div>
@@ -676,11 +646,11 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div><!-- /cockpit -->
 
-<!-- ══════════ PAGE: TASKS ══════════ -->
+<!-- ══════════ PAGE: REMINDERS ══════════ -->
 <div id="page-tasks" class="page">
   <div class="block">
-    <div class="blabel">■ Görev Ekle</div>
-    <div style="margin-bottom:8px"><div class="ilabel">GÖREV ADI *</div><input class="inp" id="inp-task-title" placeholder="Örn: AYT Fizik — Kuvvet konusu"></div>
+    <div class="blabel">■ Hatırlatıcı Ekle</div>
+    <div style="margin-bottom:8px"><div class="ilabel">HATIRLATICI ADI *</div><input class="inp" id="inp-task-title" placeholder="Örn: AYT Fizik — Kuvvet konusu"></div>
     <div class="irow mb8">
       <div class="igrp"><div class="ilabel">DEADLINE</div><input class="inp" id="inp-task-date" type="date"></div>
       <div class="igrp"><div class="ilabel">🔔 HATIRLAT</div><input class="inp" id="inp-task-time" type="time" placeholder="--:--"></div>
@@ -702,12 +672,12 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <button type="button" class="rec-btn" data-rec="weekday" onclick="setRecur(this,'weekday')">📅 HAFTA İÇİ</button>
       <button type="button" class="rec-btn" data-rec="weekly" onclick="setRecur(this,'weekly')">📆 HAFTALIK</button>
     </div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase">💡 ALT GÖREVLERİ EKLEDIKTEN SONRA OLUŞTURULABİLİR (görev oluştur, sonra "alt görev" butonuyla parçala)</div>
-    <button class="btn primary fw" onclick="addTask()">+ GÖREVE EKLE</button>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase">💡 Hatırlatıcıyı oluştur, sonra "alt görev" butonuyla parçalara böl</div>
+    <button class="btn primary fw" onclick="addTask()">+ HATIRLATICI EKLE</button>
   </div>
   <div class="block">
     <div class="fbet mb12">
-      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Görevler</div>
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Hatırlatıcılar</div>
       <div style="font-size:8px;color:var(--muted)">✓ <span id="tasks-done-today">0</span> bugün</div>
     </div>
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
@@ -717,7 +687,82 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
       <button class="fbtn" id="fd" onclick="filterTasks('done',this)">BİTEN</button>
     </div>
     <div id="task-list"></div>
-    <div id="task-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:16px 0;display:none">Görev yok.</div>
+    <div id="task-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:16px 0;display:none">Hatırlatıcı yok.</div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: DAILY PLANNER ══════════ -->
+<div id="page-planner" class="page">
+  <!-- 2:1 split: left = günlük görevler, right = tamamlananlar -->
+  <div class="planner-split">
+    <div class="block planner-left">
+      <div class="fbet mb12">
+        <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Günlük Görevler</div>
+        <span style="font-size:8px;color:var(--muted)" id="plan-active-count">0 aktif</span>
+      </div>
+      <button class="btn primary fw mb8" onclick="togPlannerForm()">+ GÖREV EKLE</button>
+      <div id="plan-form" style="display:none;background:var(--mid);border:1px solid var(--bd);padding:10px;margin-bottom:10px">
+        <div class="ilabel" style="margin-bottom:4px">GÖREV *</div>
+        <input class="inp" id="plan-title" placeholder="Örn: AYT Matematik 30 soru" style="margin-bottom:8px">
+        <div class="irow mb8">
+          <div class="igrp"><div class="ilabel">XP ÖDÜLÜ</div><input class="inp" id="plan-xp" type="number" min="5" max="500" value="50"></div>
+          <div class="igrp"><div class="ilabel">ÖNCELİK</div>
+            <select class="inp" id="plan-prio">
+              <option value="high">🔴 YÜKSEK</option>
+              <option value="med" selected>🟡 ORTA</option>
+              <option value="low">🟢 DÜŞÜK</option>
+            </select>
+          </div>
+        </div>
+        <div class="brow">
+          <button class="btn primary" style="flex:1" onclick="addPlannerTask()">✓ EKLE</button>
+          <button class="btn" onclick="togPlannerForm()">✕</button>
+        </div>
+      </div>
+      <div id="plan-active-list"></div>
+      <div id="plan-active-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:14px 0">Bugün için görev yok — yukarıdan ekle.</div>
+    </div>
+    <div class="block planner-right">
+      <div class="fbet mb12">
+        <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Tamamlananlar</div>
+        <span style="font-size:8px;color:var(--green)" id="plan-done-count">0 bitti</span>
+      </div>
+      <div id="plan-done-list"></div>
+      <div id="plan-done-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:14px 0">Henüz bitirilmiş görev yok.</div>
+    </div>
+  </div>
+
+  <!-- Mood + Verimlilik (0-10) -->
+  <div class="block">
+    <div class="blabel">■ Bugünkü Mood & Verimlilik</div>
+    <div class="irow mb8">
+      <div class="igrp">
+        <div class="ilabel">😶 MOOD (0-10)</div>
+        <input class="inp" id="mood-input" type="number" min="0" max="10" step="0.5" placeholder="0-10">
+      </div>
+      <div class="igrp">
+        <div class="ilabel">⚡ VERİMLİLİK (0-10)</div>
+        <input class="inp" id="prod-input" type="number" min="0" max="10" step="0.5" placeholder="0-10">
+      </div>
+    </div>
+    <button class="btn primary fw" onclick="saveMoodToday()">💾 KAYDET</button>
+    <div id="mood-status" style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:8px;text-align:center"></div>
+  </div>
+
+  <!-- Collapsible chart -->
+  <div class="block">
+    <div class="fbet" style="cursor:pointer" onclick="toggleMoodChart()">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Mood & Verimlilik Grafiği</div>
+      <span id="mood-chart-toggle" style="font-size:10px;color:var(--bright)">▼ AÇ</span>
+    </div>
+    <div id="mood-chart-wrap" style="display:none;margin-top:12px">
+      <canvas id="mood-chart" style="width:100%;height:200px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+      <div style="display:flex;gap:14px;font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:6px;justify-content:center">
+        <span><b style="color:var(--bright)">—</b> MOOD</span>
+        <span><b style="color:var(--yellow)">···</b> VERİMLİLİK</span>
+      </div>
+      <div id="mood-chart-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;padding:8px 0;text-align:center"></div>
+    </div>
   </div>
 </div>
 
@@ -1045,7 +1090,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.9 // TR-1<br>Enemy Intel kaldırıldı · Deneme Ağacı · Rest Day<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.10 // TR-1<br>Daily Planner · Reminders · Native bildirim<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -1106,7 +1151,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 const SK = 'overclock_v5';
 const XPGOAL_BASE = 1200;
 const CIRC = 2 * Math.PI * 65;
-const FS_CIRC = 2 * Math.PI * 145;
 
 // Difficulty Tiers — XPGOAL scales with totalXp (persistent rank)
 const TIERS = [
@@ -1311,6 +1355,8 @@ function defState() {
     topicInsurances:0,            // Konu Sigortası stock (sink)
     studyContract:null,           // {date, focusTarget, resolved}
     decayLog:[],                  // [{date, amount}]
+    // ── v7.10: DAILY PLANNER ──
+    dailyPlanner:{ tasks:[], moodLog:{} },   // tasks: [{id,title,priority,xp,done,doneAt,date}]; moodLog: {date:{mood,prod}}
   };
 }
 
@@ -1514,6 +1560,7 @@ function goTab(btn, name) {
   // EXAM tab
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
   if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
+  if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   // Resume audio context on tap (mobile policy)
   try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
 }
@@ -1738,9 +1785,8 @@ function toggleTimer(){
   if(timerRunning){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
-    const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
-    cancelTimerNotification(); stopKeepAlive();
+    cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
   } else {
     if (!isBreak) stopLeak();
     if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
@@ -1753,13 +1799,12 @@ function toggleTimer(){
     timerRunning=true;
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
     g('btn-start').textContent='⏸ PAUSE';
-    const fb=g('fs-btn-start'); if(fb) fb.textContent='⏸ PAUSE';
     setStatus(isBreak?'break':'active');
     timerIv=setInterval(tickTimer,1000);
     addLog(isBreak?'Mola başladı.':'Focus başladı — '+S.focusMin+'dk.');
     // arrange a background alert that fires even if the app is closed / screen off
     setTimeout(scheduleTimerNotification, 300);
-    startKeepAlive();
+    startKeepAlive(); _acquireWakeLock();
     cancelBossNotification(); // working again → no boss heads-up needed
   }
 }
@@ -1788,11 +1833,10 @@ function tickTimer(){
   if(timerSecs<=0){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
-    const fsBtn = g('fs-btn-start'); if (fsBtn) fsBtn.textContent='▶ START';
     // clear the page fallback timer only — do NOT cancel the SW notification
     // here, otherwise it would dismiss the very "session bitti" alert we want
     clearTimeout(_endTO); _endTO = null;
-    stopKeepAlive();
+    stopKeepAlive(); _releaseWakeLock();
     try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
     if(!isBreak){
       S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
@@ -1893,10 +1937,9 @@ function stopLeak(){
 function resetTimer(){
   clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0; timerEndAt=null;
   stopLeak();
-  cancelTimerNotification(); stopKeepAlive();
+  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
   timerSecs=S.focusMin*60;
   g('btn-start').textContent='▶ START';
-  const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
   setStatus('standby'); renderTimer(); save(); addLog('Timer sıfırlandı.');
 }
 
@@ -1911,10 +1954,9 @@ function finishTimerEarly(){
     // skip break — go straight back to standby
     if (!confirm('Molayı şimdi bitir (XP yok)?')) return;
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
-    cancelTimerNotification(); stopKeepAlive();
+    cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
     isBreak=false; timerSecs=S.focusMin*60;
     g('btn-start').textContent='▶ START';
-    const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
     setStatus('standby'); renderTimer(); save();
     addLog('Mola erken bitti.');
     return;
@@ -1928,9 +1970,8 @@ function finishTimerEarly(){
   }
   if (!confirm('Şimdi bitirilsin mi? Geçen ~'+elapsedMin+' dk için kısmi XP alacaksın (tam bitirme bonusu yok).')) return;
   clearInterval(timerIv); timerRunning=false; timerEndAt=null;
-  cancelTimerNotification(); stopKeepAlive();
+  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
   g('btn-start').textContent='▶ START';
-  const fb=g('fs-btn-start'); if(fb) fb.textContent='▶ START';
   // partial reward (proportional, slightly lower than full-session rate)
   const sxp = Math.max(5, Math.round(elapsedMin * 1.7));
   S.cumFocusSecs = (S.cumFocusSecs||0) + elapsedSec;
@@ -1957,43 +1998,24 @@ function renderTimer(){
   g('timer-unit').textContent=isBreak?'MOLA':'FOCUS';
   g('timer-mode-lbl').textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
   g('break-rem').textContent=fmtSecs(timerSecs);
-  // ── FULLSCREEN MIRROR ──
-  const fsRing = g('fs-timer-ring');
-  if (fsRing) {
-    fsRing.style.strokeDashoffset = FS_CIRC*(1-frac);
-    fsRing.style.stroke = isBreak?'var(--yellow)':'var(--bright)';
-    fsRing.style.filter = isBreak?'drop-shadow(0 0 10px rgba(255,255,102,.6))':'drop-shadow(0 0 10px rgba(255,255,255,.6))';
-  }
-  const fsNum = g('fs-timer-num');
-  if (fsNum) {
-    fsNum.textContent = fmtSecs(timerSecs);
-    fsNum.style.color = isBreak?'var(--yellow)':'var(--white)';
-  }
-  const fsUnit = g('fs-timer-unit'); if (fsUnit) fsUnit.textContent = isBreak?'MOLA':'FOCUS';
-  const fsMode = g('fs-mode-lbl'); if (fsMode) fsMode.textContent = isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
-  const fsMission = g('fs-mission'); if (fsMission) fsMission.textContent = S.missionTitle;
-  const fsTier = g('fs-tier'); if (fsTier) { const t=getTier(); fsTier.textContent = t.name+' // '+t.sub+' // GOAL '+t.goal+' XP'; }
 }
 
 function setStatus(mode){
   const e=g('statuslabel'); e.className='';
-  const fs=g('fs-status'); if(fs) fs.className='';
   if(mode==='active'){
     e.textContent='● OVERCLOCKED'; e.classList.add('active');
-    if(fs){ fs.textContent='● OVERCLOCKED'; fs.classList.add('active'); }
   } else if(mode==='break'){
     e.textContent='● MOLA'; e.classList.add('brk');
-    if(fs){ fs.textContent='● MOLA'; fs.classList.add('brk'); }
   } else {
     e.textContent='● STANDBY';
-    if(fs) fs.textContent='● STANDBY';
   }
 }
 
 // ════════════════════════════════════════
 // FULLSCREEN TIMER
 // ════════════════════════════════════════
-// Wake Lock — keeps the screen on (OS may still dim brightness, like clock apps)
+// Wake Lock — keeps the screen on during a focus session
+// (OS still dims, but doesn't sleep — exactly what clock apps do)
 let _wakeLock = null;
 async function _acquireWakeLock(){
   try {
@@ -2007,36 +2029,9 @@ function _releaseWakeLock(){
   try { if (_wakeLock && _wakeLock.release) _wakeLock.release(); } catch(e){}
   _wakeLock = null;
 }
-// Reacquire wake lock when the app becomes visible again while fullscreen is open
+// Reacquire on resume if the timer is running
 document.addEventListener('visibilitychange', ()=>{
-  const fs = document.getElementById('fs-timer');
-  if (!document.hidden && fs && fs.classList.contains('show') && !_wakeLock){
-    _acquireWakeLock();
-  }
-});
-
-function enterFullscreen(){
-  const fs = g('fs-timer');
-  if (!fs) return;
-  fs.classList.add('show');
-  const fb = g('fs-btn-start');
-  if (fb) fb.textContent = timerRunning ? '⏸ PAUSE' : '▶ START';
-  renderTimer();
-  _acquireWakeLock();
-}
-
-function exitFullscreen(){
-  const fs = g('fs-timer');
-  if (fs) fs.classList.remove('show');
-  _releaseWakeLock();
-}
-
-// Escape key also exits — extra safety net
-document.addEventListener('keydown', (e)=>{
-  if (e.key === 'Escape'){
-    const fs = document.getElementById('fs-timer');
-    if (fs && fs.classList.contains('show')) exitFullscreen();
-  }
+  if (!document.hidden && timerRunning && !_wakeLock) _acquireWakeLock();
 });
 
 function applyTimer(){
@@ -2197,14 +2192,17 @@ function addTask(){
   // reset recur to "none"
   _recurChoice = 'none';
   document.querySelectorAll('.rec-btn').forEach(b=>{ b.classList.toggle('active', b.dataset.rec==='none'); });
-  // request notification permission on first reminder
-  if (reminderTime && 'Notification' in window && Notification.permission === 'default') {
-    requestNotifPermission();
+  // request notification permission on first reminder + schedule native alarm if applicable
+  const newTask = S.tasks[0];
+  if (reminderTime){
+    if (_isNative()) ensureNativeNotifPerm();
+    else if ('Notification' in window && Notification.permission === 'default') requestNotifPermission();
+    scheduleReminderNotification(newTask);
   }
   save(); renderTasks();
   const rlbl = recurring==='none' ? '' : ' ['+recurring.toUpperCase()+']';
   const rmlbl = reminderTime ? ' 🔔'+reminderTime : '';
-  addLog('Task: '+title+' ['+xpAmt+' XP]'+rlbl+rmlbl);
+  addLog('Hatırlatıcı: '+title+' ['+xpAmt+' XP]'+rlbl+rmlbl);
 }
 
 // ── SUB-TASKS ──
@@ -2255,18 +2253,20 @@ function deleteSubtask(taskId, subId){
 function completeTask(id){
   const tk=S.tasks.find(t=>t.id===id); if(!tk||tk.done)return;
   tk.done=true; tk.doneAt=nowStr(); tk.doneDate=today(); tk.overdue=false;
-  S.tasksDoneTotal++; S.tasksDoneToday++;
+  cancelReminderNotification(id);
   save(); renderTasks();
-  addXP(tk.xp,'Task: '+tk.title);
+  S.tasksDoneTotal++; S.tasksDoneToday++;
+  addXP(tk.xp,'Hatırlatıcı: '+tk.title);
   notify('✓ TAMAMLANDI // +'+tk.xp+' XP');
-  addLog('Task bitti: '+tk.title);
+  addLog('Hatırlatıcı bitti: '+tk.title);
   g('tasks-done-today').textContent=S.tasksDoneToday;
   if(S.tasksDoneToday>=5) earnBadge('taskmaster');
   if(S.tasksDoneTotal>=20) earnBadge('tasklegend');
 }
 
 function deleteTask(id){
-  S.tasks=S.tasks.filter(t=>t.id!==id); save(); renderTasks(); addLog('Task silindi.');
+  cancelReminderNotification(id);
+  S.tasks=S.tasks.filter(t=>t.id!==id); save(); renderTasks(); addLog('Hatırlatıcı silindi.');
 }
 
 function filterTasks(f,btn){
@@ -2625,6 +2625,55 @@ function _nativeCancel(id){
   try{ LN.cancel({ notifications:[{id}] }); }catch(e){}
 }
 
+// ── Reminder bildirimi: native APK'da kesin saatte, webde Notification API + setTimeout ──
+// Task ID'lerinden 32-bit aralığa düşen stabil bir notification id türetir.
+const _REMINDER_ID_OFFSET = 100000; // timer/boss çakışmasın diye taban
+function _reminderNotifId(taskId){
+  // taskId genellikle Date.now() — mod ile 32-bit içine indir, taban ekle
+  return _REMINDER_ID_OFFSET + (Math.abs(Number(taskId)||0) % 2000000000);
+}
+const _webReminderTimers = {}; // taskId → setTimeout handle for web fallback
+
+function _parseTodayHHMM(hhmm){
+  // returns ms epoch for today's HH:MM; null if invalid
+  if (!hhmm || !/^\d{1,2}:\d{2}$/.test(hhmm)) return null;
+  const [h,m] = hhmm.split(':').map(x=>parseInt(x));
+  if (isNaN(h)||isNaN(m)) return null;
+  const d=new Date(); d.setHours(h, m, 0, 0); return d.getTime();
+}
+
+function scheduleReminderNotification(task){
+  if (!task || !task.reminderTime || task.done) return;
+  const at = _parseTodayHHMM(task.reminderTime);
+  if (!at || at < Date.now() - 5000) return; // geçmiş saat
+  const nid = _reminderNotifId(task.id);
+  if (_isNative()){
+    _nativeSchedule(nid, at, '🔔 OVERCLOCK — '+task.title, 'Hatırlatıcı: '+task.title+(task.deadline?'\nDeadline: '+task.deadline:''));
+    return;
+  }
+  // Web fallback: setTimeout while page alive; on fire show Notification (if granted) + playBell
+  clearTimeout(_webReminderTimers[task.id]);
+  _webReminderTimers[task.id] = setTimeout(()=>{
+    try { fireReminder(task); } catch(e){}
+  }, Math.max(0, at - Date.now()));
+}
+
+function cancelReminderNotification(taskId){
+  const nid = _reminderNotifId(taskId);
+  if (_isNative()) _nativeCancel(nid);
+  if (_webReminderTimers[taskId]){ clearTimeout(_webReminderTimers[taskId]); delete _webReminderTimers[taskId]; }
+}
+
+function rescheduleAllReminders(){
+  if (!S || !Array.isArray(S.tasks)) return;
+  const firedToday = (S.remindersFired||{})[today()] || [];
+  S.tasks.forEach(tk=>{
+    if (tk.done || !tk.reminderTime) return;
+    if (firedToday.includes(tk.id)) return;
+    scheduleReminderNotification(tk);
+  });
+}
+
 let _endTO = null;
 function _timerNotifText(){
   const focusEnd = !isBreak;
@@ -2745,8 +2794,8 @@ function fireReminder(task){
   if ('Notification' in window && Notification.permission === 'granted') {
     try {
       new Notification('🔔 OVERCLOCK — '+task.title, {
-        body: 'Görev hatırlatması: ' + task.title + (task.deadline?'\nDeadline: '+task.deadline:''),
-        icon: 'data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>"),
+        body: 'Hatırlatıcı: ' + task.title + (task.deadline?'\nDeadline: '+task.deadline:''),
+        icon: _NOTIF_ICON,
         tag: 'overclock-'+task.id,
       });
     } catch(e){}
@@ -3556,6 +3605,201 @@ function renderDayStrip(){
     cells.push('<div title="'+title+'" style="flex:1;height:14px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:8px;color:#000">'+txt+'</div>');
   }
   el.innerHTML = cells.join('');
+}
+
+// ════════════════════════════════════════
+// DAILY PLANNER (v7.10)
+// — günlük görevler (priority+xp), tamamlananlar, mood/verimlilik, line chart
+// ════════════════════════════════════════
+function _dp(){ if(!S.dailyPlanner) S.dailyPlanner={tasks:[],moodLog:{}}; return S.dailyPlanner; }
+
+function togPlannerForm(){
+  const f=g('plan-form'); if(!f) return;
+  f.style.display = (f.style.display==='block')?'none':'block';
+  if (f.style.display==='block'){ const t=g('plan-title'); if(t) t.focus(); }
+}
+
+function addPlannerTask(){
+  const t = (g('plan-title')||{}).value || '';
+  const xp = Math.max(5, Math.min(500, parseInt((g('plan-xp')||{}).value)||50));
+  const prio = (g('plan-prio')||{}).value || 'med';
+  if (!t.trim()){ notify('Görev adı gerekli'); return; }
+  const dp = _dp();
+  dp.tasks.push({ id:Date.now(), title:t.trim(), xp, priority:prio, done:false, date:today() });
+  g('plan-title').value=''; g('plan-xp').value=50; togPlannerForm();
+  save(); renderPlanner();
+  addLog('Planner: + '+t.trim()+' ('+xp+' XP, '+prio+')');
+}
+
+function togglePlannerTask(id){
+  const dp=_dp(); const tk=dp.tasks.find(x=>x.id===id); if(!tk) return;
+  if (tk.done){
+    tk.done=false; tk.doneAt=null;
+    save(); renderPlanner();
+  } else {
+    tk.done=true; tk.doneAt=Date.now();
+    addXP(tk.xp, 'Planner: '+tk.title);
+    notify('✓ '+tk.title+' +'+tk.xp+' XP');
+    addLog('Planner ✓ '+tk.title+' +'+tk.xp+' XP');
+    save(); renderPlanner();
+  }
+}
+
+function deletePlannerTask(id){
+  const dp=_dp();
+  dp.tasks = dp.tasks.filter(x=>x.id!==id);
+  save(); renderPlanner();
+}
+
+function _prioOrder(p){ return p==='high'?0:(p==='med'?1:2); }
+
+function renderPlanner(){
+  const activeEl=g('plan-active-list'), doneEl=g('plan-done-list');
+  if(!activeEl||!doneEl) return;
+  const dp=_dp();
+  const t=today();
+  const todays = dp.tasks.filter(x=>x.date===t);
+  const active = todays.filter(x=>!x.done).sort((a,b)=> _prioOrder(a.priority)-_prioOrder(b.priority) || a.id-b.id);
+  const done = todays.filter(x=>x.done).sort((a,b)=> (b.doneAt||0)-(a.doneAt||0));
+
+  const ae=g('plan-active-empty'); if (ae) ae.style.display = active.length?'none':'block';
+  const de=g('plan-done-empty');   if (de) de.style.display = done.length?'none':'block';
+  const ac=g('plan-active-count'); if (ac) ac.textContent = active.length+' aktif';
+  const dc=g('plan-done-count');   if (dc) dc.textContent = done.length+' bitti';
+
+  const dot = p => p==='high'?'🔴':(p==='med'?'🟡':'🟢');
+  activeEl.innerHTML = active.map(tk=>{
+    return '<div class="plan-card '+tk.priority+'">'+
+      '<div class="plan-card-row">'+
+        '<span class="plan-title">'+dot(tk.priority)+' '+_he(tk.title)+'</span>'+
+        '<span class="plan-xp">'+tk.xp+' XP</span>'+
+      '</div>'+
+      '<div class="plan-card-row" style="margin-top:6px;gap:6px">'+
+        '<button class="plan-act done" style="flex:1" onclick="togglePlannerTask('+tk.id+')">✓ BİTTİ</button>'+
+        '<button class="plan-act del" onclick="deletePlannerTask('+tk.id+')">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  doneEl.innerHTML = done.map(tk=>{
+    return '<div class="plan-card '+tk.priority+' done">'+
+      '<div class="plan-card-row">'+
+        '<span class="plan-title">'+dot(tk.priority)+' '+_he(tk.title)+'</span>'+
+        '<span class="plan-xp">+'+tk.xp+'</span>'+
+      '</div>'+
+      '<div class="plan-card-row" style="margin-top:4px;gap:6px">'+
+        '<button class="plan-act" style="flex:1" onclick="togglePlannerTask('+tk.id+')">↺ GERİ AL</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ── Mood & Verimlilik ──
+function renderMoodInputs(){
+  const dp=_dp(); const todayEntry = (dp.moodLog||{})[today()];
+  const mi=g('mood-input'), pi=g('prod-input'), st=g('mood-status');
+  if (todayEntry){
+    if (mi) mi.value = todayEntry.mood;
+    if (pi) pi.value = todayEntry.prod;
+    if (st) st.textContent = '✓ Bugün kayıtlı: mood '+todayEntry.mood+' · verimlilik '+todayEntry.prod;
+  } else {
+    if (mi) mi.value='';
+    if (pi) pi.value='';
+    if (st) st.textContent = 'Bugün için kayıt yok.';
+  }
+}
+
+function saveMoodToday(){
+  const mv = parseFloat((g('mood-input')||{}).value);
+  const pv = parseFloat((g('prod-input')||{}).value);
+  if (isNaN(mv) || isNaN(pv)){ notify('Mood ve verimlilik 0-10 arasında olmalı'); return; }
+  const mood = Math.max(0, Math.min(10, mv));
+  const prod = Math.max(0, Math.min(10, pv));
+  const dp=_dp(); dp.moodLog = dp.moodLog||{};
+  const newToday = !dp.moodLog[today()];
+  dp.moodLog[today()] = { mood, prod };
+  save(); renderMoodInputs(); drawMoodChart();
+  notify('💾 Mood '+mood+' / Verimlilik '+prod+' kaydedildi');
+  if (newToday) addLog('Mood: '+mood+' · Verimlilik: '+prod);
+}
+
+// ── Chart (collapsible) ──
+let _moodChartOpen = false;
+function toggleMoodChart(){
+  _moodChartOpen = !_moodChartOpen;
+  const w=g('mood-chart-wrap'); const t=g('mood-chart-toggle');
+  if (w) w.style.display = _moodChartOpen?'block':'none';
+  if (t) t.textContent = _moodChartOpen?'▲ KAPAT':'▼ AÇ';
+  if (_moodChartOpen) setTimeout(drawMoodChart, 50);
+}
+
+function drawMoodChart(){
+  const cv=g('mood-chart'); if(!cv) return;
+  const dp=_dp(); const log = dp.moodLog||{};
+  // last 30 days
+  const days=[]; const t=today();
+  for(let i=29;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    days.push({date:ds, ...(log[ds]||{})});
+  }
+  const empty = g('mood-chart-empty');
+  const hasAny = days.some(d=>typeof d.mood==='number' || typeof d.prod==='number');
+  if (empty) empty.textContent = hasAny ? '' : 'Henüz veri yok — bir gün kaydet, grafik burada şekillenir.';
+
+  const dpr = window.devicePixelRatio||1;
+  const W = cv.clientWidth||300, H = cv.clientHeight||200;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  if (!hasAny) return;
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim();
+  const col_muted=cs.getPropertyValue('--muted').trim();
+  const col_bright=cs.getPropertyValue('--bright').trim();
+  const col_yellow=cs.getPropertyValue('--yellow').trim()||'#ffff66';
+  const col_white=cs.getPropertyValue('--white').trim();
+  const padL=22, padR=10, padT=10, padB=20;
+  const cw=W-padL-padR, ch=H-padT-padB;
+  ctx.font="7px 'Share Tech Mono',monospace";
+  // y-grid: 0,5,10
+  [0,5,10].forEach(v=>{
+    const y = padT + ch*(1 - v/10);
+    ctx.strokeStyle=col_dim; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(v, padL-3, y);
+  });
+  const n = days.length;
+  const xOf = i => padL + (cw * i / (n-1));
+  const yOf = v => padT + ch*(1 - Math.max(0,Math.min(10,v))/10);
+  // draw a series — skip missing points
+  function drawSeries(key, color, dashed){
+    ctx.strokeStyle=color; ctx.lineWidth=1.5;
+    if (dashed) ctx.setLineDash([4,4]); else ctx.setLineDash([]);
+    ctx.beginPath();
+    let first=true;
+    days.forEach((d,i)=>{
+      if (typeof d[key] !== 'number') { first=true; return; }
+      const x=xOf(i), y=yOf(d[key]);
+      if (first){ ctx.moveTo(x,y); first=false; } else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // dots
+    days.forEach((d,i)=>{
+      if (typeof d[key] !== 'number') return;
+      const x=xOf(i), y=yOf(d[key]);
+      ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2); ctx.fill();
+    });
+  }
+  drawSeries('mood', col_bright, false);
+  drawSeries('prod', col_yellow, true);
+  // x labels: first / mid / last
+  ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
+  [0, Math.floor((n-1)/2), n-1].forEach(i=>{
+    const d=days[i].date.slice(5); ctx.fillText(d, xOf(i), padT+ch+5);
+  });
 }
 
 // ════════════════════════════════════════
@@ -4555,9 +4799,11 @@ renderAll();
 refreshNotifSwitch();
 // initial reminder & aggro check on open
 try { reminderTick(); bossAggroTick(); } catch(e){}
+// schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
+try { rescheduleAllReminders(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.9 başlatıldı.');
+addLog('OVERCLOCK v7.10 başlatıldı.');
 </script>
 </body>
 </html>
