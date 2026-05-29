@@ -22,7 +22,7 @@ const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standa
 ]};
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 <!-- Cross-device sync (optional — inert until firebase-config.js is filled) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -382,15 +382,23 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 @media (max-width:520px){.char-top{grid-template-columns:1fr}}
 .char-left{display:flex;flex-direction:column;width:170px}
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
-.char-photo{width:170px;height:340px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:hidden}
+.char-photo{width:170px;height:340px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:hidden;position:relative}
 .char-photo:hover{border-color:var(--bright)}
+/* Animated profile border — gold case epic ödülü */
+.char-photo.glow{border-color:#ffd700;animation:glowPulse 2.4s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 0 2px #ffd700,0 0 14px rgba(255,215,0,.45),0 0 28px rgba(255,215,0,.2)}50%{box-shadow:0 0 0 3px #fff,0 0 28px rgba(255,215,0,.85),0 0 56px rgba(255,215,0,.5)}}
+/* Avatar aksesuar — gözlük (gold case rare ödülü) */
+.char-photo.acc-glasses::after{content:'';position:absolute;left:50%;top:24%;transform:translateX(-50%);width:78px;height:30px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 78 30'><g stroke='%23111' stroke-width='3' fill='%23000'><circle cx='17' cy='15' r='12'/><circle cx='61' cy='15' r='12'/></g><line x1='28' y1='15' x2='50' y2='15' stroke='%23111' stroke-width='3'/><line x1='5' y1='12' x2='1' y2='8' stroke='%23111' stroke-width='2'/><line x1='73' y1='12' x2='77' y2='8' stroke='%23111' stroke-width='2'/></svg>") no-repeat center/contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+/* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit */
+body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:30px;letter-spacing:0;line-height:1.15}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
 .char-stat-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);letter-spacing:1px}
 .char-stat-row .lbl{flex:1;min-width:0;display:flex;align-items:center;gap:6px;cursor:pointer}
 .char-stat-row .lbl input{flex:1;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--bright);background:transparent;border:none;border-bottom:1px dashed var(--bd2);outline:none;padding:2px 0;min-width:0}
 .char-stat-row .bar{display:flex;gap:2px;flex:1.5}
 .char-stat-row .slot{flex:1;height:8px;background:var(--mid);border:1px solid var(--bd);border-radius:2px}
-.char-stat-row .slot.on{background:var(--bright);border-color:var(--bright)}
+.char-stat-row .slot.on{background:var(--phase-color,var(--bright));border-color:var(--phase-color,var(--bright));box-shadow:0 0 4px var(--phase-color,var(--bright))}
+.char-phase-badge{display:inline-block;font-family:'Orbitron',monospace;font-size:9px;font-weight:900;letter-spacing:3px;padding:3px 10px;border:1px solid var(--phase-color,var(--bright));color:var(--phase-color,var(--bright));margin-top:6px;border-radius:4px;background:rgba(0,0,0,.35)}
 .char-stat-row .plus{width:26px;height:26px;border-radius:50%;background:var(--dim);border:1px solid var(--bright);color:var(--white);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
 .char-stat-row .plus:disabled{opacity:.25;cursor:not-allowed}
 .char-stat-row .pencil{background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px}
@@ -980,7 +988,10 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
           <input class="inp" id="char-name" placeholder="Karakter Adı" style="text-align:center;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px" onchange="charSetName(this.value)">
           <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--bright);letter-spacing:3px;margin-top:6px">SV <span id="char-level">1</span></div>
           <div style="font-size:8px;color:var(--yellow);letter-spacing:2px;margin-top:2px"><span id="char-stat-points">0</span> stat puanı</div>
+          <div id="char-phase-row" style="display:none;margin-top:4px"></div>
         </div>
+        <!-- Kasa ödülü kozmetiklerin aç/kapa toggle'ları (sadece sahip olduklarını gösterir) -->
+        <div id="cosmetic-toggles" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
       </div>
       <!-- RIGHT: stats grid -->
       <div class="char-right">
@@ -1016,10 +1027,10 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
   </div>
 
-  <!-- STAT DECAY WARNINGS -->
+  <!-- SPIDER DECAY WARNINGS -->
   <div class="block" id="decay-warn-block" style="display:none">
-    <div class="blabel" style="color:var(--red)">⚠ STAT DECAY UYARILARI</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.7">Bir kategoriye 3 günden fazla giriş yapmazsan bağlı statlar azalmaya başlar.</div>
+    <div class="blabel" style="color:var(--red)">⚠ SPIDER DECAY UYARILARI</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.7">3 günden fazla bir kategoriye eylem girmezsen, spider grafiğindeki o değer her gün -1 azalır. (Statlar artık azalmaz — sadece spider.)</div>
     <div id="decay-warn-list"></div>
   </div>
 
@@ -3317,40 +3328,31 @@ function _lastActionDate(cat){
   return latest;
 }
 
-// 3 günden fazla eylem yoksa bağlı statlardan 1 azalt (her gün için tek sefer)
+// 3+ gün eylem girilmezse SPIDER GRAFİĞİ değerleri azalır.
+// (Stat decay kaldırıldı — kullanıcı isteğiyle. Karakter statları artık
+//  sadece kullanıcı tarafından değiştirilir; otomatik azalmaz.)
 function applyStatDecay(){
   const c = _char();
-  c.lastDecayApplied = c.lastDecayApplied || {};
+  c.lastSpiderDecayApplied = c.lastSpiderDecayApplied || {};
   const t = today();
   const tMs = new Date(t).getTime();
-  const decayed = [];
-  Object.keys(CAT_STAT_MAP).forEach(cat => {
+  let decayed = 0;
+  Object.keys(SPIDER_ICONS).forEach(cat => {
     const latest = _lastActionDate(cat);
-    if (!latest) return;  // hiç eylem girilmemiş → decay yok
+    if (!latest) return;
     const daysSince = Math.floor((tMs - new Date(latest).getTime()) / 86400000);
     if (daysSince <= STAT_DECAY_GRACE_DAYS) return;
-    if (c.lastDecayApplied[cat] === t) return; // bugün uygulandı
-    c.lastDecayApplied[cat] = t;
-    const stats = CAT_STAT_MAP[cat];
-    const dropped = [];
-    stats.forEach(k => {
-      if ((c.stats[k]||0) > 0){
-        c.stats[k] = c.stats[k] - 1;
-        dropped.push((c.statLabels[k]||k));
-      }
-    });
-    if (dropped.length){
-      decayed.push({cat, days:daysSince, dropped});
+    if (c.lastSpiderDecayApplied[cat] === t) return;
+    c.lastSpiderDecayApplied[cat] = t;
+    if (!c.spider) c.spider = {ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0};
+    if ((c.spider[cat]||0) > 0){
+      c.spider[cat] = Math.max(0, c.spider[cat] - 1);
+      addLog('Spider decay ('+cat+' '+daysSince+' gün): -1');
+      decayed++;
     }
   });
-  if (decayed.length){
-    decayed.forEach(d => {
-      addLog('Stat decay ('+d.cat+' '+d.days+' gün): -1 '+d.dropped.join(', -1 '));
-    });
-    save();
-    return decayed.length;
-  }
-  return 0;
+  if (decayed) save();
+  return decayed;
 }
 
 // Level eğrisi: lvl 1→2 = 100 XP, 2→3 = 200, ..., (N→N+1) = 100*N
@@ -3496,7 +3498,33 @@ function addCharStat(key){
   if ((c.stats[key]||0) >= CHAR_STAT_MAX){ notify('Bu stat zaten max ('+CHAR_STAT_MAX+')'); return; }
   c.stats[key] = (c.stats[key]||0) + 1;
   c.statPoints--;
+  // Tüm statlar max'a ulaştıysa → PHASE atla, statları 0'a sıfırla
+  const allMaxed = CHAR_STAT_KEYS.every(k => (c.stats[k]||0) >= CHAR_STAT_MAX);
+  if (allMaxed){
+    c.phase = (c.phase||1) + 1;
+    CHAR_STAT_KEYS.forEach(k => c.stats[k] = 0);
+    notify('★ PHASE '+c.phase+' BAŞLADI — Tüm statlar sıfırlandı, bar yeni renge döndü');
+    addLog('Karakter PHASE '+c.phase+' (statlar reset, renk değişti)');
+    playBell('reminder');
+  }
   save(); renderCharacter();
+}
+
+// Karakter kozmetikleri (pixel font vs.) body sınıfı olarak set edilir.
+function applyCharCosmetics(){
+  try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
+}
+
+// PHASE renkleri — her tier'da bar değişir, cyclic
+const PHASE_COLORS = ['#f0f0f0','#ff6666','#8fff8f','#ffff66','#66ccff','#cc88ff','#ffd700','#ff44ff'];
+function phaseColor(phase){
+  const p = Math.max(1, phase|0) - 1;
+  return PHASE_COLORS[p % PHASE_COLORS.length];
+}
+const PHASE_NAMES = ['INITIATE','REFORGED','ASCENDED','LUMINOUS','SAPPHIRE','VIOLET','GOLDEN','ETERNAL'];
+function phaseName(phase){
+  const p = Math.max(1, phase|0) - 1;
+  return PHASE_NAMES[p % PHASE_NAMES.length];
 }
 
 function editCharStat(key){
@@ -3534,22 +3562,46 @@ function deleteCharAction(id){
 function renderCharacter(){
   const wrap = g('char-stats-list'); if(!wrap) return;
   const c=_char();
-  // photo
+  // photo + kasa ödülleri (glow border, glasses, pixel font)
   const ph=g('char-photo');
   if (ph){
     if (c.photo){ ph.style.backgroundImage='url("'+c.photo.replace(/"/g,'\\"')+'")'; const e=g('char-photo-empty'); if(e) e.style.display='none'; }
     else { ph.style.backgroundImage=''; const e=g('char-photo-empty'); if(e) e.style.display='block'; }
+    const cs = (S.cases||{});
+    ph.classList.toggle('glow', cs.avatarBorder === 'glow');
+    ph.classList.toggle('acc-glasses', Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   }
+  // Pixel font: kasadan kazanıldıysa body sınıfı set et
+  try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
   // name
   const ni=g('char-name'); if (ni && ni.value !== (c.name||'')) ni.value = c.name||'';
+  // PHASE: tüm statlar max'a ulaşıp sıfırlandıkça artar, bar/slot rengi cycle eder
+  const phase = c.phase || 1;
+  const pcol = phaseColor(phase);
+  const pname = phaseName(phase);
+  document.documentElement.style.setProperty('--phase-color', pcol);
+  // Phase header (level alanının yanına ekle)
+  const lvWrap = g('char-level'); if (lvWrap) lvWrap.textContent = getCharLevelInfo(c.charXp||0).level;
+  const sp=g('char-stat-points'); if(sp) sp.textContent = c.statPoints||0;
+  // Stat panel başına phase rozeti ekle
+  const phaseEl=g('char-phase-row');
+  if (phaseEl){
+    if (phase > 1){
+      phaseEl.innerHTML = '<span class="char-phase-badge">PHASE '+phase+' · '+pname+'</span>';
+      phaseEl.style.display='block';
+    } else {
+      phaseEl.innerHTML = '';
+      phaseEl.style.display='none';
+    }
+  }
   // level + xp bar
   const info = getCharLevelInfo(c.charXp||0);
-  const lv=g('char-level'); if(lv) lv.textContent = info.level;
-  const sp=g('char-stat-points'); if(sp) sp.textContent = c.statPoints||0;
   const bar=g('char-xp-bar');
   if (bar){
     const pct = info.needForNext>0 ? Math.min(100, (info.intoLevel/info.needForNext)*100) : 100;
     bar.style.width = pct+'%';
+    // XP barı da phase rengiyle parlasın
+    bar.style.background = 'linear-gradient(90deg, '+pcol+', '+pcol+'88)';
   }
   const txt=g('char-xp-text'); if (txt) txt.textContent = info.intoLevel+' / '+info.needForNext+'  (toplam '+ (c.charXp||0) +')';
   // stats list
@@ -3583,40 +3635,83 @@ function renderCharacter(){
   }
   // Karakter Özeti banner (sağ sütundaki boş alanı doldurur)
   renderCharBanner();
+  // Kasa ödülü kozmetiklerin toggle'ları
+  renderCosmeticToggles();
   // Decay uyarıları
   renderDecayWarnings();
   // draw spider
   setTimeout(drawSpider, 30);
 }
 
+// Kasa ödülü kozmetiklerin aç/kapat toggle'ları (sadece sahip olduklarını gösterir)
+function renderCosmeticToggles(){
+  const el = g('cosmetic-toggles'); if(!el) return;
+  const cs = S.cases || {};
+  const u = cs.unlocked || {};
+  // Geriye dönük: eğer fiilen aktifse, unlocked sayılır (eski kasa açanlar için)
+  const hasPixel = u.pixelFont || !!cs.pixelFont;
+  const hasBorder = u.glowBorder || cs.avatarBorder === 'glow';
+  const hasGlasses = u.glasses || (Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
+  const items = [];
+  function row(key, label, isOn){
+    items.push('<button class="btn fw" style="min-height:32px;font-size:9px;padding:4px 10px;'+(isOn?'border-color:var(--green);color:var(--green)':'border-color:var(--bd);color:var(--muted)')+'" onclick="toggleCosmetic(\''+key+'\')">'+
+      (isOn?'✓ ':'⚪ ')+label+'</button>');
+  }
+  if (hasPixel)   row('pixelFont',  '📟 Pixel Font',         !!cs.pixelFont);
+  if (hasBorder)  row('glowBorder', '💫 Glow Border',         cs.avatarBorder === 'glow');
+  if (hasGlasses) row('glasses',    '👓 Gözlük Aksesuarı',    Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
+  if (!items.length){
+    el.innerHTML = '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:4px">Kasalardan görsel ödül kazanınca burada aç/kapat çıkar.</div>';
+  } else {
+    el.innerHTML = '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;text-transform:uppercase">Görsel süslemeler</div>' + items.join('');
+  }
+}
+
+function toggleCosmetic(key){
+  const cs = _cs();
+  cs.unlocked = cs.unlocked || {};
+  if (key === 'pixelFont'){
+    cs.pixelFont = !cs.pixelFont;
+    cs.unlocked.pixelFont = true; // confirm unlocked
+  } else if (key === 'glowBorder'){
+    if (cs.avatarBorder === 'glow'){ cs.avatarBorder = null; }
+    else { cs.avatarBorder = 'glow'; }
+    cs.unlocked.glowBorder = true;
+  } else if (key === 'glasses'){
+    cs.avatarAccessory = cs.avatarAccessory || [];
+    if (cs.avatarAccessory.includes('glasses')){
+      cs.avatarAccessory = cs.avatarAccessory.filter(x => x !== 'glasses');
+    } else {
+      cs.avatarAccessory.push('glasses');
+    }
+    cs.unlocked.glasses = true;
+  }
+  save();
+  applyCharCosmetics();
+  renderCharacter();
+}
+
 function renderDecayWarnings(){
   const block = g('decay-warn-block');
   const list = g('decay-warn-list');
   if (!block || !list) return;
-  const c = _char();
   const tMs = new Date(today()).getTime();
   const warnings = [];
-  Object.keys(CAT_STAT_MAP).forEach(cat => {
+  Object.keys(SPIDER_ICONS).forEach(cat => {
     const latest = _lastActionDate(cat);
-    const stats = CAT_STAT_MAP[cat].map(k => c.statLabels[k]||k).join(', ');
     const ic = SPIDER_ICONS[cat]||'•';
     const lb = SPIDER_LABELS[cat]||cat;
-    if (!latest){
-      warnings.push({ cat, lb, ic, stats, status:'never', txt:'Hiç eylem girmedin (decay henüz başlamaz)' });
-      return;
-    }
+    if (!latest) return; // hiç eylem yoksa uyarı gösterme (baseline'sız)
     const days = Math.floor((tMs - new Date(latest).getTime())/86400000);
     if (days >= STAT_DECAY_GRACE_DAYS){
-      warnings.push({ cat, lb, ic, stats, status:'active', txt:'⛔ '+days+' gündür eylem yok — '+stats+' AZALIYOR' });
+      warnings.push({ ic, lb, status:'active', txt:'⛔ '+days+' gündür eylem yok — spider değeri AZALIYOR' });
     } else if (days >= STAT_DECAY_GRACE_DAYS - 1){
-      warnings.push({ cat, lb, ic, stats, status:'warn', txt:'⚠ '+(STAT_DECAY_GRACE_DAYS - days)+' gün sonra '+stats+' azalmaya başlar' });
+      warnings.push({ ic, lb, status:'warn', txt:'⚠ '+(STAT_DECAY_GRACE_DAYS - days)+' gün sonra spider değeri azalmaya başlar' });
     }
   });
-  // Sadece warn/active olanları göster (never'ı saklamak istersen; "hiç" olanları göster ki kullanıcı bilsin)
-  const visible = warnings.filter(w => w.status !== 'never');
-  if (!visible.length){ block.style.display='none'; return; }
+  if (!warnings.length){ block.style.display='none'; return; }
   block.style.display='block';
-  list.innerHTML = visible.map(w=>{
+  list.innerHTML = warnings.map(w=>{
     const col = w.status==='active' ? 'var(--red)' : 'var(--yellow)';
     return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+col+';border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.5">'+
       '<b style="color:'+col+'">'+w.ic+' '+_he(w.lb)+'</b> — '+w.txt+'</div>';
@@ -3739,7 +3834,7 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_deepwork',  weight:25,   tier:'common',    icon:'🧘', name:'Deep Work',             desc:'Kesintisiz blokta 2x XP (durdurulursa iptal)', fx:()=>{ _cs().deepWorkActive=true; notify('🧘 Deep Work AKTİF — pause yapma!'); } },
   { id:'s_open',      weight:10,   tier:'uncommon',  icon:'🎁', name:'Bedava Standard',       desc:'Bir Standard Kasa daha al'              , fx:()=>{ _cs().standard++; notify('🎁 +1 Standard Kasa'); } },
   { id:'s_taskbuff',  weight:8,    tier:'uncommon',  icon:'✨', name:'Task Buff',              desc:'Sonraki 3 hatırlatıcı/planner görevi 2x XP', fx:()=>{ _cs().taskBuffRemaining=3; notify('✨ Sonraki 3 görev 2x XP'); } },
-  { id:'s_pixelfont', weight:4,    tier:'rare',      icon:'🕹', name:'Pixel Font',             desc:'Sayaç fontu retro 8-bit (kozmetik)'      , fx:()=>{ _cs().pixelFont = true; notify('🕹 Pixel font kazandın (kozmetik)'); } },
+  { id:'s_pixelfont', weight:4,    tier:'rare',      icon:'🕹', name:'Pixel Font',             desc:'Sayaç fontu retro 8-bit (HQ\'da sayaç sayıları). Karakter sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.pixelFont=true; c.unlocked=c.unlocked||{}; c.unlocked.pixelFont=true; notify('🕹 Pixel font aktif — HQ sayaç sayıları değişti'); } },
   { id:'s_break15',   weight:1.5,  tier:'rare',      icon:'⏸', name:'+15dk Mola',            desc:'Bir sonraki mola +15dk uzar (tek seferlik)', fx:()=>{ _cs().breakBonus = (_cs().breakBonus||0) + 15*60; notify('⏸ Sonraki mola +15dk'); } },
   { id:'s_cerrah',    weight:0.8,  tier:'epic',      icon:'🩺', name:'"Cerrah" Unvanı',       desc:'Profil unvanına eklenir'                , fx:()=>{ if(!_cs().profileTitles.includes('Cerrah')) _cs().profileTitles.push('Cerrah'); notify('🩺 Unvan: Cerrah'); } },
   { id:'s_reroll',    weight:0.5,  tier:'epic',      icon:'🎲', name:'Reroll Token',          desc:'Bir kasa daha aç'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa (reroll)'); } },
@@ -3752,9 +3847,9 @@ const CASE_ITEMS_GOLD = [
   { id:'g_premiumbk', weight:25,   tier:'common',    icon:'☕', name:'30dk Premium Break',    desc:'Mevcut session XP cezasız biter + 30dk mola', fx:()=>{ _cs().premiumBreakReady=true; notify('☕ Premium Break hazır — sayaç ekranından kullan'); } },
   { id:'g_nodisrupt', weight:10,   tier:'uncommon',  icon:'🛑', name:'2sa No-Distraction Challenge', desc:'Uygulamadan ÇIKARSAN fail; başarılı = 6x ödül', fx:()=>{ _cs().challengePending=true; notify('🛑 Challenge davetiyesi — sayaç ekranından başlat'); } },
   { id:'g_nightowl',  weight:8,    tier:'uncommon',  icon:'🦉', name:'"Night Owl" Unvanı',    desc:'Profil unvanına eklenir'                , fx:()=>{ if(!_cs().profileTitles.includes('Night Owl')) _cs().profileTitles.push('Night Owl'); notify('🦉 Unvan: Night Owl'); } },
-  { id:'g_accessory', weight:4,    tier:'rare',      icon:'👓', name:'Avatar Aksesuarı',      desc:'Karaktere göz lensi/şapka tarzı süs'    , fx:()=>{ _cs().avatarAccessory = _cs().avatarAccessory || []; _cs().avatarAccessory.push('glasses'); notify('👓 Avatar aksesuarı kazandın'); } },
+  { id:'g_accessory', weight:4,    tier:'rare',      icon:'👓', name:'Avatar Aksesuarı',      desc:'Karakter fotoğrafının üzerinde güneş gözlüğü. Karakter sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.avatarAccessory = c.avatarAccessory || []; if(!c.avatarAccessory.includes('glasses')) c.avatarAccessory.push('glasses'); c.unlocked=c.unlocked||{}; c.unlocked.glasses=true; notify('👓 Gözlük aksesuarı — Character sekmesinde foto üzerinde görünür'); } },
   { id:'g_rerollstd', weight:1.5,  tier:'rare',      icon:'🎲', name:'Reroll Token',          desc:'+1 Standard Kasa'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa'); } },
-  { id:'g_border',    weight:0.8,  tier:'epic',      icon:'💫', name:'Animasyonlu Border',    desc:'Karakter fotoğrafı çevresinde glow halka', fx:()=>{ _cs().avatarBorder='glow'; notify('💫 Animasyonlu border aktif'); } },
+  { id:'g_border',    weight:0.8,  tier:'epic',      icon:'💫', name:'Animasyonlu Border',    desc:'Karakter fotoğrafı çevresinde altın parlayan halka. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarBorder='glow'; c.unlocked=c.unlocked||{}; c.unlocked.glowBorder=true; notify('💫 Glow border aktif — Character sekmesinde foto kenarında'); } },
   { id:'g_halfday',   weight:0.5,  tier:'epic',      icon:'⏭', name:'Yarım Gün Pass',        desc:'Bir öğleden sonrayı streak kırılmadan atla', fx:()=>{ _cs().halfDayPass=(_cs().halfDayPass||0)+1; notify('⏭ Half-Day Pass +1'); } },
   { id:'g_forgive',   weight:0.15, tier:'legendary', icon:'🛡', name:'"Forgive and Forget"',  desc:'Önceki günden kırık streak\'i geri yükler', fx:()=>{ _cs().forgiveTokens=(_cs().forgiveTokens||0)+1; notify('🛡 Forgive token +1'); } },
   { id:'g_permmul',   weight:0.05, tier:'legendary', icon:'⚛', name:'1.2x Kalıcı XP Çarpanı', desc:'Tüm session XP kalıcı +20%'             , fx:()=>{ _cs().xpMultiplier = Math.max(_cs().xpMultiplier||1, 1.2); notify('⚛ Kalıcı 1.2x XP çarpanı!'); } },
@@ -3823,6 +3918,10 @@ function openCase(type){
   showCaseRoulette(items, item, type, ()=>{
     try { item.fx(); } catch(e){}
     save(); renderShop();
+    // Kozmetik efektleri anında uygula (pixel font, glow border, glasses)
+    try { applyCharCosmetics(); } catch(e){}
+    // Karakter sayfası açıksa yeniden render
+    try { if (g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); } catch(e){}
   });
   addLog('Kasa açıldı ('+(type==='gold'?'GOLD':'STD')+'): '+item.name+' ['+item.tier+']');
 }
@@ -5940,6 +6039,7 @@ loadState();
 timerSecs=S.focusMin*60;
 applyTheme();
 applyBackground('cockpit');
+try { applyCharCosmetics(); } catch(e){}
 renderAll();
 refreshNotifSwitch();
 // initial reminder & aggro check on open
