@@ -9,9 +9,17 @@
 <meta name="apple-mobile-web-app-title" content="OVERCLOCK">
 <meta name="theme-color" content="#000000">
 <title>OVERCLOCK</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script>
-const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standalone",start_url:"./",scope:"./",background_color:"#000000",theme_color:"#000000",orientation:"portrait",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000'/><text x='96' y='140' font-size='120' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standalone",start_url:"./",scope:"./",background_color:"#000000",theme_color:"#000000",orientation:"portrait",icons:[
+  {src:"icon-192.png",sizes:"192x192",type:"image/png",purpose:"any"},
+  {src:"icon-512.png",sizes:"512x512",type:"image/png",purpose:"any"},
+  {src:"icon-192.png",sizes:"192x192",type:"image/png",purpose:"maskable"},
+  {src:"icon-512.png",sizes:"512x512",type:"image/png",purpose:"maskable"}
+]};
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
@@ -2553,7 +2561,7 @@ function requestNotifPermission(){
 // delivered by the service worker. Falls back to silent-audio keepalive +
 // foreground catch-up where triggers aren't supported.
 // ════════════════════════════════════════
-const _NOTIF_ICON = 'data:image/svg+xml,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23000'/><text x='32' y='46' font-size='40' text-anchor='middle' fill='%23f0f0f0' font-family='monospace'>⚡</text></svg>");
+const _NOTIF_ICON = new URL('icon-192.png', location.href).href;
 
 function swPost(msg){
   try{
