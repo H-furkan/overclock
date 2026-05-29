@@ -396,22 +396,19 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     0 0 55px rgba(96,165,250,.45),
     0 0 90px rgba(30,64,175,.28)
 }
-/* Animasyonlu Çerçeve — Steam APNG (21 kareli) + 9-slice border-image.
-   Kare kaynak (224x224) dikey avatara orantılı oturur:
-   - Köşeler (jagged flames) bozulmadan köşede kalır
-   - Üst/alt kenarlar yatay yönde, sol/sağ kenarlar dikey yönde uzar
-   - Merkez şeffaf → avatar tüm yükseklikte görünür */
+/* Animasyonlu Çerçeve — Steam APNG (21 kareli, 224x224 kare).
+   Kaynak kare olduğundan dikey avatara (170x340) zorla esnetilir.
+   Border-image APNG ile düzgün çalışmadı; bu en az problemli yöntem. */
 .char-photo.glow{border-color:transparent}
 .char-photo.glow::before{
   content:'';
   position:absolute;
-  inset:-22px;          /* fotoğrafın 22px dışında bir ::before kutusu */
-  border:22px solid transparent;
-  border-image:url('frame-flame.png') 60 stretch;
-  -webkit-border-image:url('frame-flame.png') 60 stretch;
+  inset:-22px;
+  background-image:url('frame-flame.png');
+  background-size:100% 100%;
+  background-repeat:no-repeat;
   pointer-events:none;
   z-index:2;
-  box-sizing:border-box;
 }
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:30px;letter-spacing:0;line-height:1.15}
