@@ -131,18 +131,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .boss-hp-lbl{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);margin-bottom:10px}
 
 /* enemy intel */
-.enemy-item{background:var(--mid);border-left:2px solid var(--dim);margin-bottom:6px}
-.enemy-item.hot{border-left-color:var(--red)}
-.enemy-top{display:flex;align-items:center;padding:10px 12px;cursor:pointer;min-height:44px;gap:8px}
-.enemy-name{flex:1;font-size:10px;color:var(--bright);letter-spacing:1px}
-.enemy-note-hint{font-size:7px;color:var(--muted);margin-top:2px}
-.enemy-cnt{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--white)}
-.enemy-cnt.hot{color:var(--red);text-shadow:0 0 8px var(--red)}
-.enemy-btns{display:flex;border-top:1px solid var(--bd)}
-.enemy-act{flex:1;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:7px 4px;border:none;background:transparent;cursor:pointer;text-transform:uppercase;min-height:34px;color:var(--muted)}
-.enemy-act:active{background:var(--dim)}
-.enemy-act.note{color:var(--gray);border-right:1px solid var(--bd)}
-.enemy-act.del{color:var(--red)}
 
 /* bio */
 .bio-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--mid);border:1px solid var(--bd);margin-bottom:8px;cursor:pointer;min-height:44px}
@@ -204,14 +192,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .err-sub{font-size:9px;color:var(--bright);letter-spacing:3px;margin-bottom:16px;line-height:1.8}
 #error-list{text-align:left;margin-bottom:16px;max-height:200px;overflow-y:auto}
 .err-task{font-size:10px;color:var(--red);letter-spacing:1px;padding:6px 0;border-bottom:1px solid var(--bd)}
-
-/* notes modal */
-#notes-modal{display:none;position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.9);align-items:flex-end;justify-content:center}
-#notes-modal.show{display:flex}
-#notes-box{background:var(--dark);border:1px solid var(--bd2);border-bottom:none;width:100%;max-width:600px;padding:16px;display:flex;flex-direction:column}
-#notes-subj{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--white);letter-spacing:2px;margin-bottom:12px}
-#notes-ta{background:var(--deep);border:1px solid var(--bd);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:11px;padding:12px;resize:none;outline:none;letter-spacing:1px;line-height:1.6;min-height:200px;width:100%}
-#notes-ta:focus{border-color:var(--bd2)}
 
 /* confirm boxes */
 .confirm-box{background:var(--mid);border:1px solid var(--bd2);padding:12px 14px;margin-top:8px}
@@ -444,18 +424,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   </div>
 </div>
 
-<!-- NOTES MODAL -->
-<div id="notes-modal">
-  <div id="notes-box">
-    <div id="notes-subj">📝 NOTLAR</div>
-    <textarea id="notes-ta" placeholder="Bu konuya özel notlarını buraya yaz..."></textarea>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn primary" style="flex:1" onclick="saveNotes()">💾 KAYDET</button>
-      <button class="btn" onclick="closeNotes()">↩ KAPAT</button>
-    </div>
-  </div>
-</div>
-
 <!-- SYNC LOGIN OVERLAY -->
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:22px">
@@ -675,19 +643,6 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div id="boss-edit" style="display:none">
       <div class="irow"><input class="inp" id="inp-boss-name" placeholder="Boss adı..."><input class="inp" id="inp-boss-hp" type="number" min="0" max="100" placeholder="HP%" style="max-width:80px"><button class="btn primary" onclick="setBoss()">SET</button></div>
-    </div>
-  </div>
-
-  <!-- ENEMY INTEL -->
-  <div class="block">
-    <div class="fbet mb8">
-      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Enemy Intel</div>
-      <span style="font-size:8px;color:var(--gray)">TOTAL: <b id="total-errors" style="color:var(--bright)">0</b></span>
-    </div>
-    <div id="enemy-grid"></div>
-    <button class="btn fw mt8" onclick="tog('enemy-add')">+ KONU EKLE</button>
-    <div id="enemy-add" style="display:none;margin-top:8px">
-      <div class="irow"><input class="inp" id="inp-enemy" placeholder="Konu adı..." onkeydown="if(event.key==='Enter')addEnemySubject()"><button class="btn primary" onclick="addEnemySubject()">EKLE</button></div>
     </div>
   </div>
 
@@ -1082,7 +1037,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
     </div>
     <div class="ssec" style="border-bottom:none">
       <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.8 // TR-1<br>Deneme Ağacı · Plato uyarısı · Rest Day · XP decay<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.9 // TR-1<br>Enemy Intel kaldırıldı · Deneme Ağacı · Rest Day<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
     </div>
   </div>
 </div>
@@ -2165,107 +2120,6 @@ function defeatBoss(){
   addLog('Boss yenildi: '+S.bossName);
   renderLog();
   if(S.bossLog.length>=3) earnBadge('slayer');
-}
-
-// ════════════════════════════════════════
-// ENEMY INTEL
-// ════════════════════════════════════════
-function addError(subj){
-  S.errors[subj]=(S.errors[subj]||0)+1;
-  save(); renderEnemyGrid();
-  addLog('Hata: '+subj+' ('+S.errors[subj]+')');
-}
-
-function deleteEnemy(subj){
-  delete S.errors[subj];
-  if(S.notes) delete S.notes[subj];
-  save(); renderEnemyGrid();
-  notify('KONU SİLİNDİ: '+subj);
-  addLog('Konu silindi: '+subj);
-}
-
-function addEnemySubject(){
-  const v=g('inp-enemy').value.trim();
-  if(!v||v in S.errors){ notify('Konu zaten var veya boş!'); return; }
-  S.errors[v]=0; save(); renderEnemyGrid();
-  g('inp-enemy').value=''; hideEl('enemy-add');
-  addLog('Konu eklendi: '+v);
-}
-
-// ── NOTES ──
-let _noteSubj=null;
-
-function openNotes(subj){
-  _noteSubj=subj;
-  g('notes-subj').textContent='📝 '+subj.toUpperCase()+' — NOTLAR';
-  g('notes-ta').value=(S.notes&&S.notes[subj])||'';
-  g('notes-modal').style.display='flex';
-  setTimeout(()=>g('notes-ta').focus(),100);
-}
-
-function saveNotes(){
-  if(!_noteSubj)return;
-  if(!S.notes) S.notes={};
-  S.notes[_noteSubj]=g('notes-ta').value;
-  save(); closeNotes();
-  notify('NOT KAYDEDİLDİ');
-  addLog('Not kaydedildi: '+_noteSubj);
-  renderEnemyGrid();
-}
-
-function closeNotes(){
-  g('notes-modal').style.display='none';
-  _noteSubj=null;
-}
-
-function renderEnemyGrid(){
-  const gr=g('enemy-grid'); gr.innerHTML='';
-  const total=Object.values(S.errors).reduce((a,b)=>a+b,0);
-  g('total-errors').textContent=total;
-
-  if(!Object.keys(S.errors).length){
-    gr.innerHTML='<div style="font-size:9px;color:var(--dim);letter-spacing:2px;padding:8px 0">Konu yok — ekle butonunu kullan.</div>';
-    return;
-  }
-
-  Object.entries(S.errors).forEach(([subj,cnt])=>{
-    const hot=cnt>=5;
-    const hasNote=S.notes&&S.notes[subj]&&S.notes[subj].trim().length>0;
-
-    const wrap=document.createElement('div');
-    wrap.className='enemy-item'+(hot?' hot':'');
-
-    // top row: tap to add error
-    const top=document.createElement('div');
-    top.className='enemy-top';
-    top.onclick=()=>addError(subj);
-    top.innerHTML=
-      '<div style="flex:1;min-width:0">'+
-        '<div class="enemy-name">'+subj+'</div>'+
-        (hasNote?'<div class="enemy-note-hint">📝 not var</div>':'')+
-      '</div>'+
-      '<span class="enemy-cnt'+(hot?' hot':'')+'">'+cnt+'</span>';
-
-    // bottom row: note + delete buttons
-    const bbar=document.createElement('div');
-    bbar.className='enemy-btns';
-
-    const noteBtn=document.createElement('button');
-    noteBtn.className='enemy-act note';
-    noteBtn.textContent='📝 NOT AL';
-    noteBtn.onclick=function(e){ e.stopPropagation(); openNotes(subj); };
-
-    const delBtn=document.createElement('button');
-    delBtn.className='enemy-act del';
-    delBtn.textContent='✕ SİL';
-    delBtn.onclick=function(e){ e.stopPropagation(); deleteEnemy(subj); };
-
-    bbar.appendChild(noteBtn);
-    bbar.appendChild(delBtn);
-    wrap.appendChild(top);
-    wrap.appendChild(bbar);
-    gr.appendChild(wrap);
-  });
 }
 
 // ════════════════════════════════════════
@@ -4082,7 +3936,7 @@ function drawNumericChart(h,cid){
 // RENDER ALL
 // ════════════════════════════════════════
 function renderAll(){
-  renderXP(); renderStreak(); renderBoss(); renderEnemyGrid(); updateWaterUI();
+  renderXP(); renderStreak(); renderBoss(); updateWaterUI();
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
   renderRestDayUI();
@@ -4695,7 +4549,7 @@ refreshNotifSwitch();
 try { reminderTick(); bossAggroTick(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.8 başlatıldı.');
+addLog('OVERCLOCK v7.9 başlatıldı.');
 </script>
 </body>
 </html>
