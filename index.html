@@ -508,9 +508,9 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
 <div id="notif"></div>
 
 <!-- FULLSCREEN TIMER OVERLAY -->
-<div id="fs-timer" onclick="if(event.target===this)exitFullscreen()">
+<div id="fs-timer">
   <div id="fs-status">● STANDBY</div>
-  <button id="fs-close" type="button" onclick="event.stopPropagation();exitFullscreen()" aria-label="Kapat">✕</button>
+  <button id="fs-close" type="button" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
   <div id="fs-ring-wrap">
     <svg id="fs-svg" viewBox="0 0 200 200">
       <circle id="fs-ring-bg" cx="100" cy="100" r="92"></circle>
@@ -2347,15 +2347,30 @@ function renderFsTimer(){
   }
 }
 
+let _fsWired=false;
 function enterFullscreen(){
   const fs=g('fs-timer'); if(!fs) return;
   renderFsTimer();
   fs.classList.add('show');
+  fs.style.transform='translateY(0)';
+  fs.style.opacity='1';
+  fs.style.pointerEvents='auto';
+  // Olay dinleyicilerini JS ile bağla (inline 'event' bağımlılığı yok)
+  if(!_fsWired){
+    _fsWired=true;
+    const closeBtn=g('fs-close');
+    if(closeBtn) closeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); exitFullscreen(); });
+    fs.addEventListener('click', function(ev){ if(ev.target===fs) exitFullscreen(); });
+  }
   try{ _acquireWakeLock(); }catch(e){}
 }
 function exitFullscreen(){
   const fs=g('fs-timer'); if(!fs) return;
   fs.classList.remove('show');
+  // Sınıf + inline stil ile garanti kapat (transition'lı slayt aşağı)
+  fs.style.transform='translateY(100%)';
+  fs.style.opacity='0';
+  fs.style.pointerEvents='none';
   if(!timerRunning){ try{ _releaseWakeLock(); }catch(e){} }
 }
 // ESC ile tam ekrandan çık
@@ -6260,7 +6275,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.1 başlatıldı.');
+addLog('OVERCLOCK v7.15.2 başlatıldı.');
 </script>
 </body>
 </html>
