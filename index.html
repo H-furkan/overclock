@@ -4209,7 +4209,7 @@ function activateInventoryItem(id){
   save(); renderShop();
   addLog('Envanter aktif: '+it.name);
 }
-// 2 saat No-Distraction — anında 120dk session başlar; uygulamadan çıkarsan fail, tamamlarsan 6x XP
+// 2 saat No-Distraction challenge — anında 120dk session başlar; uygulamadan çıkarsan fail, tamamlarsan 6x XP
 function startNoDistraction(){
   if(timerRunning){ notify('Önce mevcut sayacı durdur'); return false; }
   const c=_cs();
