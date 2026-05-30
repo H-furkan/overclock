@@ -150,6 +150,27 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #timer-unit{font-size:8px;color:var(--muted);letter-spacing:3px;margin-top:2px}
 #timer-wrap{position:relative;flex-shrink:0;width:130px;height:130px}
 #timer-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+/* ── FULLSCREEN TIMER OVERLAY ── */
+#fs-timer{position:fixed;inset:0;z-index:9970;background:radial-gradient(ellipse at center,rgba(20,20,28,.98),rgba(0,0,0,.99));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.3,1),opacity .35s ease;padding:env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0)}
+#fs-timer.show{transform:translateY(0);opacity:1;pointer-events:auto}
+#fs-close{position:absolute;top:calc(env(safe-area-inset-top,0) + 16px);right:18px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--bd2);color:var(--bright);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s}
+#fs-close:active{transform:scale(.9);background:rgba(255,255,255,.14)}
+#fs-status{position:absolute;top:calc(env(safe-area-inset-top,0) + 22px);left:22px;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;color:var(--muted)}
+#fs-status.active{color:var(--green);text-shadow:0 0 10px var(--green)}
+#fs-status.brk{color:var(--yellow);text-shadow:0 0 10px var(--yellow)}
+#fs-ring-wrap{position:relative;width:min(74vw,360px);height:min(74vw,360px)}
+#fs-svg{transform:rotate(-90deg);width:100%;height:100%}
+#fs-ring-bg{fill:none;stroke:var(--dim);stroke-width:4}
+#fs-ring{fill:none;stroke:var(--bright);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 8px rgba(255,255,255,.5))}
+#fs-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+#fs-num{font-family:'Orbitron',monospace;font-size:min(20vw,86px);font-weight:900;color:var(--white);letter-spacing:3px;line-height:1;text-shadow:0 0 22px rgba(255,255,255,.4)}
+body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:min(14vw,60px);letter-spacing:0}
+#fs-unit{font-size:13px;color:var(--muted);letter-spacing:6px;margin-top:10px}
+#fs-mode{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+#fs-subject{font-size:12px;color:var(--bright);letter-spacing:2px;text-transform:uppercase;min-height:14px}
+#fs-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(86vw,420px)}
+#fs-controls .btn{min-height:54px;font-size:12px}
+#fs-controls .btn.fw2{grid-column:1 / -1}
 
 /* buttons */
 .btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 14px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;transition:background .15s,border-color .15s,transform .05s}
@@ -486,6 +507,32 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
 <div id="xp-popup"></div>
 <div id="notif"></div>
 
+<!-- FULLSCREEN TIMER OVERLAY -->
+<div id="fs-timer">
+  <div id="fs-status">● STANDBY</div>
+  <button id="fs-close" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
+  <div id="fs-ring-wrap">
+    <svg id="fs-svg" viewBox="0 0 200 200">
+      <circle id="fs-ring-bg" cx="100" cy="100" r="92"></circle>
+      <circle id="fs-ring" cx="100" cy="100" r="92"></circle>
+    </svg>
+    <div id="fs-inner">
+      <div id="fs-num">90:00</div>
+      <div id="fs-unit">FOCUS</div>
+    </div>
+  </div>
+  <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
+    <div id="fs-mode">Focus — 90dk</div>
+    <div id="fs-subject"></div>
+  </div>
+  <div id="fs-controls">
+    <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
+    <button class="btn" onclick="resetTimer()">↺ RESET</button>
+    <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
+    <button class="btn" onclick="openSubjectPicker()">📚 DERS SEÇ</button>
+  </div>
+</div>
+
 <!-- ERROR MODAL -->
 <div id="error-modal">
   <div id="error-box">
@@ -701,6 +748,7 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
         <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
         <button class="btn" id="btn-subject" onclick="openSubjectPicker()" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📚 DERS SEÇ</button>
       </div>
+      <button class="btn fw mb8" onclick="enterFullscreen()" style="border-color:var(--bright)">⛶ TAM EKRAN</button>
       <button class="btn fw" style="font-size:8px;color:var(--muted);border-color:var(--bd)" onclick="tog('timer-set-panel')">⚙ SÜRE: <span id="timer-cfg-lbl">90dk/20dk</span></button>
       <div id="timer-set-panel" style="display:none;margin-top:8px">
         <div class="irow">
@@ -2257,6 +2305,48 @@ function renderTimer(){
   g('timer-num').style.color=isBreak?'var(--yellow)':'var(--white)';
   g('timer-unit').textContent=isBreak?'MOLA':'FOCUS';
   g('timer-mode-lbl').textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
+  renderFsTimer();
+}
+
+// Tam ekran sayaç elemanlarını senkronize et (overlay açık olsun olmasın güvenli)
+const FS_CIRC = 2 * Math.PI * 92;
+function renderFsTimer(){
+  const fsNum=g('fs-num'); if(!fsNum) return;
+  const total=(isBreak?S.breakMin:S.focusMin)*60;
+  const frac=total>0?timerSecs/total:0;
+  const ring=g('fs-ring');
+  if(ring){
+    ring.style.strokeDasharray=FS_CIRC;
+    ring.style.strokeDashoffset=FS_CIRC*(1-frac);
+    ring.style.stroke=isBreak?'var(--yellow)':'var(--bright)';
+  }
+  fsNum.textContent=fmtSecs(timerSecs);
+  fsNum.style.color=isBreak?'var(--yellow)':'var(--white)';
+  const u=g('fs-unit'); if(u) u.textContent=isBreak?'MOLA':'FOCUS';
+  const m=g('fs-mode'); if(m) m.textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
+  const sj=g('fs-subject'); if(sj) sj.textContent=S.activeSubject?('📚 '+S.activeSubject):'';
+  // başlat/durdur buton etiketlerini her iki ekranda eşitle
+  const lbl=timerRunning?'⏸ DURDUR':'▶ START';
+  const fb=g('fs-btn-start'); if(fb) fb.textContent=lbl;
+  const fsStatus=g('fs-status');
+  if(fsStatus){
+    fsStatus.className='';
+    if(timerRunning && !isBreak){ fsStatus.textContent='● OVERCLOCKED'; fsStatus.classList.add('active'); }
+    else if(isBreak){ fsStatus.textContent='● MOLA'; fsStatus.classList.add('brk'); }
+    else fsStatus.textContent='● STANDBY';
+  }
+}
+
+function enterFullscreen(){
+  const fs=g('fs-timer'); if(!fs) return;
+  renderFsTimer();
+  fs.classList.add('show');
+  try{ _acquireWakeLock(); }catch(e){}
+}
+function exitFullscreen(){
+  const fs=g('fs-timer'); if(!fs) return;
+  fs.classList.remove('show');
+  if(!timerRunning){ try{ _releaseWakeLock(); }catch(e){} }
 }
 
 function setStatus(mode){
@@ -2268,6 +2358,7 @@ function setStatus(mode){
   } else {
     e.textContent='● STANDBY';
   }
+  try{ renderFsTimer(); }catch(_){}
 }
 
 // ════════════════════════════════════════
@@ -4771,6 +4862,7 @@ function pickSubject(val){
   save();
   closeSubjectPicker();
   renderSubjectBtn();
+  try{ renderFsTimer(); }catch(_){}
   if (val) notify('📚 AKTİF DERS: '+val);
 }
 
