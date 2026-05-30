@@ -1157,6 +1157,9 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
     <div class="shop-grid" id="shop-cases"></div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;margin-bottom:4px;text-transform:uppercase">Son açılışlar</div>
     <div id="cases-log" style="font-size:8px;color:var(--bright);letter-spacing:1px;line-height:1.7"></div>
+    <div class="blabel" style="margin-top:16px">🎒 ENVANTER</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Kasadan çıkan ödüller burada bekler. İstediğin an <b style="color:var(--bright)">AKTİFLEŞTİR</b> ile kullan. Süreli itemler (No-Distraction, Premium Break) basınca anında sayaç başlatır.</div>
+    <div id="shop-inventory"></div>
   </div>
 
   <div class="block">
@@ -4161,6 +4164,92 @@ function buyCase(type){
   addLog('Kasa satın alındı: '+(type==='gold'?'GOLD':'STD')+' (-'+cost+' XP)');
 }
 
+// ════════════════════════════════════════
+// ENVANTER (kasa ödülleri burada bekler, kullanıcı aktive eder)
+// ════════════════════════════════════════
+function _allCaseItems(){ return CASE_ITEMS_STANDARD.concat(CASE_ITEMS_GOLD); }
+function _findCaseItem(id){ return _allCaseItems().find(x=>x.id===id); }
+function addToInventory(id){
+  const c=_cs(); c.inv=c.inv||{};
+  c.inv[id]=(c.inv[id]||0)+1;
+  const it=_findCaseItem(id);
+  notify('🎒 Envantere eklendi: '+(it?it.name:id));
+}
+function renderInventory(){
+  const el=g('shop-inventory'); if(!el) return;
+  const c=_cs(); const inv=c.inv||{};
+  const ids=Object.keys(inv).filter(id=>inv[id]>0);
+  if(!ids.length){ el.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:1px;padding:6px 0">Envanter boş — kasa aç, ödüller buraya düşsün.</div>'; return; }
+  const order={legendary:0,epic:1,rare:2,uncommon:3,common:4};
+  ids.sort((a,b)=>{ const A=_findCaseItem(a),B=_findCaseItem(b); return (order[(A||{}).tier]==null?9:order[A.tier])-(order[(B||{}).tier]==null?9:order[B.tier]); });
+  el.innerHTML = ids.map(id=>{
+    const it=_findCaseItem(id); if(!it) return '';
+    const col=TIER_COLORS[it.tier]||'#fff';
+    const qty=inv[id];
+    return '<div class="shop-card" style="border:1px solid '+col+';border-radius:10px;flex-direction:row;align-items:center;gap:10px;text-align:left;padding:10px 12px">'+
+      '<div style="font-size:26px;line-height:1;flex-shrink:0">'+it.icon+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="shop-name" style="color:'+col+';text-align:left">'+_he(it.name)+(qty>1?(' <span style="color:var(--white)">×'+qty+'</span>'):'')+'</div>'+
+        '<div class="shop-desc" style="text-align:left">'+_he(it.desc)+'</div>'+
+      '</div>'+
+      '<button class="shop-btn primary" style="width:auto;flex-shrink:0" onclick="activateInventoryItem(\''+id+'\')">AKTİFLEŞTİR</button>'+
+    '</div>';
+  }).join('');
+}
+function activateInventoryItem(id){
+  const c=_cs(); c.inv=c.inv||{};
+  if(!(c.inv[id]>0)){ notify('Bu item envanterde yok'); return; }
+  const it=_findCaseItem(id); if(!it){ notify('Bilinmeyen item'); return; }
+  if(id==='g_nodisrupt'){ if(!startNoDistraction()) return; }
+  else if(id==='g_premiumbk'){ if(!startPremiumBreak()) return; }
+  else { try{ it.fx(); }catch(e){} }
+  c.inv[id]--; if(c.inv[id]<=0) delete c.inv[id];
+  try{ applyCharCosmetics(); }catch(e){}
+  try{ if (g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){}
+  save(); renderShop();
+  addLog('Envanter aktif: '+it.name);
+}
+// 2 saat No-Distraction — anında 120dk session başlar; uygulamadan çıkarsan fail, tamamlarsan 6x XP
+function startNoDistraction(){
+  if(timerRunning){ notify('Önce mevcut sayacı durdur'); return false; }
+  const c=_cs();
+  S.focusMin=120; if(g('inp-focus')) g('inp-focus').value=120;
+  isBreak=false; timerSecs=120*60;
+  c.challenge={ active:true, type:'nodistraction', start:Date.now(), durMin:120 };
+  syncTimerInputs(); renderTimer();
+  notify('🛑 2 SAAT NO-DISTRACTION BAŞLADI — uygulamadan çıkma! Başarırsan 6x XP');
+  addLog('No-Distraction challenge başladı (120dk).');
+  toggleTimer();
+  return true;
+}
+// 30dk Premium Break — çalışan session cezasız biter, 30dk mola başlar
+function startPremiumBreak(){
+  if(timerRunning){ clearInterval(timerIv); timerRunning=false; timerEndAt=null; try{ cancelTimerNotification(); stopKeepAlive(); }catch(e){} }
+  S.breakMin=30; if(g('inp-break')) g('inp-break').value=30;
+  isBreak=true; timerSecs=30*60;
+  syncTimerInputs(); setStatus('break'); renderTimer();
+  notify('☕ 30dk PREMIUM BREAK başladı (XP cezası yok)');
+  addLog('Premium Break başladı (30dk).');
+  toggleTimer();
+  return true;
+}
+// No-Distraction: uygulamadan çıkılırsa challenge başarısız
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) return;
+  const c=(typeof _cs==='function')?_cs():null;
+  if(c && c.challenge && c.challenge.active && c.challenge.type==='nodistraction'){
+    c.challenge=null;
+    try{ clearInterval(timerIv); }catch(e){}
+    timerRunning=false; timerEndAt=null;
+    try{ cancelTimerNotification(); stopKeepAlive(); }catch(e){}
+    isBreak=false; timerSecs=S.focusMin*60;
+    try{ setStatus('standby'); renderTimer(); }catch(e){}
+    save();
+    notify('💥 NO-DISTRACTION BAŞARISIZ — uygulamadan çıktın');
+    addLog('No-Distraction başarısız (uygulamadan çıkıldı).');
+  }
+});
+
 function renderCases(){
   const grid=g('shop-cases'); if(!grid) return;
   const cs=_cs();
@@ -6171,7 +6260,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.13.1 başlatıldı.');
+addLog('OVERCLOCK v7.15.1 başlatıldı.');
 </script>
 </body>
 </html>
