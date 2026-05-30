@@ -153,7 +153,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 /* ── FULLSCREEN TIMER OVERLAY ── */
 #fs-timer{position:fixed;inset:0;z-index:9970;background:radial-gradient(ellipse at center,rgba(20,20,28,.98),rgba(0,0,0,.99));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.3,1),opacity .35s ease;padding:env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0)}
 #fs-timer.show{transform:translateY(0);opacity:1;pointer-events:auto}
-#fs-close{position:absolute;top:calc(env(safe-area-inset-top,0) + 16px);right:18px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--bd2);color:var(--bright);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s}
+#fs-close{position:absolute;top:calc(env(safe-area-inset-top,0) + 16px);right:18px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--bd2);color:var(--bright);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;z-index:20;pointer-events:auto}
 #fs-close:active{transform:scale(.9);background:rgba(255,255,255,.14)}
 #fs-status{position:absolute;top:calc(env(safe-area-inset-top,0) + 22px);left:22px;font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;color:var(--muted)}
 #fs-status.active{color:var(--green);text-shadow:0 0 10px var(--green)}
@@ -508,9 +508,9 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
 <div id="notif"></div>
 
 <!-- FULLSCREEN TIMER OVERLAY -->
-<div id="fs-timer">
+<div id="fs-timer" onclick="if(event.target===this)exitFullscreen()">
   <div id="fs-status">● STANDBY</div>
-  <button id="fs-close" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
+  <button id="fs-close" type="button" onclick="event.stopPropagation();exitFullscreen()" aria-label="Kapat">✕</button>
   <div id="fs-ring-wrap">
     <svg id="fs-svg" viewBox="0 0 200 200">
       <circle id="fs-ring-bg" cx="100" cy="100" r="92"></circle>
@@ -2154,6 +2154,13 @@ function tickTimer(){
       if (_cs2 && (_cs2.sessionBuffRemaining||0) > 0){ sxp = Math.round(sxp*1.2); _cs2.sessionBuffRemaining--; }
       if (_cs2 && _cs2.sprintActive && S.focusMin <= 30){ sxp = Math.round(sxp*1.5); _cs2.sprintActive=false; }
       if (_cs2 && _cs2.deepWorkActive){ sxp = Math.round(sxp*2); _cs2.deepWorkActive=false; }
+      // No-Distraction challenge tamamlandı → 6x ödül
+      if (_cs2 && _cs2.challenge && _cs2.challenge.active && _cs2.challenge.type==='nodistraction'){
+        sxp = Math.round(sxp*6);
+        _cs2.challenge=null;
+        notify('🏆 NO-DISTRACTION BAŞARILDI — 6x XP!');
+        addLog('No-Distraction challenge başarıldı (6x XP).');
+      }
       addXP(sxp,'Session tamamlandı ('+S.focusMin+'dk)');
       notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
       if(S.streak>=3) earnBadge('streak');
@@ -2348,6 +2355,10 @@ function exitFullscreen(){
   fs.classList.remove('show');
   if(!timerRunning){ try{ _releaseWakeLock(); }catch(e){} }
 }
+// ESC ile tam ekrandan çık
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ const fs=g('fs-timer'); if(fs && fs.classList.contains('show')) exitFullscreen(); }
+});
 
 function setStatus(mode){
   const e=g('statuslabel'); e.className='';
@@ -4025,17 +4036,13 @@ function openCase(type){
   cs.openedLog = cs.openedLog || [];
   cs.openedLog.unshift({ date:today(), time:nowStr(), type, id:item.id, tier:item.tier, name:item.name, icon:item.icon });
   if (cs.openedLog.length > 30) cs.openedLog = cs.openedLog.slice(0,30);
-  // Efekti animasyon bitiminde uygula ki kullanıcı önce ne çıktığını görsün
+  // Ödül animasyon bitiminde ENVANTERE düşer (otomatik uygulanmaz)
   save(); renderShop();
   showCaseRoulette(items, item, type, ()=>{
-    try { item.fx(); } catch(e){}
+    addToInventory(item.id);
     save(); renderShop();
-    // Kozmetik efektleri anında uygula (pixel font, glow border, glasses)
-    try { applyCharCosmetics(); } catch(e){}
-    // Karakter sayfası açıksa yeniden render
-    try { if (g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); } catch(e){}
   });
-  addLog('Kasa açıldı ('+(type==='gold'?'GOLD':'STD')+'): '+item.name+' ['+item.tier+']');
+  addLog('Kasa açıldı ('+(type==='gold'?'GOLD':'STD')+'): '+item.name+' ['+item.tier+'] → envanter');
 }
 
 // CSGO-style horizontal roulette. Sticker'lar hızlıca akar, ease-out ile durur,
@@ -4221,6 +4228,7 @@ function renderBoostBanner(){
 
 function renderShop(){
   try { renderCases(); } catch(e){}
+  try { renderInventory(); } catch(e){}
   const balEl = g('shop-balance'); if (balEl) balEl.textContent = shopBalance();
   const totEl = g('shop-total-xp'); if (totEl) totEl.textContent = S.totalXp||0;
   const themesEl = g('shop-themes');
