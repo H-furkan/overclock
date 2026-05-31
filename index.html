@@ -6161,18 +6161,47 @@ function authLogout(){
   _sync.auth.signOut().catch(()=>{});
 }
 
+// Kümülatif alanlar sync sırasında ASLA geri gitmemeli — cihaz saatine güvenmek
+// yerine bunlarda her zaman max(local, remote) alınır. Böylece bir cihaz eski
+// veriyle yazsa bile XP/süre düşmez.
+const _CUM_GLOBAL = ['totalXp','cumFocusSecs','cumBreakSecs','tasksDoneTotal','bestStreak','spentXp'];
+const _CUM_DAILY  = ['xp','todayFocusSecs','tasksDoneToday','waterCount','sessions','kills'];
+function _mergeIncoming(incoming){
+  const merged = Object.assign(defState(), incoming);
+  _CUM_GLOBAL.forEach(k=>{ merged[k] = Math.max(Number(S[k])||0, Number(incoming[k])||0); });
+  // günlük sayaçlar yalnızca aynı takvim günündeyse korunur (gün değişince reset meşru)
+  if (incoming.lastDate === S.lastDate){
+    _CUM_DAILY.forEach(k=>{ merged[k] = Math.max(Number(S[k])||0, Number(incoming[k])||0); });
+  }
+  // bugünün focus geçmişi de geri gitmesin
+  try{
+    if (Array.isArray(incoming.focusHistory) && Array.isArray(S.focusHistory)){
+      const map={}; incoming.focusHistory.forEach(h=>{ if(h&&h.date) map[h.date]=h.focusSecs||0; });
+      S.focusHistory.forEach(h=>{ if(h&&h.date) map[h.date]=Math.max(map[h.date]||0, h.focusSecs||0); });
+      merged.focusHistory = Object.keys(map).map(d=>({date:d,focusSecs:map[d]})).slice(-30);
+    }
+  }catch(e){}
+  return merged;
+}
+
 function _applyRemote(data){
   if(!data || typeof data!=='object' || typeof data.totalXp==='undefined') return;
   _sync.applying = true;
   try{
-    const dev=data._device, ts=data._updatedAt||0;
-    S = Object.assign(defState(), data);
+    const ts=data._updatedAt||0;
+    // local daha yüksek kümülatif değer taşıyor muydu? (merge öncesi tespit)
+    const grew = (Number(S.totalXp)||0) > (Number(data.totalXp)||0)
+              || ((data.lastDate===S.lastDate) && (Number(S.todayFocusSecs)||0) > (Number(data.todayFocusSecs)||0))
+              || ((data.lastDate===S.lastDate) && (Number(S.xp)||0) > (Number(data.xp)||0));
+    S = _mergeIncoming(data);
     delete S._streakSaved;
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     _sync.lastRemoteTs = ts;
     timerSecs = (isBreak?S.breakMin:S.focusMin)*60;
     applyTheme(); renderAll();
-    addLog('☁ Veri başka cihazdan senkronlandı.');
+    addLog('☁ Veri senkronlandı (kümülatif korundu).');
+    // local daha ileriydiyse birleşmiş (daha yüksek) hali geri yaz
+    if (grew){ _sync.applying=false; _cloudPush(); return; }
   }catch(e){}
   setTimeout(()=>{ _sync.applying=false; }, 50);
 }
@@ -6203,19 +6232,12 @@ function _onSignedIn(user){
   const ref = _sync.db.collection('users').doc(user.uid);
   ref.get().then(snap=>{
     const remote = snap.exists ? snap.data() : null;
-    const localTs = (S && S._updatedAt) || 0;
-    const remoteTs = (remote && remote._updatedAt) || 0;
     if (!remote) {
-      _cloudPush();                                  // first run on this account
-    } else if (localTs === 0) {
-      // never synced on this device — don't blindly lose local progress:
-      // keep whichever has more total XP
-      if ((S.totalXp||0) > (remote.totalXp||0)) _cloudPush();
-      else _applyRemote(remote);
-    } else if (remoteTs > localTs) {
-      _applyRemote(remote);                          // cloud is newer
+      _cloudPush();                                  // ilk kayıt
     } else {
-      _cloudPush();                                  // local is newer
+      // Her zaman kümülatif birleştir (saat farkına güvenme). _applyRemote
+      // local daha yüksekse merge edip otomatik geri yazar.
+      _applyRemote(remote);
     }
     // realtime updates from the other device
     _sync.unsub = ref.onSnapshot(s=>{
@@ -6275,7 +6297,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.2 başlatıldı.');
+addLog('OVERCLOCK v7.15.3 başlatıldı.');
 </script>
 </body>
 </html>
