@@ -1387,7 +1387,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.5</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.6</div>
     </div>
   </div>
 </div>
@@ -1648,6 +1648,7 @@ function defState() {
     restDayTokens:0,              // ticket count (max 2)
     restDayLastGrant:0,           // last dayStreak value at which a token was granted
     restDayActiveDate:null,       // if === today() → rest mode UI is active
+    lastBrokenStreak:null,        // {value,brokenOn,missedDate} — Forgive&Forget geri yükler
     wrongTopics:{},               // {normKey: {name,level,target,solved,fixed,history,lastSeenExam}}
     topicInsurances:0,            // Konu Sigortası stock (sink)
     studyContract:null,           // {date, focusTarget, resolved}
@@ -1747,6 +1748,11 @@ function applyDailyRollover(saved){
   S.dayMarks = _dayMarks;
   S.streakProtectors = _prot;
   if(_resetIt){
+    // Forgive & Forget için: kırılmadan önceki streak'i ve kaçırılan günü sakla.
+    // (Sadece son sıfırlanma; forgive token bunu geri yükleyebilir.)
+    if ((saved.dayStreak||0) > 0){
+      S.lastBrokenStreak = { value: saved.dayStreak, brokenOn: t, missedDate: saved.lastDate };
+    }
     S.dayStreak = 0;
   } else {
     S.dayStreak = saved.dayStreak || 0;
@@ -4007,8 +4013,8 @@ const CASE_ITEMS_GOLD = [
   { id:'g_accessory', weight:4,    tier:'rare',      icon:'❄', name:'Frost Çerçeve',         desc:'Steam APNG animasyonlu kar/buz çerçevesi — karakter fotoğrafının etrafında 80 kareli akan kar tanesi efekti. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarAccessory = c.avatarAccessory || []; if(!c.avatarAccessory.includes('glasses')) c.avatarAccessory.push('glasses'); c.unlocked=c.unlocked||{}; c.unlocked.glasses=true; notify('❄ Frost Çerçeve aktif — Character sekmesinde foto kenarında'); } },
   { id:'g_rerollstd', weight:1.5,  tier:'rare',      icon:'🎲', name:'Reroll Token',          desc:'+1 Standard Kasa'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa'); } },
   { id:'g_border',    weight:0.8,  tier:'epic',      icon:'🔥', name:'Fire Çerçeve',           desc:'Steam APNG animasyonlu alev çerçevesi — karakter fotoğrafının etrafında 21 kareli titreşen mor alev efekti. Aç/kapat seçeneği var.', fx:()=>{ const c=_cs(); c.avatarBorder='glow'; c.unlocked=c.unlocked||{}; c.unlocked.glowBorder=true; notify('🔥 Fire Çerçeve aktif — Character sekmesinde foto kenarında'); } },
-  { id:'g_halfday',   weight:0.5,  tier:'epic',      icon:'⏭', name:'Yarım Gün Pass',        desc:'Bir öğleden sonrayı streak kırılmadan atla', fx:()=>{ _cs().halfDayPass=(_cs().halfDayPass||0)+1; notify('⏭ Half-Day Pass +1'); } },
-  { id:'g_forgive',   weight:0.15, tier:'legendary', icon:'🛡', name:'"Forgive and Forget"',  desc:'Önceki günden kırık streak\'i geri yükler', fx:()=>{ _cs().forgiveTokens=(_cs().forgiveTokens||0)+1; notify('🛡 Forgive token +1'); } },
+  { id:'g_halfday',   weight:0.5,  tier:'epic',      icon:'⏭', name:'Yarım Gün Pass',        desc:'TEK KULLANIM: Bugün XP kotası dolmasa bile streak kırılmaz. Sadece o gün — sürekli değil.', fx:()=>{} },
+  { id:'g_forgive',   weight:0.15, tier:'legendary', icon:'🛡', name:'Forgive and Forget',    desc:'TEK KULLANIM: Önceki günden kırılan streak\'i geri yükler. 1 token = 1 kez, sürekli korumaz.', fx:()=>{} },
   { id:'g_permmul',   weight:0.05, tier:'legendary', icon:'⚛', name:'1.2x Kalıcı XP Çarpanı', desc:'Tüm session XP kalıcı +20%'             , fx:()=>{ _cs().xpMultiplier = Math.max(_cs().xpMultiplier||1, 1.2); notify('⚛ Kalıcı 1.2x XP çarpanı!'); } },
 ];
 
@@ -4233,6 +4239,8 @@ function activateInventoryItem(id){
   const it=_findCaseItem(id); if(!it){ notify('Bilinmeyen item'); return; }
   if(id==='g_nodisrupt'){ if(!startNoDistraction()) return; }
   else if(id==='g_premiumbk'){ if(!startPremiumBreak()) return; }
+  else if(id==='g_forgive'){ if(!useForgiveToken()) return; }
+  else if(id==='g_halfday'){ if(!useHalfDayPass()) return; }
   else { try{ it.fx(); }catch(e){} }
   c.inv[id]--; if(c.inv[id]<=0) delete c.inv[id];
   try{ applyCharCosmetics(); }catch(e){}
@@ -4264,6 +4272,53 @@ function startPremiumBreak(){
   toggleTimer();
   return true;
 }
+
+// Forgive & Forget — TEK KULLANIMLIK. Önceki günden kırılmış bir streak varsa
+// onu geri yükler. Sürekli koruma DEĞİL: 1 token = 1 kez geri yükleme.
+function useForgiveToken(){
+  const b = S.lastBrokenStreak;
+  if (!b || !b.value || b.value <= 0){
+    notify('🛡 Geri yüklenecek kırılmış streak yok (streak\'in zaten sağlam)');
+    return false;
+  }
+  // sadece son 2 gün içinde kırılmış streak'i affet (çok eskisini değil)
+  const tMs = new Date(today()).getTime();
+  const brokenMs = new Date(b.brokenOn||today()).getTime();
+  if ((tMs - brokenMs)/86400000 > 2){
+    notify('🛡 Kırılma çok eski (>2 gün), geri yüklenemez');
+    return false;
+  }
+  S.dayStreak = b.value;
+  if (b.missedDate){ S.dayMarks = S.dayMarks||{}; S.dayMarks[b.missedDate] = 'frozen'; }
+  // bugünü de köprüle ki bugün kota tutmadan da zincir kopmasın gibi DAVRANMASIN —
+  // sadece geri yükleme; bugün hâlâ normal kurallarla ilerler.
+  S.lastBrokenStreak = null;
+  notify('🛡 FORGIVE & FORGET — streak '+b.value+' güne geri yüklendi!');
+  addLog('Forgive & Forget kullanıldı: streak '+b.value+' geri yüklendi.');
+  save(); renderStreak();
+  return true;
+}
+
+// Half-Day Pass — TEK KULLANIMLIK. BUGÜNÜ korumalı işaretler: bugün XP kotası
+// dolmasa bile streak kırılmaz (rest day gibi ama jeton harcamadan, ayrı item).
+// Sürekli koruma DEĞİL: 1 pass = sadece 1 gün.
+function useHalfDayPass(){
+  const t = today();
+  if (S.lastGoalHitDate === t){
+    notify('⏭ Bugün zaten kotayı tuttun, pass\'e gerek yok (saklandı)');
+    return false;
+  }
+  S.dayMarks = S.dayMarks||{};
+  if (S.dayMarks[t] === 'active'){ notify('⏭ Bugün zaten korumalı'); return false; }
+  // bugünü frozen işaretle + zinciri köprüle → gece yarısı rollover bugünü korunmuş sayar
+  S.dayMarks[t] = 'frozen';
+  S.lastGoalHitDate = t;   // bugün "tutulmuş" sayılır ki yarınki rollover kırmasın
+  notify('⏭ HALF-DAY PASS aktif — bugün kota dolmasa bile streak korunacak');
+  addLog('Half-Day Pass kullanıldı ('+t+').');
+  save(); renderStreak();
+  return true;
+}
+
 // No-Distraction: uygulamadan çıkılırsa challenge başarısız
 document.addEventListener('visibilitychange', function(){
   if(!document.hidden) return;
@@ -6345,7 +6400,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.5 başlatıldı.');
+addLog('OVERCLOCK v7.15.6 başlatıldı.');
 </script>
 </body>
 </html>
