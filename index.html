@@ -431,8 +431,10 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
   pointer-events:none;
   z-index:2;
 }
-/* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit */
-body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:30px;letter-spacing:0;line-height:1.15}
+/* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit.
+   130px dairenin içine sığması için font küçük + tam ortalı. */
+body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:17px;letter-spacing:0;line-height:1.2;white-space:nowrap}
+body.pixel-font #timer-unit{font-size:7px}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
 .char-stat-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);letter-spacing:1px}
 .char-stat-row .lbl{flex:1;min-width:0;display:flex;align-items:center;gap:6px;cursor:pointer}
@@ -897,10 +899,15 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
       <div style="font-size:8px;color:var(--bright);letter-spacing:3px;margin:8px 0 6px">▮ BUGÜN</div>
       <div id="plan-today-list"></div>
       <div id="plan-today-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:10px 0">Bugün için görev yok.</div>
-      <!-- GELECEK -->
-      <div style="font-size:8px;color:var(--yellow);letter-spacing:3px;margin:14px 0 6px">▷ GELECEK GÖREVLER</div>
-      <div id="plan-future-list"></div>
-      <div id="plan-future-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:10px 0">Gelecek tarih için planlanmış görev yok.</div>
+      <!-- GELECEK (açılır/kapanır) -->
+      <div onclick="togglePlanFuture()" style="cursor:pointer;font-size:8px;color:var(--yellow);letter-spacing:3px;margin:14px 0 6px;display:flex;align-items:center;justify-content:space-between">
+        <span>▷ GELECEK GÖREVLER <span id="plan-future-count" style="color:var(--muted)"></span></span>
+        <span id="plan-future-caret">▼</span>
+      </div>
+      <div id="plan-future-wrap">
+        <div id="plan-future-list"></div>
+        <div id="plan-future-empty" style="font-size:10px;color:var(--dim);letter-spacing:2px;padding:10px 0">Gelecek tarih için planlanmış görev yok.</div>
+      </div>
       <!-- TAMAMLANMADI -->
       <div style="font-size:8px;color:var(--red);letter-spacing:3px;margin:14px 0 6px">✕ TAMAMLANMADI (GEÇMİŞ)</div>
       <div id="plan-missed-list"></div>
@@ -1378,9 +1385,9 @@ body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monosp
       <button class="btn fw" onclick="openBgModal()">🖼 ARKAPLAN DEĞİŞTİR</button>
       <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px;line-height:1.6">Tüm sekmeler için tek arkaplan veya sekme başına ayrı arkaplan koy. Tuşların arkasına otomatik blur eklenir.</div>
     </div>
-    <div class="ssec" style="border-bottom:none">
-      <div class="slbl">Hakkında</div>
-      <div style="font-size:9px;color:var(--gray);line-height:2">OVERCLOCK v7.12 // TR-1<br>Character Stats · Kasalar · Arkaplan · Planner tarih<br><b style="color:var(--bright)">APK + aynı hesap = otomatik senkron</b></div>
+    <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
+      <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.4</div>
     </div>
   </div>
 </div>
@@ -1811,7 +1818,8 @@ function applyDailyRollover(saved){
     }
     if (resetIt) {
       const resetSubs = (tk.subtasks||[]).map(s=>Object.assign({},s,{done:false}));
-      return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false,subtasks:resetSubs});
+      // xpAwarded sıfırlanmalı ki tekrarlayan görev ertesi gün yeniden XP versin
+      return Object.assign({},tk,{done:false,doneAt:null,doneDate:null,overdue:false,xpAwarded:false,subtasks:resetSubs});
     }
     if (!tk.done && tk.deadline && tk.deadline < t && rec === 'none') return Object.assign({},tk,{overdue:true});
     return tk;
@@ -2062,6 +2070,8 @@ function renderStreak(){
   // restday-chip color hint
   const chip = g('restday-chip');
   if (chip){ chip.style.opacity = (rd>0 || isRestDayActive()) ? '1' : '.45'; }
+  // gün kutucuk şeridi (XP barı dolup streak artınca da güncellensin)
+  try{ renderDayStrip(); }catch(e){}
 }
 
 function renderCumulative() {
@@ -5082,11 +5092,11 @@ function addPlannerTask(){
 function togglePlannerTask(id){
   const dp=_dp(); const tk=dp.tasks.find(x=>x.id===id); if(!tk) return;
   if (tk.done){
-    tk.done=false; tk.doneAt=null;
+    tk.done=false; tk.doneAt=null; tk.doneDate=null;
     save(); renderPlanner();
     return;
   }
-  tk.done=true; tk.doneAt=Date.now();
+  tk.done=true; tk.doneAt=Date.now(); tk.doneDate=today();
   if (!tk.xpAwarded){
     tk.xpAwarded = true;
     // Task Buff: ilk 3 görev 2x XP
@@ -5100,6 +5110,14 @@ function togglePlannerTask(id){
     notify('✓ '+tk.title+' (XP zaten verilmişti)');
   }
   save(); renderPlanner();
+}
+
+let _planFutureOpen = false;
+function togglePlanFuture(){
+  _planFutureOpen = !_planFutureOpen;
+  const w=g('plan-future-wrap'), c=g('plan-future-caret');
+  if(w) w.style.display = _planFutureOpen ? 'block':'none';
+  if(c) c.textContent = _planFutureOpen ? '▲':'▼';
 }
 
 function deletePlannerTask(id){
@@ -5123,8 +5141,8 @@ function renderPlanner(){
   const fut = all.filter(x=>x.date>t && !x.done).sort((a,b)=>a.date.localeCompare(b.date) || a.id-b.id);
   // Tamamlanmadı: date<t, not done
   const miss = all.filter(x=>x.date<t && !x.done).sort((a,b)=>b.date.localeCompare(a.date) || a.id-b.id);
-  // Tamamlananlar: done (tüm tarihler)
-  const done = all.filter(x=>x.done).sort((a,b)=> (b.doneAt||0)-(a.doneAt||0));
+  // Tamamlananlar: SADECE bugün tamamlananlar (doneDate===t). Geçmiş gösterilmez.
+  const done = all.filter(x=>x.done && (x.doneDate===t)).sort((a,b)=> (b.doneAt||0)-(a.doneAt||0));
 
   const setEmpty=(empId,list)=>{ const e=g(empId); if(e) e.style.display = list.length?'none':'block'; };
   setEmpty('plan-today-empty', tdy);
@@ -5133,6 +5151,7 @@ function renderPlanner(){
   setEmpty('plan-done-empty', done);
   const ac=g('plan-active-count'); if (ac) ac.textContent = tdy.length+' bugün · '+fut.length+' yarın+';
   const dc=g('plan-done-count');   if (dc) dc.textContent = done.length+' bitti';
+  const fc=g('plan-future-count'); if (fc) fc.textContent = fut.length?('('+fut.length+')'):'';
 
   const dot = p => p==='high'?'🔴':(p==='med'?'🟡':'🟢');
   const dateTag = d => '<span style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-left:6px">📅 '+_he(d)+'</span>';
@@ -5157,6 +5176,10 @@ function renderPlanner(){
   }
   todayEl.innerHTML = tdy.map(tk=>card(tk,{completable:true})).join('');
   futureEl.innerHTML = fut.map(tk=>card(tk,{completable:false, showDate:true})).join('');
+  // gelecek bölümü açık/kapalı durumunu uygula (varsayılan kapalı)
+  const fw=g('plan-future-wrap'), fcar=g('plan-future-caret');
+  if(fw) fw.style.display = _planFutureOpen ? 'block':'none';
+  if(fcar) fcar.textContent = _planFutureOpen ? '▲':'▼';
   missedEl.innerHTML = miss.map(tk=>card(tk,{completable:true, showDate:true})).join('');
   doneEl.innerHTML = done.map(tk=>card(tk,{})).join('');
 }
@@ -6173,6 +6196,24 @@ function _mergeIncoming(incoming){
   if (incoming.lastDate === S.lastDate){
     _CUM_DAILY.forEach(k=>{ merged[k] = Math.max(Number(S[k])||0, Number(incoming[k])||0); });
   }
+  // ── STREAK: sync geri gitmesin — daha yüksek streak ve daha güncel hedef-tarihi kazanır ──
+  merged.dayStreak = Math.max(Number(S.dayStreak)||0, Number(incoming.dayStreak)||0);
+  // lastGoalHitDate: hangi cihazda daha yeni (string karşılaştırması YYYY-MM-DD sıralı) o kalır
+  const lh1 = S.lastGoalHitDate||'', lh2 = incoming.lastGoalHitDate||'';
+  merged.lastGoalHitDate = (lh1 > lh2) ? lh1 : lh2;
+  // streak koruyucu / rest token: max
+  merged.streakProtectors = Math.max(Number(S.streakProtectors)||0, Number(incoming.streakProtectors)||0);
+  merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
+  merged.restDayLastGrant = Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0);
+  // dayMarks: iki cihazın işaretlerini birleştir (active > partial > frozen > rest önceliğiyle)
+  try{
+    const rank={active:4,partial:3,rest:2,frozen:1};
+    const dm=Object.assign({}, incoming.dayMarks||{});
+    Object.entries(S.dayMarks||{}).forEach(([d,v])=>{
+      if(!dm[d] || (rank[v]||0) > (rank[dm[d]]||0)) dm[d]=v;
+    });
+    merged.dayMarks = dm;
+  }catch(e){ merged.dayMarks = S.dayMarks || incoming.dayMarks || {}; }
   // bugünün focus geçmişi de geri gitmesin
   try{
     if (Array.isArray(incoming.focusHistory) && Array.isArray(S.focusHistory)){
@@ -6297,7 +6338,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.3 başlatıldı.');
+addLog('OVERCLOCK v7.15.4 başlatıldı.');
 </script>
 </body>
 </html>
