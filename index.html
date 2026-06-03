@@ -70,17 +70,14 @@ body.has-bg .block{background:transparent;border-color:rgba(255,255,255,.18)}
 body.has-bg #content{background:transparent}
 body.has-bg #sidebar,body.has-bg #statusbar{background:rgba(0,0,0,.35)}
 body.has-bg .ssec,body.has-bg .shop-card,body.has-bg .plan-card,body.has-bg .bio-item{background:transparent}
-/* Sadece tuşlar: backdrop-filter + sağlam yarı saydam zemin → açık arkaplanda bile okunur.
-   border-radius'lu köşeler için background-clip:padding-box kullanılır → rounded köşede leak olmaz. */
+/* Tuşlar/inputlar: PERFORMANS için backdrop-filter blur KALDIRILDI (her tuşta canlı
+   blur tablette FPS'i çok düşürüyordu). Yerine opak koyu zemin → açık arkaplanda da okunur. */
 body.has-bg .btn,body.has-bg .fbtn,body.has-bg .shop-btn,body.has-bg .plan-act,body.has-bg .navitem{
-  background:rgba(0,0,0,.55) !important;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  background-clip:padding-box;
-  -webkit-background-clip:padding-box;
+  background:rgba(10,10,12,.82) !important;
 }
-body.has-bg .btn.primary{background:rgba(40,40,40,.75) !important}
-body.has-bg .navitem.active{background:rgba(80,80,80,.7) !important}
-body.has-bg .inp{background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background-clip:padding-box;-webkit-background-clip:padding-box}
+body.has-bg .btn.primary{background:rgba(45,45,50,.9) !important}
+body.has-bg .navitem.active{background:rgba(80,80,90,.9) !important}
+body.has-bg .inp{background:rgba(10,10,12,.82)}
 input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radius:0;-webkit-appearance:none;appearance:none;user-select:text;-webkit-user-select:text}
 ::-webkit-scrollbar{width:2px}::-webkit-scrollbar-thumb{background:var(--dim)}
 
@@ -1320,28 +1317,7 @@ body.pixel-font #timer-unit{font-size:7px}
   <div class="block">
     <div class="blabel">■ Sistem Ayarları</div>
     <div class="ssec">
-      <div class="slbl">Timer Ayarları</div>
-      <div class="irow mb8">
-        <div class="igrp"><div class="ilabel">Focus (dk)</div><input class="inp" id="set-focus" type="number" min="1" max="240" value="90"></div>
-        <div class="igrp"><div class="ilabel">Mola (dk)</div><input class="inp" id="set-break" type="number" min="1" max="60" value="20"></div>
-      </div>
-      <button class="btn primary fw" onclick="applyTimerSettings()">UYGULA</button>
-    </div>
-    <div class="ssec">
-      <div class="slbl">XP Referansı</div>
-      <div style="font-size:10px;color:var(--gray);line-height:2">
-        Günlük hedef: <b style="color:var(--bright)">tier'a göre 1200+ XP</b><br>
-        Session: <b style="color:var(--bright)">~2 XP/dk</b> (örn. 90dk → +180 XP) &nbsp;|&nbsp; Boss: <b style="color:var(--bright)">+100 XP</b><br>
-        Task: <b style="color:var(--bright)">belirlediğin kadar</b> &nbsp;|&nbsp; Rozet: <b style="color:var(--bright)">+50 XP</b>
-      </div>
-    </div>
-    <div class="ssec">
       <div class="slbl">Veri Yönetimi</div>
-      <button class="btn fw mb8" onclick="tog('conf-daily')">↺ GÜNLÜK SIFIRLA</button>
-      <div id="conf-daily" style="display:none" class="confirm-box mb8">
-        <div class="confirm-msg">XP, session, su, hata sayıları ve günlük rozetler sıfırlanır.<br>Boss log, tasks ve kalıcı rozetler korunur.</div>
-        <div class="brow"><button class="btn primary" onclick="execDailyReset()">✓ EVET</button><button class="btn" onclick="hideEl('conf-daily')">✕ İPTAL</button></div>
-      </div>
       <button class="btn danger fw" onclick="tog('conf-full')">🗑 TAM SİL</button>
       <div id="conf-full" style="display:none" class="confirm-box mt8">
         <div class="confirm-msg danger">⚠ TÜM VERİLER SİLİNECEK. Geri alınamaz!</div>
@@ -1387,7 +1363,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.6</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.7</div>
     </div>
   </div>
 </div>
@@ -2101,9 +2077,11 @@ let timerEndAt=null; // wall-clock ms when current countdown expires
 function initTimer(){ timerSecs=S.focusMin*60; syncTimerInputs(); renderTimer(); }
 
 function syncTimerInputs(){
-  g('inp-focus').value=S.focusMin; g('inp-break').value=S.breakMin;
-  g('set-focus').value=S.focusMin; g('set-break').value=S.breakMin;
-  g('timer-cfg-lbl').textContent=S.focusMin+'dk/'+S.breakMin+'dk';
+  const inf=g('inp-focus'); if(inf) inf.value=S.focusMin;
+  const inb=g('inp-break'); if(inb) inb.value=S.breakMin;
+  const sf=g('set-focus'); if(sf) sf.value=S.focusMin;
+  const sb=g('set-break'); if(sb) sb.value=S.breakMin;
+  const lbl=g('timer-cfg-lbl'); if(lbl) lbl.textContent=S.focusMin+'dk/'+S.breakMin+'dk';
 }
 
 function toggleTimer(){
@@ -3418,18 +3396,53 @@ function bgPickFile(){
 function bgOnFile(file){
   if (!file) return;
   if (!file.type.startsWith('image/')){ notify('Sadece resim dosyası'); return; }
+  notify('🖼 Arkaplan işleniyor…');
   const r = new FileReader();
   r.onload=()=>{
-    const url = r.result;
-    const tgt = (g('bg-target')||{}).value || 'global';
-    if (!S.background) S.background = {global:null, perTab:{}};
-    if (tgt==='global') S.background.global = url;
-    else {
-      if (!S.background.perTab) S.background.perTab={};
-      S.background.perTab[tgt] = url;
-    }
-    save(); applyBackground(); bgUpdatePreview();
-    notify('🖼 Arkaplan ayarlandı');
+    const img = new Image();
+    img.onload = ()=>{
+      try{
+        // Ekrana uygun boyuta downscale + JPEG sıkıştır → localStorage'a SIĞAR,
+        // FPS düşmez, sync şişmez. (Büyük ham base64 localStorage'a sığmayıp
+        // sessizce fail ediyor, bu yüzden "siyah ekran / 30 kez yükle" oluyordu.)
+        const maxW = 1080, maxH = 1920;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const scale = Math.min(1, maxW/w, maxH/h);
+        w = Math.round(w*scale); h = Math.round(h*scale);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        let dataUrl = cv.toDataURL('image/jpeg', 0.82);
+        // hâlâ çok büyükse kaliteyi kademeli düşür (localStorage ~5MB sınırı)
+        let q = 0.82;
+        while (dataUrl.length > 1500000 && q > 0.4){
+          q -= 0.12;
+          dataUrl = cv.toDataURL('image/jpeg', q);
+        }
+        const tgt = (g('bg-target')||{}).value || 'global';
+        if (!S.background) S.background = {global:null, perTab:{}, dim:0.65};
+        // önce eski değeri yedekle, set etmeyi DENE, sığmazsa geri al + uyar
+        const prevGlobal = S.background.global;
+        const prevTab = (S.background.perTab||{})[tgt];
+        if (tgt==='global') S.background.global = dataUrl;
+        else { if (!S.background.perTab) S.background.perTab={}; S.background.perTab[tgt] = dataUrl; }
+        let ok = true;
+        try{ localStorage.setItem(SK, JSON.stringify(S)); }
+        catch(e){
+          ok = false;
+          // geri al
+          if (tgt==='global') S.background.global = prevGlobal;
+          else S.background.perTab[tgt] = prevTab;
+        }
+        if (!ok){ notify('⚠ Resim çok büyük — depoya sığmadı. Daha küçük bir görsel dene.'); return; }
+        if (window._syncPush) { try{ window._syncPush(); }catch(e){} }
+        applyBackground(); bgUpdatePreview();
+        notify('🖼 Arkaplan ayarlandı ('+Math.round(dataUrl.length/1024)+'KB)');
+      }catch(err){ notify('⚠ Resim işlenemedi: '+(err&&err.message||err)); }
+    };
+    img.onerror=()=>notify('⚠ Görsel açılamadı (bozuk olabilir)');
+    img.src = r.result;
   };
   r.onerror=()=>notify('Dosya okunamadı');
   r.readAsDataURL(file);
@@ -6400,7 +6413,7 @@ try { rescheduleAllReminders(); } catch(e){}
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.6 başlatıldı.');
+addLog('OVERCLOCK v7.15.7 başlatıldı.');
 </script>
 </body>
 </html>
