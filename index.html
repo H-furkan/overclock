@@ -6297,14 +6297,12 @@ function _mergeIncoming(incoming){
       merged.focusHistory = Object.keys(map).map(d=>({date:d,focusSecs:map[d]})).slice(-30);
     }
   }catch(e){}
-  // CİHAZ-YEREL alanlar: buluttan gelmez (background+foto buluta gönderilmiyor).
-  // Gelen veride yoksa YEREL değeri koru, yoksa silinir.
+  // ARKAPLAN cihaz-yereldir (buluta hiç gönderilmez) → her zaman yerel değer korunur.
   merged.background = S.background || incoming.background || {global:null,perTab:{},dim:0.65};
-  if (incoming.character && S.character){
-    // remote.character.photo yok → yerel fotoğrafı koru
-    if (!incoming.character.photo && S.character.photo) merged.character.photo = S.character.photo;
-  } else if (S.character && !incoming.character){
-    merged.character = S.character;
+  // KARAKTER FOTOĞRAFI artık sync ediliyor. incoming'de foto varsa onu al;
+  // yoksa (büyük olduğu için gönderilmemişse) yerel fotoğrafı koru — kaybolmasın.
+  if (merged.character && !merged.character.photo && S.character && S.character.photo){
+    merged.character.photo = S.character.photo;
   }
   return merged;
 }
@@ -6339,11 +6337,14 @@ function _cloudPush(){
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     const data = JSON.parse(JSON.stringify(S));
     data._device = _deviceId();
-    // Firestore doküman limiti 1 MB. Arkaplan resimleri (base64) buna SIĞMAZ ve
-    // tüm sync'i bozar → cihaz-yerel tutulur, buluta GÖNDERİLMEZ.
+    // Firestore doküman limiti 1 MB. ARKAPLAN resimleri (1080×1920, birden çok
+    // per-tab) buna sığmaz → cihaz-yerel tutulur, buluta gönderilmez.
     delete data.background;
-    // karakter fotoğrafı da büyük base64 olabilir — buluttan çıkar (cihaz-yerel)
-    if (data.character && data.character.photo){ data.character = Object.assign({}, data.character); delete data.character.photo; }
+    // Karakter fotoğrafı 240×240 JPEG (~30KB) — limite rahat sığar, SYNC EDİLİR.
+    // (Çok büyükse — eski/sıkıştırılmamış — buluttan çıkar ki sync'i bozmasın.)
+    if (data.character && data.character.photo && data.character.photo.length > 400000){
+      data.character = Object.assign({}, data.character); delete data.character.photo;
+    }
     _sync.lastRemoteTs = ts;
     _sync.db.collection('users').doc(_sync.uid).set(data)
       .then(()=>{ setSyncStatus('☁ Senkron aktif — '+( _sync.email||'' )+' (son: şimdi)'); })
@@ -6447,7 +6448,7 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.9 başlatıldı.');
+addLog('OVERCLOCK v7.15.10 başlatıldı.');
 </script>
 </body>
 </html>
