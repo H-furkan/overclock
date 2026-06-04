@@ -6373,8 +6373,10 @@ function _onSignedIn(user){
     _sync.unsub = ref.onSnapshot(s=>{
       if(!s.exists) return;
       const d=s.data();
-      if(d._device === _deviceId()) return;            // our own write echo
-      if((d._updatedAt||0) <= _sync.lastRemoteTs) return;
+      // Sadece KENDİ yazımızı atla (_device). Timestamp guard'ı kaldırıldı —
+      // iki cihazın saati farklı olunca düşük-timestamp'li gerçek güncellemeyi
+      // yanlışlıkla atlıyordu ("yazdım, diğerinde görünmedi" sebebi buydu).
+      if(d._device === _deviceId()) return;            // kendi yazımızın echo'su
       _applyRemote(d);
     }, ()=>{});
   }).catch(()=>{ setSyncStatus('⚠ Buluta erişilemedi.'); });
@@ -6400,13 +6402,30 @@ function initSync(){
     firebase.initializeApp(window.FIREBASE_CONFIG);
     _sync.auth = firebase.auth();
     _sync.db   = firebase.firestore();
-    try{ _sync.db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
+    // ÖNEMLİ: enablePersistence (offline IndexedDB kuyruğu) KAPALI. Eski büyük
+    // doküman (arkaplanlı) kuyruğa takılıp sonraki tüm yazmaları bloke ediyordu
+    // ("yazdım ama gitmiyor"). Anlık state zaten localStorage'da; offline kuyruğa
+    // gerek yok. Bu, zehirli pending-write sorununu kökten çözer.
     try{ _sync.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
     _sync.ready = true;
     _sync.auth.onAuthStateChanged(u=>{ if(u) _onSignedIn(u); else _onSignedOut(); });
   }catch(e){
     setSyncStatus('⚠ Senkron başlatılamadı: '+(e.message||e));
   }
+}
+
+// Eski sürümden kalma zehirli offline kuyruğu (arkaplanlı büyük doküman) temizle.
+// Tek seferlik: IndexedDB'deki firestore cache'i sil. Yeni veri buluttan gelir.
+function _purgePoisonedSyncCache(){
+  try{
+    if (localStorage.getItem('oc_sync_purged_v158')) return;
+    localStorage.setItem('oc_sync_purged_v158','1');
+    if (window.indexedDB && indexedDB.databases){
+      indexedDB.databases().then(dbs=>{
+        (dbs||[]).forEach(db=>{ if(db.name && /firestore/i.test(db.name)){ try{ indexedDB.deleteDatabase(db.name); }catch(e){} } });
+      }).catch(()=>{});
+    }
+  }catch(e){}
 }
 
 // ════════════════════════════════════════
@@ -6426,8 +6445,9 @@ try { rescheduleAllReminders(); } catch(e){}
 // Stat decay: 3+ gün eylem yok ise bağlı statlar azalır (boot'ta bir kez)
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
+try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.8 başlatıldı.');
+addLog('OVERCLOCK v7.15.9 başlatıldı.');
 </script>
 </body>
 </html>
