@@ -50,15 +50,36 @@ jobs:
           ANCHOR='.setGroupSummary(localNotification.isGroupSummary());'
           grep -qF "$ANCHOR" "$LNF"   # anchor yoksa build burada patlar (sessiz no-op değil)
           printf '%s\n' \
-            '        // OVERCLOCK_CHRONO_PATCH: system-ticked count-down timer in the notification' \
+            '        // OVERCLOCK_CHRONO_PATCH: system-ticked count-down timer shown BIG in the body' \
+            '        // via a custom RemoteViews layout (oc_ongoing) with a <Chronometer> view.' \
+            '        // Falls back to the small corner chronometer if the layout is missing.' \
             '        try {' \
             '            com.getcapacitor.JSObject _ocx = localNotification.getExtra();' \
-            '            if (_ocx != null && _ocx.has("chronoWhen") && android.os.Build.VERSION.SDK_INT >= 24) {' \
+            '            if (_ocx != null && _ocx.has("chronoWhen")) {' \
             '                long _ocw = _ocx.getLong("chronoWhen");' \
-            '                mBuilder.setWhen(_ocw);' \
-            '                mBuilder.setShowWhen(true);' \
-            '                mBuilder.setUsesChronometer(true);' \
-            '                mBuilder.setChronometerCountDown(_ocx.optBoolean("chronoCountdown", true));' \
+            '                boolean _occd = _ocx.optBoolean("chronoCountdown", true);' \
+            '                android.content.Context _occtx = this.context;' \
+            '                String _ocpkg = _occtx.getPackageName();' \
+            '                int _oclay = _occtx.getResources().getIdentifier("oc_ongoing", "layout", _ocpkg);' \
+            '                if (_oclay != 0 && android.os.Build.VERSION.SDK_INT >= 24) {' \
+            '                    int _idT = _occtx.getResources().getIdentifier("oc_title", "id", _ocpkg);' \
+            '                    int _idC = _occtx.getResources().getIdentifier("oc_chrono", "id", _ocpkg);' \
+            '                    int _idB = _occtx.getResources().getIdentifier("oc_body", "id", _ocpkg);' \
+            '                    android.widget.RemoteViews _ocrv = new android.widget.RemoteViews(_ocpkg, _oclay);' \
+            '                    _ocrv.setTextViewText(_idT, localNotification.getTitle());' \
+            '                    _ocrv.setTextViewText(_idB, localNotification.getBody());' \
+            '                    long _ocbase = android.os.SystemClock.elapsedRealtime() + (_ocw - System.currentTimeMillis());' \
+            '                    _ocrv.setChronometer(_idC, _ocbase, "%s", true);' \
+            '                    _ocrv.setChronometerCountDown(_idC, _occd);' \
+            '                    mBuilder.setStyle(new androidx.core.app.NotificationCompat.DecoratedCustomViewStyle());' \
+            '                    mBuilder.setCustomContentView(_ocrv);' \
+            '                    mBuilder.setCustomBigContentView(_ocrv);' \
+            '                } else {' \
+            '                    mBuilder.setWhen(_ocw);' \
+            '                    mBuilder.setShowWhen(true);' \
+            '                    mBuilder.setUsesChronometer(true);' \
+            '                    if (android.os.Build.VERSION.SDK_INT >= 24) mBuilder.setChronometerCountDown(_occd);' \
+            '                }' \
             '            }' \
             '        } catch (Exception _oce) {}' > /tmp/chrono.txt
           awk 'BEGIN{while((getline l < "/tmp/chrono.txt")>0) ins=ins l ORS}
@@ -70,6 +91,48 @@ jobs:
 
       - name: Add Android platform
         run: npx cap add android
+
+      # Büyük gövde sayacı için özel bildirim düzeni (Chronometer view). Plugin patch'i
+      # bunu runtime'da getIdentifier ile bulur; bulamazsa köşedeki küçük kronometreye düşer.
+      # Chronometer'a textAppearance verilir → OEM'lerde "beyaz üstüne beyaz" görünmez yazı olmaz.
+      - name: Inject custom ongoing-notification layout (big chronometer)
+        run: |
+          set -eux
+          LAYDIR=android/app/src/main/res/layout
+          mkdir -p "$LAYDIR"
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="utf-8"?>' \
+            '<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"' \
+            '    android:layout_width="match_parent"' \
+            '    android:layout_height="wrap_content"' \
+            '    android:orientation="vertical"' \
+            '    android:paddingTop="2dp"' \
+            '    android:paddingBottom="2dp">' \
+            '    <TextView android:id="@+id/oc_title"' \
+            '        android:layout_width="match_parent"' \
+            '        android:layout_height="wrap_content"' \
+            '        android:textAppearance="@style/TextAppearance.Compat.Notification.Title"' \
+            '        android:singleLine="true"/>' \
+            '    <LinearLayout android:layout_width="match_parent"' \
+            '        android:layout_height="wrap_content"' \
+            '        android:orientation="horizontal"' \
+            '        android:gravity="center_vertical"' \
+            '        android:paddingTop="2dp">' \
+            '        <Chronometer android:id="@+id/oc_chrono"' \
+            '            android:layout_width="wrap_content"' \
+            '            android:layout_height="wrap_content"' \
+            '            android:textAppearance="@style/TextAppearance.Compat.Notification.Title"' \
+            '            android:textSize="24sp"' \
+            '            android:textStyle="bold"/>' \
+            '        <TextView android:id="@+id/oc_body"' \
+            '            android:layout_width="wrap_content"' \
+            '            android:layout_height="wrap_content"' \
+            '            android:layout_marginStart="10dp"' \
+            '            android:textAppearance="@style/TextAppearance.Compat.Notification.Info"/>' \
+            '    </LinearLayout>' \
+            '</LinearLayout>' > "$LAYDIR/oc_ongoing.xml"
+          test -f "$LAYDIR/oc_ongoing.xml"   # eksikse build patlasın (sessiz fallback değil)
+          echo "── oc_ongoing.xml written ──"; cat "$LAYDIR/oc_ongoing.xml"
 
       - name: Generate Android icons & splash from resources/
         run: npx capacitor-assets generate --android
