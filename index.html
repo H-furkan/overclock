@@ -168,8 +168,10 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 #fs-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(86vw,420px)}
 #fs-controls .btn{min-height:54px;font-size:12px}
 #fs-controls .btn.fw2{grid-column:1 / -1}
-/* ── Süre tekerleği (slot-makinesi tarzı, sadece dakika) ── */
-#fs-wheel-wrap{position:relative;height:120px;overflow:hidden;width:min(70vw,300px);margin:0 auto;
+/* ── Süre tekerleği (slot-makinesi tarzı, sadece dakika) — yuvarlağın İÇİNDE ── */
+#fs-dur{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;z-index:5}
+#fs-wheel-cap{font-size:10px;color:var(--muted);letter-spacing:4px}
+#fs-wheel-wrap{position:relative;height:120px;overflow:hidden;width:min(42vw,180px);margin:0 auto;
   -webkit-mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent);
           mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent)}
 #fs-wheel{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center}
@@ -520,7 +522,7 @@ body.pixel-font #timer-unit{font-size:7px}
 <div id="fs-timer">
   <div id="fs-status">● STANDBY</div>
   <button id="fs-close" type="button" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
-  <div id="fs-ring-wrap" onclick="fsTimerTap()" style="cursor:pointer">
+  <div id="fs-ring-wrap">
     <svg id="fs-svg" viewBox="0 0 200 200">
       <circle id="fs-ring-bg" cx="100" cy="100" r="92"></circle>
       <circle id="fs-ring" cx="100" cy="100" r="92"></circle>
@@ -529,17 +531,16 @@ body.pixel-font #timer-unit{font-size:7px}
       <div id="fs-num">90:00</div>
       <div id="fs-unit">FOCUS</div>
     </div>
-  </div>
-  <!-- Süre ayarı: sayaca dokununca açılır slot-makinesi tarzı dakika tekerleği (yalnızca başlatılmamışken) -->
-  <div id="fs-dur" style="display:none;text-align:center">
-    <div id="fs-wheel-wrap">
-      <div id="fs-wheel"></div>
-      <div id="fs-wheel-band"></div>
+    <!-- Başlatılmamışken yuvarlağın İÇİNDEKİ sayı, doğrudan çevrilebilir dakika tekerleği olur -->
+    <div id="fs-dur" style="display:none">
+      <div id="fs-wheel-wrap">
+        <div id="fs-wheel"></div>
+        <div id="fs-wheel-band"></div>
+      </div>
+      <div id="fs-wheel-cap">DAKİKA</div>
     </div>
-    <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:6px">DAKİKA · çevir · sayaca tekrar dokun kapat</div>
   </div>
   <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
-    <div id="fs-mode">Focus — 90dk</div>
     <div id="fs-subject"></div>
   </div>
   <div id="fs-controls">
@@ -1332,7 +1333,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.19</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.20</div>
     </div>
   </div>
 </div>
@@ -2071,7 +2072,7 @@ function toggleTimer(){
     }
     timerRunning=true;
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
-    { const _d=g('fs-dur'); if(_d) _d.style.display='none'; }   // süre slider'ı açıksa kapat
+    renderTimer();   // taze→çalışıyor: tekerlek gizlenir, geri-sayım sayısı gösterilir
     g('btn-start').textContent='⏸ PAUSE';
     setStatus(isBreak?'break':'active');
     timerIv=setInterval(tickTimer,1000);
@@ -2306,6 +2307,19 @@ function renderFsTimer(){
   fsNum.style.fontSize = (timerSecs>=6000)
     ? (document.body.classList.contains('pixel-font')?'min(10vw,42px)':'min(14vw,58px)')
     : '';   // '' → CSS varsayılanına döner (normal/pixel)
+  // Başlatılmamış (taze) sayaçta: yuvarlağın içinde SAYI yerine çevrilebilir dakika tekerleği göster
+  const _dur=g('fs-dur'), _inner=g('fs-inner');
+  if(_dur && _inner){
+    if(_timerIsFresh()){
+      _inner.style.display='none';
+      const needMax=isBreak?60:240;
+      if(_dur.style.display==='none'){ _dur.style.display='flex'; _buildWheel(); _wheelSetTo(isBreak?S.breakMin:S.focusMin); }
+      else if(_wheelMax!==needMax){ _buildWheel(); _wheelSetTo(isBreak?S.breakMin:S.focusMin); }
+    } else {
+      _dur.style.display='none';
+      _inner.style.display='';
+    }
+  }
   const u=g('fs-unit'); if(u) u.textContent=isBreak?'MOLA':'FOCUS';
   const m=g('fs-mode'); if(m) m.textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
   const sj=g('fs-subject'); if(sj) sj.textContent=S.activeSubject?('📚 '+S.activeSubject):'';
@@ -2390,18 +2404,10 @@ function _wheelScroll(){
   if(_wheelScrollTO) clearTimeout(_wheelScrollTO);
   _wheelScrollTO=setTimeout(()=>{ save(); try{ syncTimerInputs(); }catch(e){} }, 220);
 }
-function fsTimerTap(){
-  const dur=g('fs-dur'); if(!dur) return;
-  if(!_timerIsFresh()){
-    notify('⏸ Süre yalnızca başlatılmamış sayaçta değiştirilebilir');
-    return;
-  }
-  if(dur.style.display!=='none'){ dur.style.display='none'; return; }   // toggle kapat
-  dur.style.display='block';
-  _buildWheel();
-  const cur=isBreak?S.breakMin:S.focusMin;
-  const w=g('fs-wheel');
-  requestAnimationFrame(()=>{ if(w){ w.scrollTop=(cur-_wheelMin)*_WHEEL_IH; _wheelScroll(); } });
+function _wheelSetTo(val){
+  const w=g('fs-wheel'); if(!w) return;
+  val=Math.max(_wheelMin,Math.min(_wheelMax,val||_wheelMin));
+  requestAnimationFrame(()=>{ if(w){ w.scrollTop=(val-_wheelMin)*_WHEEL_IH; _wheelScroll(); } });
 }
 
 function setStatus(mode){
@@ -6569,7 +6575,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.19 başlatıldı.');
+addLog('OVERCLOCK v7.15.20 başlatıldı.');
 </script>
 </body>
 </html>
