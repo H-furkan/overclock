@@ -1,5 +1,5 @@
 // OVERCLOCK service worker — offline cache + scheduled (background) notifications
-const CACHE = 'overclock-v7-15-12';
+const CACHE = 'overclock-v7-15-13';
 
 self.addEventListener('install', e => self.skipWaiting());
 
@@ -25,17 +25,21 @@ self.addEventListener('fetch', e => {
 self.addEventListener('message', async (e) => {
   const d = e.data || {};
   const reg = self.registration;
-  const baseOpts = (d) => ({
-    body: d.body || '',
-    tag: d.tag || 'overclock-timer',
-    renotify: !d.silent,
-    requireInteraction: !d.silent,
-    vibrate: d.silent ? undefined : [500, 200, 500, 200, 700],
-    silent: !!d.silent,       // ongoing bildirim sessiz; bitiş bildirimi sesli (zil)
-    icon: d.icon,
-    badge: d.icon,
-    data: { kind: d.kind || 'timer' },
-  });
+  const baseOpts = (d) => {
+    const o = {
+      body: d.body || '',
+      tag: d.tag || 'overclock-timer',
+      renotify: !d.silent,
+      requireInteraction: !d.silent,
+      vibrate: d.silent ? undefined : [500, 200, 500, 200, 700],
+      silent: !!d.silent,       // ongoing bildirim sessiz; bitiş bildirimi sesli (zil)
+      icon: d.icon,
+      badge: d.icon,
+      data: { kind: d.kind || 'timer' },
+    };
+    if (d.image) o.image = d.image;   // yumuşak arkaplan banner görseli
+    return o;
+  };
   if (d.type === 'schedule') {
     // ONLY schedule when real Notification Triggers exist. Without it, showing
     // here would fire immediately (the bug) — so we skip and let the page's

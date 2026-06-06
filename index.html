@@ -1363,7 +1363,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.12</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.13</div>
     </div>
   </div>
 </div>
@@ -2943,6 +2943,7 @@ function requestNotifPermission(){
 // foreground catch-up where triggers aren't supported.
 // ════════════════════════════════════════
 const _NOTIF_ICON = new URL('icon-192.png', location.href).href;
+const _NOTIF_IMG = new URL('notif-bg.png', location.href).href;   // yumuşak arkaplan banner
 
 function swPost(msg){
   try{
@@ -3023,30 +3024,49 @@ function _fmtRemain(){
   const m = Math.floor(sec/60), s = sec%60;
   return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
+function _fmtEndClock(){
+  // sayacın biteceği saat (HH:MM) — donmaz, hep doğru
+  try{ const d=new Date(timerEndAt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }catch(e){ return ''; }
+}
+let _ongoingIv = null;
 function showOngoingTimerNotif(){
   if (!timerRunning || !timerEndAt) return;
   const title = (isBreak ? '☕ MOLA' : '⏱ ODAK') + ' — sayaç çalışıyor';
-  const body  = 'Kalan süre: '+_fmtRemain()+(S.activeSubject?(' · '+S.activeSubject):'');
+  // Hem kalan süre hem BİTİŞ SAATİ yazılır; saat hiç eskimez (donmuş süre yanılgısını giderir)
+  const body  = 'Kalan: '+_fmtRemain()+'  ·  Bitiş ~'+_fmtEndClock()+(S.activeSubject?('  ·  '+S.activeSubject):'');
   const LN=_capNotif();
   if (_isNative() && LN){
     ensureNotifChannel();
-    try{
-      LN.schedule({ notifications:[{
-        id:_NID_ONGOING, title, body,
-        ongoing:true, autoCancel:false,
-        smallIcon:'ic_stat_icon', channelId:_NCH_TIMER,
-        // silent kanal yok; ama ongoing bildirim ses çıkarmamalı → sound:null benzeri
-        // davranış için ayrı bir sessiz kanal kullanmıyoruz, importance default kalsın.
-      }]});
-    }catch(e){}
+    // schedule yok → bildirim ANINDA gösterilir (ongoing kalıcı bildirim).
+    try{ LN.schedule({ notifications:[{ id:_NID_ONGOING, title, body, ongoing:true, autoCancel:false, smallIcon:'ic_stat_icon', channelId:_NCH_TIMER }]}); }catch(e){}
+    // JS canlıyken (uygulama henüz tam donmadıysa) bildirimi periyodik tazele
+    _startOngoingRefresh();
     return;
   }
-  // Web fallback: tek seferlik anlık bildirim (kalan süre anlık)
+  // Web fallback: anlık bildirim + JS canlıyken periyodik güncelleme
   if (('Notification' in window) && Notification.permission==='granted'){
-    swPost({ type:'notify', tag:'overclock-ongoing', title, body, icon:_NOTIF_ICON, silent:true });
+    swPost({ type:'notify', tag:'overclock-ongoing', title, body, icon:_NOTIF_ICON, image:_NOTIF_IMG, silent:true });
+    _startOngoingRefresh();
   }
 }
+function _startOngoingRefresh(){
+  if (_ongoingIv) return;
+  _ongoingIv = setInterval(()=>{
+    if (!timerRunning || !timerEndAt || !document.hidden){ return; }
+    // sayfa hâlâ canlıysa (Android henüz dondurmadıysa) bildirimi güncelle
+    const title = (isBreak ? '☕ MOLA' : '⏱ ODAK') + ' — sayaç çalışıyor';
+    const body  = 'Kalan: '+_fmtRemain()+'  ·  Bitiş ~'+_fmtEndClock()+(S.activeSubject?('  ·  '+S.activeSubject):'');
+    const LN=_capNotif();
+    if (_isNative() && LN){
+      try{ LN.schedule({ notifications:[{ id:_NID_ONGOING, title, body, ongoing:true, autoCancel:false, smallIcon:'ic_stat_icon', channelId:_NCH_TIMER }]}); }catch(e){}
+    } else if (('Notification' in window) && Notification.permission==='granted'){
+      swPost({ type:'notify', tag:'overclock-ongoing', title, body, icon:_NOTIF_ICON, image:_NOTIF_IMG, silent:true });
+    }
+  }, 5000);
+}
+function _stopOngoingRefresh(){ if(_ongoingIv){ clearInterval(_ongoingIv); _ongoingIv=null; } }
 function cancelOngoingTimerNotif(){
+  _stopOngoingRefresh();
   if (_isNative()){ _nativeCancel(_NID_ONGOING); return; }
   swPost({ type:'cancel', tag:'overclock-ongoing' });
 }
@@ -3129,7 +3149,7 @@ function _fireEndFallback(){
   // (with system sound + vibration) so they hear it without watching.
   if (document.hidden || !document.hasFocus()){
     if (!_isNative() && ('Notification' in window) && Notification.permission==='granted'){
-      swPost({ type:'notify', tag:'overclock-timer', title, body, icon:_NOTIF_ICON });
+      swPost({ type:'notify', tag:'overclock-timer', title, body, icon:_NOTIF_ICON, image:_NOTIF_IMG });
     }
     try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
   }
@@ -3151,7 +3171,7 @@ function scheduleTimerNotification(){
     swPost({
       type:'schedule', at: timerEndAt, tag:'overclock-timer',
       kind: focusEnd ? 'focus_end' : 'break_end',
-      title, body, icon:_NOTIF_ICON,
+      title, body, icon:_NOTIF_ICON, image:_NOTIF_IMG,
     });
   }
 }
@@ -3175,7 +3195,7 @@ function scheduleBossNotification(){
   const body='Uzun süredir odak yok. Boss saldırmaya başladı — uygulamayı aç ve focus başlat.';
   if (_isNative()){ _nativeSchedule(_NID_BOSS, hitAt, title, body); return; }
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  swPost({ type:'schedule', at: hitAt, tag:'overclock-boss', kind:'aggro', title, body, icon:_NOTIF_ICON });
+  swPost({ type:'schedule', at: hitAt, tag:'overclock-boss', kind:'aggro', title, body, icon:_NOTIF_ICON, image:_NOTIF_IMG });
 }
 function cancelBossNotification(){
   if (_isNative()){ _nativeCancel(_NID_BOSS); return; }
@@ -6489,7 +6509,7 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.12 başlatıldı.');
+addLog('OVERCLOCK v7.15.13 başlatıldı.');
 </script>
 </body>
 </html>
