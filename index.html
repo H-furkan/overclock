@@ -168,6 +168,16 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 #fs-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(86vw,420px)}
 #fs-controls .btn{min-height:54px;font-size:12px}
 #fs-controls .btn.fw2{grid-column:1 / -1}
+/* ── Süre tekerleği (slot-makinesi tarzı, sadece dakika) ── */
+#fs-wheel-wrap{position:relative;height:120px;overflow:hidden;width:min(70vw,300px);margin:0 auto;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent);
+          mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent)}
+#fs-wheel{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center}
+#fs-wheel::-webkit-scrollbar{display:none}
+.fs-wheel-pad{height:40px}
+.fs-wheel-item{height:40px;line-height:40px;scroll-snap-align:center;font-family:'Orbitron',monospace;font-size:22px;color:var(--dim);transition:color .1s,font-size .1s}
+.fs-wheel-item.sel{color:var(--white);font-weight:900;font-size:30px;text-shadow:0 0 14px rgba(255,255,255,.55)}
+#fs-wheel-band{position:absolute;left:8%;right:8%;top:40px;height:40px;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);pointer-events:none}
 
 /* buttons */
 .btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 14px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;transition:background .15s,border-color .15s,transform .05s}
@@ -520,11 +530,13 @@ body.pixel-font #timer-unit{font-size:7px}
       <div id="fs-unit">FOCUS</div>
     </div>
   </div>
-  <!-- Süre ayarı: sayaca dokununca açılır (yalnızca başlatılmamışken) -->
-  <div id="fs-dur" style="display:none;width:min(86vw,420px);text-align:center">
-    <div style="font-size:13px;color:var(--bright);letter-spacing:2px;margin-bottom:10px"><span id="fs-dur-lbl">90</span> dk</div>
-    <input id="fs-dur-range" type="range" min="1" max="240" value="90" style="width:100%;accent-color:var(--bright)" oninput="fsDurInput(this.value)" onchange="fsDurCommit()">
-    <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:8px">Kaydırarak ayarla · sayaca tekrar dokun kapat</div>
+  <!-- Süre ayarı: sayaca dokununca açılır slot-makinesi tarzı dakika tekerleği (yalnızca başlatılmamışken) -->
+  <div id="fs-dur" style="display:none;text-align:center">
+    <div id="fs-wheel-wrap">
+      <div id="fs-wheel"></div>
+      <div id="fs-wheel-band"></div>
+    </div>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:6px">DAKİKA · çevir · sayaca tekrar dokun kapat</div>
   </div>
   <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
     <div id="fs-mode">Focus — 90dk</div>
@@ -1320,7 +1332,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.18</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.19</div>
     </div>
   </div>
 </div>
@@ -2290,6 +2302,10 @@ function renderFsTimer(){
   }
   fsNum.textContent=fmtSecs(timerSecs);
   fsNum.style.color=isBreak?'var(--yellow)':'var(--white)';
+  // 100dk+ (3 haneli dk) → punto küçült, yuvarlağın dışına taşmasın
+  fsNum.style.fontSize = (timerSecs>=6000)
+    ? (document.body.classList.contains('pixel-font')?'min(10vw,42px)':'min(14vw,58px)')
+    : '';   // '' → CSS varsayılanına döner (normal/pixel)
   const u=g('fs-unit'); if(u) u.textContent=isBreak?'MOLA':'FOCUS';
   const m=g('fs-mode'); if(m) m.textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
   const sj=g('fs-subject'); if(sj) sj.textContent=S.activeSubject?('📚 '+S.activeSubject):'';
@@ -2347,6 +2363,33 @@ function _timerIsFresh(){
   const full=(isBreak?S.breakMin:S.focusMin)*60;
   return !timerRunning && timerSecs===full;
 }
+const _WHEEL_IH = 40;   // .fs-wheel-item yüksekliği (CSS ile aynı)
+let _wheelMin = 1, _wheelMax = 240, _wheelSel = -1, _wheelScrollTO = null;
+function _buildWheel(){
+  const w=g('fs-wheel'); if(!w) return;
+  _wheelMin=1; _wheelMax=isBreak?60:240; _wheelSel=-1;
+  let html='<div class="fs-wheel-pad"></div>';
+  for(let i=_wheelMin;i<=_wheelMax;i++) html+='<div class="fs-wheel-item">'+i+'</div>';
+  html+='<div class="fs-wheel-pad"></div>';
+  w.innerHTML=html;
+  w.onscroll=_wheelScroll;
+}
+function _wheelScroll(){
+  const w=g('fs-wheel'); if(!w) return;
+  let idx=Math.round(w.scrollTop/_WHEEL_IH);
+  idx=Math.max(0,Math.min(_wheelMax-_wheelMin, idx));
+  if(idx===_wheelSel) return;
+  const items=w.children;   // [pad, 1..N, pad] → değer i, children[i]
+  if(_wheelSel>=0 && items[_wheelSel+1]) items[_wheelSel+1].classList.remove('sel');
+  if(items[idx+1]) items[idx+1].classList.add('sel');
+  _wheelSel=idx;
+  const v=_wheelMin+idx;
+  if(isBreak) S.breakMin=v; else S.focusMin=v;
+  timerSecs=v*60;
+  renderTimer();   // büyük sayaç + halka canlı güncellenir
+  if(_wheelScrollTO) clearTimeout(_wheelScrollTO);
+  _wheelScrollTO=setTimeout(()=>{ save(); try{ syncTimerInputs(); }catch(e){} }, 220);
+}
 function fsTimerTap(){
   const dur=g('fs-dur'); if(!dur) return;
   if(!_timerIsFresh()){
@@ -2354,19 +2397,12 @@ function fsTimerTap(){
     return;
   }
   if(dur.style.display!=='none'){ dur.style.display='none'; return; }   // toggle kapat
-  const rng=g('fs-dur-range');
-  if(rng){ rng.max=isBreak?60:240; rng.value=isBreak?S.breakMin:S.focusMin; }
-  const lbl=g('fs-dur-lbl'); if(lbl) lbl.textContent=isBreak?S.breakMin:S.focusMin;
   dur.style.display='block';
+  _buildWheel();
+  const cur=isBreak?S.breakMin:S.focusMin;
+  const w=g('fs-wheel');
+  requestAnimationFrame(()=>{ if(w){ w.scrollTop=(cur-_wheelMin)*_WHEEL_IH; _wheelScroll(); } });
 }
-function fsDurInput(v){
-  v=Math.max(1,Math.min(isBreak?60:240,parseInt(v)||1));
-  if(isBreak) S.breakMin=v; else S.focusMin=v;
-  timerSecs=v*60;
-  const lbl=g('fs-dur-lbl'); if(lbl) lbl.textContent=v;
-  renderTimer();   // HQ + tam ekran sayaç ve halka birlikte güncellenir
-}
-function fsDurCommit(){ save(); try{ syncTimerInputs(); }catch(e){} }
 
 function setStatus(mode){
   const e=g('statuslabel'); e.className='';
@@ -6533,7 +6569,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.18 başlatıldı.');
+addLog('OVERCLOCK v7.15.19 başlatıldı.');
 </script>
 </body>
 </html>
