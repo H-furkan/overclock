@@ -1244,6 +1244,7 @@ body.pixel-font #timer-unit{font-size:7px}
         <button class="fbtn" id="ng-AYT" onclick="setNetChartType('AYT',this)">AYT</button>
       </div>
     </div>
+    <div id="net-subj-chips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
     <canvas id="net-chart" style="width:100%;height:190px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
     <div id="net-chart-legend" style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase">— ham net &nbsp;&nbsp; <span style="color:var(--yellow)">···</span> 5'li hareketli ortalama</div>
     <div id="net-chart-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:8px">Bu tür için henüz deneme girilmedi.</div>
@@ -1372,7 +1373,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.24</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.25</div>
     </div>
   </div>
 </div>
@@ -4779,11 +4780,26 @@ function deleteExam(id){
 }
 
 let _netChartType='TYT';
+let _netSubject='total';   // 'total' veya ders key'i — grafikte hangi seri çizilsin
 function setNetChartType(t,btn){
   _netChartType=t;
+  _netSubject='total';   // tür değişince toplam'a dön (ders key'leri türe özel)
   document.querySelectorAll('#ng-TYT,#ng-AYT').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  renderNetSubjChips();
   drawNetChart();
+  renderPlateauWarnings();
+}
+function setNetSubject(key){
+  _netSubject=key;
+  renderNetSubjChips();
+  drawNetChart();
+}
+function renderNetSubjChips(){
+  const el=g('net-subj-chips'); if(!el) return;
+  const defs=EXAM_DEFS[_netChartType]||[];
+  const chips=[{key:'total',label:'TOPLAM'}].concat(defs.map(s=>({key:s.key,label:s.label})));
+  el.innerHTML=chips.map(c=>'<button class="fbtn'+(_netSubject===c.key?' active':'')+'" onclick="setNetSubject(\''+c.key+'\')">'+c.label+'</button>').join('');
 }
 
 function drawNetChart(){
@@ -4803,7 +4819,10 @@ function drawNetChart(){
   const col_muted=cs.getPropertyValue('--muted').trim();
   const col_bright=cs.getPropertyValue('--bright').trim();
   const col_white=cs.getPropertyValue('--white').trim();
-  const maxNet=EXAM_DEFS[_netChartType].reduce((a,s)=>a+s.max,0);
+  const _isTotal=(_netSubject==='total');
+  const _subjDef=_isTotal?null:(EXAM_DEFS[_netChartType].find(s=>s.key===_netSubject));
+  const valOf=e=>_isTotal?(e.total||0):((e.nets&&e.nets[_netSubject])||0);
+  const maxNet=_isTotal?EXAM_DEFS[_netChartType].reduce((a,s)=>a+s.max,0):(_subjDef?_subjDef.max:1);
   const padL=28,padR=12,padT=12,padB=22;
   const cw=W-padL-padR, ch=H-padT-padB;
   ctx.font="7px 'Share Tech Mono',monospace";
@@ -4819,19 +4838,19 @@ function drawNetChart(){
   const yOf=v=> padT+ch*(1-Math.max(0,Math.min(maxNet,v))/maxNet);
   // area
   ctx.beginPath(); ctx.moveTo(xOf(0),padT+ch);
-  data.forEach((e,i)=>ctx.lineTo(xOf(i),yOf(e.total)));
+  data.forEach((e,i)=>ctx.lineTo(xOf(i),yOf(valOf(e))));
   ctx.lineTo(xOf(n-1),padT+ch); ctx.closePath();
   ctx.fillStyle='rgba(204,204,204,0.07)'; ctx.fill();
   // line
   ctx.strokeStyle=col_bright; ctx.lineWidth=1.5; ctx.beginPath();
-  data.forEach((e,i)=>{ const x=xOf(i),y=yOf(e.total); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  data.forEach((e,i)=>{ const x=xOf(i),y=yOf(valOf(e)); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
   ctx.stroke();
   // dots + value labels
   data.forEach((e,i)=>{
-    const x=xOf(i),y=yOf(e.total);
+    const x=xOf(i),y=yOf(valOf(e));
     ctx.fillStyle=col_white; ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
     ctx.fillStyle=col_bright; ctx.textAlign='center'; ctx.textBaseline='bottom';
-    ctx.fillText(e.total.toFixed(1), x, y-5);
+    ctx.fillText(valOf(e).toFixed(1), x, y-5);
   });
   // ── Rev C: 5-point moving average overlay ──
   if (n >= 3){
@@ -4840,7 +4859,7 @@ function drawNetChart(){
     for (let i=0;i<n;i++){
       const s = Math.max(0, i-win+1);
       const slice = data.slice(s, i+1);
-      ma.push(slice.reduce((a,e)=>a+(e.total||0),0)/slice.length);
+      ma.push(slice.reduce((a,e)=>a+valOf(e),0)/slice.length);
     }
     const col_yellow = cs.getPropertyValue('--yellow').trim() || '#FFFF66';
     ctx.strokeStyle = col_yellow; ctx.lineWidth = 1.5;
@@ -4953,6 +4972,7 @@ function renderExam(){
   renderExamHistory();
   renderWrongTopicsAutocomplete();
   renderExamWrongChips();
+  renderNetSubjChips();
   renderPlateauWarnings();
   renderQuestionStats();
   setTimeout(()=>{ try{ drawNetChart(); }catch(e){} }, 40);
@@ -5177,6 +5197,20 @@ function renderPlateauWarnings(){
     if (t[0] > t[1] && t[1] > t[2]){
       out.push({lvl:'down', txt:'Son 3 denemede toplam net <b>düşüş</b> trendinde: '+t.map(x=>x.toFixed(1)).join(' → ')+'.'});
     }
+  }
+  // per-subject SÜREKLİ DÜŞÜŞ (>=4 deneme, belirgin düşüş — 1-2 deneme gürültüsüyle karar vermez)
+  if (exams.length >= 4){
+    const defs2 = EXAM_DEFS[_netChartType]||[];
+    const last4d = exams.slice(-4);
+    defs2.forEach(s=>{
+      const arr = last4d.map(e=>(e.nets&&e.nets[s.key])||0);
+      if (arr.length!==4) return;
+      const firstAvg=(arr[0]+arr[1])/2, lastAvg=(arr[2]+arr[3])/2;
+      // ilk yarı ort. - son yarı ort. ≥ 2 net VE son değer ilk değerin altında → net, kalıcı düşüş
+      if ((firstAvg-lastAvg) >= 2 && arr[3] <= arr[0]){
+        out.push({lvl:'down', txt:'<b>'+s.label+'</b> netlerinde belirgin DÜŞÜŞ: '+arr.map(x=>x.toFixed(1)).join(' → ')+' — bu derse öncelik ver.'});
+      }
+    });
   }
   el.innerHTML = out.map(w=>{
     const c = w.lvl==='down'?'var(--red,#ff6b6b)':(w.lvl==='warn'?'var(--yellow)':'var(--bright)');
@@ -6649,7 +6683,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.24 başlatıldı.');
+addLog('OVERCLOCK v7.15.25 başlatıldı.');
 </script>
 </body>
 </html>
