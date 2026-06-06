@@ -701,6 +701,7 @@ body.pixel-font #timer-unit{font-size:7px}
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
+  <button class="navitem" onclick="goTab(this,'srs')">🧠 ARALIKLI TEKRAR</button>
   <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
   <button class="navitem" onclick="goTab(this,'character')">🧬 CHARACTER</button>
   <button class="navitem" onclick="goTab(this,'shop')">📦 MARKET</button>
@@ -717,6 +718,11 @@ body.pixel-font #timer-unit{font-size:7px}
 
   <!-- YKS GERİ SAYIM -->
   <div id="yks-countdown">⏳ YKS'ye <b id="yks-days">—</b> gün</div>
+
+  <!-- ARALIKLI TEKRAR HATIRLATICI (sadece bugün tekrar varsa) -->
+  <div id="sr-hq-badge" style="display:none;text-align:center;margin-bottom:8px">
+    <button onclick="goTab(null,'srs')" style="background:var(--mid);border:1px solid var(--bright);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:7px 14px;cursor:pointer;border-radius:6px">🧠 Bugün <b id="sr-hq-count">0</b> tekrar var → aç</button>
+  </div>
 
   <!-- XP BAR -->
   <div class="block">
@@ -1290,6 +1296,30 @@ body.pixel-font #timer-unit{font-size:7px}
   </div>
 </div>
 
+<!-- ══════════ PAGE: ARALIKLI TEKRAR (SM-2) ══════════ -->
+<div id="page-srs" class="page">
+  <div class="block">
+    <div class="blabel">■ Aralıklı Tekrar — Konu Ekle</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+      Çalıştığın konuyu ekle; sistem bilimsel aralıklı tekrar (SM-2) ile tekrar günlerini kendisi planlar (1 gün → 6 gün → giderek açılan aralıklar). Tekrar günü gelince burada ve HQ'da çıkar. Her tekrarda ne kadar hatırladığını işaretle — sistem sonraki günü ayarlar. İyi hatırladıkça aralık uzar, unuttukça sıfırlanır.
+    </div>
+    <div class="irow">
+      <input class="inp" id="sr-topic" placeholder="Örn: AYT Mat — Türev kuralları" onkeydown="if(event.key==='Enter')srAdd()">
+      <button class="btn primary" onclick="srAdd()">+ EKLE</button>
+    </div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Bugün Tekrar — <span id="sr-due-count" style="color:var(--bright)">0</span></div>
+    <div id="sr-due-list"></div>
+    <div id="sr-due-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:10px 0">Bugün tekrar edilecek konu yok. 👌</div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Tüm Konular</div>
+    <div id="sr-all-list"></div>
+    <div id="sr-all-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:10px 0">Henüz konu eklenmedi.</div>
+  </div>
+</div>
+
 <div id="page-log" class="page">
   <div class="block">
     <div class="blabel">■ Boss Yenildi</div>
@@ -1373,7 +1403,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.25</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.26</div>
     </div>
   </div>
 </div>
@@ -1636,6 +1666,7 @@ function defState() {
     restDayActiveDate:null,       // if === today() → rest mode UI is active
     lastBrokenStreak:null,        // {value,brokenOn,missedDate} — Forgive&Forget geri yükler
     wrongTopics:{},               // {normKey: {name,level,target,solved,fixed,history,lastSeenExam}}
+    srItems:[],                   // aralıklı tekrar (SM-2): {id,topic,ease,interval,reps,lapses,due,created,last}
     topicInsurances:0,            // Konu Sigortası stock (sink)
     studyContract:null,           // {date, focusTarget, resolved}
     decayLog:[],                  // [{date, amount}]
@@ -1878,6 +1909,7 @@ function goTab(btn, name) {
   // EXAM tab
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
   if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
+  if (name === 'srs') setTimeout(()=>{ try{ renderSrs(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
   applyBackground(name);
@@ -5219,6 +5251,81 @@ function renderPlateauWarnings(){
 }
 
 // ════════════════════════════════════════
+// ARALIKLI TEKRAR — SM-2 algoritması
+// ════════════════════════════════════════
+function _srAddDays(dateStr, days){ const d=new Date(dateStr); d.setDate(d.getDate()+Math.round(days)); return d.toISOString().slice(0,10); }
+function srDueItems(){ const t=today(); return (S.srItems||[]).filter(it=>it.due<=t); }
+function srAdd(){
+  const inp=g('sr-topic'); if(!inp) return;
+  const t=(inp.value||'').trim(); if(!t){ notify('Konu adı gir'); return; }
+  if(!S.srItems) S.srItems=[];
+  const id = String(Date.now())+'-'+Math.floor((typeof performance!=='undefined'?performance.now():0)%100000);
+  // İlk tekrar bugün gösterilsin (kullanıcı bugün çalıştı → yarın ilk gerçek tekrar mantıklı ama
+  // hemen 1 kez gözden geçirmesi için due=bugün; ilk "İyi" ile 1 güne, sonra 6 güne açılır)
+  S.srItems.push({ id, topic:t, ease:2.5, interval:0, reps:0, lapses:0, due:today(), created:today(), last:null });
+  inp.value='';
+  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+  addLog('Tekrar konusu eklendi: '+t);
+  notify('🧠 Eklendi — tekrar planı başladı');
+}
+function srRate(id, q){
+  const it=(S.srItems||[]).find(x=>x.id===id); if(!it) return;
+  if(q<3){
+    it.reps=0; it.interval=1; it.lapses=(it.lapses||0)+1;
+  } else {
+    if((it.reps||0)===0) it.interval=1;
+    else if(it.reps===1) it.interval=6;
+    else it.interval=Math.max(1, Math.round((it.interval||1)*(it.ease||2.5)));
+    it.reps=(it.reps||0)+1;
+    let ef=(it.ease||2.5)+(0.1-(5-q)*(0.08+(5-q)*0.02));
+    it.ease=Math.max(1.3, Math.round(ef*100)/100);
+  }
+  it.last=today();
+  it.due=_srAddDays(today(), it.interval);
+  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+}
+function srDelete(id){
+  if(!confirm('Bu tekrar konusu silinsin mi?')) return;
+  S.srItems=(S.srItems||[]).filter(x=>x.id!==id);
+  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+}
+function renderSrs(){
+  const dueList=g('sr-due-list'); if(!dueList) return;
+  const t=today();
+  const due=srDueItems();
+  const cnt=g('sr-due-count'); if(cnt) cnt.textContent=due.length;
+  const de=g('sr-due-empty'); if(de) de.style.display=due.length?'none':'block';
+  dueList.innerHTML=due.map(it=>{
+    const od = it.due<t;
+    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+(od?'var(--yellow)':'var(--bright)')+';padding:10px 12px;margin-bottom:8px">'+
+      '<div style="font-size:11px;color:var(--white);font-weight:700;margin-bottom:8px">'+_he(it.topic)+(od?' <span style="font-size:8px;color:var(--yellow)">(gecikmiş)</span>':'')+'</div>'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+        '<button class="btn" style="flex:1;min-width:64px;border-color:var(--red);color:var(--red)" onclick="srRate(\''+it.id+'\',0)">Unuttum</button>'+
+        '<button class="btn" style="flex:1;min-width:54px" onclick="srRate(\''+it.id+'\',3)">Zor</button>'+
+        '<button class="btn" style="flex:1;min-width:54px" onclick="srRate(\''+it.id+'\',4)">İyi</button>'+
+        '<button class="btn primary" style="flex:1;min-width:54px" onclick="srRate(\''+it.id+'\',5)">Kolay</button>'+
+      '</div></div>';
+  }).join('');
+  const allList=g('sr-all-list'); if(!allList) return;
+  const all=(S.srItems||[]).slice().sort((a,b)=> a.due<b.due?-1:(a.due>b.due?1:0));
+  const ae=g('sr-all-empty'); if(ae) ae.style.display=all.length?'none':'block';
+  allList.innerHTML=all.map(it=>{
+    const dleft=daysUntil(it.due);
+    const when = dleft<=0?'bugün':(dleft+' gün sonra');
+    return '<div class="fbet" style="background:var(--mid);border:1px solid var(--bd);padding:8px 10px;margin-bottom:6px">'+
+      '<span style="font-size:10px;color:var(--bright);flex:1;word-break:break-word">'+_he(it.topic)+'</span>'+
+      '<span style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span style="font-size:8px;color:var(--muted)">⏭ '+when+' · '+(it.reps||0)+'x</span>'+
+      '<button onclick="srDelete(\''+it.id+'\')" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px">✕</button></span></div>';
+  }).join('');
+}
+function renderSrsBadge(){
+  const b=g('sr-hq-badge'); if(!b) return;
+  const n=srDueItems().length;
+  const c=g('sr-hq-count'); if(c) c.textContent=n;
+  b.style.display = n>0 ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════
 // HEDEF SÖZLEŞMESİ MODAL
 // ════════════════════════════════════════
 function openContractModal(){
@@ -5986,7 +6093,7 @@ function drawNumericChart(h,cid){
 // RENDER ALL
 // ════════════════════════════════════════
 function renderAll(){
-  renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown();
+  renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown(); try{ renderSrsBadge(); }catch(e){}
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
   renderRestDayUI();
@@ -6683,7 +6790,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.25 başlatıldı.');
+addLog('OVERCLOCK v7.15.26 başlatıldı.');
 </script>
 </body>
 </html>
