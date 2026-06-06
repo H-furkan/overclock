@@ -1,5 +1,5 @@
 // OVERCLOCK service worker — offline cache + scheduled (background) notifications
-const CACHE = 'overclock-v7-15-13';
+const CACHE = 'overclock-v7-15-14';
 
 self.addEventListener('install', e => self.skipWaiting());
 
@@ -26,13 +26,15 @@ self.addEventListener('message', async (e) => {
   const d = e.data || {};
   const reg = self.registration;
   const baseOpts = (d) => {
+    // quiet = devam eden sayaç bildirimi: renotify KAPALI → aynı tag'li bildirim
+    // yukarıdan tekrar düşmez, sadece YERİNDE güncellenir (Spotify tarzı).
     const o = {
       body: d.body || '',
       tag: d.tag || 'overclock-timer',
-      renotify: !d.silent,
-      requireInteraction: !d.silent,
-      vibrate: d.silent ? undefined : [500, 200, 500, 200, 700],
-      silent: !!d.silent,       // ongoing bildirim sessiz; bitiş bildirimi sesli (zil)
+      renotify: d.quiet ? false : !d.silent,
+      requireInteraction: d.quiet ? true : !d.silent,
+      vibrate: (d.silent || d.quiet) ? undefined : [500, 200, 500, 200, 700],
+      silent: !!(d.silent || d.quiet),
       icon: d.icon,
       badge: d.icon,
       data: { kind: d.kind || 'timer' },
