@@ -584,6 +584,16 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- CONTRACT (Hedef Sözleşmesi) MODAL -->
+<!-- HAFTALIK RAPOR MODAL (Pazar akşamı belirir + İstatistik'ten hafta-seçmeli arşiv) -->
+<div id="weekly-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9990;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:360px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
+    <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:10px">📊 HAFTALIK RAPOR</div>
+    <select class="inp" id="weekly-select" onchange="renderWeeklyReportInto(this.value)" style="margin-bottom:14px"></select>
+    <div id="weekly-body"></div>
+    <button class="btn primary fw" style="margin-top:16px" onclick="closeWeeklyModal()">⏎ KAPAT</button>
+  </div>
+</div>
+
 <div id="contract-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9990;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
     <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:6px">📜 HEDEF SÖZLEŞMESİ</div>
@@ -975,6 +985,8 @@ body.pixel-font #timer-unit{font-size:8px}
 
 <!-- ══════════ PAGE: STATS ══════════ -->
 <div id="page-stats" class="page">
+
+  <button class="btn fw mb8" style="border-color:var(--bright)" onclick="openWeeklyModal()">📊 HAFTALIK RAPORLAR (arşiv)</button>
 
   <!-- HAFTALIK KARŞILAŞTIRMA -->
   <div class="block">
@@ -1407,7 +1419,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.2</div>
     </div>
   </div>
 </div>
@@ -1671,6 +1683,8 @@ function defState() {
     lastBrokenStreak:null,        // {value,brokenOn,missedDate} — Forgive&Forget geri yükler
     wrongTopics:{},               // {normKey: {name,level,target,solved,fixed,history,lastSeenExam}}
     srItems:[],                   // aralıklı tekrar (SM-2): {id,topic,ease,interval,reps,lapses,due,created,last}
+    weeklyReports:{},             // {weekId(Pazartesi tarihi): rapor} — Pazar akşamı belirir, hafta-seçmeli arşiv
+    lastWeeklyReportShown:null,   // en son gösterilen haftalık rapor weekId'si
     topicInsurances:0,            // Konu Sigortası stock (sink)
     studyContract:null,           // {date, focusTarget, resolved}
     decayLog:[],                  // [{date, amount}]
@@ -3979,6 +3993,7 @@ function addCharAction(){
   const c=_char();
   c.spiderLog = c.spiderLog||[];
   c.spiderLog.push({ id:Date.now(), date:today(), text:t.trim(), cat });
+  if(c.spiderLog.length>200) c.spiderLog = c.spiderLog.slice(-200);   // sınırsız büyümesin
   c.spider = c.spider||{ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0};
   c.spider[cat] = (c.spider[cat]||0) + 1;
   g('char-act-text').value='';
@@ -5403,6 +5418,81 @@ function renderHqToday(){
   if(ll) ll.innerHTML=items.map(it=>'<button class="hq-today-row" onclick="goTab(null,\''+it.tab+'\')"><span>'+it.ico+'  '+_he(it.txt)+'</span><span class="hq-today-go">›</span></button>').join('');
 }
 function renderSrsBadge(){ renderHqToday(); }   // geriye dönük çağrı uyumu
+
+// ════════════════════════════════════════
+// HAFTALIK RAPOR (Pazar akşamı belirir, hafta-seçmeli arşiv)
+// ════════════════════════════════════════
+function _mondayOf(d){ const dt=new Date(d); dt.setHours(0,0,0,0); const day=(dt.getDay()+6)%7; dt.setDate(dt.getDate()-day); return dt; }
+function _weekId(d){ return _mondayOf(d).toISOString().slice(0,10); }   // weekId = haftanın Pazartesi tarihi
+function _weekRange(weekId){ const m=new Date(weekId); m.setDate(m.getDate()+6); return [weekId, m.toISOString().slice(0,10)]; }
+function _datesInRange(a,b){ const out=[]; let d=new Date(a); const e=new Date(b); while(d<=e){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1); } return out; }
+function generateWeeklyReport(weekId){
+  const [mon,sun]=_weekRange(weekId);
+  let focusSecs=0;
+  _datesInRange(mon,sun).forEach(ds=>{
+    if(ds===today()) focusSecs += (S.todayFocusSecs||0);
+    else { const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) focusSecs += (h.focusSecs||0); }
+  });
+  const topicsFixed=Object.values(S.wrongTopics||{}).filter(w=>w.fixed && w.fixedAt>=mon && w.fixedAt<=sun).length;
+  const tasksDone=(S.tasks||[]).filter(tk=>tk.doneDate && tk.doneDate>=mon && tk.doneDate<=sun).length;
+  const reviews=(S.srItems||[]).filter(it=>it.last && it.last>=mon && it.last<=sun).length;
+  const wk=(S.exams||[]).filter(e=>e.date>=mon && e.date<=sun);
+  const lastEx = wk.length ? wk[wk.length-1] : null;
+  return { weekId, start:mon, end:sun, focusSecs, focusHours:Math.round(focusSecs/360)/10,
+           topicsFixed, tasksDone, reviews, netCount:wk.length,
+           netLast: lastEx?lastEx.total:null, netType: lastEx?lastEx.type:null };
+}
+function maybeShowWeeklyReport(){
+  try{
+    const now=new Date(); const dow=now.getDay();   // 0=Pazar
+    let target=new Date(now);
+    if(dow!==0) target.setDate(target.getDate()-7);  // Pzt-Cmt → geçen (tamamlanmış) hafta; Pazar → bu hafta
+    const wid=_weekId(target);
+    if(S.lastWeeklyReportShown===wid) return;
+    const rep=generateWeeklyReport(wid);
+    if(rep.focusSecs<=0 && !rep.topicsFixed && !rep.tasksDone && !rep.reviews && !rep.netCount){
+      S.lastWeeklyReportShown=wid; return;   // tamamen boş hafta → modal açma
+    }
+    if(!S.weeklyReports) S.weeklyReports={};
+    S.weeklyReports[wid]=rep;
+    const keys=Object.keys(S.weeklyReports).sort();
+    if(keys.length>120) keys.slice(0,keys.length-120).forEach(k=>delete S.weeklyReports[k]);   // max 120 hafta
+    S.lastWeeklyReportShown=wid; save();
+    openWeeklyModal(wid);
+    notify('📊 Haftalık raporun hazır!');
+  }catch(e){}
+}
+function openWeeklyModal(weekId){
+  const m=g('weekly-modal'), sel=g('weekly-select'); if(!m||!sel) return;
+  const keys=Object.keys(S.weeklyReports||{}).sort().reverse();
+  if(!keys.length){ notify('Henüz haftalık rapor yok — ilki pazar akşamı gelir'); return; }
+  sel.innerHTML=keys.map(k=>{ const [a,b]=_weekRange(k); return '<option value="'+k+'">'+fmtDate(a)+' – '+fmtDate(b)+'</option>'; }).join('');
+  const show=(weekId && S.weeklyReports[weekId]) ? weekId : keys[0];
+  sel.value=show; renderWeeklyReportInto(show);
+  m.style.display='flex';
+}
+function renderWeeklyReportInto(weekId){
+  const body=g('weekly-body'); if(!body) return;
+  const r=(S.weeklyReports||{})[weekId]; if(!r){ body.innerHTML=''; return; }
+  const row=(l,v)=>'<div class="fbet" style="padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:11px"><span style="color:var(--muted)">'+l+'</span><b style="color:var(--white);font-family:Orbitron,monospace">'+v+'</b></div>';
+  body.innerHTML =
+    row('⏱ Toplam odak', (r.focusHours||0)+' saat')+
+    row('🌳 Düzeltilen konu', (r.topicsFixed||0))+
+    row('🧠 Yapılan tekrar', (r.reviews||0))+
+    row('✅ Tamamlanan görev', (r.tasksDone||0))+
+    row('📝 Deneme', (r.netCount||0)+(r.netLast!=null?(' · son '+r.netLast.toFixed(1)+' net'+(r.netType?' ('+r.netType+')':'')):''));
+}
+function closeWeeklyModal(){ const m=g('weekly-modal'); if(m) m.style.display='none'; }
+// Pazar 20:00 bildirimi (her açılışta yeniden kurulur)
+const _NID_WEEKLY=1005;
+function _nextSundayEve(){ const n=new Date(); const t=new Date(); t.setHours(20,0,0,0); const dow=t.getDay(); let add=(7-dow)%7; if(add===0 && t.getTime()<=n.getTime()) add=7; t.setDate(t.getDate()+add); return t; }
+function scheduleWeeklyNotification(){
+  try{
+    const when=_nextSundayEve(); const title='📊 HAFTALIK RAPOR'; const body='Bu haftanın özeti hazır — gözden geçir.';
+    if(_isNative()){ _nativeSchedule(_NID_WEEKLY, when.getTime(), title, body); return; }
+    if(('Notification' in window) && Notification.permission==='granted'){ swPost({ type:'schedule', at:when.getTime(), tag:'overclock-weekly', kind:'weekly', title, body, icon:_NOTIF_ICON }); }
+  }catch(e){}
+}
 
 // ════════════════════════════════════════
 // HEDEF SÖZLEŞMESİ MODAL
@@ -6863,6 +6953,8 @@ try { cancelBossNotification(); } catch(e){}
 // schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
 try { rescheduleAllReminders(); } catch(e){}
 try { scheduleSrsNotification(); } catch(e){}
+try { scheduleWeeklyNotification(); } catch(e){}
+setTimeout(()=>{ try { maybeShowWeeklyReport(); } catch(e){} }, 800);   // açılış oturunca haftalık raporu göster
 // Stat decay: 3+ gün eylem yok ise bağlı statlar azalır (boot'ta bir kez)
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
@@ -6870,7 +6962,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.16.1 başlatıldı.');
+addLog('OVERCLOCK v7.16.2 başlatıldı.');
 </script>
 </body>
 </html>
