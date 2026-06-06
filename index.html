@@ -1363,7 +1363,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.15</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.16</div>
     </div>
   </div>
 </div>
@@ -3044,21 +3044,25 @@ function _fmtEndClock(){
   try{ const d=new Date(timerEndAt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }catch(e){ return ''; }
 }
 let _ongoingIv = null, _ongoingShown = false;
-// Spotify / Focus To-Do tarzı SABİT, SESSİZ, yerinde güncellenen sayaç bildirimi.
-// Süre doğrudan bildirim METNİNE yazılır (chronometer bazı cihazlarda boş çıkıyordu)
-// ve her saniye yerinde güncellenir. Düşük öncelikli sessiz kanal → yukarıdan fırlamaz.
+// NATIVE (APK): bildirim TEK SEFER post edilir; kalan süreyi Android'in KENDİ
+// geri-sayım kronometresi tik-tak ettirir (setUsesChronometer + setChronometerCountDown
+// + setWhen, plugin CI'da patch'lenir → extra.chronoWhen = bitiş zamanı ms). Böylece
+// her saniye yeniden post YOK → bildirim hiç kaybolup yeniden gelmez, normal bir cihaz
+// sayacı gibi yerinde sayar. Gövdeye sadece SABİT bitiş saati yazılır (donmaz).
+// WEB: chronometer yok → metni her saniye yerinde yeniler (renotify:false, fırlamaz).
 function _ongoingTitle(){ return (isBreak ? '☕ MOLA' : '⏱ ODAK')+(S.activeSubject?(' · '+S.activeSubject):''); }
-function _ongoingBody(){ return '⏳ '+_fmtRemain()+'   (bitiş ~'+_fmtEndClock()+')'; }
+function _ongoingBody(){ return '⏳ '+_fmtRemain()+'   (bitiş ~'+_fmtEndClock()+')'; } // web
 function _pushOngoingNative(){
   const LN=_capNotif(); if(!LN) return;
   try{
     LN.schedule({ notifications:[{
       id:_NID_ONGOING,
       title:_ongoingTitle(),
-      body:_ongoingBody(),
+      body:'bitiş ~'+_fmtEndClock(),   // SABİT; kalan süreyi kronometre tik-tak ettirir
       ongoing:true, autoCancel:false,
       smallIcon:'ic_stat_icon',
       channelId:_NCH_ONGOING,   // düşük öncelik, sessiz → yerinde güncellenir, fırlamaz
+      extra:{ chronoWhen: timerEndAt, chronoCountdown: true },  // ← native chronometer
     }]});
   }catch(e){}
 }
@@ -3066,8 +3070,7 @@ function showOngoingTimerNotif(){
   if (!timerRunning || !timerEndAt) return;
   if (_isNative() && _capNotif()){
     ensureNotifChannel();
-    _pushOngoingNative();
-    _startOngoingRefresh();   // her saniye süreyi metinde güncelle
+    _pushOngoingNative();   // TEK sefer; kronometre kendi sayar, saniyelik refresh YOK
     return;
   }
   // Web fallback
@@ -3086,8 +3089,7 @@ function _startOngoingRefresh(){
   _ongoingIv = setInterval(()=>{
     if (!timerRunning || !timerEndAt){ return; }
     if (!document.hidden) return;   // sadece arkaplandayken bildirimi güncelle
-    if (_isNative()) _pushOngoingNative();
-    else _pushOngoingWeb();
+    _pushOngoingWeb();   // SADECE web; native'de kronometre kendi sayar (loop kurulmaz)
   }, 1000);
 }
 function _stopOngoingRefresh(){ if(_ongoingIv){ clearInterval(_ongoingIv); _ongoingIv=null; } }
@@ -6535,7 +6537,7 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.15 başlatıldı.');
+addLog('OVERCLOCK v7.15.16 başlatıldı.');
 </script>
 </body>
 </html>

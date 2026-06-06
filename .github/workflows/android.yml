@@ -36,6 +36,38 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Gerçek geri-sayım: bildirimi her saniye yeniden post etmek (eski yöntem) bazı
+      # cihazlarda bildirimi kaybolup-yeniden-düşüyor gösteriyordu + arkaplandaki webview
+      # interval'i OS tarafından donduruluyor. Bunun yerine bildirimi TEK SEFER basıp
+      # Android'in KENDİ kronometresine saydırıyoruz. @capacitor/local-notifications v6
+      # bunu desteklemediği için plugin'in buildNotification'ına extra.chronoWhen okuyan
+      # bir blok enjekte ediyoruz. Sürüm package.json'da 6.1.0'a pinlendi (anchor sabit).
+      - name: Patch LocalNotifications for live count-down chronometer
+        run: |
+          set -eux
+          LNF=node_modules/@capacitor/local-notifications/android/src/main/java/com/capacitorjs/plugins/localnotifications/LocalNotificationManager.java
+          test -f "$LNF"
+          ANCHOR='.setGroupSummary(localNotification.isGroupSummary());'
+          grep -qF "$ANCHOR" "$LNF"   # anchor yoksa build burada patlar (sessiz no-op değil)
+          printf '%s\n' \
+            '        // OVERCLOCK_CHRONO_PATCH: system-ticked count-down timer in the notification' \
+            '        try {' \
+            '            com.getcapacitor.JSObject _ocx = localNotification.getExtra();' \
+            '            if (_ocx != null && _ocx.has("chronoWhen") && android.os.Build.VERSION.SDK_INT >= 24) {' \
+            '                long _ocw = _ocx.getLong("chronoWhen");' \
+            '                mBuilder.setWhen(_ocw);' \
+            '                mBuilder.setShowWhen(true);' \
+            '                mBuilder.setUsesChronometer(true);' \
+            '                mBuilder.setChronometerCountDown(_ocx.optBoolean("chronoCountdown", true));' \
+            '            }' \
+            '        } catch (Exception _oce) {}' > /tmp/chrono.txt
+          awk 'BEGIN{while((getline l < "/tmp/chrono.txt")>0) ins=ins l ORS}
+               {print}
+               index($0,".setGroupSummary(localNotification.isGroupSummary());") && !done {printf "%s",ins; done=1}' \
+               "$LNF" > /tmp/LNF.java && mv /tmp/LNF.java "$LNF"
+          grep -qF "OVERCLOCK_CHRONO_PATCH" "$LNF" || { echo "CHRONO PATCH FAILED — anchor matched but inject missing"; exit 1; }
+          echo "── chronometer patch applied & verified ──"
+
       - name: Add Android platform
         run: npx cap add android
 
