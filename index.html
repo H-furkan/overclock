@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement
 :root{
   --black:#000;--deep:#080808;--dark:#111;--mid:#1a1a1a;
   --panel:#141414;--bd:#2a2a2a;--bd2:#444;--dim:#333;
-  --muted:#555;--gray:#777;--bright:#ccc;--white:#f0f0f0;
+  --muted:#8a8a8a;--gray:#a2a2a2;--bright:#d2d2d2;--white:#f2f2f2;
   --green:#8fff8f;--yellow:#ffff66;--red:#ff6666;
   --accent:#ccc;/* themeable accent */
 }
@@ -97,7 +97,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 .roulette-track{display:flex;gap:8px;padding:8px 0;will-change:transform;height:100%}
 .roulette-card{flex:0 0 100px;width:100px;height:108px;background:#161616;border:2px solid #888;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;flex-shrink:0;box-sizing:border-box}
 .roulette-card .rc-ico{font-size:30px;line-height:1}
-.roulette-card .rc-nm{font-size:7px;letter-spacing:1px;color:#ccc;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
+.roulette-card .rc-nm{font-size:8px;letter-spacing:1px;color:#ccc;margin-top:6px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 .roulette-card.winner-reveal{animation:winnerPulse 1.2s ease-out infinite alternate}
 @keyframes winnerPulse{0%{transform:scale(1)}100%{transform:scale(1.1)}}
 .roulette-selector{position:absolute;left:50%;top:-3px;bottom:-3px;width:3px;background:linear-gradient(180deg,transparent 0%,#ffff66 18%,#ffff66 82%,transparent 100%);box-shadow:0 0 14px #ffff66,0 0 5px #fff;transform:translateX(-50%);pointer-events:none;z-index:5}
@@ -133,7 +133,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #xp-bar-wrap{height:8px;background:var(--dim);overflow:hidden;margin:8px 0 4px;position:relative}
 #xp-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--dim),var(--bright));transition:width .5s;position:relative}
 #xp-bar::after{content:'';position:absolute;right:0;top:0;width:3px;height:100%;background:var(--white);box-shadow:0 0 8px var(--white)}
-.xp-ticks{display:flex;justify-content:space-between;font-size:7px;color:var(--dim)}
+.xp-ticks{display:flex;justify-content:space-between;font-size:8px;color:var(--muted)}
 #level-badge{width:44px;height:44px;border:2px solid var(--bd2);background:var(--mid);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
 #level-num{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;color:var(--white);line-height:1}
 #level-title{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--bright);letter-spacing:2px}
@@ -218,11 +218,11 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 
 /* boss */
 #boss-panel{background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--white);padding:12px 14px;margin-bottom:12px;position:relative}
-#boss-tag{position:absolute;top:8px;right:10px;font-size:7px;letter-spacing:2px;color:var(--dim)}
+#boss-tag{position:absolute;top:8px;right:10px;font-size:8px;letter-spacing:2px;color:var(--dim)}
 #boss-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px;margin-bottom:8px}
 #boss-hp-wrap{height:5px;background:var(--dim);margin-bottom:4px}
 #boss-hp-fill{height:100%;width:70%;background:var(--bright);transition:width .4s}
-.boss-hp-lbl{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);margin-bottom:10px}
+.boss-hp-lbl{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:10px}
 
 /* enemy intel */
 
@@ -243,7 +243,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .task-txt.done-txt{text-decoration:line-through;color:var(--muted)}
 .task-xp{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;padding:2px 7px;border:1px solid var(--bd2);color:var(--bright);white-space:nowrap;flex-shrink:0}
 .task-meta{font-size:8px;color:var(--muted);letter-spacing:1px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
-.task-st{font-size:7px;padding:2px 7px;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.task-st{font-size:8px;padding:2px 7px;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
 .task-st.od{color:var(--red);border:1px solid var(--red)}
 .task-st.urg{color:var(--yellow);border:1px solid var(--yellow)}
 .task-st.done{color:var(--green);border:1px solid var(--green)}
@@ -263,9 +263,9 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .badge-card.earned{opacity:1;border-color:var(--bd2)}
 .badge-icon{font-size:22px;filter:grayscale(100%)}
 .badge-card.earned .badge-icon{filter:none}
-.badge-name{font-size:7px;letter-spacing:1px;color:var(--gray);text-align:center;text-transform:uppercase;line-height:1.3}
+.badge-name{font-size:8px;letter-spacing:1px;color:var(--gray);text-align:center;text-transform:uppercase;line-height:1.3}
 .badge-card.earned .badge-name{color:var(--bright)}
-.badge-desc{font-size:7px;color:var(--muted);text-align:center}
+.badge-desc{font-size:8px;color:var(--muted);text-align:center}
 
 /* log */
 .log-entry{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:10px}
@@ -314,7 +314,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 #streak-msg{flex:1;font-size:8px;color:var(--bright);letter-spacing:1px;line-height:1.4;text-transform:uppercase}
 
 /* difficulty tier badge */
-#tier-badge{display:inline-block;font-size:7px;letter-spacing:2px;padding:2px 7px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);margin-left:6px;vertical-align:middle}
+#tier-badge{display:inline-block;font-size:8px;letter-spacing:2px;padding:2px 7px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);margin-left:6px;vertical-align:middle}
 #tier-badge.t2{border-color:var(--bright);color:var(--white)}
 #tier-badge.t3{border-color:var(--yellow);color:var(--yellow);text-shadow:0 0 6px var(--yellow)}
 #tier-badge.t4{border-color:var(--red);color:var(--red);text-shadow:0 0 6px var(--red)}
@@ -332,7 +332,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .rec-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .rec-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:7px 8px;border:1px solid var(--bd);background:transparent;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:1px;min-height:34px;flex:1;min-width:64px}
 .rec-btn.active{border-color:var(--bright);color:var(--white);background:var(--dim)}
-.task-rec-tag{font-size:7px;letter-spacing:2px;padding:2px 6px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);text-transform:uppercase;display:inline-block}
+.task-rec-tag{font-size:8px;letter-spacing:2px;padding:2px 6px;border:1px solid var(--bd2);color:var(--bright);background:var(--dim);text-transform:uppercase;display:inline-block}
 .task-rec-tag.daily{border-color:var(--green);color:var(--green)}
 .task-rec-tag.weekday{border-color:var(--yellow);color:var(--yellow)}
 .task-rec-tag.weekly{border-color:var(--bright);color:var(--white)}
@@ -345,7 +345,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .habit-streak{text-align:right;flex-shrink:0}
 .habit-streak-num{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);line-height:1}
 .habit-streak-num.fire{color:var(--red);text-shadow:0 0 8px var(--red)}
-.habit-streak-lbl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.habit-streak-lbl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
 .habit-btns{display:flex;border-top:1px solid var(--bd)}
 .habit-act{flex:1;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:8px 4px;border:none;background:transparent;cursor:pointer;text-transform:uppercase;min-height:34px;color:var(--muted);text-align:center}
 .habit-act:active{background:var(--dim)}
@@ -357,11 +357,11 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 /* analytics canvas */
 #chart-wrap{background:var(--mid);border:1px solid var(--bd);padding:14px 12px;margin-bottom:10px}
 #focus-chart{width:100%;height:180px;display:block;background:var(--deep);border:1px solid var(--bd)}
-.chart-legend{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase}
+.chart-legend{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .stat-card{background:var(--mid);border:1px solid var(--bd);padding:11px 12px;border-left:2px solid var(--bd2)}
 .stat-card .sv{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);line-height:1}
-.stat-card .sl{font-size:7px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
+.stat-card .sl{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:5px}
 .stat-card.hot{border-left-color:var(--red)}
 .stat-card.hot .sv{color:var(--red);text-shadow:0 0 8px var(--red)}
 .stat-card.good{border-left-color:var(--green)}
@@ -374,22 +374,22 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .hcal-grid-outer{overflow-x:auto}
 .hcal-grid{min-width:320px}
 .hcal-row{display:flex;align-items:center;gap:2px;margin-bottom:2px}
-.hcal-day-lbl{font-size:7px;color:var(--dim);letter-spacing:1px;text-align:right;padding-right:4px;white-space:nowrap;min-width:22px;flex-shrink:0}
+.hcal-day-lbl{font-size:8px;color:var(--dim);letter-spacing:1px;text-align:right;padding-right:4px;white-space:nowrap;min-width:22px;flex-shrink:0}
 .hcal-cell{width:20px;height:20px;min-width:20px;display:flex;align-items:center;justify-content:center;font-size:9px;border:1px solid var(--bd);background:var(--deep);cursor:default;flex-shrink:0}
 .hcal-cell.tick{background:rgba(143,255,143,.15);border-color:var(--green);color:var(--green)}
 .hcal-cell.cross{background:rgba(255,102,102,.08);border-color:var(--dim);color:var(--dim)}
 .hcal-cell.future{background:transparent;border-color:transparent;color:transparent}
 .hcal-cell.today-cell{outline:1px solid var(--bright)}
 .hcal-col-labels{display:flex;align-items:center;gap:2px;margin-bottom:3px;margin-left:26px}
-.hcal-col-lbl{width:20px;min-width:20px;font-size:6px;color:var(--dim);text-align:center;flex-shrink:0}
-.hcal-streak-info{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:8px;text-transform:uppercase;padding-top:8px;border-top:1px solid var(--bd)}
+.hcal-col-lbl{width:20px;min-width:20px;font-size:8px;color:var(--dim);text-align:center;flex-shrink:0}
+.hcal-streak-info{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:8px;text-transform:uppercase;padding-top:8px;border-top:1px solid var(--bd)}
 
 /* numeric habit chart */
 .hchart-wrap{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
 .hchart-wrap:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
 .hchart-title{font-size:9px;color:var(--bright);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
 .hchart-canvas{width:100%;height:100px;display:block;background:var(--deep);border:1px solid var(--bd)}
-.hchart-meta{display:flex;justify-content:space-between;font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:4px}
+.hchart-meta{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px}
 
 /* numeric habit input row */
 .habit-num-row{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--deep);border-top:1px solid var(--bd)}
@@ -416,7 +416,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .task-toggle-sub{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--muted);background:transparent;border:1px solid var(--bd);padding:6px 10px;cursor:pointer;letter-spacing:1px;min-height:36px;text-transform:uppercase}
 
 /* REMINDER */
-.task-reminder-tag{font-size:7px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--accent,var(--bright));color:var(--accent,var(--bright));background:rgba(204,204,204,.06)}
+.task-reminder-tag{font-size:8px;letter-spacing:1px;padding:2px 6px;border:1px solid var(--accent,var(--bright));color:var(--accent,var(--bright));background:rgba(204,204,204,.06)}
 
 /* BOSS AGGRESSION */
 #boss-aggro{display:none;margin-top:8px;padding:8px 10px;background:rgba(255,102,102,.08);border:1px solid var(--red);border-left:3px solid var(--red);font-size:9px;color:var(--red);letter-spacing:1px;line-height:1.5}
@@ -424,7 +424,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 #boss-aggro b{font-family:'Orbitron',monospace;letter-spacing:2px}
 #boss-panel.defeated{border-left-color:var(--green);opacity:.55}
 #boss-panel.defeated #boss-name{color:var(--green);text-shadow:0 0 8px var(--green)}
-.boss-defeated-tag{display:inline-block;font-size:7px;padding:2px 6px;letter-spacing:2px;color:var(--green);border:1px solid var(--green);margin-left:6px;text-transform:uppercase}
+.boss-defeated-tag{display:inline-block;font-size:8px;padding:2px 6px;letter-spacing:2px;color:var(--green);border:1px solid var(--green);margin-left:6px;text-transform:uppercase}
 
 /* CHARACTER STATS */
 .char-top{display:grid;grid-template-columns:auto 1fr;gap:14px}
@@ -462,7 +462,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit.
    130px dairenin içine sığması için font küçük + tam ortalı. */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:17px;letter-spacing:0;line-height:1.2;white-space:nowrap}
-body.pixel-font #timer-unit{font-size:7px}
+body.pixel-font #timer-unit{font-size:8px}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
 .char-stat-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);letter-spacing:1px}
 .char-stat-row .lbl{flex:1;min-width:0;display:flex;align-items:center;gap:6px;cursor:pointer}
@@ -482,7 +482,7 @@ body.pixel-font #timer-unit{font-size:7px}
 .char-banner .cb-row:last-child{margin-bottom:0;border-bottom:none}
 .char-banner .cb-row b{color:var(--white);font-family:'Orbitron',monospace;font-weight:700}
 .char-banner .cb-titles{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.char-banner .cb-tag{font-size:7px;letter-spacing:2px;background:rgba(255,170,68,.15);border:1px solid var(--yellow);color:var(--yellow);padding:2px 7px;border-radius:10px;text-transform:uppercase}
+.char-banner .cb-tag{font-size:8px;letter-spacing:2px;background:rgba(255,170,68,.15);border:1px solid var(--yellow);color:var(--yellow);padding:2px 7px;border-radius:10px;text-transform:uppercase}
 .char-banner .cb-quote{font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-top:8px;font-style:italic;text-align:center}
 .char-act-card{background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:9px;color:var(--bright);letter-spacing:1px;display:flex;align-items:center;gap:8px}
 .char-act-card .ico{font-size:14px}
@@ -509,14 +509,14 @@ body.pixel-font #timer-unit{font-size:7px}
 /* SHOP / INVENTORY */
 .shop-balance{display:flex;align-items:center;justify-content:space-between;background:var(--mid);border:1px solid var(--bd2);padding:12px 14px;margin-bottom:12px}
 .shop-balance-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--accent,var(--white));text-shadow:0 0 10px rgba(204,204,204,.3)}
-.shop-balance-lbl{font-size:7px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.shop-balance-lbl{font-size:8px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
 .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .shop-card{background:var(--mid);border:1px solid var(--bd);padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;position:relative;border-radius:10px}
 .shop-card.owned{border-color:var(--green);background:rgba(143,255,143,.04)}
 .shop-card.active-item{border-color:var(--accent,var(--white));box-shadow:inset 0 0 0 1px var(--accent,var(--white))}
 .shop-icon{font-size:26px;line-height:1}
 .shop-name{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:var(--bright);letter-spacing:2px;text-transform:uppercase}
-.shop-desc{font-size:7px;color:var(--muted);letter-spacing:1px;line-height:1.4}
+.shop-desc{font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.4}
 .shop-cost{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--yellow);letter-spacing:1px;padding:2px 8px;border:1px solid var(--yellow);background:rgba(255,255,102,.05)}
 .shop-btn{font-family:'Share Tech Mono',monospace;font-size:8px;padding:6px 12px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;letter-spacing:1px;min-height:32px;width:100%;margin-top:2px;border-radius:6px}
 .shop-btn:active{background:var(--dim)}
@@ -524,7 +524,7 @@ body.pixel-font #timer-unit{font-size:7px}
 .shop-btn.equipped{color:var(--green);border-color:var(--green);background:rgba(143,255,143,.08);cursor:default}
 .shop-btn.locked{color:var(--muted);border-color:var(--bd);cursor:not-allowed}
 .shop-section-lbl{font-size:8px;letter-spacing:3px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase}
-.boost-tag{position:absolute;top:4px;right:4px;font-size:6px;letter-spacing:1px;color:var(--yellow);border:1px solid var(--yellow);padding:1px 4px;background:rgba(0,0,0,.5);text-transform:uppercase}
+.boost-tag{position:absolute;top:4px;right:4px;font-size:8px;letter-spacing:1px;color:var(--yellow);border:1px solid var(--yellow);padding:1px 4px;background:rgba(0,0,0,.5);text-transform:uppercase}
 #boost-banner{display:none;background:var(--mid);border:1px solid var(--yellow);border-left:3px solid var(--yellow);padding:9px 12px;margin-top:8px;align-items:center;gap:10px}
 #boost-banner.show{display:flex;animation:pg 2.5s ease-in-out infinite}
 #boost-banner .b-ico{font-size:14px;color:var(--yellow);text-shadow:0 0 8px var(--yellow)}
@@ -635,7 +635,7 @@ body.pixel-font #timer-unit{font-size:7px}
     <button class="btn primary fw mb8" onclick="bgPickFile()">📁 RESİM SEÇ</button>
     <button class="btn fw mb8" onclick="bgRemove()" style="border-color:var(--red);color:var(--red)">🗑 BU HEDEFTEN KALDIR</button>
     <button class="btn fw" onclick="bgClearAll()" style="border-color:var(--bd);color:var(--muted);font-size:8px">🗑 HEPSİNİ TEMİZLE</button>
-    <div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:10px;line-height:1.6">Resim ekrana zorla cover edilir (kırpılabilir). Hedef "Tüm sekmeler" ise sekme bazlı seçim onu ezer. Veriler localStorage'a base64 olarak yazılır — büyük dosyalardan kaçın.</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;line-height:1.6">Resim ekrana zorla cover edilir (kırpılabilir). Hedef "Tüm sekmeler" ise sekme bazlı seçim onu ezer. Veriler localStorage'a base64 olarak yazılır — büyük dosyalardan kaçın.</div>
   </div>
 </div>
 
@@ -676,7 +676,7 @@ body.pixel-font #timer-unit{font-size:7px}
     <button class="btn primary fw mb8" id="auth-login-btn" onclick="authLogin()">↪ GİRİŞ YAP</button>
     <button class="btn fw mb8" onclick="authRegister()">+ YENİ HESAP OLUŞTUR</button>
     <button class="btn fw" style="border-color:var(--bd);color:var(--muted)" onclick="authSkip()">⏭ ÇEVRİMDIŞI DEVAM ET (senkron yok)</button>
-    <div style="font-size:7px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:14px;text-align:center">Aynı e-posta/şifre ile iki cihazda giriş yap → veriler otomatik senkronlanır.</div>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:14px;text-align:center">Aynı e-posta/şifre ile iki cihazda giriş yap → veriler otomatik senkronlanır.</div>
   </div>
 </div>
 
@@ -737,15 +737,15 @@ body.pixel-font #timer-unit{font-size:7px}
       <div style="flex:1"></div>
       <div style="display:flex;gap:10px">
         <div style="text-align:center">
-          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">SESSION</div>
+          <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">SESSION</div>
           <div id="session-count" style="font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--bright)">0</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">FOCUS</div>
+          <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">FOCUS</div>
           <div id="cum-focus" style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--bright);margin-top:3px">0d</div>
         </div>
         <div style="text-align:center">
-          <div style="font-size:6px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">MOLA</div>
+          <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">MOLA</div>
           <div id="cum-break" style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--bright);margin-top:3px">0d</div>
         </div>
       </div>
@@ -763,9 +763,9 @@ body.pixel-font #timer-unit{font-size:7px}
 
     <!-- DAY MARK STRIP — Rev A visual differentiation -->
     <div id="day-strip-wrap" style="display:flex;align-items:center;gap:6px;margin-top:8px">
-      <span style="font-size:7px;color:var(--muted);letter-spacing:2px">SON 14 G</span>
+      <span style="font-size:8px;color:var(--muted);letter-spacing:2px">SON 14 G</span>
       <div id="day-strip" style="display:flex;gap:2px;flex:1"></div>
-      <span style="font-size:7px;color:var(--muted);letter-spacing:1px">⬜boş ❄frozen 🎟rest ▮aktif</span>
+      <span style="font-size:8px;color:var(--muted);letter-spacing:1px">⬜boş ❄frozen 🎟rest ▮aktif</span>
     </div>
 
     <!-- REST DAY BANNER -->
@@ -901,7 +901,7 @@ body.pixel-font #timer-unit{font-size:7px}
             </select>
           </div>
         </div>
-        <div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;line-height:1.5">📅 Planlanan gün gelene kadar "Gelecek Görevler" altında bekler. O gün geldiğinde "Bugün" bölümüne düşer.</div>
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;line-height:1.5">📅 Planlanan gün gelene kadar "Gelecek Görevler" altında bekler. O gün geldiğinde "Bugün" bölümüne düşer.</div>
         <div class="brow">
           <button class="btn primary" style="flex:1" onclick="addPlannerTask()">✓ EKLE</button>
           <button class="btn" onclick="togPlannerForm()">✕</button>
@@ -1238,7 +1238,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <datalist id="wrong-topics-dl"></datalist>
     <div id="exam-wrong-chips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;min-height:6px"></div>
-    <div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">Eklenen konular kaydedince <b style="color:var(--bright)">Deneme Ağacı</b> sekmesinde görünür. Listeden seçtiğinde aynı isim yazım hatası dahil tekleştirilir.</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">Eklenen konular kaydedince <b style="color:var(--bright)">Deneme Ağacı</b> sekmesinde görünür. Listeden seçtiğinde aynı isim yazım hatası dahil tekleştirilir.</div>
     <button class="btn primary fw" onclick="addExam()">💾 DENEMEYİ KAYDET</button>
   </div>
 
@@ -1252,7 +1252,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div id="net-subj-chips" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px"></div>
     <canvas id="net-chart" style="width:100%;height:190px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
-    <div id="net-chart-legend" style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase">— ham net &nbsp;&nbsp; <span style="color:var(--yellow)">···</span> 5'li hareketli ortalama</div>
+    <div id="net-chart-legend" style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:6px;text-transform:uppercase">— ham net &nbsp;&nbsp; <span style="color:var(--yellow)">···</span> 5'li hareketli ortalama</div>
     <div id="net-chart-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;margin-top:8px">Bu tür için henüz deneme girilmedi.</div>
     <div id="plateau-warnings" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
   </div>
@@ -1342,7 +1342,7 @@ body.pixel-font #timer-unit{font-size:7px}
       <div>
         <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px">LGS LEGACY</div>
         <div style="font-size:8px;color:var(--gray);letter-spacing:2px;margin-top:3px">Geçmişin kanıtı. Bu rozet hiç sökmez.</div>
-        <div style="display:inline-block;font-size:7px;letter-spacing:2px;color:var(--white);background:var(--dim);padding:2px 8px;margin-top:6px">ONUR MADALYASI</div>
+        <div style="display:inline-block;font-size:8px;letter-spacing:2px;color:var(--white);background:var(--dim);padding:2px 8px;margin-top:6px">ONUR MADALYASI</div>
       </div>
     </div>
     <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">GÜNLÜK (her gün sıfırlanır)</div>
@@ -1403,7 +1403,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.26</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.0</div>
     </div>
   </div>
 </div>
@@ -2254,7 +2254,7 @@ document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     // going to background: make sure the OS-level alerts are armed
     if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-    scheduleBossNotification();
+    scheduleBossNotification(); try{ scheduleSrsNotification(); }catch(e){}
     return;
   }
   // back in foreground
@@ -2277,7 +2277,7 @@ document.addEventListener('visibilitychange', function(){
 // extra safety: arm alerts right before the page is frozen/hidden on Android
 ['pagehide','freeze','blur'].forEach(ev=>window.addEventListener(ev,function(){
   if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-  scheduleBossNotification();
+  scheduleBossNotification(); try{ scheduleSrsNotification(); }catch(e){}
 }));
 
 // ════════════════════════════════════════
@@ -2903,10 +2903,10 @@ function renderBadges(){
       '<div class="badge-name">'+b.name+'</div>'+
       '<div class="badge-desc">'+b.desc+'</div>'+
       (earned
-        ?'<div style="font-size:7px;color:var(--green);letter-spacing:2px">✓ EARNED</div>'
+        ?'<div style="font-size:8px;color:var(--green);letter-spacing:2px">✓ EARNED</div>'
         :(b.trig==='manual'
           ?'<button onclick="earnBadge(\''+b.id+'\')" style="margin-top:4px;background:var(--dim);border:1px solid var(--bd);color:var(--bright);font-family:\'Share Tech Mono\',monospace;font-size:8px;padding:4px 10px;cursor:pointer;letter-spacing:1px">✓ KAZAN</button>'
-          :'<div style="font-size:7px;color:var(--dim)">otomatik</div>')
+          :'<div style="font-size:8px;color:var(--dim)">otomatik</div>')
       )+'</div>';
   }
   g('daily-badges').innerHTML=BADGES.filter(b=>b.type==='daily').map(card).join('');
@@ -3347,6 +3347,35 @@ function scheduleBossNotification(){
 function cancelBossNotification(){
   if (_isNative()){ _nativeCancel(_NID_BOSS); return; }
   swPost({ type:'cancel', tag:'overclock-boss' });
+}
+
+// ── Aralıklı tekrar günlük bildirimi ──
+// Her gün SRS_HOUR'da "bugün N konu tekrar var" hatırlatması. Her açılış/arkaplanda yeniden kurulur.
+const _NID_SRS = 1004;
+const SRS_HOUR = 10;   // sabah 10:00
+function _nextSrsTime(){
+  const now=new Date();
+  const t=new Date(); t.setHours(SRS_HOUR,0,0,0);
+  if (t.getTime() <= now.getTime()) t.setDate(t.getDate()+1);
+  return t;
+}
+function scheduleSrsNotification(){
+  try{
+    const when=_nextSrsTime();
+    const byDate=when.toISOString().slice(0,10);
+    const dueByThen=(S.srItems||[]).filter(it=> it.due <= byDate).length;
+    if (dueByThen<=0){ cancelSrsNotification(); return; }
+    const title='🧠 ARALIKLI TEKRAR';
+    const body=dueByThen+' konu tekrar zamanı — bugün gözden geçir.';
+    if (_isNative()){ _nativeSchedule(_NID_SRS, when.getTime(), title, body); return; }
+    if (('Notification' in window) && Notification.permission==='granted'){
+      swPost({ type:'schedule', at: when.getTime(), tag:'overclock-srs', kind:'srs', title, body, icon:_NOTIF_ICON });
+    }
+  }catch(e){}
+}
+function cancelSrsNotification(){
+  if (_isNative()){ _nativeCancel(_NID_SRS); return; }
+  swPost({ type:'cancel', tag:'overclock-srs' });
 }
 
 // ── Silent-audio keepalive ──
@@ -4062,9 +4091,9 @@ function renderCosmeticToggles(){
   if (hasBorder)  row('glowBorder', '🔥 Fire Çerçeve',                     cs.avatarBorder === 'glow');
   if (hasGlasses) row('glasses',    '❄ Frost Çerçeve',                    Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   if (!items.length){
-    el.innerHTML = '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-top:4px">Kasalardan görsel ödül kazanınca burada aç/kapat çıkar.</div>';
+    el.innerHTML = '<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-top:4px">Kasalardan görsel ödül kazanınca burada aç/kapat çıkar.</div>';
   } else {
-    el.innerHTML = '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;text-transform:uppercase">Görsel süslemeler</div>' + items.join('');
+    el.innerHTML = '<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:4px;text-transform:uppercase">Görsel süslemeler</div>' + items.join('');
   }
 }
 
@@ -4396,7 +4425,7 @@ function showCaseRoulette(allItems, winner, type, onComplete){
       const res = document.getElementById('reveal-result');
       const c = TIER_COLORS[winner.tier] || '#fff';
       res.innerHTML =
-        '<div style="font-size:7px;letter-spacing:4px;color:'+c+';margin-bottom:6px">KAZANDI · '+winner.tier.toUpperCase()+'</div>'+
+        '<div style="font-size:8px;letter-spacing:4px;color:'+c+';margin-bottom:6px">KAZANDI · '+winner.tier.toUpperCase()+'</div>'+
         '<div style="font-family:\'Orbitron\',monospace;font-size:16px;font-weight:900;color:#fff;letter-spacing:2px;margin-bottom:4px">'+winner.icon+' '+_he(winner.name)+'</div>'+
         '<div style="font-size:9px;color:#ccc;letter-spacing:1px;line-height:1.6;margin-bottom:14px">'+_he(winner.desc)+'</div>'+
         '<button class="btn primary fw" onclick="document.getElementById(\'case-reveal\').style.display=\'none\'">TAMAM</button>';
@@ -5264,7 +5293,7 @@ function srAdd(){
   // hemen 1 kez gözden geçirmesi için due=bugün; ilk "İyi" ile 1 güne, sonra 6 güne açılır)
   S.srItems.push({ id, topic:t, ease:2.5, interval:0, reps:0, lapses:0, due:today(), created:today(), last:null });
   inp.value='';
-  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+  save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
   addLog('Tekrar konusu eklendi: '+t);
   notify('🧠 Eklendi — tekrar planı başladı');
 }
@@ -5282,12 +5311,12 @@ function srRate(id, q){
   }
   it.last=today();
   it.due=_srAddDays(today(), it.interval);
-  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+  save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
 }
 function srDelete(id){
   if(!confirm('Bu tekrar konusu silinsin mi?')) return;
   S.srItems=(S.srItems||[]).filter(x=>x.id!==id);
-  save(); renderSrs(); try{ renderSrsBadge(); }catch(e){}
+  save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
 }
 function renderSrs(){
   const dueList=g('sr-due-list'); if(!dueList) return;
@@ -5568,7 +5597,7 @@ function renderPlanner(){
   const fc=g('plan-future-count'); if (fc) fc.textContent = fut.length?('('+fut.length+')'):'';
 
   const dot = p => p==='high'?'🔴':(p==='med'?'🟡':'🟢');
-  const dateTag = d => '<span style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-left:6px">📅 '+_he(d)+'</span>';
+  const dateTag = d => '<span style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-left:6px">📅 '+_he(d)+'</span>';
   function card(tk, opts){
     const o = opts||{};
     const cls = 'plan-card '+tk.priority+(tk.done?' done':'');
@@ -5947,11 +5976,11 @@ function drawCalendar(hid){
   rows+='<div class="hcal-row"><div class="hcal-day-lbl" style="min-width:22px"></div>';
   for(let d=1;d<=daysInMonth;d++){
     const dow=new Date(year,month,d).getDay();
-    rows+='<div class="hcal-col-lbl" style="width:20px;min-width:20px;text-align:center;font-size:6px;color:var(--dim)">'+dayNames[dow]+'</div>';
+    rows+='<div class="hcal-col-lbl" style="width:20px;min-width:20px;text-align:center;font-size:8px;color:var(--dim)">'+dayNames[dow]+'</div>';
   }
   rows+='</div>';
   // number row
-  rows+='<div class="hcal-row"><div class="hcal-day-lbl" style="min-width:22px;font-size:6px;color:var(--muted)">'+monthNames[month]+'</div>';
+  rows+='<div class="hcal-row"><div class="hcal-day-lbl" style="min-width:22px;font-size:8px;color:var(--muted)">'+monthNames[month]+'</div>';
   for(let d=1;d<=daysInMonth;d++){
     const ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const isFuture=ds>t;
@@ -6374,7 +6403,7 @@ function drawSubjectChart(days){
   // legend dots
   if(legendEl){
     legendEl.innerHTML=entries.map(([s],i)=>
-      '<span style="font-size:7px;letter-spacing:1px;color:'+subjColor(i)+';display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;background:'+subjColor(i)+';display:inline-block;flex-shrink:0"></span>'+s+'</span>'
+      '<span style="font-size:8px;letter-spacing:1px;color:'+subjColor(i)+';display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;background:'+subjColor(i)+';display:inline-block;flex-shrink:0"></span>'+s+'</span>'
     ).join('');
   }
 }
@@ -6783,6 +6812,7 @@ try { reminderTick(); bossAggroTick(); } catch(e){}
 try { cancelBossNotification(); } catch(e){}
 // schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
 try { rescheduleAllReminders(); } catch(e){}
+try { scheduleSrsNotification(); } catch(e){}
 // Stat decay: 3+ gün eylem yok ise bağlı statlar azalır (boot'ta bir kez)
 try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
@@ -6790,7 +6820,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.26 başlatıldı.');
+addLog('OVERCLOCK v7.16.0 başlatıldı.');
 </script>
 </body>
 </html>
