@@ -171,15 +171,17 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 /* ── Süre tekerleği (slot-makinesi tarzı, sadece dakika) — yuvarlağın İÇİNDE ── */
 #fs-dur{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;z-index:5}
 #fs-wheel-cap{font-size:10px;color:var(--muted);letter-spacing:4px}
-#fs-wheel-wrap{position:relative;height:120px;overflow:hidden;width:min(42vw,180px);margin:0 auto;
-  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent);
-          mask-image:linear-gradient(to bottom,transparent,#000 28%,#000 72%,transparent)}
+#fs-wheel-wrap{position:relative;height:210px;overflow:hidden;width:min(52vw,220px);margin:0 auto;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent);
+          mask-image:linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent)}
 #fs-wheel{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center}
 #fs-wheel::-webkit-scrollbar{display:none}
-.fs-wheel-pad{height:40px}
-.fs-wheel-item{height:40px;line-height:40px;scroll-snap-align:center;font-family:'Orbitron',monospace;font-size:22px;color:var(--dim);transition:color .1s,font-size .1s}
-.fs-wheel-item.sel{color:var(--white);font-weight:900;font-size:30px;text-shadow:0 0 14px rgba(255,255,255,.55)}
-#fs-wheel-band{position:absolute;left:8%;right:8%;top:40px;height:40px;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);pointer-events:none}
+.fs-wheel-pad{height:70px}
+/* sıradaki/önceki süre: küçük + soluk */
+.fs-wheel-item{height:70px;line-height:70px;scroll-snap-align:center;font-family:'Orbitron',monospace;font-size:24px;color:var(--dim);opacity:.55;transition:color .12s,font-size .12s,opacity .12s}
+/* seçili süre: normal/büyük + parlak (sayaç sayısı gibi) */
+.fs-wheel-item.sel{color:var(--white);font-weight:900;font-size:min(16vw,62px);opacity:1;text-shadow:0 0 16px rgba(255,255,255,.55)}
+#fs-wheel-band{position:absolute;left:6%;right:6%;top:70px;height:70px;border-top:1px solid var(--bd2);border-bottom:1px solid var(--bd2);pointer-events:none}
 
 /* buttons */
 .btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 14px;border:1px solid var(--bd2);background:transparent;color:var(--bright);cursor:pointer;text-transform:uppercase;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;transition:background .15s,border-color .15s,transform .05s}
@@ -1333,7 +1335,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.20</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.21</div>
     </div>
   </div>
 </div>
@@ -2377,7 +2379,7 @@ function _timerIsFresh(){
   const full=(isBreak?S.breakMin:S.focusMin)*60;
   return !timerRunning && timerSecs===full;
 }
-const _WHEEL_IH = 40;   // .fs-wheel-item yüksekliği (CSS ile aynı)
+const _WHEEL_IH = 70;   // .fs-wheel-item yüksekliği (CSS ile aynı)
 let _wheelMin = 1, _wheelMax = 240, _wheelSel = -1, _wheelScrollTO = null;
 function _buildWheel(){
   const w=g('fs-wheel'); if(!w) return;
@@ -6575,7 +6577,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.20 başlatıldı.');
+addLog('OVERCLOCK v7.15.21 başlatıldı.');
 </script>
 </body>
 </html>
