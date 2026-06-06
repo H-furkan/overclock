@@ -140,7 +140,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 #level-next{font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px}
 
 /* timer ring */
-#timer-svg{transform:rotate(-90deg);display:block;width:100%;height:auto}
+#timer-svg{transform:rotate(-90deg);display:block;width:100%;height:auto;overflow:visible}
 #timer-ring-bg{fill:none;stroke:var(--dim);stroke-width:3}
 #timer-ring{fill:none;stroke:var(--bright);stroke-width:3;stroke-dasharray:408;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 4px rgba(255,255,255,.5))}
 #timer-num{font-family:'Orbitron',monospace;font-size:clamp(30px,9vw,52px);font-weight:900;color:var(--white);letter-spacing:2px;text-shadow:0 0 10px rgba(255,255,255,.35)}
@@ -798,6 +798,18 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
   </div>
 
+  <!-- DAVET EDİLEN BOSS — yalnızca Market'ten "Boss Daveti" alınınca görünür -->
+  <div id="boss-panel" style="display:none">
+    <span id="boss-tag">DAVET EDİLEN BOSS</span>
+    <div id="boss-name">BOSS</div>
+    <div id="boss-hp-wrap"><div id="boss-hp-fill"></div></div>
+    <div class="boss-hp-lbl"><span>HP: <span id="boss-hp-val">100</span>%</span><span>YENİNCE +250 XP</span></div>
+    <div class="brow">
+      <button class="btn" onclick="dmgBoss(25)">-25 HP</button>
+      <button class="btn primary" onclick="defeatBoss()" style="flex:1">⚔ YENİLDİ</button>
+    </div>
+  </div>
+
 </div><!-- /cockpit -->
 
 <!-- ══════════ PAGE: REMINDERS ══════════ -->
@@ -1348,7 +1360,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.22</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.23</div>
     </div>
   </div>
 </div>
@@ -1481,10 +1493,10 @@ const SHOP_ITEMS = [
   {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Ücretsiz. İMZALA, dakika hedefini gir. Tutarsan çalışılan sürenin 1.5× XP ödülü; tutmazsan eksik kalan dk kadar XP düşer.', cost:0},
   {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince +250 XP.', cost:200},
   // COSMETICS (permanent badge decoration)
-  {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Level rozeti yanında 💀', cost:700},
-  {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Level rozeti yanında ⚡', cost:550},
-  {id:'cos_crown',   cat:'cosmetic', icon:'👑', name:'TAÇ',          desc:'Level rozeti yanında 👑', cost:2000},
-  {id:'cos_diamond', cat:'cosmetic', icon:'💎', name:'ELMAS',        desc:'Level rozeti yanında 💎', cost:1500},
+  {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Karakter özetinde 💀', cost:700},
+  {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Karakter özetinde ⚡', cost:550},
+  {id:'cos_crown',   cat:'cosmetic', icon:'👑', name:'TAÇ',          desc:'Karakter özetinde 👑', cost:2000},
+  {id:'cos_diamond', cat:'cosmetic', icon:'💎', name:'ELMAS',        desc:'Karakter özetinde 💎', cost:1500},
 ];
 
 // ── Streak Protector dynamic pricing (Rev B) ──
@@ -1581,6 +1593,8 @@ function defState() {
     subjectLog:{},
     // ── NEW v6: BOSS AGGRESSION ──
     bossDefeated:false,           // current boss defeated flag
+    bossSummoned:false,           // Boss Daveti ile çağrılmış aktif boss var mı (HQ'da gösterilir)
+    bossSummonRecent:[],          // son çağrılan konu key'leri (cooldown/rotasyon dengesi)
     lastFocusEnd:null,            // ms timestamp of last completed focus
     bossAggroLastHit:null,        // ms timestamp of last boss aggression damage
     // ── NEW v6: SHOP / INVENTORY ──
@@ -2510,19 +2524,14 @@ function setBoss(){
 
 function renderBoss(){
   const panel = g('boss-panel');
-  if(!panel) return;   // boss fight UI HQ'dan kaldırıldı — dormant
-  g('boss-name').textContent=S.bossName + (S.bossDefeated ? ' ✓' : '');
+  if(!panel) return;
+  // Yalnızca Market'ten çağrılmış aktif (yenilmemiş) boss varken göster
+  if(!(S.bossSummoned && !S.bossDefeated)){ panel.style.display='none'; return; }
+  panel.style.display='';
+  g('boss-name').textContent=S.bossName;
   g('boss-hp-fill').style.width=S.bossHp+'%';
-  g('boss-hp-fill').style.background=S.bossDefeated?'var(--green)':(S.bossHp>30?'var(--bright)':'var(--red)');
+  g('boss-hp-fill').style.background=(S.bossHp>30?'var(--bright)':'var(--red)');
   g('boss-hp-val').textContent=S.bossHp;
-  if (panel) {
-    if (S.bossDefeated) panel.classList.add('defeated');
-    else panel.classList.remove('defeated');
-  }
-  // hide aggro when defeated
-  if (S.bossDefeated) {
-    const aggro = g('boss-aggro'); if (aggro) aggro.classList.remove('show');
-  }
 }
 
 function dmgBoss(d){
@@ -2537,22 +2546,17 @@ function dmgBoss(d){
 }
 
 function defeatBoss(){
-  if (S.bossHp <= 0 && S.bossDefeated) {
-    notify('⚔ ZATEN YENİLDİ — YENİ BOSS BELİRLE');
-    return;
-  }
+  if (!S.bossSummoned || S.bossDefeated) return;   // aktif çağrılmış boss yok
   const num=S.bossLog.length+1;
   S.bossLog.push({num,name:S.bossName,time:nowStr(),date:today()});
   S.bossHp=0;
-  S.bossDefeated=true;             // ── NEW: stop aggression damage ──
-  S.bossAggroLastHit=null;         // reset aggro timer
+  S.bossDefeated=true;
+  S.bossSummoned=false;            // panel gizlenir
+  S._summonBonus=false;
   renderBoss(); save();
-  // hide any active aggro warning
-  const aggro = g('boss-aggro'); if (aggro) aggro.classList.remove('show');
-  addXP(100,'Boss yenildi');
-  if (S._summonBonus){ S._summonBonus = false; addXP(250,'Boss Daveti bonusu'); }
-  notify('⚔ BOSS YENİLDİ: '+S.bossName);
-  addLog('Boss yenildi: '+S.bossName);
+  addXP(250,'Boss Daveti yenildi');   // kart: "Yenince +250 XP"
+  notify('⚔ BOSS YENİLDİ: '+S.bossName+' // +250 XP');
+  addLog('Boss yenildi: '+S.bossName+' (+250 XP)');
   renderLog();
   if(S.bossLog.length>=3) earnBadge('slayer');
 }
@@ -2906,7 +2910,7 @@ const BOSS_AGGRO_HIT_HOURS  = 5;   // start damage after N hours without focus
 const BOSS_AGGRO_INTERVAL_MIN = 30; // hit every N minutes once active
 
 function bossAggroTick(){
-  if (!g('boss-panel')) return;   // boss fight kaldırıldı → aggro/XP-drain devre dışı
+  return;   // boss aggro/XP-drain devre dışı — davet edilen boss pasif hedeftir (saldırmaz)
   // skip if boss already defeated or no boss configured (HP 0)
   if (!S || S.bossDefeated || S.bossHp <= 0) {
     const a = g('boss-aggro'); if (a) a.classList.remove('show');
@@ -3267,7 +3271,7 @@ function cancelTimerNotification(){
 
 // Schedule a boss-attack heads-up while the app is in the background
 function scheduleBossNotification(){
-  if (!g('boss-panel')) return;   // boss fight kaldırıldı → boss bildirimi kurulmaz
+  return;   // davet edilen boss pasiftir → boss saldırı bildirimi kurulmaz
   if (!S || S.bossDefeated || S.bossHp <= 0) return;
   if (S.boostUntil && Date.now() < S.boostUntil && S.activeShield) return;
   if (timerRunning && !isBreak) return; // actively working — boss is calm
@@ -3403,15 +3407,32 @@ function buyItem(id){
       openContractModal();
       return;
     } else if (item.id === 'sink_boss_summon') {
-      const topName = (function(){
-        const list = Object.values(S.wrongTopics||{}).filter(w=>!w.fixed).sort((a,b)=>b.level-a.level);
-        return list[0] ? list[0].name : (S.bossName||'TÜREV BOSS');
-      })();
-      S.bossName = 'BOSS: '+topName.toUpperCase();
+      // Zaten aktif (yenilmemiş) çağrılmış boss varsa, ikinci kez alma — XP'yi iade et
+      if (S.bossSummoned && !S.bossDefeated) {
+        S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);
+        notify('⚔ Zaten aktif bir boss var — önce onu yen');
+        return;
+      }
+      // Adaylar: düzeltilmemiş yanlış konular, seviyeye göre
+      const entries = Object.entries(S.wrongTopics||{}).filter(([k,w])=>!w.fixed).sort((a,b)=>(b[1].level||0)-(a[1].level||0));
+      if (!entries.length) {
+        S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);
+        notify('Yanlış konu yok — önce Net Takip\'ten yanlış konu işaretle');
+        return;
+      }
+      // DENGE/ROTASYON: son çağrılan konuları hariç tut (hep aynı konudan boss gelmesin);
+      // hepsi cooldown'daysa en yüksek seviyeliye dön.
+      const recent = S.bossSummonRecent || [];
+      const avail = entries.filter(([k])=>!recent.includes(k));
+      const [chKey, chVal] = (avail[0] || entries[0]);
+      const cap = Math.max(1, entries.length-1);   // en az 1 farklı konu hep seçilebilir kalsın
+      S.bossSummonRecent = [chKey, ...recent.filter(k=>k!==chKey)].slice(0, cap);
+      S.bossName = 'BOSS: '+(chVal.name||'KONU').toUpperCase();
       S.bossHp = 100;
       S.bossDefeated = false;
-      S._summonBonus = true; // tickTimer/defeat path can grant +250
-      notify('⚔ BOSS DAVET EDİLDİ: '+S.bossName);
+      S.bossSummoned = true;
+      S._summonBonus = true;
+      notify('⚔ BOSS DAVET EDİLDİ: '+S.bossName+' — HQ\'da seni bekliyor');
       addLog('Boss daveti: '+S.bossName+' (yenince +250 XP)');
     }
     playBell('reminder');
@@ -3449,7 +3470,7 @@ function equipTheme(id){
 function equipCosmetic(id){
   if (id && !(S.inventory||[]).includes(id)) return;
   S.equippedCosmetic = id || null;
-  save(); renderShop(); renderXP();
+  save(); renderShop(); renderXP(); try{ renderCharBanner(); }catch(e){}
 }
 
 function applyTheme(){
@@ -4064,11 +4085,16 @@ function renderCharBanner(){
     const d=new Date(x.date); const t=new Date(today());
     return (t-d)/86400000 < 7;
   }).length;
+  // Sahip olunan kozmetikler (eski "level rozeti yanında" eşyaları) — artık özette
+  const cosOwned = (S.inventory||[]).map(id=>SHOP_ITEMS.find(x=>x.id===id)).filter(x=>x && x.cat==='cosmetic');
+  const cosEq = S.equippedCosmetic ? (SHOP_ITEMS.find(x=>x.id===S.equippedCosmetic)||null) : null;
+  const cosDisp = cosEq ? cosEq.icon : (cosOwned.length ? cosOwned.map(c=>c.icon).join(' ') : '—');
   el.innerHTML =
     '<div class="cb-title">★ Karakter Özeti</div>'+
     '<div class="cb-row"><span>Build skoru</span><b>'+totalStat+' / '+(CHAR_STAT_KEYS.length*CHAR_STAT_MAX)+' &nbsp; ('+buildPct+'%)</b></div>'+
     '<div class="cb-row"><span>Toplam XP</span><b>'+lifetimeXp.toLocaleString('tr-TR')+'</b></div>'+
     '<div class="cb-row"><span>Son 7 gün eylem</span><b>'+acts7+'</b></div>'+
+    '<div class="cb-row"><span>Kozmetik'+(cosEq?' (takılı)':'')+'</span><b style="font-size:18px;line-height:1">'+cosDisp+'</b></div>'+
     (titles.length ? ('<div class="cb-titles">'+titles.map(t=>'<span class="cb-tag">'+_he(t)+'</span>').join('')+'</div>') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px">Henüz unvan yok — Gold kasalardan çıkar.</div>')+
     '<div class="cb-quote">'+_he(_quoteToday())+'</div>';
 }
@@ -6595,7 +6621,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.22 başlatıldı.');
+addLog('OVERCLOCK v7.15.23 başlatıldı.');
 </script>
 </body>
 </html>
