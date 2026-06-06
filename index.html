@@ -1363,7 +1363,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.11</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.12</div>
     </div>
   </div>
 </div>
@@ -2193,12 +2193,13 @@ function tickTimer(){
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     // going to background: make sure the OS-level alerts are armed
-    if (timerRunning && timerEndAt) scheduleTimerNotification();
+    if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
     scheduleBossNotification();
     return;
   }
   // back in foreground
   cancelBossNotification();
+  cancelOngoingTimerNotif();
   if(timerRunning && timerEndAt){
     // Let tickTimer credit the elapsed time properly. It compares `prev` (the
     // last known timerSecs) with the new wall-clock value and adds the diff
@@ -2215,7 +2216,7 @@ document.addEventListener('visibilitychange', function(){
 
 // extra safety: arm alerts right before the page is frozen/hidden on Android
 ['pagehide','freeze','blur'].forEach(ev=>window.addEventListener(ev,function(){
-  if (timerRunning && timerEndAt) scheduleTimerNotification();
+  if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
   scheduleBossNotification();
 }));
 
@@ -2961,7 +2962,7 @@ const _NID_TIMER = 1001, _NID_BOSS = 1002;
 // without a sound by older Capacitor builds) get a fresh HIGH-importance one.
 // A channel's sound/importance is FROZEN once created, so changing the ID is
 // the only way to reset it on existing installs.
-const _NCH_TIMER = 'overclock-timer-v3';
+const _NCH_TIMER = 'overclock-timer-v4';
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
 function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
 let _capPermAsked = false, _capChannelReady = false;
@@ -2982,10 +2983,11 @@ function ensureNotifChannel(){
       id: _NCH_TIMER,
       name: 'OVERCLOCK Sayaç',
       description: 'Session ve mola bitişi alarmları',
-      importance: 5,        // IMPORTANCE_HIGH → heads-up + sound on lock screen
-      visibility: 1,        // PUBLIC
+      importance: 5,          // IMPORTANCE_HIGH → heads-up + lock-screen
+      visibility: 1,          // PUBLIC
       vibration: true,
-      // sound omitted → uses the system default notification sound
+      sound: 'default',       // sistem varsayılan bildirim sesi (zil) — kanal seviyesinde
+      lights: true,
     });
   } catch(e){}
 }
@@ -3009,6 +3011,44 @@ function _nativeSchedule(id, at, title, body){
 function _nativeCancel(id){
   const LN=_capNotif(); if(!LN) return;
   try{ LN.cancel({ notifications:[{id}] }); }catch(e){}
+}
+
+// ── DEVAM EDEN SAYAÇ BİLDİRİMİ (ongoing) ──
+// Uygulama arkaplana alınınca, çalışan sayacın kalan süresini bir bildirim
+// olarak gösterir. Native (APK): ongoing/silent kalıcı bildirim. Web: setTimeout
+// yok — sadece tek bir anlık bildirim (web ongoing'i güvenilir değil).
+const _NID_ONGOING = 1003;
+function _fmtRemain(){
+  const sec = Math.max(0, Math.round((timerEndAt - Date.now())/1000));
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function showOngoingTimerNotif(){
+  if (!timerRunning || !timerEndAt) return;
+  const title = (isBreak ? '☕ MOLA' : '⏱ ODAK') + ' — sayaç çalışıyor';
+  const body  = 'Kalan süre: '+_fmtRemain()+(S.activeSubject?(' · '+S.activeSubject):'');
+  const LN=_capNotif();
+  if (_isNative() && LN){
+    ensureNotifChannel();
+    try{
+      LN.schedule({ notifications:[{
+        id:_NID_ONGOING, title, body,
+        ongoing:true, autoCancel:false,
+        smallIcon:'ic_stat_icon', channelId:_NCH_TIMER,
+        // silent kanal yok; ama ongoing bildirim ses çıkarmamalı → sound:null benzeri
+        // davranış için ayrı bir sessiz kanal kullanmıyoruz, importance default kalsın.
+      }]});
+    }catch(e){}
+    return;
+  }
+  // Web fallback: tek seferlik anlık bildirim (kalan süre anlık)
+  if (('Notification' in window) && Notification.permission==='granted'){
+    swPost({ type:'notify', tag:'overclock-ongoing', title, body, icon:_NOTIF_ICON, silent:true });
+  }
+}
+function cancelOngoingTimerNotif(){
+  if (_isNative()){ _nativeCancel(_NID_ONGOING); return; }
+  swPost({ type:'cancel', tag:'overclock-ongoing' });
 }
 
 // ── Reminder bildirimi: native APK'da kesin saatte, webde Notification API + setTimeout ──
@@ -3118,6 +3158,7 @@ function scheduleTimerNotification(){
 
 function cancelTimerNotification(){
   clearTimeout(_endTO); _endTO = null;
+  try{ cancelOngoingTimerNotif(); }catch(e){}   // devam eden bildirimi de kapat
   if (_isNative()){ _nativeCancel(_NID_TIMER); return; }
   swPost({ type:'cancel', tag:'overclock-timer' });
 }
@@ -6448,7 +6489,7 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.11 başlatıldı.');
+addLog('OVERCLOCK v7.15.12 başlatıldı.');
 </script>
 </body>
 </html>

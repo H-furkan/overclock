@@ -1,5 +1,5 @@
 // OVERCLOCK service worker — offline cache + scheduled (background) notifications
-const CACHE = 'overclock-v79';
+const CACHE = 'overclock-v7-15-12';
 
 self.addEventListener('install', e => self.skipWaiting());
 
@@ -28,10 +28,10 @@ self.addEventListener('message', async (e) => {
   const baseOpts = (d) => ({
     body: d.body || '',
     tag: d.tag || 'overclock-timer',
-    renotify: true,
-    requireInteraction: true,
-    vibrate: [500, 200, 500, 200, 700],
-    silent: false,            // play the system notification sound (the "zil")
+    renotify: !d.silent,
+    requireInteraction: !d.silent,
+    vibrate: d.silent ? undefined : [500, 200, 500, 200, 700],
+    silent: !!d.silent,       // ongoing bildirim sessiz; bitiş bildirimi sesli (zil)
     icon: d.icon,
     badge: d.icon,
     data: { kind: d.kind || 'timer' },
