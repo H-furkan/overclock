@@ -162,7 +162,7 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   #timer-wrap{width:min(34vh,300px)}
 }
 /* ── FULLSCREEN TIMER OVERLAY ── */
-#fs-timer{position:fixed;inset:0;z-index:9970;background:radial-gradient(ellipse at center,rgba(20,20,28,.98),rgba(0,0,0,.99));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.3,1),opacity .35s ease;padding:env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0)}
+#fs-timer{position:fixed;inset:0;z-index:9970;background:radial-gradient(ellipse at center,rgb(20,20,28),rgb(0,0,0));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.3,1),opacity .35s ease;padding:env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0)}
 #fs-timer.show{transform:translateY(0);opacity:1;pointer-events:auto}
 #fs-close{position:absolute;top:calc(env(safe-area-inset-top,0) + 16px);right:18px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--bd2);color:var(--bright);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;z-index:20;pointer-events:auto}
 #fs-close:active{transform:scale(.9);background:rgba(255,255,255,.14)}
@@ -271,6 +271,9 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .log-entry{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--bd);font-size:10px}
 .log-time{color:var(--dim);flex-shrink:0}
 .log-msg{color:var(--gray);word-break:break-all}
+.log-msg.err{color:var(--red);font-weight:700}
+#yks-countdown{text-align:center;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:4px 0 8px}
+#yks-countdown b{font-family:'Orbitron',monospace;font-size:15px;color:var(--bright);letter-spacing:1px}
 
 /* notifications */
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -712,6 +715,9 @@ body.pixel-font #timer-unit{font-size:7px}
 <!-- ══════════ PAGE: HQ ══════════ -->
 <div id="page-cockpit" class="page visible">
 
+  <!-- YKS GERİ SAYIM -->
+  <div id="yks-countdown">⏳ YKS'ye <b id="yks-days">—</b> gün</div>
+
   <!-- XP BAR -->
   <div class="block">
     <div class="fbet mb8">
@@ -741,6 +747,12 @@ body.pixel-font #timer-unit{font-size:7px}
     <div id="streak-panel">
       <div id="streak-msg">HEDEFE ULAŞ — ZİNCİRİ BAŞLAT</div>
       <button id="restday-chip" onclick="askRestDay()" title="Rest Day jetonu" style="background:var(--mid);border:1px solid var(--bd2);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px">🎟 <span id="restday-count">0</span></button>
+    </div>
+    <!-- Aktif boost göstergesi (sadece boost aktifken görünür) -->
+    <div id="boost-banner">
+      <span class="b-ico">⚡</span>
+      <div class="b-txt" id="boost-txt">2X XP BOOST AKTİF</div>
+      <span class="b-time" id="boost-time">--:--</span>
     </div>
 
     <!-- DAY MARK STRIP — Rev A visual differentiation -->
@@ -1360,7 +1372,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.23</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.24</div>
     </div>
   </div>
 </div>
@@ -1485,7 +1497,6 @@ const SHOP_ITEMS = [
   // BOOSTS (one-shot, time-limited)
   {id:'boost_xp1h',  cat:'boost', icon:'⚡',  name:'2X XP — 1H',  desc:'1 saat boyunca tüm XP 2 kat', cost:1500,  duration:3600},
   {id:'boost_xp30',  cat:'boost', icon:'🔥',  name:'2X XP — 30D', desc:'30 dk içinde kazanılan XP 2 katı', cost:900, duration:1800},
-  {id:'boost_shield',cat:'boost', icon:'🛡',  name:'KALKAN — 2H', desc:'2 saat boss saldırısını engelle', cost:500, duration:7200, shield:true},
   // STREAK PROTECTOR (consumable — auto-consumed on a missed day; cost is dynamic)
   {id:'streak_shield', cat:'streak', icon:'❄️', name:'STREAK KORUYUCU', desc:'Bir gün hedefi kaçırsan bile streak kırılmaz. Otomatik harcanır. Stok max 2.', cost:2500},
   // ── XP SINKS (Rev D) — study-directing modules ──
@@ -1568,7 +1579,7 @@ function defState() {
   return {
     xp:0, totalXp:0,
     focusMin:90, breakMin:20,
-    sessions:0, streak:0, kills:0,
+    sessions:0, streak:0,
     cumFocusSecs:0, cumBreakSecs:0,
     missionTitle:'AYT MATEMATİK',
     missionSub:'Türev & Limit — Derinlik Protokolü',
@@ -1650,8 +1661,15 @@ let S = defState();
 // ════════════════════════════════════════
 // PERSISTENCE
 // ════════════════════════════════════════
+let _saveErrShown = false;
 function save() {
-  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {}
+  try {
+    localStorage.setItem(SK, JSON.stringify(S));
+    _saveErrShown = false;
+  } catch(e) {
+    // localStorage dolu/erişilemez → veri KAYDEDİLEMEDİ. Sessiz kalma: kullanıcıyı uyar.
+    if (!_saveErrShown){ _saveErrShown = true; logErr('KAYIT BAŞARISIZ — yer dolu olabilir. Ayarlar > Yedek Al ile dışa aktar!'); }
+  }
   try { if (window._syncPush) window._syncPush(); } catch(e) {}
 }
 
@@ -1771,7 +1789,7 @@ function applyDailyRollover(saved){
   }
   S.todayFocusSecs = 0;
   // Daily resets
-  S.xp=0; S.sessions=0; S.streak=0; S.kills=0;
+  S.xp=0; S.sessions=0; S.streak=0;
   S.waterCount=0; S.tasksDoneToday=0;
   S.earnedBadges = (saved.earnedBadges||['lgs']).filter(id=>!dids.includes(id));
   S.errors = {};
@@ -1828,6 +1846,13 @@ function fmtHM(s){ const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return 
 function nowStr(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function fmtDate(str){ if(!str)return''; const[y,m,d]=str.split('-'); return d+'.'+m+'.'+y; }
 function daysUntil(str){ if(!str)return null; const a=new Date();a.setHours(0,0,0,0);const b=new Date(str);b.setHours(0,0,0,0);return Math.round((b-a)/86400000); }
+// YKS geri sayım — hedef sınav tarihi
+const YKS_DATE = '2027-06-19';
+function renderYksCountdown(){
+  const el=g('yks-days'); if(!el) return;
+  const d=daysUntil(YKS_DATE);
+  el.textContent = (d==null ? '—' : (d<0 ? 'geçti' : (d===0 ? 'BUGÜN' : d)));
+}
 function getLevel(xp){ let r=LEVELS[0]; LEVELS.forEach(l=>{if(xp>=l.min)r=l;}); return r; }
 function g(id){ return document.getElementById(id); }
 function tog(id){ const e=g(id); e.style.display=e.style.display==='none'?'block':'none'; }
@@ -1936,7 +1961,9 @@ setInterval(()=>{
 let _nt=null;
 function notify(msg){ const e=g('notif');e.textContent=msg;e.classList.add('show');clearTimeout(_nt);_nt=setTimeout(()=>e.classList.remove('show'),3500); }
 function showXpPop(amt){ const e=g('xp-popup');e.textContent='+'+amt+' XP';e.classList.remove('show');void e.offsetWidth;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1600); }
-function addLog(msg){ S.logEntries.unshift({t:nowStr(),msg});if(S.logEntries.length>60)S.logEntries.pop();renderLog(); }
+function addLog(msg, kind){ S.logEntries.unshift({t:nowStr(),msg,kind:kind||''});if(S.logEntries.length>60)S.logEntries.pop();renderLog(); }
+// Veri/sistem hatası: logda KIRMIZI + ekranda küçük uyarı (sessiz yutma yok)
+function logErr(msg){ try{ addLog(msg,'err'); }catch(e){} try{ notify('⚠ '+msg); }catch(e){} }
 
 // ════════════════════════════════════════
 // XP & LEVEL
@@ -2145,7 +2172,7 @@ function tickTimer(){
     try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
     if(!isBreak){
       S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
-      S.sessions++; S.streak++; S.kills++;
+      S.sessions++; S.streak++;
       g('session-count').textContent=S.sessions;
       renderCumulative();
       // ── BELL: focus session ended ──
@@ -2867,7 +2894,7 @@ function renderLog(){
   if(!S.logEntries.length){sl.innerHTML='';se.style.display='block';}
   else{
     se.style.display='none';
-    sl.innerHTML=S.logEntries.map(e=>'<div class="log-entry"><span class="log-time">['+e.t+']</span><span class="log-msg">'+e.msg+'</span></div>').join('');
+    sl.innerHTML=S.logEntries.map(e=>'<div class="log-entry"><span class="log-time">['+e.t+']</span><span class="log-msg'+(e.kind==='err'?' err':'')+'">'+e.msg+'</span></div>').join('');
   }
 }
 
@@ -2882,7 +2909,7 @@ function execDailyReset(){
     S.focusHistory.push({date:today(), focusSecs:S.todayFocusSecs});
     if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
   }
-  S.xp=0; S.sessions=0; S.streak=0; S.kills=0; S.waterCount=0; S.tasksDoneToday=0;
+  S.xp=0; S.sessions=0; S.streak=0; S.waterCount=0; S.tasksDoneToday=0;
   S.todayFocusSecs = 0;
   S.earnedBadges=S.earnedBadges.filter(id=>!dids.includes(id));
   S.errors={}; S.logEntries=[]; S.lastDate=today();
@@ -5086,7 +5113,8 @@ function renderTree(){
   let entries = Object.entries(wt).filter(([,w])=>!w._pending);
   if (_treeFilter==='active') entries = entries.filter(([,w])=>!w.fixed);
   else if (_treeFilter==='fixed') entries = entries.filter(([,w])=>w.fixed);
-  entries.sort((a,b)=> (b[1].level||0)-(a[1].level||0) || (b[1].history?.length||0)-(a[1].history?.length||0));
+  // en çok hata yapılan (en çok etiketlenen) konu en üstte; düzeltilenler dibe
+  entries.sort((a,b)=> (a[1].fixed?1:0)-(b[1].fixed?1:0) || (b[1].history?.length||0)-(a[1].history?.length||0) || (b[1].level||0)-(a[1].level||0));
   if (emp) emp.style.display = entries.length ? 'none' : 'block';
   list.innerHTML = entries.map(([key,w])=>{
     const target = w.target || topicTargetForLevel(w.level||0);
@@ -5924,7 +5952,7 @@ function drawNumericChart(h,cid){
 // RENDER ALL
 // ════════════════════════════════════════
 function renderAll(){
-  renderXP(); renderStreak(); renderBoss(); updateWaterUI();
+  renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown();
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
   renderRestDayUI();
@@ -6517,7 +6545,7 @@ function _cloudPush(){
     _sync.lastRemoteTs = ts;
     _sync.db.collection('users').doc(_sync.uid).set(data)
       .then(()=>{ setSyncStatus('☁ Senkron aktif — '+( _sync.email||'' )+' (son: şimdi)'); })
-      .catch(e=>{ setSyncStatus('⚠ Senkron hatası: '+(e&&e.code||e&&e.message||'?')); addLog('Sync push hatası: '+(e&&e.message||e)); });
+      .catch(e=>{ setSyncStatus('⚠ Senkron hatası: '+(e&&e.code||e&&e.message||'?')); logErr('SENKRON BAŞARISIZ: '+(e&&e.message||e)); });
   }catch(e){}
 }
 window._syncPush = function(){
@@ -6621,7 +6649,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.15.23 başlatıldı.');
+addLog('OVERCLOCK v7.15.24 başlatıldı.');
 </script>
 </body>
 </html>
