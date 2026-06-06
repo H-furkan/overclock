@@ -274,6 +274,9 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .log-msg.err{color:var(--red);font-weight:700}
 #yks-countdown{text-align:center;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:4px 0 8px}
 #yks-countdown b{font-family:'Orbitron',monospace;font-size:15px;color:var(--bright);letter-spacing:1px}
+.hq-today-row{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:9px 11px;margin-bottom:6px;cursor:pointer;text-align:left;border-radius:4px}
+.hq-today-row:last-child{margin-bottom:0}
+.hq-today-go{color:var(--muted);font-size:14px}
 
 /* notifications */
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -719,9 +722,10 @@ body.pixel-font #timer-unit{font-size:8px}
   <!-- YKS GERİ SAYIM -->
   <div id="yks-countdown">⏳ YKS'ye <b id="yks-days">—</b> gün</div>
 
-  <!-- ARALIKLI TEKRAR HATIRLATICI (sadece bugün tekrar varsa) -->
-  <div id="sr-hq-badge" style="display:none;text-align:center;margin-bottom:8px">
-    <button onclick="goTab(null,'srs')" style="background:var(--mid);border:1px solid var(--bright);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:7px 14px;cursor:pointer;border-radius:6px">🧠 Bugün <b id="sr-hq-count">0</b> tekrar var → aç</button>
+  <!-- BUGÜN — dağınık uyarıları tek kutuda toplar; SADECE yapılacak iş varsa görünür -->
+  <div id="hq-today" class="block" style="display:none;margin-bottom:10px">
+    <div class="blabel" style="margin-bottom:8px">■ Bugün</div>
+    <div id="hq-today-list"></div>
   </div>
 
   <!-- XP BAR -->
@@ -1403,7 +1407,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.1</div>
     </div>
   </div>
 </div>
@@ -5179,6 +5183,8 @@ function markTopicFixed(key){
   const reward = w.target||15;
   addXP(reward, 'Düzeltildi: '+w.name);
   addLog('🌳 Konu düzeltildi: '+w.name+' (+'+reward+' XP)');
+  srAddFromTopic(w.name, true);   // düzeltilen konuyu otomatik aralıklı tekrara al
+  notify('✓ Düzeltildi (+'+reward+' XP) — 🧠 tekrar planına alındı');
   save(); renderTree();
 }
 
@@ -5218,6 +5224,7 @@ function renderTree(){
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',10)">+10</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',-1)">−1</button>'+
             '<button class="btn primary" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" '+(solved>=target?'':'disabled ')+'onclick="markTopicFixed(\''+safeKey+'\')">✓ DÜZELTİLDİ (+'+target+' XP)</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="srAddTopicFromTree(\''+safeKey+'\')" title="Aralıklı tekrara ekle">🧠 Tekrara</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑</button>'+
           '</div>')+
     '</div>';
@@ -5318,6 +5325,24 @@ function srDelete(id){
   S.srItems=(S.srItems||[]).filter(x=>x.id!==id);
   save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
 }
+// Deneme Ağacı → aralıklı tekrara konu ekle (sistemleri birbirine bağlar)
+function srAddFromTopic(name, quiet){
+  if(!name) return false;
+  if(!S.srItems) S.srItems=[];
+  if(S.srItems.some(it=> (it.topic||'').toLowerCase()===String(name).toLowerCase())){
+    if(!quiet) notify('🧠 "'+name+'" zaten tekrar listende');
+    return false;
+  }
+  const id=String(Date.now())+'-'+Math.floor((typeof performance!=='undefined'?performance.now():0)%100000);
+  S.srItems.push({ id, topic:name, ease:2.5, interval:0, reps:0, lapses:0, due:today(), created:today(), last:null });
+  try{ renderSrs(); renderHqToday(); scheduleSrsNotification(); }catch(e){}
+  if(!quiet){ notify('🧠 Tekrara eklendi: '+name); addLog('Tekrara eklendi (Deneme Ağacı): '+name); }
+  return true;
+}
+function srAddTopicFromTree(key){
+  const w=(S.wrongTopics||{})[key]; if(!w) return;
+  if(srAddFromTopic(w.name)) save();
+}
 function renderSrs(){
   const dueList=g('sr-due-list'); if(!dueList) return;
   const t=today();
@@ -5347,12 +5372,37 @@ function renderSrs(){
       '<button onclick="srDelete(\''+it.id+'\')" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px">✕</button></span></div>';
   }).join('');
 }
-function renderSrsBadge(){
-  const b=g('sr-hq-badge'); if(!b) return;
-  const n=srDueItems().length;
-  const c=g('sr-hq-count'); if(c) c.textContent=n;
-  b.style.display = n>0 ? 'block' : 'none';
+// HQ "Bugün" kutusu: tekrar + gecikmiş hatırlatıcı + net düşüşü tek yerde
+function _decliningSubjectLabels(){
+  const out=[];
+  ['TYT','AYT'].forEach(type=>{
+    const ex=(S.exams||[]).filter(e=>e.type===type).slice(-4);
+    if(ex.length<4) return;
+    (EXAM_DEFS[type]||[]).forEach(s=>{
+      const arr=ex.map(e=>(e.nets&&e.nets[s.key])||0);
+      if(arr.length!==4) return;
+      const firstAvg=(arr[0]+arr[1])/2, lastAvg=(arr[2]+arr[3])/2;
+      if((firstAvg-lastAvg)>=2 && arr[3]<=arr[0]) out.push(s.label);
+    });
+  });
+  return out;
 }
+function renderHqToday(){
+  const wrap=g('hq-today'); if(!wrap) return;
+  const items=[];
+  const due=srDueItems().length;
+  if(due>0) items.push({ico:'🧠',txt:due+' konu tekrar zamanı',tab:'srs'});
+  const t=today();
+  const overdue=(S.tasks||[]).filter(tk=>!tk.done && tk.deadline && tk.deadline<t).length;
+  if(overdue>0) items.push({ico:'⚠',txt:overdue+' gecikmiş hatırlatıcı',tab:'tasks'});
+  const decl=_decliningSubjectLabels();
+  if(decl.length) items.push({ico:'📉',txt:'Net düşüşte: '+decl.slice(0,3).join(', '),tab:'exam'});
+  if(!items.length){ wrap.style.display='none'; return; }
+  wrap.style.display='';
+  const ll=g('hq-today-list');
+  if(ll) ll.innerHTML=items.map(it=>'<button class="hq-today-row" onclick="goTab(null,\''+it.tab+'\')"><span>'+it.ico+'  '+_he(it.txt)+'</span><span class="hq-today-go">›</span></button>').join('');
+}
+function renderSrsBadge(){ renderHqToday(); }   // geriye dönük çağrı uyumu
 
 // ════════════════════════════════════════
 // HEDEF SÖZLEŞMESİ MODAL
@@ -6820,7 +6870,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.16.0 başlatıldı.');
+addLog('OVERCLOCK v7.16.1 başlatıldı.');
 </script>
 </body>
 </html>
