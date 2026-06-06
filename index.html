@@ -1363,7 +1363,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.14</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.15</div>
     </div>
   </div>
 </div>
@@ -3045,44 +3045,40 @@ function _fmtEndClock(){
 }
 let _ongoingIv = null, _ongoingShown = false;
 // Spotify / Focus To-Do tarzı SABİT, SESSİZ, yerinde güncellenen sayaç bildirimi.
+// Süre doğrudan bildirim METNİNE yazılır (chronometer bazı cihazlarda boş çıkıyordu)
+// ve her saniye yerinde güncellenir. Düşük öncelikli sessiz kanal → yukarıdan fırlamaz.
+function _ongoingTitle(){ return (isBreak ? '☕ MOLA' : '⏱ ODAK')+(S.activeSubject?(' · '+S.activeSubject):''); }
+function _ongoingBody(){ return '⏳ '+_fmtRemain()+'   (bitiş ~'+_fmtEndClock()+')'; }
+function _pushOngoingNative(){
+  const LN=_capNotif(); if(!LN) return;
+  try{
+    LN.schedule({ notifications:[{
+      id:_NID_ONGOING,
+      title:_ongoingTitle(),
+      body:_ongoingBody(),
+      ongoing:true, autoCancel:false,
+      smallIcon:'ic_stat_icon',
+      channelId:_NCH_ONGOING,   // düşük öncelik, sessiz → yerinde güncellenir, fırlamaz
+    }]});
+  }catch(e){}
+}
 function showOngoingTimerNotif(){
   if (!timerRunning || !timerEndAt) return;
-  const LN=_capNotif();
-  if (_isNative() && LN){
+  if (_isNative() && _capNotif()){
     ensureNotifChannel();
-    const title = (isBreak ? '☕ MOLA' : '⏱ ODAK')+(S.activeSubject?(' · '+S.activeSubject):'');
-    try{
-      LN.schedule({ notifications:[{
-        id:_NID_ONGOING,
-        title,
-        body:'Bitiş ~'+_fmtEndClock(),
-        ongoing:true, autoCancel:false,
-        smallIcon:'ic_stat_icon',
-        channelId:_NCH_ONGOING,         // düşük öncelik, sessiz → yukarıdan fırlamaz
-        // Android'in kendi canlı geri sayımı — JS olmadan bildirimde saniye saniye akar
-        usesChronometer:true,
-        chronometerCountDown:true,
-        when:timerEndAt,                // geri sayım hedefi (bitiş ms)
-        showWhen:true
-      }]});
-    }catch(e){
-      // chronometer desteklenmiyorsa düz sessiz ongoing'e düş
-      try{ LN.schedule({ notifications:[{ id:_NID_ONGOING, title, body:'Kalan: '+_fmtRemain()+' · Bitiş ~'+_fmtEndClock(), ongoing:true, autoCancel:false, smallIcon:'ic_stat_icon', channelId:_NCH_ONGOING }]}); }catch(_){}
-      _startOngoingRefresh();
-    }
+    _pushOngoingNative();
+    _startOngoingRefresh();   // her saniye süreyi metinde güncelle
     return;
   }
-  // Web fallback: tek bildirim, renotify KAPALI (yukarıdan tekrar düşmez), 1sn'de yerinde güncellenir
+  // Web fallback
   _ongoingShown = false;
   _pushOngoingWeb();
   _startOngoingRefresh();
 }
 function _pushOngoingWeb(){
   if (!(('Notification' in window) && Notification.permission==='granted')) return;
-  const title = (isBreak ? '☕ MOLA' : '⏱ ODAK')+(S.activeSubject?(' · '+S.activeSubject):'');
-  const body  = 'Kalan: '+_fmtRemain()+'  ·  Bitiş ~'+_fmtEndClock();
   // aynı tag + renotify:false + silent → mevcut bildirim YERİNDE güncellenir, fırlamaz
-  swPost({ type:'notify', tag:'overclock-ongoing', title, body, icon:_NOTIF_ICON, silent:true, quiet:true });
+  swPost({ type:'notify', tag:'overclock-ongoing', title:_ongoingTitle(), body:_ongoingBody(), icon:_NOTIF_ICON, silent:true, quiet:true });
   _ongoingShown = true;
 }
 function _startOngoingRefresh(){
@@ -3090,11 +3086,8 @@ function _startOngoingRefresh(){
   _ongoingIv = setInterval(()=>{
     if (!timerRunning || !timerEndAt){ return; }
     if (!document.hidden) return;   // sadece arkaplandayken bildirimi güncelle
-    if (_isNative()){
-      // chronometer kullanan native bildirimi güncellemeye gerek yok (OS sayıyor)
-      return;
-    }
-    _pushOngoingWeb();
+    if (_isNative()) _pushOngoingNative();
+    else _pushOngoingWeb();
   }, 1000);
 }
 function _stopOngoingRefresh(){ if(_ongoingIv){ clearInterval(_ongoingIv); _ongoingIv=null; } }
@@ -6542,7 +6535,7 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.14 başlatıldı.');
+addLog('OVERCLOCK v7.15.15 başlatıldı.');
 </script>
 </body>
 </html>
