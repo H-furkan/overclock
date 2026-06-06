@@ -510,7 +510,7 @@ body.pixel-font #timer-unit{font-size:7px}
 <div id="fs-timer">
   <div id="fs-status">● STANDBY</div>
   <button id="fs-close" type="button" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
-  <div id="fs-ring-wrap">
+  <div id="fs-ring-wrap" onclick="fsTimerTap()" style="cursor:pointer">
     <svg id="fs-svg" viewBox="0 0 200 200">
       <circle id="fs-ring-bg" cx="100" cy="100" r="92"></circle>
       <circle id="fs-ring" cx="100" cy="100" r="92"></circle>
@@ -519,6 +519,12 @@ body.pixel-font #timer-unit{font-size:7px}
       <div id="fs-num">90:00</div>
       <div id="fs-unit">FOCUS</div>
     </div>
+  </div>
+  <!-- Süre ayarı: sayaca dokununca açılır (yalnızca başlatılmamışken) -->
+  <div id="fs-dur" style="display:none;width:min(86vw,420px);text-align:center">
+    <div style="font-size:13px;color:var(--bright);letter-spacing:2px;margin-bottom:10px"><span id="fs-dur-lbl">90</span> dk</div>
+    <input id="fs-dur-range" type="range" min="1" max="240" value="90" style="width:100%;accent-color:var(--bright)" oninput="fsDurInput(this.value)" onchange="fsDurCommit()">
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:8px">Kaydırarak ayarla · sayaca tekrar dokun kapat</div>
   </div>
   <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
     <div id="fs-mode">Focus — 90dk</div>
@@ -764,55 +770,6 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
   </div>
 
-  <!-- MISSION + BOSS -->
-  <div class="block">
-    <div class="blabel">■ Current Mission</div>
-    <div id="boss-panel">
-      <span id="boss-tag">BOSS FIGHT</span>
-      <div id="boss-name">TÜREV BOSS FIGHT</div>
-      <div id="boss-hp-wrap"><div id="boss-hp-fill"></div></div>
-      <div class="boss-hp-lbl"><span>HP: <span id="boss-hp-val">70</span>%</span><span>TARGET: ELIMINATION</span></div>
-      <div class="brow">
-        <button class="btn" onclick="dmgBoss(10)">-10 HP</button>
-        <button class="btn" onclick="dmgBoss(25)">-25 HP</button>
-        <button class="btn primary" onclick="defeatBoss()" style="flex:1">⚔ YENİLDİ</button>
-      </div>
-      <div id="boss-aggro">
-        <b>⚠ BOSS AGRESİF</b><br>
-        <span id="boss-aggro-msg">Son focus üzerinden uzun süre geçti. Boss yakında saldıracak.</span>
-      </div>
-      <div id="boost-banner">
-        <span class="b-ico">⚡</span>
-        <div class="b-txt" id="boost-txt">2X XP BOOST AKTİF</div>
-        <span class="b-time" id="boost-time">--:--</span>
-      </div>
-    </div>
-    <div id="mission-title" style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--white);text-transform:uppercase;letter-spacing:3px;margin-bottom:4px">AYT MATEMATİK</div>
-    <div id="mission-sub" style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-bottom:12px">Türev &amp; Limit — Derinlik Protokolü</div>
-    <div class="brow mb8">
-      <button class="btn" onclick="tog('mission-edit')">✏ GÖREV</button>
-      <button class="btn" onclick="tog('boss-edit')">🗡 BOSS</button>
-    </div>
-    <div id="mission-edit" style="display:none" class="mb8">
-      <div class="irow"><input class="inp" id="inp-mission" placeholder="Yeni görev..." onkeydown="if(event.key==='Enter')setMission()"><button class="btn primary" onclick="setMission()">SET</button></div>
-    </div>
-    <div id="boss-edit" style="display:none">
-      <div class="irow"><input class="inp" id="inp-boss-name" placeholder="Boss adı..."><input class="inp" id="inp-boss-hp" type="number" min="0" max="100" placeholder="HP%" style="max-width:80px"><button class="btn primary" onclick="setBoss()">SET</button></div>
-    </div>
-  </div>
-
-  <!-- BIOMETRICS -->
-  <div class="block">
-    <div class="blabel">■ Biometric Stats</div>
-    <div style="background:var(--mid);border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px">
-      <div class="fbet mb8">
-        <span style="font-size:8px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">💧 Hidrasyon</span>
-        <span id="water-val" class="bio-val warn">0 / 8</span>
-      </div>
-      <div style="height:3px;background:var(--dim);margin-bottom:8px"><div id="water-bar" style="height:100%;width:0%;background:var(--bright);transition:width .4s"></div></div>
-      <div class="brow"><button class="btn" style="flex:1" onclick="addWater()">+ İÇ (250ml)</button><button class="btn" onclick="resetWater()">↺</button></div>
-    </div>
-  </div>
 </div><!-- /cockpit -->
 
 <!-- ══════════ PAGE: REMINDERS ══════════ -->
@@ -1363,7 +1320,7 @@ body.pixel-font #timer-unit{font-size:7px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.17</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.15.18</div>
     </div>
   </div>
 </div>
@@ -1457,7 +1414,6 @@ const BADGES = [
   {id:'maestro',    icon:'🎹', name:'SILENT MAESTRO', desc:'12h sessizlikte çalış', type:'daily',     trig:'manual'},
   {id:'titan_b',    icon:'💀', name:'TITAN PROTOCOL', desc:'1200 XP tamamla',       type:'daily',     trig:'auto'},
   {id:'streak',     icon:'⚡', name:'CHAIN STRIKE',   desc:'3 session üst üste',    type:'daily',     trig:'auto'},
-  {id:'hydra',      icon:'💧', name:'HYDRA',          desc:'Günde 8 bardak su',     type:'daily',     trig:'auto'},
   {id:'iron',       icon:'🔩', name:'IRON WILL',      desc:'5 session tamamla',     type:'daily',     trig:'auto'},
   {id:'ghost',      icon:'👻', name:'GHOST MODE',     desc:'2h kesintisiz',         type:'daily',     trig:'manual'},
   {id:'error0',     icon:'🎯', name:'ZERO ERRORS',    desc:'0 hata ile günü bitir', type:'daily',     trig:'manual'},
@@ -2103,6 +2059,7 @@ function toggleTimer(){
     }
     timerRunning=true;
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
+    { const _d=g('fs-dur'); if(_d) _d.style.display='none'; }   // süre slider'ı açıksa kapat
     g('btn-start').textContent='⏸ PAUSE';
     setStatus(isBreak?'break':'active');
     timerIv=setInterval(tickTimer,1000);
@@ -2363,7 +2320,7 @@ function enterFullscreen(){
     if(closeBtn) closeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); exitFullscreen(); });
     fs.addEventListener('click', function(ev){ if(ev.target===fs) exitFullscreen(); });
   }
-  try{ _acquireWakeLock(); }catch(e){}
+  if(timerRunning){ try{ _acquireWakeLock(); }catch(e){} }  // ekran kilidini sadece sayaç çalışırken tut (pil)
 }
 function exitFullscreen(){
   const fs=g('fs-timer'); if(!fs) return;
@@ -2372,12 +2329,44 @@ function exitFullscreen(){
   fs.style.transform='translateY(100%)';
   fs.style.opacity='0';
   fs.style.pointerEvents='none';
+  // süre slider'ı açıksa kapat
+  const dur=g('fs-dur'); if(dur) dur.style.display='none';
   if(!timerRunning){ try{ _releaseWakeLock(); }catch(e){} }
+  // tam ekran kapanınca HQ sekmesine dön
+  try{ goTab(document.querySelector('.navitem'), 'cockpit'); }catch(e){}
 }
 // ESC ile tam ekrandan çık
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){ const fs=g('fs-timer'); if(fs && fs.classList.contains('show')) exitFullscreen(); }
 });
+
+// ── Tam ekran: sayaca dokununca kaydırmalı süre ayarı ──
+// Yalnızca başlatılmamış (taze) sayaçta çalışır. Başlatılıp DURDURULMUŞ sayaçta
+// çalışmaz (kötü deneyim olmasın) — kalan süre tam süreye eşit değilse taze sayılmaz.
+function _timerIsFresh(){
+  const full=(isBreak?S.breakMin:S.focusMin)*60;
+  return !timerRunning && timerSecs===full;
+}
+function fsTimerTap(){
+  const dur=g('fs-dur'); if(!dur) return;
+  if(!_timerIsFresh()){
+    notify('⏸ Süre yalnızca başlatılmamış sayaçta değiştirilebilir');
+    return;
+  }
+  if(dur.style.display!=='none'){ dur.style.display='none'; return; }   // toggle kapat
+  const rng=g('fs-dur-range');
+  if(rng){ rng.max=isBreak?60:240; rng.value=isBreak?S.breakMin:S.focusMin; }
+  const lbl=g('fs-dur-lbl'); if(lbl) lbl.textContent=isBreak?S.breakMin:S.focusMin;
+  dur.style.display='block';
+}
+function fsDurInput(v){
+  v=Math.max(1,Math.min(isBreak?60:240,parseInt(v)||1));
+  if(isBreak) S.breakMin=v; else S.focusMin=v;
+  timerSecs=v*60;
+  const lbl=g('fs-dur-lbl'); if(lbl) lbl.textContent=v;
+  renderTimer();   // HQ + tam ekran sayaç ve halka birlikte güncellenir
+}
+function fsDurCommit(){ save(); try{ syncTimerInputs(); }catch(e){} }
 
 function setStatus(mode){
   const e=g('statuslabel'); e.className='';
@@ -2459,6 +2448,7 @@ function setBoss(){
 
 function renderBoss(){
   const panel = g('boss-panel');
+  if(!panel) return;   // boss fight UI HQ'dan kaldırıldı — dormant
   g('boss-name').textContent=S.bossName + (S.bossDefeated ? ' ✓' : '');
   g('boss-hp-fill').style.width=S.bossHp+'%';
   g('boss-hp-fill').style.background=S.bossDefeated?'var(--green)':(S.bossHp>30?'var(--bright)':'var(--red)');
@@ -2519,9 +2509,10 @@ function resetWater(){
 }
 
 function updateWaterUI(){
-  g('water-val').textContent=S.waterCount+' / 8';
+  const wv=g('water-val'); if(!wv) return;   // hidrasyon UI kaldırıldı
+  wv.textContent=S.waterCount+' / 8';
   g('water-bar').style.width=(S.waterCount/8*100)+'%';
-  g('water-val').className='bio-val '+(S.waterCount>=8?'on':'warn');
+  wv.className='bio-val '+(S.waterCount>=8?'on':'warn');
 }
 
 // ════════════════════════════════════════
@@ -2853,6 +2844,7 @@ const BOSS_AGGRO_HIT_HOURS  = 5;   // start damage after N hours without focus
 const BOSS_AGGRO_INTERVAL_MIN = 30; // hit every N minutes once active
 
 function bossAggroTick(){
+  if (!g('boss-panel')) return;   // boss fight kaldırıldı → aggro/XP-drain devre dışı
   // skip if boss already defeated or no boss configured (HP 0)
   if (!S || S.bossDefeated || S.bossHp <= 0) {
     const a = g('boss-aggro'); if (a) a.classList.remove('show');
@@ -3213,6 +3205,7 @@ function cancelTimerNotification(){
 
 // Schedule a boss-attack heads-up while the app is in the background
 function scheduleBossNotification(){
+  if (!g('boss-panel')) return;   // boss fight kaldırıldı → boss bildirimi kurulmaz
   if (!S || S.bossDefeated || S.bossHp <= 0) return;
   if (S.boostUntil && Date.now() < S.boostUntil && S.activeShield) return;
   if (timerRunning && !isBreak) return; // actively working — boss is calm
@@ -5851,8 +5844,7 @@ function renderAll(){
   g('session-count').textContent=S.sessions;
   g('tasks-done-today').textContent=S.tasksDoneToday;
   syncTimerInputs();
-  g('mission-title').textContent=S.missionTitle;
-  g('mission-sub').textContent=S.missionSub;
+  { const mt=g('mission-title'); if(mt) mt.textContent=S.missionTitle; const ms=g('mission-sub'); if(ms) ms.textContent=S.missionSub; }  // mission UI HQ'dan kaldırıldı
   renderSubjectBtn();
   // ── STREAK PROTECTOR consumed last night → notify once ──
   if (S._streakSaved) {
@@ -6530,6 +6522,8 @@ renderAll();
 refreshNotifSwitch();
 // initial reminder & aggro check on open
 try { reminderTick(); bossAggroTick(); } catch(e){}
+// boss fight kaldırıldı: önceden kurulmuş yetim boss alarmı varsa iptal et
+try { cancelBossNotification(); } catch(e){}
 // schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
 try { rescheduleAllReminders(); } catch(e){}
 // Stat decay: 3+ gün eylem yok ise bağlı statlar azalır (boot'ta bir kez)
@@ -6537,7 +6531,9 @@ try { applyStatDecay(); } catch(e){}
 try { if (_isNative()) ensureNativeNotifPerm(); } catch(e){}
 try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
-addLog('OVERCLOCK v7.15.17 başlatıldı.');
+// Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
+try { enterFullscreen(); } catch(e){}
+addLog('OVERCLOCK v7.15.18 başlatıldı.');
 </script>
 </body>
 </html>
