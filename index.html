@@ -1419,7 +1419,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.3</div>
     </div>
   </div>
 </div>
@@ -5451,7 +5451,7 @@ function maybeShowWeeklyReport(){
     if(S.lastWeeklyReportShown===wid) return;
     const rep=generateWeeklyReport(wid);
     if(rep.focusSecs<=0 && !rep.topicsFixed && !rep.tasksDone && !rep.reviews && !rep.netCount){
-      S.lastWeeklyReportShown=wid; return;   // tamamen boş hafta → modal açma
+      S.lastWeeklyReportShown=wid; save(); return;   // tamamen boş hafta → işaretle, modal açma
     }
     if(!S.weeklyReports) S.weeklyReports={};
     S.weeklyReports[wid]=rep;
@@ -6783,6 +6783,11 @@ function _mergeIncoming(incoming){
   // lastGoalHitDate: hangi cihazda daha yeni (string karşılaştırması YYYY-MM-DD sıralı) o kalır
   const lh1 = S.lastGoalHitDate||'', lh2 = incoming.lastGoalHitDate||'';
   merged.lastGoalHitDate = (lh1 > lh2) ? lh1 : lh2;
+  // HAFTALIK RAPOR: "gösterildi" işareti sync ile geri gitmesin (yoksa her açılışta tekrar çıkar);
+  // en güncel hafta kazanır + iki cihazın rapor arşivi birleşir.
+  const wr1 = S.lastWeeklyReportShown||'', wr2 = incoming.lastWeeklyReportShown||'';
+  merged.lastWeeklyReportShown = (wr1 > wr2) ? wr1 : wr2;
+  merged.weeklyReports = Object.assign({}, incoming.weeklyReports||{}, S.weeklyReports||{});
   // streak koruyucu / rest token: max
   merged.streakProtectors = Math.max(Number(S.streakProtectors)||0, Number(incoming.streakProtectors)||0);
   merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
@@ -6962,7 +6967,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.16.2 başlatıldı.');
+addLog('OVERCLOCK v7.16.3 başlatıldı.');
 </script>
 </body>
 </html>
