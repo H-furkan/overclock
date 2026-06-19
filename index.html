@@ -1419,7 +1419,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.6</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.16.7</div>
     </div>
   </div>
 </div>
@@ -3683,59 +3683,63 @@ function bgUpdatePreview(){
 function bgPickFile(){
   const inp=g('bg-file'); if(inp) inp.click();
 }
-function bgOnFile(file){
-  if (!file) return;
-  if (!file.type.startsWith('image/')){ notify('Sadece resim dosyası'); return; }
-  notify('🖼 Arkaplan işleniyor…');
+// Kaynak görseli (ImageBitmap/Image) ekrana uygun boyuta downscale + JPEG sıkıştır,
+// localStorage'a yaz. Tek noktadan işlenir (hem createImageBitmap hem fallback kullanır).
+function _bgStoreImg(src, nw, nh){
+  try{
+    if (!nw || !nh){ notify('⚠ Görselin boyutu okunamadı (bozuk olabilir)'); return; }
+    const maxW = 1080, maxH = 1920;
+    const scale = Math.min(1, maxW/nw, maxH/nh);
+    const w = Math.max(1, Math.round(nw*scale)), h = Math.max(1, Math.round(nh*scale));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(src, 0, 0, w, h);
+    let dataUrl = cv.toDataURL('image/jpeg', 0.82);
+    let q = 0.82;
+    while (dataUrl.length > 1500000 && q > 0.4){ q -= 0.12; dataUrl = cv.toDataURL('image/jpeg', q); }
+    const tgt = (g('bg-target')||{}).value || 'global';
+    if (!S.background) S.background = {global:null, perTab:{}, dim:0.65};
+    const prevGlobal = S.background.global;
+    const prevTab = (S.background.perTab||{})[tgt];
+    if (tgt==='global') S.background.global = dataUrl;
+    else { if (!S.background.perTab) S.background.perTab={}; S.background.perTab[tgt] = dataUrl; }
+    let ok = true;
+    try{ localStorage.setItem(SK, JSON.stringify(S)); }
+    catch(e){ ok = false; if (tgt==='global') S.background.global = prevGlobal; else S.background.perTab[tgt] = prevTab; }
+    if (!ok){ notify('⚠ Resim çok büyük — depoya sığmadı. Daha küçük bir görsel dene.'); return; }
+    if (window._syncPush) { try{ window._syncPush(); }catch(e){} }
+    applyBackground(); bgUpdatePreview();
+    notify('🖼 Arkaplan ayarlandı ('+Math.round(dataUrl.length/1024)+'KB)');
+  }catch(err){ notify('⚠ Resim işlenemedi: '+(err&&err.message||err)); }
+}
+// Eski yol (createImageBitmap yoksa): FileReader → Image → canvas
+function _bgOnFileLegacy(file){
   const r = new FileReader();
   r.onload=()=>{
     const img = new Image();
-    img.onload = ()=>{
-      try{
-        // Ekrana uygun boyuta downscale + JPEG sıkıştır → localStorage'a SIĞAR,
-        // FPS düşmez, sync şişmez. (Büyük ham base64 localStorage'a sığmayıp
-        // sessizce fail ediyor, bu yüzden "siyah ekran / 30 kez yükle" oluyordu.)
-        const maxW = 1080, maxH = 1920;
-        let w = img.naturalWidth, h = img.naturalHeight;
-        const scale = Math.min(1, maxW/w, maxH/h);
-        w = Math.round(w*scale); h = Math.round(h*scale);
-        const cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        const ctx = cv.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        let dataUrl = cv.toDataURL('image/jpeg', 0.82);
-        // hâlâ çok büyükse kaliteyi kademeli düşür (localStorage ~5MB sınırı)
-        let q = 0.82;
-        while (dataUrl.length > 1500000 && q > 0.4){
-          q -= 0.12;
-          dataUrl = cv.toDataURL('image/jpeg', q);
-        }
-        const tgt = (g('bg-target')||{}).value || 'global';
-        if (!S.background) S.background = {global:null, perTab:{}, dim:0.65};
-        // önce eski değeri yedekle, set etmeyi DENE, sığmazsa geri al + uyar
-        const prevGlobal = S.background.global;
-        const prevTab = (S.background.perTab||{})[tgt];
-        if (tgt==='global') S.background.global = dataUrl;
-        else { if (!S.background.perTab) S.background.perTab={}; S.background.perTab[tgt] = dataUrl; }
-        let ok = true;
-        try{ localStorage.setItem(SK, JSON.stringify(S)); }
-        catch(e){
-          ok = false;
-          // geri al
-          if (tgt==='global') S.background.global = prevGlobal;
-          else S.background.perTab[tgt] = prevTab;
-        }
-        if (!ok){ notify('⚠ Resim çok büyük — depoya sığmadı. Daha küçük bir görsel dene.'); return; }
-        if (window._syncPush) { try{ window._syncPush(); }catch(e){} }
-        applyBackground(); bgUpdatePreview();
-        notify('🖼 Arkaplan ayarlandı ('+Math.round(dataUrl.length/1024)+'KB)');
-      }catch(err){ notify('⚠ Resim işlenemedi: '+(err&&err.message||err)); }
-    };
+    img.onload = ()=>_bgStoreImg(img, img.naturalWidth, img.naturalHeight);
     img.onerror=()=>notify('⚠ Görsel açılamadı (bozuk olabilir)');
     img.src = r.result;
   };
   r.onerror=()=>notify('Dosya okunamadı');
   r.readAsDataURL(file);
+}
+function bgOnFile(file){
+  if (!file) return;
+  if (!file.type.startsWith('image/')){ notify('Sadece resim dosyası'); return; }
+  notify('🖼 Arkaplan işleniyor…');
+  // createImageBitmap daha sağlam bir decode yolu — büyük görsellerde <img>+drawImage'in
+  // (özellikle Android WebView) ürettiği "dikey çizgili bozuk görsel" sorununu çözer.
+  // Bozulursa sessiz çöp yerine temiz hata verir; yoksa eski yola düşer.
+  if (window.createImageBitmap){
+    createImageBitmap(file).then(bmp=>{
+      try{ _bgStoreImg(bmp, bmp.width, bmp.height); }
+      finally{ try{ bmp.close(); }catch(e){} }
+    }).catch(()=>{ _bgOnFileLegacy(file); });
+  } else {
+    _bgOnFileLegacy(file);
+  }
   const inp=g('bg-file'); if (inp) inp.value='';
 }
 function bgRemove(){
@@ -6995,7 +6999,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.16.6 başlatıldı.');
+addLog('OVERCLOCK v7.16.7 başlatıldı.');
 </script>
 </body>
 </html>
