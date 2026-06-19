@@ -179,6 +179,8 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 #fs-unit{font-size:13px;color:var(--muted);letter-spacing:6px;margin-top:10px}
 #fs-mode{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
 #fs-subject{font-size:12px;color:var(--bright);letter-spacing:2px;text-transform:uppercase;min-height:14px}
+#fs-sesstype{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(86vw,420px)}
+#fs-sesstype .btn{min-height:42px;font-size:11px}
 #fs-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(86vw,420px)}
 #fs-controls .btn{min-height:54px;font-size:12px}
 #fs-controls .btn.fw2{grid-column:1 / -1}
@@ -564,6 +566,11 @@ body.pixel-font #timer-unit{font-size:8px}
   </div>
   <div style="text-align:center;display:flex;flex-direction:column;gap:6px">
     <div id="fs-subject"></div>
+  </div>
+  <!-- Seans tipi (tam ekran) -->
+  <div id="fs-sesstype">
+    <button class="btn" id="fs-st-soru" onclick="setSessionType('soru')">📝 SORU</button>
+    <button class="btn" id="fs-st-konu" onclick="setSessionType('konu')">📖 KONU</button>
   </div>
   <div id="fs-controls">
     <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
@@ -1013,12 +1020,20 @@ body.pixel-font #timer-unit{font-size:8px}
 
   <!-- HAFTALIK KARŞILAŞTIRMA -->
   <div class="block">
-    <div class="blabel">■ Haftalık Karşılaştırma</div>
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Haftalık Karşılaştırma</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:12px" onclick="weekNav(-1)">◀</button>
+        <span id="week-label" style="font-size:9px;color:var(--bright);letter-spacing:1px;min-width:88px;text-align:center">Bu Hafta</span>
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:12px" onclick="weekNav(1)">▶</button>
+      </div>
+    </div>
     <div id="week-compare-cards" class="stat-grid" style="margin-top:0;margin-bottom:10px"></div>
-    <div id="chart-wrap">
+    <div id="chart-wrap" style="position:relative">
       <canvas id="focus-chart" width="600" height="160"></canvas>
+      <div id="chart-tip" style="display:none;position:absolute;z-index:50;background:var(--deep);border:1px solid var(--bd2);color:var(--bright);font-size:9px;letter-spacing:.3px;padding:5px 8px;border-radius:6px;pointer-events:none;line-height:1.5;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.6)"></div>
       <div class="chart-legend" id="focus-chart-legend">
-        <span>BU HAFTA</span><span>GEÇEN HAFTA</span><span>SAAT (FOCUS)</span>
+        <span>SEÇİLİ HAFTA</span><span>ÖNCEKİ HAFTA</span><span>SAAT (FOCUS)</span>
       </div>
     </div>
   </div>
@@ -1447,7 +1462,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.1</div>
     </div>
   </div>
 </div>
@@ -2216,9 +2231,11 @@ let _sessType='soru', _sessFocusMin=0, _sessSubject='';
 function setSessionType(t){ S.sessionType = (t==='konu')?'konu':'soru'; save(); renderSessionType(); }
 function renderSessionType(){
   const t=S.sessionType||'soru';
-  const bs=g('st-soru'), bk=g('st-konu');
-  if(bs){ bs.classList.toggle('primary', t==='soru'); }
-  if(bk){ bk.classList.toggle('primary', t==='konu'); }
+  [['st-soru','st-konu'],['fs-st-soru','fs-st-konu']].forEach(([si,ki])=>{
+    const bs=g(si), bk=g(ki);
+    if(bs) bs.classList.toggle('primary', t==='soru');
+    if(bk) bk.classList.toggle('primary', t==='konu');
+  });
 }
 function toggleTimer(){
   if(timerRunning){
@@ -2590,6 +2607,7 @@ let _fsWired=false;
 function enterFullscreen(){
   const fs=g('fs-timer'); if(!fs) return;
   renderFsTimer();
+  try{ renderSessionType(); }catch(e){}
   fs.classList.add('show');
   fs.style.transform='translateY(0)';
   fs.style.opacity='1';
@@ -6505,18 +6523,43 @@ function setSubjectRange(n, btn){
 }
 
 // Returns an array of {date,focusSecs} for last N days (including today)
+const _MAX_DAY_FOCUS = 16*3600;   // bir günde gerçekçi tavan (16s) — bozuk/abartı değerleri kırpar (24h bug)
+function _dstr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _focusSecsFor(ds){
+  let secs = (ds===today()) ? (S.todayFocusSecs||0) : 0;
+  if(ds!==today()){ const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) secs=h.focusSecs||0; }
+  return Math.min(_MAX_DAY_FOCUS, Math.max(0, secs||0));
+}
 function getFocusDays(n){
   const t = today();
   const result = [];
   for(let i=n-1;i>=0;i--){
     const d=new Date(); d.setDate(d.getDate()-i);
-    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    let secs=0;
-    if(ds===t) secs=S.todayFocusSecs||0;
-    else { const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) secs=h.focusSecs||0; }
-    result.push({date:ds,secs,isToday:ds===t});
+    const ds=_dstr(d);
+    result.push({date:ds,secs:_focusSecsFor(ds),isToday:ds===t});
   }
   return result;
+}
+// Hafta-sabitli (Pzt-Pzr) gün dizisi. offset: 0=bu hafta, -1=geçen hafta...
+function _mondayLocal(base){ const d=new Date(base); d.setHours(0,0,0,0); const dow=(d.getDay()+6)%7; d.setDate(d.getDate()-dow); return d; }
+let _weekOffset = 0;
+function _weekDays(offset){
+  const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+offset*7);
+  const t=today(); const arr=[];
+  for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(d.getDate()+i); const ds=_dstr(d);
+    arr.push({date:ds, secs:_focusSecsFor(ds), isToday:ds===t}); }
+  return arr;
+}
+function _weekLabelText(offset){
+  if(offset===0) return 'Bu Hafta';
+  if(offset===-1) return 'Geçen Hafta';
+  const days=_weekDays(offset); const a=days[0].date.slice(5).replace('-','.'), b=days[6].date.slice(5).replace('-','.');
+  return a+'–'+b;
+}
+function weekNav(delta){
+  const n=_weekOffset+delta;
+  if(n>0 || n<-4) return;   // geleceğe gitme; ~30 günlük focusHistory sınırı (≈4 hafta geri)
+  _weekOffset=n; try{ drawFocusChart(); renderWeekCompare(); }catch(e){}
 }
 
 // Returns merged subjectLog for last N days: {subject: totalSecs}
@@ -6562,35 +6605,51 @@ function renderStats(){
 function renderWeekCompare(){
   const el=g('week-compare-cards'); if(!el) return;
   // this week Mon-Sun vs last week Mon-Sun
-  const thisW=getFocusDays(7).reduce((a,d)=>a+d.secs,0);
-  const lastW=(()=>{
-    let s=0;
-    for(let i=14;i>=8;i--){
-      const d=new Date(); d.setDate(d.getDate()-i);
-      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      const h=(S.focusHistory||[]).find(x=>x.date===ds); if(h) s+=h.focusSecs||0;
-    }
-    return s;
-  })();
+  // seçili hafta (gezinmeyle aynı) vs önceki hafta — hafta-sabitli, clamp'li
+  const thisW=_weekDays(_weekOffset).reduce((a,d)=>a+d.secs,0);
+  const lastW=_weekDays(_weekOffset-1).reduce((a,d)=>a+d.secs,0);
   const diff=thisW-lastW;
   const pct=lastW>0?Math.round((diff/lastW)*100):null;
   const upDown=diff>=0?'▲':'▼';
   const cls=diff>=0?'good':'hot';
+  const curLbl=_weekOffset===0?'Bu Hafta':(_weekOffset===-1?'Geçen Hafta':'Seçili Hafta');
   el.innerHTML=
     '<div class="stat-card '+cls+'">'+
       '<div class="sv" style="font-size:15px">'+fmtHM(thisW)+'</div>'+
-      '<div class="sl">⏱ Bu Hafta</div>'+
+      '<div class="sl">⏱ '+curLbl+'</div>'+
     '</div>'+
     '<div class="stat-card">'+
       '<div class="sv" style="font-size:15px">'+fmtHM(lastW)+'</div>'+
-      '<div class="sl">⏱ Geçen Hafta</div>'+
+      '<div class="sl">⏱ Önceki Hafta</div>'+
     '</div>'+
     '<div class="stat-card '+(diff>=0?'good':'hot')+'" style="grid-column:1/-1">'+
       '<div class="sv" style="font-size:13px">'+upDown+' '+fmtHM(Math.abs(diff))+(pct!==null?' ('+Math.abs(pct)+'%)':'')+'</div>'+
-      '<div class="sl">'+(diff>=0?'GEÇEN HAFTADAN DAHA İYİ ⚡':'GEÇEN HAFTANIN GERİSİNDE ⚠')+'</div>'+
+      '<div class="sl">'+(diff>=0?'ÖNCEKİ HAFTADAN DAHA İYİ ⚡':'ÖNCEKİ HAFTANIN GERİSİNDE ⚠')+'</div>'+
     '</div>';
 }
 
+let _focusHit = [], _focusTipWired = false;
+function _fmtFocusTip(secs){ const h=secs/3600; return h>=1 ? h.toFixed(1)+' saat' : Math.round(secs/60)+' dk'; }
+function _wireFocusTip(){
+  if(_focusTipWired) return; _focusTipWired=true;
+  const cv=g('focus-chart'), tip=g('chart-tip'), wrap=cv&&cv.parentElement; if(!cv||!tip||!wrap) return;
+  const show=(ev)=>{
+    const r=cv.getBoundingClientRect();
+    const px=(ev.touches&&ev.touches[0]?ev.touches[0].clientX:ev.clientX);
+    const cx=px-r.left;
+    const hit=_focusHit.find(h=> cx>=h.x && cx<h.x+h.w);
+    if(!hit || (hit.cur<=0 && hit.prev<=0)){ tip.style.display='none'; return; }
+    tip.innerHTML='<b>'+hit.date.slice(5).replace('-','.')+' '+hit.lbl+'</b><br>seçili: '+_fmtFocusTip(hit.cur)+'<br>önceki: '+_fmtFocusTip(hit.prev);
+    tip.style.display='block';
+    const ww=wrap.getBoundingClientRect();
+    tip.style.left=Math.max(4, Math.min(px-ww.left+6, ww.width-118))+'px';
+    tip.style.top='6px';
+  };
+  cv.addEventListener('mousemove', show);
+  cv.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
+  cv.addEventListener('touchstart', show, {passive:true});
+  cv.addEventListener('touchmove', show, {passive:true});
+}
 function drawFocusChart(){
   const cv=g('focus-chart'); if(!cv) return;
   const dpr=window.devicePixelRatio||1;
@@ -6608,15 +6667,10 @@ function drawFocusChart(){
   const col_red=cs.getPropertyValue('--red').trim();
   const col_green=cs.getPropertyValue('--green').trim();
 
-  const thisWeek=getFocusDays(7);
-  // last week same 7 days
-  const lastWeek=[];
-  for(let i=13;i>=7;i--){
-    const d=new Date(); d.setDate(d.getDate()-i);
-    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const h=(S.focusHistory||[]).find(x=>x.date===ds);
-    lastWeek.push({secs:h?h.focusSecs||0:0});
-  }
+  // HAFTA-SABİTLİ (Pzt-Pzr): seçili hafta + önceki hafta. _weekOffset ile gezilir.
+  const thisWeek=_weekDays(_weekOffset);
+  const lastWeek=_weekDays(_weekOffset-1);
+  const wl=g('week-label'); if(wl) wl.textContent=_weekLabelText(_weekOffset);
 
   const padL=30,padR=10,padT=12,padB=20;
   const cw=W-padL-padR, ch=H-padT-padB;
@@ -6626,7 +6680,7 @@ function drawFocusChart(){
   //  which meant a 4.7h bar visually touched the "5" line.)
   const yMax=Math.max(1, Math.ceil(maxSecs/3600));
   const yScale = yMax*3600;
-  const dayLabels=['PZ','PT','SA','ÇA','PE','CU','CT'];
+  const dayLabels=['PT','SA','ÇA','PE','CU','CT','PZ'];   // Pazartesi-başlı (hafta-sabitli)
 
   // grid
   ctx.font="8px 'Share Tech Mono',monospace";
@@ -6640,12 +6694,13 @@ function drawFocusChart(){
 
   const bw=cw/7;
   const bHalf=bw*0.22;
+  _focusHit = [];   // tooltip için sütun bölgeleri
   thisWeek.forEach((d,i)=>{
     const x=padL+i*bw;
-    const dow=new Date(d.date).getDay();
-    const lbl=dayLabels[dow];
+    const lbl=dayLabels[i];   // i: 0=Pzt … 6=Pzr (hafta-sabitli)
     // last week bar (behind, dimmer)
     const lsecs=lastWeek[i]?lastWeek[i].secs:0;
+    _focusHit.push({ x:x, w:bw, date:d.date, cur:d.secs, prev:lsecs, lbl:lbl });
     if(lsecs>0){
       const lh=(lsecs/yScale)*ch;
       ctx.fillStyle='rgba(100,100,100,0.35)';
@@ -6668,6 +6723,7 @@ function drawFocusChart(){
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.fillText(lbl,x+bw/2,padT+ch+3);
   });
+  _wireFocusTip();
 }
 
 // Subject colour palette
@@ -7166,7 +7222,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.0 başlatıldı.');
+addLog('OVERCLOCK v7.17.1 başlatıldı.');
 </script>
 </body>
 </html>
