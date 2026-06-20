@@ -1462,7 +1462,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.2</div>
     </div>
   </div>
 </div>
@@ -2282,6 +2282,9 @@ function tickTimer(){
     const elapsed = Math.max(0, prev - timerSecs);
     if(elapsed > 0){
       S.todayFocusSecs = (S.todayFocusSecs||0) + elapsed;
+      // TEK DOĞRU KAYNAK: kümülatif odak da aynı per-tick gerçek süreden birikir
+      // (eskiden tamamlanınca tam blok ekleniyordu → grafiklerle uyuşmuyordu).
+      S.cumFocusSecs = (S.cumFocusSecs||0) + elapsed;
       // subject-level logging
       const subj = S.activeSubject||'Genel';
       const t = today();
@@ -2299,7 +2302,7 @@ function tickTimer(){
     stopKeepAlive(); _releaseWakeLock();
     try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
     if(!isBreak){
-      S.cumFocusSecs=(S.cumFocusSecs||0)+S.focusMin*60;
+      // cumFocusSecs artık per-tick birikiyor (yukarıda) — burada tekrar EKLEME (çift sayım olurdu)
       S.sessions++; S.streak++;
       g('session-count').textContent=S.sessions;
       renderCumulative();
@@ -2450,7 +2453,7 @@ function finishTimerEarly(){
   g('btn-start').textContent='▶ START';
   // partial reward (proportional, slightly lower than full-session rate)
   const sxp = Math.max(5, Math.round(elapsedMin * 1.7));
-  S.cumFocusSecs = (S.cumFocusSecs||0) + elapsedSec;
+  // cumFocusSecs per-tick birikti — burada tekrar ekleme yok (çift sayım önlendi)
   renderCumulative();
   S.lastFocusEnd = Date.now();
   addXP(sxp, 'Session erken bitti ('+elapsedMin+'dk)');
@@ -5644,25 +5647,29 @@ function generateWeeklyReport(weekId){
            topicsFixed, tasksDone, reviews, netCount:wk.length,
            netLast: lastEx?lastEx.total:null, netType: lastEx?lastEx.type:null };
 }
+// "Bu hafta raporu gösterildi mi" — CİHAZ-YEREL flag (localStorage), ASLA senkronlanmaz.
+// (Eski hata: S.lastWeeklyReportShown sync round-trip'te stale değerle eziliyor → her açılışta tekrar çıkıyordu.)
+function _weeklyShownGet(){ try{ return localStorage.getItem('oc_weekly_shown')||''; }catch(e){ return ''; } }
+function _weeklyShownSet(wid){ try{ localStorage.setItem('oc_weekly_shown', wid); }catch(e){} }
 function maybeShowWeeklyReport(){
   try{
     const now=new Date(); const dow=now.getDay();   // 0=Pazar
-    // Pazar günü: yalnızca AKŞAM (≥18:00) göster — sabah/öğlen değil (hafta daha bitmemiş olur).
-    // Pazar akşamını kaçırırsan Pzt-Cmt ilk açılışta geçen (tamamlanmış) haftayı gösterir.
-    if(dow===0 && now.getHours()<18) return;
+    if(dow===0 && now.getHours()<18) return;   // Pazar yalnızca akşam (≥18:00)
     let target=new Date(now);
     if(dow!==0) target.setDate(target.getDate()-7);  // Pzt-Cmt → geçen (tamamlanmış) hafta; Pazar akşamı → bu hafta
     const wid=_weekId(target);
-    if(S.lastWeeklyReportShown===wid) return;
+    if(_weeklyShownGet()===wid) return;   // bu hafta zaten gösterildi → bir daha ASLA gösterme
+    _weeklyShownSet(wid);                  // göstermeden ÖNCE işaretle (idempotent — tek sefer)
+    S.lastWeeklyReportShown=wid;           // arşiv/uyumluluk için S'de de tut
     const rep=generateWeeklyReport(wid);
     if(rep.focusSecs<=0 && !rep.topicsFixed && !rep.tasksDone && !rep.reviews && !rep.netCount){
-      S.lastWeeklyReportShown=wid; save(); return;   // tamamen boş hafta → işaretle, modal açma
+      save(); return;   // tamamen boş hafta → işaretlendi, modal açma
     }
     if(!S.weeklyReports) S.weeklyReports={};
     S.weeklyReports[wid]=rep;
     const keys=Object.keys(S.weeklyReports).sort();
     if(keys.length>120) keys.slice(0,keys.length-120).forEach(k=>delete S.weeklyReports[k]);   // max 120 hafta
-    S.lastWeeklyReportShown=wid; save();
+    save();
     openWeeklyModal(wid);
     notify('📊 Haftalık raporun hazır!');
   }catch(e){}
@@ -7222,7 +7229,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.1 başlatıldı.');
+addLog('OVERCLOCK v7.17.2 başlatıldı.');
 </script>
 </body>
 </html>
