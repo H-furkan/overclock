@@ -1462,7 +1462,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.3</div>
     </div>
   </div>
 </div>
@@ -5924,6 +5924,15 @@ function deletePlannerTask(id){
   save(); renderPlanner();
 }
 
+// Tamamlanmamış geçmiş görevi bugüne taşı (tarihini bugüne çek)
+function movePlannerToday(id){
+  const dp=_dp(); const tk=dp.tasks.find(x=>x.id===id); if(!tk) return;
+  tk.date = today(); tk.done=false; tk.doneAt=null; tk.doneDate=null;
+  save(); renderPlanner();
+  notify('📅 Bugüne aktarıldı: '+tk.title);
+  addLog('Planner: "'+tk.title+'" bugüne aktarıldı');
+}
+
 function _prioOrder(p){ return p==='high'?0:(p==='med'?1:2); }
 
 function renderPlanner(){
@@ -5957,10 +5966,12 @@ function renderPlanner(){
     const o = opts||{};
     const cls = 'plan-card '+tk.priority+(tk.done?' done':'');
     const xpLine = tk.done ? ('+'+tk.xp+(tk.xpAwarded?'':' (∅)')) : (tk.xp+' XP');
+    const moveBtn = o.movable ? '<button class="plan-act" style="flex:1;border-color:var(--bright);color:var(--bright)" onclick="movePlannerToday('+tk.id+')">📅 BUGÜNE AKTAR</button>' : '';
     const actions = tk.done
       ? '<button class="plan-act" style="flex:1" onclick="togglePlannerTask('+tk.id+')">↺ GERİ AL</button>'
       : (o.completable
           ? '<button class="plan-act done" style="flex:1" onclick="togglePlannerTask('+tk.id+')">✓ BİTTİ</button>'
+                + moveBtn
                 + '<button class="plan-act del" onclick="deletePlannerTask('+tk.id+')">✕</button>'
           : '<button class="plan-act" style="flex:1" onclick="togglePlannerTask('+tk.id+')">✓ ŞİMDİ BİTİR</button>'
                 + '<button class="plan-act del" onclick="deletePlannerTask('+tk.id+')">✕</button>');
@@ -5978,7 +5989,7 @@ function renderPlanner(){
   const fw=g('plan-future-wrap'), fcar=g('plan-future-caret');
   if(fw) fw.style.display = _planFutureOpen ? 'block':'none';
   if(fcar) fcar.textContent = _planFutureOpen ? '▲':'▼';
-  missedEl.innerHTML = miss.map(tk=>card(tk,{completable:true, showDate:true})).join('');
+  missedEl.innerHTML = miss.map(tk=>card(tk,{completable:true, showDate:true, movable:true})).join('');
   doneEl.innerHTML = done.map(tk=>card(tk,{})).join('');
 }
 
@@ -7229,7 +7240,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.2 başlatıldı.');
+addLog('OVERCLOCK v7.17.3 başlatıldı.');
 </script>
 </body>
 </html>
