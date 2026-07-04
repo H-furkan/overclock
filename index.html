@@ -52,6 +52,25 @@ body[data-theme="amber"] #xp-bar::after{background:#ffaa33;box-shadow:0 0 10px #
 body[data-theme="violet"]{--accent:#bb88ff;--bright:#d4b0ff;--white:#efe0ff}
 body[data-theme="violet"] #xp-bar{background:linear-gradient(90deg,#1a0033,#bb88ff)}
 body[data-theme="violet"] #xp-bar::after{background:#bb88ff;box-shadow:0 0 10px #bb88ff}
+/* KONSOL TEMALARI (kasadan çıkan syntax-highlight paletleri) */
+body[data-theme="dracula"]{--accent:#bd93f9;--bright:#e8e6f0;--white:#f8f8f2;--green:#50fa7b;--yellow:#f1fa8c;--red:#ff5555}
+body[data-theme="dracula"] #xp-bar{background:linear-gradient(90deg,#44257a,#ff79c6)}
+body[data-theme="dracula"] #xp-bar::after{background:#bd93f9;box-shadow:0 0 10px #bd93f9}
+body[data-theme="nord"]{--accent:#88c0d0;--bright:#d8dee9;--white:#eceff4;--green:#a3be8c;--yellow:#ebcb8b;--red:#bf616a}
+body[data-theme="nord"] #xp-bar{background:linear-gradient(90deg,#2e3440,#88c0d0)}
+body[data-theme="nord"] #xp-bar::after{background:#88c0d0;box-shadow:0 0 10px #88c0d0}
+body[data-theme="monokai"]{--accent:#f92672;--bright:#e6e6d8;--white:#f8f8f2;--green:#a6e22e;--yellow:#e6db74;--red:#f92672}
+body[data-theme="monokai"] #xp-bar{background:linear-gradient(90deg,#3a0a1f,#a6e22e)}
+body[data-theme="monokai"] #xp-bar::after{background:#a6e22e;box-shadow:0 0 10px #a6e22e}
+body[data-theme="gruvbox"]{--accent:#fe8019;--bright:#ebdbb2;--white:#fbf1c7;--green:#b8bb26;--yellow:#fabd2f;--red:#fb4934}
+body[data-theme="gruvbox"] #xp-bar{background:linear-gradient(90deg,#3c2a1a,#fabd2f)}
+body[data-theme="gruvbox"] #xp-bar::after{background:#fe8019;box-shadow:0 0 10px #fe8019}
+body[data-theme="solarized"]{--accent:#2aa198;--bright:#93a1a1;--white:#eee8d5;--green:#859900;--yellow:#b58900;--red:#dc322f}
+body[data-theme="solarized"] #xp-bar{background:linear-gradient(90deg,#00252e,#2aa198)}
+body[data-theme="solarized"] #xp-bar::after{background:#2aa198;box-shadow:0 0 10px #2aa198}
+body[data-theme="synthwave"]{--accent:#ff2e97;--bright:#ffb3e6;--white:#ffffff;--green:#72f1b8;--yellow:#fede5d;--red:#fe4450}
+body[data-theme="synthwave"] #xp-bar{background:linear-gradient(90deg,#2b0a3d,#ff2e97)}
+body[data-theme="synthwave"] #xp-bar::after{background:#ff2e97;box-shadow:0 0 12px #ff2e97}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{height:100%;overflow:hidden}
 body{height:100%;overflow:hidden;background:var(--black);color:var(--bright);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);user-select:none;-webkit-user-select:none;position:relative}
@@ -1372,6 +1391,9 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="blabel">■ Temalar</div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">Cihaz arayüzünün renk paletini değiştirir. Kalıcı, bir kere al — istediğin zaman aktif et.</div>
     <div class="shop-grid" id="shop-themes"></div>
+    <div class="blabel" style="margin-top:16px">🎨 Konsol Temaları <span style="font-size:8px;color:var(--muted)">(sadece kasadan açılır)</span></div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Nadir syntax-highlight paletleri. <b style="color:var(--bright)">Konsol Teması</b> item'i kasadan çıkınca rastgele biri açılır; buradan aktifleştir.</div>
+    <div class="shop-grid" id="shop-console-themes"></div>
   </div>
 
   <div class="block">
@@ -1608,7 +1630,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.20.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.20.1</div>
     </div>
   </div>
 </div>
@@ -4957,6 +4979,7 @@ function _ownedUnique(id){
     case 'g_accessory': return (c.avatarAccessory||[]).includes('glasses');
     case 'g_border': return c.avatarBorder==='glow';
     case 'g_permmul': return (c.xpMultiplier||1) >= 1.2;
+    case 's_console_theme': return _ownedConsoleCount() >= CASE_THEMES.length; // hepsi açıldıysa artık düşmesin
     default: return false;
   }
 }
@@ -4979,6 +5002,25 @@ function _summonBossFromWrongTopics(){
 
 const TIER_COLORS = { common:'#bbbbbb', uncommon:'#8fff8f', rare:'#66ccff', epic:'#cc88ff', legendary:'#ffaa44' };
 
+// Konsol temaları — SADECE kasadan açılır (market'te satılmaz), body[data-theme] CSS'i mevcut
+const CASE_THEMES = [
+  { id:'theme_dracula',   icon:'🧛', name:'DRACULA',   desc:'Mor & pembe — klasik editör paleti' },
+  { id:'theme_nord',      icon:'❄',  name:'NORD',      desc:'Buz mavisi kuzey paleti' },
+  { id:'theme_monokai',   icon:'🟩', name:'MONOKAI',   desc:'Neon yeşil/pembe — kod klasiği' },
+  { id:'theme_gruvbox',   icon:'🟫', name:'GRUVBOX',   desc:'Retro sıcak turuncu/hardal' },
+  { id:'theme_solarized', icon:'☀',  name:'SOLARIZED', desc:'Camgöbeği & bronz — düşük kontrast' },
+  { id:'theme_synthwave', icon:'🌆', name:'SYNTHWAVE', desc:'Neon 84 — pembe/mor retrowave' },
+];
+function _ownedConsoleCount(){ const inv=S.inventory||[]; return CASE_THEMES.filter(t=>inv.includes(t.id)).length; }
+function _unlockRandomConsoleTheme(){
+  const inv=S.inventory=S.inventory||[];
+  const locked=CASE_THEMES.filter(t=>!inv.includes(t.id));
+  if(!locked.length){ addXP(300,'Kasa: konsol temaları tam'); notify('🎨 Tüm konsol temaları zaten açık → +300 XP'); return; }
+  const t=locked[Math.floor(Math.random()*locked.length)];
+  inv.push(t.id);
+  notify('🎨 KONSOL TEMASI AÇILDI: '+t.name+' — Market › Temalar\'dan aktifleştir');
+}
+
 const CASE_ITEMS_STANDARD = [
   { id:'s_sprint',    weight:50,   tier:'common',    icon:'⚡',  name:'30dk Sprint',           desc:'Sonraki 30dk session 1.5x XP'           , fx:()=>{ _cs().sprintActive=true;   notify('⚡ Sprint AKTİF — sonraki 30dk session 1.5x XP'); } },
   { id:'s_deepwork',  weight:25,   tier:'common',    icon:'🧘', name:'Deep Work',             desc:'Kesintisiz blokta 2x XP (durdurulursa iptal)', fx:()=>{ _cs().deepWorkActive=true; notify('🧘 Deep Work AKTİF — pause yapma!'); } },
@@ -4986,6 +5028,7 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_xpfrag',    weight:30,   tier:'common',    icon:'🔹', name:'XP Parçacıkları',        desc:'Anında 50-100 arası XP bakiyene eklenir', fx:()=>{ const a=50+Math.floor(Math.random()*51); addXP(a,'Kasa: XP parçacığı'); notify('🔹 +'+a+' XP parçacığı'); } },
   { id:'s_shard',     weight:12,   tier:'uncommon',  icon:'🧩', name:'Streak Koruyucu Kırığı', desc:'10 tane toplayınca 1 tam Streak Koruyucu olur', fx:()=>{ const c=_cs(); c.protShards=(c.protShards||0)+1; notify('🧩 +1 Streak Kırığı ('+c.protShards+'/10)'); _synthShards(); } },
   { id:'s_bossticket',weight:6,    tier:'uncommon',  icon:'🎟', name:'Boss Karşılaşma Bileti', desc:'200 XP ödemeden doğrudan bir Boss Daveti çağırır (envanterden aktifleştir)', fx:()=>{} },
+  { id:'s_console_theme',weight:2, tier:'rare',      icon:'🎨', name:'Konsol Teması',          desc:'Rastgele kilitli bir konsol temasını açar (Dracula, Nord, Monokai...). Market › Temalar\'dan aktif et.', fx:()=>{ _unlockRandomConsoleTheme(); } },
   { id:'s_title_terminal',  weight:0.7, tier:'epic', icon:'🖥', name:'"Terminal Operatörü" Unvanı', desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Terminal Operatörü')) _cs().profileTitles.push('Terminal Operatörü'); notify('🖥 Unvan: Terminal Operatörü'); } },
   { id:'s_title_pozitivist',weight:0.7, tier:'epic', icon:'➕', name:'"Pozitivist" Unvanı',        desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Pozitivist')) _cs().profileTitles.push('Pozitivist'); notify('➕ Unvan: Pozitivist'); } },
   { id:'s_title_norolog',   weight:0.6, tier:'epic', icon:'🧠', name:'"Nörolog" Unvanı',          desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Nörolog')) _cs().profileTitles.push('Nörolog'); notify('🧠 Unvan: Nörolog'); } },
@@ -5506,6 +5549,27 @@ function renderShop(){
   cosEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='cosmetic').map(renderItem).join('');
   if (streakEl) streakEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='streak').map(renderItem).join('');
   if (sinkEl)   sinkEl.innerHTML   = SHOP_ITEMS.filter(i=>i.cat==='sink').map(renderItem).join('');
+  // Konsol temaları (kasadan açılır) — sahip olunanlar aktif edilebilir, kilitliler gri
+  const ctEl = g('shop-console-themes');
+  if (ctEl){
+    const inv=S.inventory||[];
+    ctEl.innerHTML = CASE_THEMES.map(t=>{
+      const owned=inv.includes(t.id);
+      const eq=S.equippedTheme===t.id;
+      const cls=eq?'active-item':(owned?'owned':'');
+      let btn;
+      if(!owned) btn='<button class="shop-btn locked" disabled>🔒 KASADAN ÇIKAR</button>';
+      else if(eq) btn='<button class="shop-btn equipped" disabled>✓ AKTİF</button>';
+      else btn='<button class="shop-btn primary" onclick="equipTheme(\''+t.id+'\')">AKTİVE ET</button>';
+      return '<div class="shop-card '+cls+'"'+(owned?'':' style="opacity:.55"')+'>'+
+        '<div class="shop-icon">'+t.icon+'</div>'+
+        '<div class="shop-name">'+t.name+'</div>'+
+        '<div class="shop-desc">'+_he(t.desc)+'</div>'+
+        '<div class="shop-cost" style="color:'+(owned?'var(--green)':'var(--gray)')+';border-color:var(--bd)">'+(owned?'AÇIK':'KİLİTLİ')+'</div>'+
+        btn+
+      '</div>';
+    }).join('');
+  }
 }
 
 // ════════════════════════════════════════
@@ -7870,7 +7934,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.20.0 başlatıldı.');
+addLog('OVERCLOCK v7.20.1 başlatıldı.');
 </script>
 </body>
 </html>
