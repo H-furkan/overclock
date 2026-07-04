@@ -292,6 +292,13 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .cal-ev{position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 3px;font-size:8px;color:#fff;overflow:hidden;line-height:1.15;box-sizing:border-box;cursor:pointer}
 .cal-ev.done{opacity:.5;text-decoration:line-through}
 .cal-ev-t{display:block;font-size:7px;opacity:.75;margin-top:1px}
+/* ── OKUMA SALONU ── */
+#book-shelf-wrap{display:flex;flex-wrap:wrap;gap:7px 5px;align-items:flex-end;padding:14px 10px 0;background:repeating-linear-gradient(to bottom,transparent 0 132px,rgba(90,61,43,.0) 132px);border-bottom:7px solid #5a3d2b;border-radius:2px;box-shadow:0 6px 8px -6px rgba(0,0,0,.5)}
+.book-spine{width:36px;height:132px;border-radius:2px 5px 5px 2px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 6px rgba(0,0,0,.45),inset -3px 0 4px rgba(0,0,0,.25),inset 3px 0 3px rgba(255,255,255,.12);flex-shrink:0;transition:transform .15s}
+.book-spine:hover{transform:translateY(-7px)}
+.book-spine-title{writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);font-size:9px;font-weight:700;color:#fff;letter-spacing:.4px;white-space:nowrap;overflow:hidden;max-height:112px;text-shadow:0 1px 2px rgba(0,0,0,.7);padding:7px 0}
+.book-spine-prog{position:absolute;bottom:0;left:2px;right:2px;height:3px;background:rgba(255,255,255,.9);border-radius:2px}
+.book-spine-done{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:9px}
 
 /* notifications */
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -746,6 +753,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
   <button class="navitem" onclick="goTab(this,'calendar')">📅 TAKVİM</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
+  <button class="navitem" onclick="goTab(this,'reading')">📚 OKUMA SALONU</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
@@ -897,6 +905,66 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;line-height:1.6">Boş bir saate dokun → olay ekle. Olaya dokun → detay/düzenle. <span style="color:var(--bright)">■</span> soru <span style="color:var(--yellow)">■</span> konu <span style="color:var(--muted)">▨</span> meşgul <span style="color:#66ccff">■</span> standart</div>
     <div id="cal-grid-wrap" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch"></div>
+  </div>
+</div>
+
+<!-- ══════════ PAGE: OKUMA SALONU ══════════ -->
+<div id="page-reading" class="page">
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Kitaplığım</div>
+      <button class="btn primary" style="min-height:28px;font-size:10px;padding:3px 12px" onclick="openBookAdd()">＋ KİTAP EKLE</button>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;line-height:1.6">Rafa kitap ekle, sırtına dokun → detay & okunan sayfa. Her okunan sayfa <b style="color:var(--bright)">+1 XP</b>.</div>
+    <!-- kitap ekleme formu (raf genişliğinde açılır) -->
+    <div id="book-add-form" style="display:none;background:var(--mid);border:1px solid var(--bd2);border-radius:10px;padding:12px;margin-bottom:12px">
+      <div class="ilabel" style="margin-bottom:3px">KİTABIN ADI *</div>
+      <input class="inp" id="bk-title" placeholder="Örn: Suç ve Ceza" style="margin-bottom:8px">
+      <div class="irow mb8">
+        <div class="igrp"><div class="ilabel">YAZAR</div><input class="inp" id="bk-author" placeholder="Dostoyevski"></div>
+        <div class="igrp"><div class="ilabel">SAYFA SAYISI *</div><input class="inp" id="bk-pages" type="number" min="1" placeholder="687"></div>
+      </div>
+      <div class="brow"><button class="btn primary" style="flex:1" onclick="addBook()">✓ RAFA EKLE</button><button class="btn" onclick="closeBookAdd()">İPTAL</button></div>
+    </div>
+    <!-- raf -->
+    <div id="book-shelf-wrap"></div>
+    <div id="book-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:10px 0">Raf boş — ＋ KİTAP EKLE ile başla.</div>
+  </div>
+
+  <!-- OKUMA MOLASI SAYACI -->
+  <div class="block">
+    <div class="blabel">■ Okuma Sayacı</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Bir kitap seç, sayacı başlat. Bitirince okuduğun sayfayı gir → <b style="color:var(--bright)">okuma hızın (sayfa/dk)</b> hesaplanır ve sayfalar kitaba + XP'ne işlenir.</div>
+    <select class="inp" id="read-book-select" onchange="_readBookId=this.value||null;updateReadBookLabel()" style="margin-bottom:10px"><option value="">— kitap seç —</option></select>
+    <div style="text-align:center;margin-bottom:10px">
+      <div style="font-size:8px;color:var(--muted);letter-spacing:2px" id="read-book-lbl">KİTAP SEÇİLMEDİ</div>
+      <div id="read-clock" style="font-family:'Orbitron',monospace;font-size:38px;font-weight:900;color:var(--white);letter-spacing:3px;margin:4px 0">00:00</div>
+    </div>
+    <div class="brow">
+      <button class="btn primary" style="flex:1" id="read-start-btn" onclick="readTimerToggle()">▶ BAŞLAT</button>
+      <button class="btn" id="read-reset-btn" onclick="readTimerReset()">↺ SIFIRLA</button>
+    </div>
+    <div id="read-speed-note" style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-top:10px;line-height:1.7;text-align:center"></div>
+  </div>
+</div>
+
+<!-- KİTAP DETAY POPUP -->
+<div id="book-pop" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:14px">
+  <div style="width:100%;max-width:360px;max-height:88vh;overflow-y:auto;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:16px">
+    <div class="fbet mb8"><div id="bk-pop-title" style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:1px;flex:1;min-width:0">KİTAP</div><button onclick="closeBookPop()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0">✕</button></div>
+    <div id="bk-pop-author" style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:10px"></div>
+    <!-- progress -->
+    <div style="height:14px;background:var(--mid);border:1px solid var(--bd);border-radius:7px;overflow:hidden;margin-bottom:4px"><div id="bk-pop-bar" style="height:100%;background:var(--bright);width:0%;transition:width .3s"></div></div>
+    <div id="bk-pop-prog" style="font-size:9px;color:var(--bright);letter-spacing:1px;text-align:center;margin-bottom:12px">0 / 0 sayfa</div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">OKUNAN SAYFA (toplam)</div><input class="inp" id="bk-read-inp" type="number" min="0"></div>
+      <div class="igrp" style="display:flex;align-items:flex-end"><button class="btn primary fw" onclick="saveBookRead()">✓ KAYDET</button></div>
+    </div>
+    <div class="ilabel" style="margin-bottom:3px">📝 ÖZET <span style="color:var(--muted)">(250-500 kelime)</span></div>
+    <textarea class="inp" id="bk-summary" placeholder="Kitabın özetini buraya yaz..." oninput="_updateSummaryCount()" style="min-height:120px;resize:vertical;margin-bottom:4px"></textarea>
+    <div id="bk-summary-count" style="font-size:8px;color:var(--muted);letter-spacing:1px;text-align:right;margin-bottom:10px">0 kelime</div>
+    <button class="btn primary fw mb8" onclick="saveBookSummary()">💾 ÖZETİ KAYDET</button>
+    <button class="btn fw" style="border-color:var(--red);color:var(--red)" onclick="deleteBook()">🗑 KİTABI SİL</button>
   </div>
 </div>
 
@@ -1540,7 +1608,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.20.0</div>
     </div>
   </div>
 </div>
@@ -1803,6 +1871,8 @@ function defState() {
     bankSpentKurus:0,             // toplam çekilen kuruş (XP hesabına aktarım)
     bankLog:[],                   // [{t,date,type,text,delta}] — hesap aktiviteleri
     calEvents:[],                 // takvim: [{id,date,startMin,endMin,title,desc,type,questions,remind,xp,done}]
+    books:[],                     // okuma salonu: [{id,title,author,pages,read,summary,color,added}]
+    readLog:[],                   // okuma seansları: [{date,bookId,mins,pages,ppm}]
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
     subjectCoeff:{},              // ders → zorluk katsayısı (boşsa _DEF_COEFF kullanılır)
@@ -2082,6 +2152,7 @@ function goTab(btn, name) {
   if (name === 'srs') setTimeout(()=>{ try{ renderSrs(); }catch(e){} }, 20);
   if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
   if (name === 'calendar') setTimeout(()=>{ try{ renderCalendar(); }catch(e){} }, 20);
+  if (name === 'reading') setTimeout(()=>{ try{ renderReading(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
   applyBackground(name);
@@ -2785,6 +2856,126 @@ function calToggleDone(){
   if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
   save(); calPopClose(); renderCalendar();
 }
+
+// ════════════════════════════════════════
+// OKUMA SALONU (kitaplık + okuma sayacı)
+// ════════════════════════════════════════
+const BOOK_COLORS=['#8b3a3a','#3a5a8b','#3a7a4a','#7a5a2a','#5a3a7a','#2a6a6a','#8b6a2a','#6a2a4a','#3a3a5a','#7a3a2a'];
+let _bookPopId=null, _readBookId=null, _readIv=null, _readElapsed=0, _readRunning=false;
+function _bookById(id){ return (S.books||[]).find(b=>b.id===id); }
+function _fmtClock(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+
+function openBookAdd(){ const f=g('book-add-form'); if(!f) return; f.style.display='block'; g('bk-title').value=''; g('bk-author').value=''; g('bk-pages').value=''; setTimeout(()=>{try{g('bk-title').focus();}catch(e){}},40); }
+function closeBookAdd(){ const f=g('book-add-form'); if(f) f.style.display='none'; }
+function addBook(){
+  const title=(g('bk-title').value||'').trim();
+  const author=(g('bk-author').value||'').trim();
+  const pages=parseInt(g('bk-pages').value)||0;
+  if(!title){ notify('Kitap adı gir'); return; }
+  if(pages<=0){ notify('Sayfa sayısı gir'); return; }
+  S.books=S.books||[];
+  const color=BOOK_COLORS[S.books.length % BOOK_COLORS.length];
+  S.books.push({ id:String(Date.now()), title, author, pages, read:0, summary:'', color, added:today() });
+  closeBookAdd(); save(); renderReading(); notify('📚 Kitap eklendi: '+title);
+}
+function renderReading(){
+  const wrap=g('book-shelf-wrap'), emp=g('book-empty'); if(!wrap) return;
+  const books=S.books||[];
+  if(emp) emp.style.display=books.length?'none':'block';
+  wrap.style.display=books.length?'flex':'none';
+  wrap.innerHTML=books.map(b=>{
+    const pct=b.pages>0?Math.min(100,Math.round((b.read||0)/b.pages*100)):0;
+    const done=pct>=100;
+    return '<div class="book-spine" style="background:linear-gradient(90deg,'+b.color+'dd,'+b.color+')" onclick="openBook(\''+b.id+'\')" title="'+_he(b.title)+'">'+
+      (done?'<div class="book-spine-done">✓</div>':'')+
+      '<div class="book-spine-title">'+_he(b.title)+'</div>'+
+      '<div class="book-spine-prog" style="width:'+pct+'%"></div>'+
+    '</div>';
+  }).join('');
+  // sayaç kitap dropdown'ı
+  const sel=g('read-book-select');
+  if(sel){
+    const cur=_readBookId;
+    sel.innerHTML='<option value="">— kitap seç —</option>'+books.map(b=>'<option value="'+b.id+'"'+(b.id===cur?' selected':'')+'>'+_he(b.title)+'</option>').join('');
+    if(cur && !_bookById(cur)){ _readBookId=null; sel.value=''; }
+  }
+  updateReadBookLabel();
+}
+function _updateBookProg(b){
+  const pct=b.pages>0?Math.min(100,Math.round((b.read||0)/b.pages*100)):0;
+  const bar=g('bk-pop-bar'); if(bar) bar.style.width=pct+'%';
+  const pr=g('bk-pop-prog'); if(pr) pr.textContent=(b.read||0)+' / '+b.pages+' sayfa  ('+pct+'%)';
+}
+function _updateSummaryCount(){
+  const ta=g('bk-summary'); const el=g('bk-summary-count'); if(!ta||!el) return;
+  const w=(ta.value.trim().match(/\S+/g)||[]).length;
+  el.textContent=w+' kelime'+(w<250?' (hedef 250+)':(w>500?' (500 üstü)':' ✓'));
+}
+function openBook(id){
+  const b=_bookById(id); if(!b) return; _bookPopId=id;
+  g('bk-pop-title').textContent=b.title;
+  g('bk-pop-author').textContent=(b.author?('✍ '+b.author+'  ·  '):'')+b.pages+' sayfa';
+  const ri=g('bk-read-inp'); ri.value=b.read||0; ri.max=b.pages;
+  g('bk-summary').value=b.summary||'';
+  _updateBookProg(b); _updateSummaryCount();
+  g('book-pop').style.display='flex';
+}
+function closeBookPop(){ const p=g('book-pop'); if(p) p.style.display='none'; _bookPopId=null; }
+function saveBookRead(){
+  const b=_bookById(_bookPopId); if(!b) return;
+  let nv=parseInt(g('bk-read-inp').value); if(isNaN(nv)) nv=0;
+  nv=Math.max(0,Math.min(b.pages,nv));
+  const gained=nv-(b.read||0);
+  b.read=nv;
+  if(gained>0){ addXP(gained,'Okuma: '+b.title); notify('📖 +'+gained+' sayfa → +'+gained+' XP'); }
+  else notify('Sayfa güncellendi');
+  _updateBookProg(b); save(); renderReading();
+}
+function saveBookSummary(){ const b=_bookById(_bookPopId); if(!b) return; b.summary=g('bk-summary').value||''; save(); notify('💾 Özet kaydedildi'); }
+function deleteBook(){
+  if(!_bookPopId) return; if(!confirm('Bu kitap silinsin mi?')) return;
+  S.books=(S.books||[]).filter(b=>b.id!==_bookPopId);
+  if(_readBookId===_bookPopId) _readBookId=null;
+  closeBookPop(); save(); renderReading();
+}
+function updateReadBookLabel(){
+  const lbl=g('read-book-lbl'); if(!lbl) return;
+  const b=_readBookId?_bookById(_readBookId):null;
+  lbl.textContent=b?('📖 '+b.title.toUpperCase()):'KİTAP SEÇİLMEDİ';
+}
+function readTimerToggle(){
+  if(_readRunning){ readTimerStop(); return; }
+  const books=S.books||[];
+  if(!books.length){ notify('Önce kitap ekle'); return; }
+  if(!_readBookId){ notify('Önce yukarıdan bir kitap seç'); return; }
+  _readRunning=true;
+  const startBtn=g('read-start-btn'); if(startBtn) startBtn.textContent='⏸ DURDUR & BİTİR';
+  const t0=Date.now()-_readElapsed*1000;
+  _readIv=setInterval(()=>{ _readElapsed=Math.floor((Date.now()-t0)/1000); const c=g('read-clock'); if(c) c.textContent=_fmtClock(_readElapsed); }, 500);
+}
+function readTimerStop(){
+  clearInterval(_readIv); _readIv=null; _readRunning=false;
+  const startBtn=g('read-start-btn'); if(startBtn) startBtn.textContent='▶ BAŞLAT';
+  const note=g('read-speed-note');
+  const b=_bookById(_readBookId);
+  if(!b || _readElapsed<30){ if(note) note.textContent=(_readElapsed<30&&_readElapsed>0)?'Seans çok kısa (≥30 sn gerekli).':''; _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00'; return; }
+  const mins=_readElapsed/60;
+  const ans=prompt('Bu seansta kaç sayfa okudun?\n('+b.title+')','');
+  if(ans===null){ if(note) note.textContent='Seans iptal edildi.'; _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00'; return; }
+  const pages=Math.max(0,parseInt(ans)||0);
+  if(pages>0){
+    b.read=Math.min(b.pages,(b.read||0)+pages);
+    addXP(pages,'Okuma seansı: '+b.title);
+    const ppm=pages/Math.max(0.1,mins);
+    S.readLog=S.readLog||[]; S.readLog.unshift({date:today(), bookId:b.id, mins:Math.round(mins*10)/10, pages, ppm:Math.round(ppm*100)/100});
+    if(S.readLog.length>100) S.readLog=S.readLog.slice(0,100);
+    if(note) note.innerHTML='📖 <b>'+pages+' sayfa</b> / '+_fmtClock(_readElapsed)+' → hız: <b style="color:var(--white)">'+ppm.toFixed(2)+' sayfa/dk</b>  ·  +'+pages+' XP';
+    notify('📖 '+ppm.toFixed(2)+' sayfa/dk — +'+pages+' XP');
+  } else { if(note) note.textContent='Sayfa girilmedi, seans kaydedilmedi.'; }
+  _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00';
+  save(); renderReading();
+}
+function readTimerReset(){ clearInterval(_readIv); _readIv=null; _readRunning=false; _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00'; const sb=g('read-start-btn'); if(sb) sb.textContent='▶ BAŞLAT'; const n=g('read-speed-note'); if(n) n.textContent=''; }
 
 function renderBank(){
   const bal=g('bank-balance'); if(bal) bal.textContent=_fmtTL(_bankKurus());
@@ -7679,7 +7870,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.19.2 başlatıldı.');
+addLog('OVERCLOCK v7.20.0 başlatıldı.');
 </script>
 </body>
 </html>
