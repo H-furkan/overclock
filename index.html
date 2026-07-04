@@ -971,6 +971,14 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div id="read-speed-note" style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-top:10px;line-height:1.7;text-align:center"></div>
   </div>
+
+  <!-- GÜNLÜK OKUMA GRAFİĞİ -->
+  <div class="block">
+    <div class="blabel">■ Günlük Okunan Sayfa</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">Son 30 gün. Bir güne dokun → o günün sayfa/dk hızı.</div>
+    <canvas id="read-chart" style="width:100%;height:130px;display:block"></canvas>
+    <div id="read-chart-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;text-align:center;padding:10px 0;display:none">Henüz okuma seansı yok — okuma sayacını çalıştır.</div>
+  </div>
 </div>
 
 <!-- KİTAP DETAY POPUP -->
@@ -1622,7 +1630,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.21.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.21.1</div>
     </div>
   </div>
 </div>
@@ -3009,6 +3017,52 @@ function renderReading(){
     if(cur && !_bookById(cur)){ _readBookId=null; sel.value=''; }
   }
   updateReadBookLabel();
+  try{ drawReadChart(); }catch(e){}
+}
+function _readDayDetailHtml(ds){
+  const rows=(S.readLog||[]).filter(r=>r.date===ds);
+  const pages=rows.reduce((a,r)=>a+(r.pages||0),0);
+  const mins=rows.reduce((a,r)=>a+(r.mins||0),0);
+  const ppm=mins>0?(pages/mins):0;
+  return '<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+ds.slice(5).replace('-','.')+'</div>'+
+    '📖 Sayfa: <b style="color:var(--green)">'+pages+'</b><br>'+
+    '⏱ Süre: <b style="color:var(--bright)">'+_fmtHM2(Math.round(mins*60))+'</b><br>'+
+    '⚡ Hız: <b style="color:var(--yellow)">'+ppm.toFixed(2)+' sayfa/dk</b>';
+}
+let _readHit=[];
+function drawReadChart(){
+  const cv=g('read-chart'); if(!cv) return;
+  const emp=g('read-chart-empty');
+  const log=S.readLog||[];
+  if(emp) emp.style.display=log.length?'none':'block';
+  // son 30 günün günlük toplam sayfası
+  const days=[];
+  for(let i=29;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const ds=_dstr(d); const pages=log.filter(r=>r.date===ds).reduce((a,r)=>a+(r.pages||0),0); days.push({date:ds,pages}); }
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||300, H=cv.clientHeight||130;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const cs=getComputedStyle(document.documentElement);
+  const col_dim=cs.getPropertyValue('--dim').trim(), col_muted=cs.getPropertyValue('--muted').trim(), col_bright=cs.getPropertyValue('--bright').trim(), col_white=cs.getPropertyValue('--white').trim();
+  const padL=26,padR=10,padT=10,padB=16, cw=W-padL-padR, ch=H-padT-padB;
+  const maxP=Math.max(...days.map(d=>d.pages),10);
+  ctx.font="7px 'Share Tech Mono',monospace";
+  [0,.5,1].forEach(f=>{ const y=padT+ch*(1-f); ctx.strokeStyle=col_dim; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(Math.round(f*maxP),padL-3,y); });
+  const bw=cw/30;
+  // area
+  ctx.beginPath(); ctx.moveTo(padL,padT+ch);
+  days.forEach((d,i)=>{ const x=padL+i*bw+bw/2, y=padT+ch*(1-d.pages/maxP); ctx.lineTo(x,y); });
+  ctx.lineTo(padL+29*bw+bw/2,padT+ch); ctx.closePath(); ctx.fillStyle='rgba(143,255,143,0.08)'; ctx.fill();
+  // line
+  ctx.strokeStyle=col_bright; ctx.lineWidth=1.5; ctx.beginPath();
+  let first=true; days.forEach((d,i)=>{ const x=padL+i*bw+bw/2, y=padT+ch*(1-d.pages/maxP); if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y); }); ctx.stroke();
+  // dots
+  days.forEach((d,i)=>{ if(d.pages<=0 && !(i===29)) return; const x=padL+i*bw+bw/2, y=padT+ch*(1-d.pages/maxP); ctx.fillStyle=i===29?col_white:col_bright; ctx.beginPath(); ctx.arc(x,y,i===29?3:1.5,0,Math.PI*2); ctx.fill(); });
+  // x labels
+  ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
+  [0,7,14,21,29].forEach(i=>{ const d=days[i]; if(!d) return; const dt=new Date(d.date); ctx.fillText(dt.getDate()+'.'+(dt.getMonth()+1),padL+i*bw+bw/2,padT+ch+3); });
+  _readHit=days.map((d,i)=>({x:padL+i*bw+bw/2, payload:d.date}));
+  _wireChartTap('read-chart', ()=>_readHit, ds=>_readDayDetailHtml(ds));
 }
 function _updateBookProg(b){
   const pct=b.pages>0?Math.min(100,Math.round((b.read||0)/b.pages*100)):0;
@@ -6083,6 +6137,26 @@ function treeAddSolved(key, n){
   }
   save(); renderTree();
 }
+// Manuel çözülen soru sayısı gir (toplam olarak set eder)
+function treeManualSolved(key){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  const raw=prompt('Bu konuda toplam kaç soru çözdün?\n('+w.name+' · hedef '+(w.target||15)+')', String(w.solved||0));
+  if(raw===null) return;
+  const v=parseInt(raw); if(isNaN(v)||v<0){ notify('Geçersiz sayı'); return; }
+  w.solved=v;
+  if (w.solved >= (w.target||15) && !w.fixed) notify('🌳 '+w.name+' — hedefe ulaştın! "Düzeltildi" işaretleyebilirsin.');
+  save(); renderTree();
+}
+// Çözümü takvime planla → takvim popup'ını 'soru' olayı olarak prefilled aç (tarih+saat seç, kaydedince blok olur)
+function treePlanToCalendar(key){
+  const w = (S.wrongTopics||{})[key]; if(!w) return;
+  const remain=Math.max(1,(w.target||15)-(w.solved||0));
+  calPopOpen(null, today(), 9*60, 10*60);
+  const ty=g('cal-f-type'); if(ty){ ty.value='soru'; calPopTypeChange(); }
+  const tt=g('cal-f-title'); if(tt) tt.value=w.name;
+  const qq=g('cal-f-q'); if(qq) qq.value=remain;
+  const pt=g('cal-pop-title'); if(pt) pt.textContent='📅 ÇÖZÜMÜ PLANLA';
+}
 
 function markTopicFixed(key){
   const w = (S.wrongTopics||{})[key]; if(!w || w.fixed) return;
@@ -6131,12 +6205,16 @@ function renderTree(){
       '<div style="height:6px;background:var(--dim);margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(w.fixed?'var(--green)':'var(--bright)')+'"></div></div>'+
       (w.fixed
         ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑 SİL</button></div>'
-        : '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+        : '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">'+
+            '<button class="btn" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" onclick="treeManualSolved(\''+safeKey+'\')">✏ SORU GİR (manuel)</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',5)">+5</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',10)">+10</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',-1)">−1</button>'+
+          '</div>'+
+          '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
             '<button class="btn primary" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" '+(solved>=target?'':'disabled ')+'onclick="markTopicFixed(\''+safeKey+'\')">✓ DÜZELTİLDİ (+'+target+' XP)</button>'+
-            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="srAddTopicFromTree(\''+safeKey+'\')" title="Aralıklı tekrara ekle">🧠 Tekrara</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treePlanToCalendar(\''+safeKey+'\')" title="Çözümü takvime planla">📅 PLANLA</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="srAddTopicFromTree(\''+safeKey+'\')" title="Aralıklı tekrara ekle">🧠</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑</button>'+
           '</div>')+
     '</div>';
@@ -8022,7 +8100,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.21.0 başlatıldı.');
+addLog('OVERCLOCK v7.21.1 başlatıldı.');
 </script>
 </body>
 </html>
