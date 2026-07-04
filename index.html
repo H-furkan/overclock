@@ -1038,7 +1038,11 @@ body.pixel-font #timer-unit{font-size:8px}
       <div class="igrp"><div class="ilabel">BAŞLANGIÇ</div><input class="inp" id="cal-f-start" type="time"></div>
       <div class="igrp"><div class="ilabel">BİTİŞ</div><input class="inp" id="cal-f-end" type="time"></div>
     </div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);margin-bottom:8px;cursor:pointer"><input type="checkbox" id="cal-f-remind"> 🔔 Hatırlatıcı kur (olay saatinde bildirim)</label>
+    <div class="ilabel" style="margin-bottom:3px">🔔 HATIRLATICI — KAÇ DK ÖNCE? (boş = yok)</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <input class="inp" id="cal-f-remindmin" type="number" min="0" max="1440" placeholder="örn. 10" style="flex:1">
+      <button class="btn" type="button" style="min-height:32px;padding:2px 12px;font-size:9px;border-color:var(--red);color:var(--red)" onclick="calClearRemind()">🔕 SİL</button>
+    </div>
     <div class="ilabel" style="margin-bottom:3px">XP ÖDÜLÜ (tamamlayınca)</div>
     <input class="inp" id="cal-f-xp" type="number" min="0" value="0" style="margin-bottom:12px">
     <div id="cal-pop-detail" style="display:none;font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px"></div>
@@ -1636,7 +1640,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.22.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.23.0</div>
     </div>
   </div>
 </div>
@@ -2857,7 +2861,7 @@ function renderCalendar(){
       const widthCss='calc('+wpct+'% - '+(4+gap)+'px)';
       const qbadge=(ev.type==='soru'&&ev.questions>0)?('<span class="cal-ev-q">'+ev.questions+'❓</span>'):'';
       const titleTxt=_he(ev.title||(blok?'Meşgul':'(başlıksız)'));
-      html+='<div class="cal-ev'+(ev.done?' done':'')+'" style="top:'+top+'px;height:'+eh+'px;left:'+leftCss+';width:'+widthCss+';'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+
+      html+='<div class="cal-ev'+(ev.done?' done':'')+'" data-evid="'+ev.id+'" style="top:'+top+'px;height:'+eh+'px;left:'+leftCss+';width:'+widthCss+';'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+
         '<div class="cal-ev-top">'+(ev.done?'✓ ':'')+'<span class="cal-ev-title">'+titleTxt+'</span>'+qbadge+'</div>'+
         '<span class="cal-ev-t">'+_minToTime(ev.startMin||0)+'</span></div>';
     });
@@ -2865,10 +2869,48 @@ function renderCalendar(){
   });
   html+='</div>';
   wrap.innerHTML=html;
+  _wireCalHover();
 }
-// Bir günün olaylarını çakışmaya göre sütunlara yerleştir (dikey bölme)
+// ── Olay üstüne hover → detay tooltip (masaüstü; dokunmatikte tıklayınca düzenleyici açılıyor zaten) ──
+const CAL_TYPE_LABEL={ std:'📌 Standart', soru:'📝 Soru Çözümü', konu:'📖 Konu Çalışması', blok:'▨ Meşgul / Blok' };
+let _calHoverWired=false;
+function _calEvTipHtml(ev){
+  const time=_minToTime(ev.startMin||0)+' – '+_minToTime(ev.endMin||((ev.startMin||0)+60));
+  let h='<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+_he(ev.title||(ev.type==='blok'?'Meşgul':'(başlıksız)'))+(ev.done?' <span style="color:var(--green)">✓</span>':'')+'</div>';
+  h+='<div>'+(CAL_TYPE_LABEL[ev.type]||CAL_TYPE_LABEL.std)+' · '+time+'</div>';
+  if(ev.type==='soru' && ev.questions>0) h+='<div>❓ Hedef: <b style="color:var(--bright)">'+ev.questions+' soru</b></div>';
+  if(ev.xp>0) h+='<div>⭐ Ödül: <b style="color:var(--yellow)">+'+ev.xp+' XP</b></div>';
+  if(ev.remindMin!=null && ev.remind!==false) h+='<div>🔔 '+((ev.remindMin||0)>0?(ev.remindMin+' dk önce'):'olay saatinde')+'</div>';
+  if(ev.desc) h+='<div style="color:var(--muted);margin-top:3px;white-space:pre-wrap">'+_he(ev.desc)+'</div>';
+  return h;
+}
+function _wireCalHover(){
+  if(_calHoverWired) return;
+  try{ if(!window.matchMedia('(hover: hover)').matches) return; }catch(e){}
+  const wrap=g('cal-grid-wrap'); if(!wrap) return; _calHoverWired=true;
+  let tip=null;
+  const ensure=()=>{ if(!tip){ tip=document.createElement('div'); tip.id='cal-tip';
+    tip.style.cssText='display:none;position:fixed;z-index:9992;background:var(--deep);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:9px;letter-spacing:1px;line-height:1.8;color:var(--bright);box-shadow:0 4px 18px rgba(0,0,0,.55);max-width:220px;pointer-events:none';
+    document.body.appendChild(tip);} return tip; };
+  wrap.addEventListener('mouseover',(e)=>{
+    const el=e.target.closest ? e.target.closest('.cal-ev') : null; if(!el) return;
+    const ev=(S.calEvents||[]).find(x=>x.id===el.getAttribute('data-evid')); if(!ev) return;
+    const tp=ensure(); tp.innerHTML=_calEvTipHtml(ev); tp.style.display='block';
+    const r=el.getBoundingClientRect(); const w=tp.offsetWidth||200, h=tp.offsetHeight||80;
+    let left=r.right+8; if(left+w>window.innerWidth-6) left=r.left-w-8; if(left<6) left=6;
+    let top=r.top; if(top+h>window.innerHeight-6) top=window.innerHeight-h-6; if(top<6) top=6;
+    tp.style.left=left+'px'; tp.style.top=top+'px';
+  });
+  wrap.addEventListener('mouseout',(e)=>{
+    const el=e.target.closest ? e.target.closest('.cal-ev') : null;
+    if(el && tip && !(e.relatedTarget && el.contains(e.relatedTarget))) tip.style.display='none';
+  });
+}
+// Bir günün olaylarını çakışmaya göre sütunlara yerleştir (dikey bölme).
+// ÖNEMLİ: çakışma GERÇEK saatlere göre hesaplanır (görsel min-yükseklik hesaba karışmaz):
+// 8:50-9:00 ile 9:00-10:00 bitişiktir, ÇAKIŞMAZ (bitiş == başlangıç → ayrı küme, bölünme yok).
 function _layoutDayEvents(evs){
-  const arr=evs.map(ev=>({ev, _s:ev.startMin||0, _e:Math.max((ev.startMin||0)+16, ev.endMin||((ev.startMin||0)+60))}));
+  const arr=evs.map(ev=>({ev, _s:ev.startMin||0, _e:Math.max((ev.startMin||0)+1, ev.endMin||((ev.startMin||0)+60))}));
   arr.sort((a,b)=> (a._s-b._s) || (a._e-b._e));
   const out=[]; let cluster=[], clusterEnd=-1;
   const flush=()=>{
@@ -2912,7 +2954,8 @@ function calPopOpen(id, date, startMin, endMin){
   g('cal-f-q').value=ev.questions||'';
   g('cal-f-start').value=_minToTime(ev.startMin!=null?ev.startMin:CAL_START*60);
   g('cal-f-end').value=_minToTime(ev.endMin!=null?ev.endMin:((ev.startMin||CAL_START*60)+60));
-  g('cal-f-remind').checked=!!ev.remind;
+  // hatırlatıcı: dk-önce sayısı (eski remind:true kayıtları 0 dk = tam saatinde sayılır)
+  const rm=g('cal-f-remindmin'); if(rm) rm.value = (ev.remindMin!=null) ? ev.remindMin : (ev.remind ? 0 : '');
   g('cal-f-xp').value=ev.xp||0;
   calPopTypeChange();
   const db=g('cal-done-btn'), dl=g('cal-del-btn');
@@ -2929,17 +2972,33 @@ function calSave(){
   if(startMin==null){ notify('Başlangıç saati gir'); return; }
   if(endMin==null||endMin<=startMin) endMin=startMin+60;
   if(!title && type!=='blok'){ notify('Başlık gir'); return; }
-  const q=parseInt(g('cal-f-q').value)||0, xp=Math.max(0,parseInt(g('cal-f-xp').value)||0), remind=g('cal-f-remind').checked, desc=g('cal-f-desc').value||'';
+  const q=parseInt(g('cal-f-q').value)||0, xp=Math.max(0,parseInt(g('cal-f-xp').value)||0), desc=g('cal-f-desc').value||'';
+  const rmRaw=((g('cal-f-remindmin')||{}).value||'').trim();
+  const remindMin = rmRaw==='' ? null : Math.max(0, Math.min(1440, parseInt(rmRaw)||0));
+  const remind = remindMin!=null;
   const date=((g('cal-f-date')||{}).value)||_calDraft.date||today();
   S.calEvents=S.calEvents||[];
   if(_calEditId){
-    const ev=S.calEvents.find(x=>x.id===_calEditId); if(ev) Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remind,xp,date});
+    const ev=S.calEvents.find(x=>x.id===_calEditId); if(ev) Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remind,remindMin,xp,date});
   } else {
-    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remind, xp, done:false });
+    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remind, remindMin, xp, done:false });
   }
   save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
-  if(remind){ _ensureNotifPerm(); scheduleCalendarReminders(); notify('🔔 Kaydedildi — hatırlatıcı kuruldu'); }
+  if(remind){ _ensureNotifPerm(); scheduleCalendarReminders(); notify('🔔 Kaydedildi — '+(remindMin>0?(remindMin+' dk önce'):'olay saatinde')+' hatırlatılacak'); }
   else { scheduleCalendarReminders(); notify('✓ Kaydedildi'); }
+}
+// Hatırlatıcıyı sil: popup'taki dk alanını boşalt; düzenlenen olay varsa bildirimini de anında iptal et
+function calClearRemind(){
+  const rm=g('cal-f-remindmin'); if(rm) rm.value='';
+  if(_calEditId){
+    const ev=(S.calEvents||[]).find(x=>x.id===_calEditId);
+    if(ev && (ev.remind || ev.remindMin!=null)){
+      ev.remind=false; ev.remindMin=null;
+      try{ if(_isNative()) _nativeCancel(_calNotifId(ev.id)); else swPost({type:'cancel',tag:'occal-'+ev.id}); }catch(e){}
+      save();
+    }
+  }
+  notify('🔕 Hatırlatıcı silindi');
 }
 // ── Takvim hatırlatıcıları (olay başlangıç saatinde bildirim) ──
 const _CAL_ID_OFFSET = 400000;
@@ -2950,12 +3009,16 @@ function _ensureNotifPerm(){ try{ if(('Notification' in window) && Notification.
 function scheduleCalendarReminders(){
   try{
     (S.calEvents||[]).forEach(ev=>{
+      if(ev.remind===true && ev.remindMin==null) ev.remindMin=0;   // eski kayıt göçü
       const id=_calNotifId(ev.id), tag='occal-'+ev.id;
-      const when=_eventStartDate(ev);
-      if(!ev.remind || ev.done || !when || when.getTime()<=Date.now()){ if(_isNative()) _nativeCancel(id); else swPost({type:'cancel',tag}); return; }
-      const title='📅 TAKVİM', body=(ev.title||'Olay')+' — '+_minToTime(ev.startMin||0)+' başlıyor';
-      if(_isNative()){ _nativeSchedule(id, when.getTime(), title, body); }
-      else if(('Notification' in window) && Notification.permission==='granted'){ swPost({type:'schedule', at:when.getTime(), tag, kind:'cal', title, body, icon:_NOTIF_ICON}); }
+      const start=_eventStartDate(ev);
+      const hasRem = (ev.remindMin!=null) && ev.remind!==false;
+      const fireAt = start ? (start.getTime() - (ev.remindMin||0)*60000) : 0;
+      if(!hasRem || ev.done || !start || fireAt<=Date.now()){ if(_isNative()) _nativeCancel(id); else swPost({type:'cancel',tag}); return; }
+      const title='📅 TAKVİM';
+      const body=(ev.title||'Olay')+' — '+((ev.remindMin||0)>0 ? (ev.remindMin+' dk sonra ('+_minToTime(ev.startMin||0)+') başlıyor') : (_minToTime(ev.startMin||0)+' başlıyor'));
+      if(_isNative()){ _nativeSchedule(id, fireAt, title, body); }
+      else if(('Notification' in window) && Notification.permission==='granted'){ swPost({type:'schedule', at:fireAt, tag, kind:'cal', title, body, icon:_NOTIF_ICON}); }
     });
   }catch(e){}
 }
@@ -2973,28 +3036,39 @@ function hqCalToggle(id){
   if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
   save(); renderHqCalTasks(); try{ if(g('page-calendar')&&g('page-calendar').classList.contains('visible')) renderCalendar(); }catch(e){}
 }
-// HQ'da bugünün takvim olayları: sayacın altında, zaman sırasına göre, açıklama görünür, tamamla butonlu
+// HQ'da bugünün takvim olayları: sayacın altında, zaman sırasına göre, açıklama + XP/soru/bildirim rozetleri, tamamla butonlu
+const CAL_TYPE_ICON={ std:'📌', soru:'📝', konu:'📖', blok:'▨' };
 function renderHqCalTasks(){
   const box=g('hq-cal-tasks'); if(!box) return;
   const t=today();
   const evs=(S.calEvents||[]).filter(e=>e.date===t).sort((a,b)=>(a.startMin||0)-(b.startMin||0));
   if(!evs.length){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
+  const doneN=evs.filter(e=>e.done).length;
+  const chip=(txt,col)=>'<span style="display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:'+col+';border:1px solid '+col+'44;background:'+col+'14;border-radius:10px;padding:2px 7px;white-space:nowrap">'+txt+'</span>';
   const rows=evs.map(ev=>{
     const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std;
-    const time=_minToTime(ev.startMin||0)+(ev.endMin?('-'+_minToTime(ev.endMin)):'');
-    const qtag=(ev.type==='soru'&&ev.questions>0)?(' · '+ev.questions+' soru'):'';
-    const desc=ev.desc?('<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.5;margin-top:2px">'+_he(ev.desc)+'</div>'):'';
-    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-left:3px solid '+st.bd+';background:var(--mid);border-radius:6px;margin-bottom:5px'+(ev.done?';opacity:.5':'')+'">'+
-      '<div style="flex:1;min-width:0">'+
-        '<div style="font-size:8px;color:var(--bright);letter-spacing:1px">'+time+qtag+'</div>'+
-        '<div style="font-size:10px;color:var(--white);letter-spacing:.5px'+(ev.done?';text-decoration:line-through':'')+'">'+_he(ev.title||'(başlıksız)')+'</div>'+
-        desc+
+    const ico=CAL_TYPE_ICON[ev.type]||'📌';
+    const time=_minToTime(ev.startMin||0)+(ev.endMin?('–'+_minToTime(ev.endMin)):'');
+    const badges=[];
+    if(ev.xp>0) badges.push(chip('⭐ +'+ev.xp+' XP','#ffff66'));
+    if(ev.type==='soru'&&ev.questions>0) badges.push(chip('❓ '+ev.questions+' soru','#8fff8f'));
+    if(ev.remindMin!=null && ev.remind!==false) badges.push(chip('🔔 '+((ev.remindMin||0)>0?(ev.remindMin+' dk önce'):'saatinde'),'#66ccff'));
+    const badgeRow=badges.length?('<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'+badges.join('')+'</div>'):'';
+    const desc=ev.desc?('<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:3px;white-space:pre-wrap">'+_he(ev.desc)+'</div>'):'';
+    return '<div style="display:flex;gap:10px;align-items:stretch;padding:9px 10px;border:1px solid var(--bd);border-left:3px solid '+st.bd+';background:var(--mid);border-radius:8px;margin-bottom:6px'+(ev.done?';opacity:.45':'')+'">'+
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:44px">'+
+        '<span style="font-size:15px;line-height:1">'+ico+'</span>'+
+        '<span style="font-family:Orbitron,monospace;font-size:8px;font-weight:700;color:var(--bright);letter-spacing:.5px;white-space:nowrap">'+time+'</span>'+
       '</div>'+
-      '<button onclick="hqCalToggle(\''+ev.id+'\')" style="flex-shrink:0;background:none;border:1px solid '+(ev.done?'var(--green)':'var(--bd2)')+';color:'+(ev.done?'var(--green)':'var(--muted)')+';border-radius:5px;font-size:12px;width:26px;height:26px;cursor:pointer">✓</button>'+
+      '<div style="flex:1;min-width:0;border-left:1px dashed rgba(255,255,255,.08);padding-left:10px">'+
+        '<div style="font-size:11px;color:var(--white);letter-spacing:.5px;font-weight:600'+(ev.done?';text-decoration:line-through':'')+'">'+(ev.done?'✓ ':'')+_he(ev.title||(ev.type==='blok'?'Meşgul':'(başlıksız)'))+'</div>'+
+        desc+badgeRow+
+      '</div>'+
+      '<button onclick="hqCalToggle(\''+ev.id+'\')" title="'+(ev.done?'Geri al':'Tamamla')+'" style="flex-shrink:0;align-self:center;background:'+(ev.done?'rgba(143,255,143,.12)':'none')+';border:1.5px solid '+(ev.done?'var(--green)':'var(--bd2)')+';color:'+(ev.done?'var(--green)':'var(--bright)')+';border-radius:50%;font-size:13px;width:32px;height:32px;cursor:pointer">✓</button>'+
     '</div>';
   }).join('');
-  box.innerHTML='<div class="blabel" style="margin-bottom:6px">📅 Bugünün Programı</div>'+rows;
+  box.innerHTML='<div class="fbet" style="margin-bottom:8px"><div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">📅 Bugünün Programı</div><span style="font-size:8px;color:var(--muted);letter-spacing:1px">'+doneN+'/'+evs.length+' tamam</span></div>'+rows;
 }
 
 // ════════════════════════════════════════
@@ -8169,7 +8243,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.22.0 başlatıldı.');
+addLog('OVERCLOCK v7.23.0 başlatıldı.');
 </script>
 </body>
 </html>
