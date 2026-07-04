@@ -1532,7 +1532,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.1</div>
     </div>
   </div>
 </div>
@@ -1978,7 +1978,7 @@ function applyDailyRollover(saved){
   // Archive yesterday's focus into history
   if (saved.lastDate && (saved.todayFocusSecs||0) > 0) {
     S.focusHistory = (saved.focusHistory||[]).filter(h=>h.date!==saved.lastDate);
-    S.focusHistory.push({date:saved.lastDate, focusSecs:saved.todayFocusSecs||0});
+    S.focusHistory.push({date:saved.lastDate, focusSecs:saved.todayFocusSecs||0, breakSecs:saved.todayBreakSecs||0});
     if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
   }
   S.todayFocusSecs = 0; S.todayBreakSecs = 0;
@@ -3369,7 +3369,7 @@ function execDailyReset(){
   // Push today's focus into history if any
   if ((S.todayFocusSecs||0) > 0) {
     S.focusHistory = (S.focusHistory||[]).filter(h=>h.date!==today());
-    S.focusHistory.push({date:today(), focusSecs:S.todayFocusSecs});
+    S.focusHistory.push({date:today(), focusSecs:S.todayFocusSecs, breakSecs:S.todayBreakSecs||0});
     if (S.focusHistory.length > 30) S.focusHistory = S.focusHistory.slice(-30);
   }
   S.xp=0; S.sessions=0; S.streak=0; S.waterCount=0; S.tasksDoneToday=0;
@@ -5430,6 +5430,9 @@ function drawNetChart(){
   ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
   const idxs = n<=4 ? data.map((_,i)=>i) : [0,Math.floor((n-1)/2),n-1];
   idxs.forEach(i=>{ const d=(data[i].date||'').slice(5); ctx.fillText(d,xOf(i),padT+ch+5); });
+  // tıkla-detay: her denemenin x'i → o denemenin detayları
+  _netHit = data.map((e,i)=>({ x: xOf(i), payload:e }));
+  _wireChartTap('net-chart', ()=>_netHit, e=>_examDetailHtml(e));
 }
 
 function renderExamHistory(){
@@ -6924,6 +6927,19 @@ function renderWeekCompare(){
 }
 
 let _focusHit = [], _focusTipWired = false;
+// Detaylı süre: "6 saat 18 dk" / "18 dk" / "0 dk"
+function _fmtHM2(secs){ secs=Math.max(0,Math.round(secs||0)); const h=Math.floor(secs/3600), m=Math.floor((secs%3600)/60); if(h>0) return h+' saat '+m+' dk'; return m+' dk'; }
+function _dayBreakSecs(ds){ if(ds===today()) return S.todayBreakSecs||0; const e=(S.focusHistory||[]).find(h=>h.date===ds); return e?(e.breakSecs||0):0; }
+function _dayFocusSecs2(ds){ if(ds===today()) return S.todayFocusSecs||0; const e=(S.focusHistory||[]).find(h=>h.date===ds); return e?(e.focusSecs||0):0; }
+function _dayQuestions(ds){ return (S.prodSessions||[]).filter(p=>p.date===ds).reduce((a,p)=>a+(p.questions||0),0); }
+// Bir güne ait detaylı özet HTML (tooltip/popup içeriği) — süre + mola + soru
+function _dayDetailHtml(ds){
+  const f=_dayFocusSecs2(ds), b=_dayBreakSecs(ds), q=_dayQuestions(ds);
+  return '<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+ds.slice(5).replace('-','.')+'</div>'+
+    '⏱ Odak: <b style="color:var(--green)">'+_fmtHM2(f)+'</b><br>'+
+    '☕ Mola: <b style="color:var(--yellow)">'+_fmtHM2(b)+'</b><br>'+
+    '📝 Soru: <b style="color:var(--bright)">'+q+'</b>';
+}
 function _fmtFocusTip(secs){ const h=secs/3600; return h>=1 ? h.toFixed(1)+' saat' : Math.round(secs/60)+' dk'; }
 function _wireFocusTip(){
   if(_focusTipWired) return; _focusTipWired=true;
@@ -6934,16 +6950,55 @@ function _wireFocusTip(){
     const cx=px-r.left;
     const hit=_focusHit.find(h=> cx>=h.x && cx<h.x+h.w);
     if(!hit || (hit.cur<=0 && hit.prev<=0)){ tip.style.display='none'; return; }
-    tip.innerHTML='<b>'+hit.date.slice(5).replace('-','.')+' '+hit.lbl+'</b><br>seçili: '+_fmtFocusTip(hit.cur)+'<br>önceki: '+_fmtFocusTip(hit.prev);
+    tip.innerHTML=_dayDetailHtml(hit.date)+'<div style="color:var(--muted);margin-top:3px">önceki hafta: '+_fmtHM2(hit.prev)+'</div>';
     tip.style.display='block';
     const ww=wrap.getBoundingClientRect();
-    tip.style.left=Math.max(4, Math.min(px-ww.left+6, ww.width-118))+'px';
+    tip.style.left=Math.max(4, Math.min(px-ww.left+6, ww.width-128))+'px';
     tip.style.top='6px';
   };
   cv.addEventListener('mousemove', show);
   cv.addEventListener('mouseleave', ()=>{ tip.style.display='none'; });
   cv.addEventListener('touchstart', show, {passive:true});
   cv.addEventListener('touchmove', show, {passive:true});
+}
+
+// ── Grafiklerde tıkla-detay (aylık odak + net takip) ──
+let _monthlyHit=[], _netHit=[], _chartTapWired={}, _chartPopT=null;
+function _examDetailHtml(e){
+  const defs=EXAM_DEFS[e.type]||[];
+  const rows=defs.map(s=>{ const v=(e.nets&&e.nets[s.key]!=null)?e.nets[s.key]:null; return v==null?'':('<div>'+s.label+': <b style="color:var(--bright)">'+(Math.round(v*100)/100)+'</b></div>'); }).filter(Boolean).join('');
+  return '<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+_he(e.name||e.type||'Deneme')+' — '+String(e.date||'').slice(5).replace('-','.')+'</div>'+
+    '<div>Toplam net: <b style="color:var(--green)">'+(Math.round((e.total||0)*100)/100)+'</b></div>'+rows;
+}
+function _ensureChartPop(){
+  let p=g('chart-detail-pop');
+  if(!p){ p=document.createElement('div'); p.id='chart-detail-pop';
+    p.style.cssText='display:none;position:fixed;z-index:9993;background:var(--deep);border:1px solid var(--bd2);border-radius:8px;padding:9px 12px;font-size:9px;letter-spacing:1px;line-height:1.7;color:var(--bright);box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:190px;pointer-events:none';
+    document.body.appendChild(p);
+  }
+  return p;
+}
+function _showChartPop(html, cx, cy){
+  const p=_ensureChartPop(); p.innerHTML=html; p.style.display='block';
+  const w=p.offsetWidth||170, h=p.offsetHeight||70;
+  let left=cx+12, top=cy-h-10;
+  if(left+w>window.innerWidth-6) left=window.innerWidth-w-6;
+  if(left<6) left=6;
+  if(top<6) top=cy+16;
+  p.style.left=left+'px'; p.style.top=top+'px';
+  clearTimeout(_chartPopT); _chartPopT=setTimeout(()=>{ p.style.display='none'; },5000);
+}
+document.addEventListener('click',(e)=>{ const p=g('chart-detail-pop'); if(p && p.style.display==='block' && (!e.target||e.target.tagName!=='CANVAS')) p.style.display='none'; }, true);
+function _wireChartTap(cvId, getHits, htmlOf){
+  if(_chartTapWired[cvId]) return; const cv=g(cvId); if(!cv) return; _chartTapWired[cvId]=true;
+  cv.style.cursor='pointer';
+  cv.addEventListener('click',(ev)=>{
+    const r=cv.getBoundingClientRect();
+    const px=ev.clientX, py=ev.clientY, cx=px-r.left;
+    const hits=getHits(); if(!hits||!hits.length) return;
+    let best=null,bd=1e9; hits.forEach(h=>{ const d=Math.abs(cx-h.x); if(d<bd){bd=d;best=h;} });
+    if(best && bd<=28){ _showChartPop(htmlOf(best.payload), px, py); }
+  });
 }
 function drawFocusChart(){
   const cv=g('focus-chart'); if(!cv) return;
@@ -7172,6 +7227,9 @@ function drawMonthlyChart(){
     const dt=new Date(d.date);
     ctx.fillText((dt.getDate())+'.'+(dt.getMonth()+1),x,padT+ch+3);
   });
+  // tıkla-detay: her günün merkez x'i
+  _monthlyHit = days.map((d,i)=>({ x: padL+i*bw+bw/2, payload:d.date }));
+  _wireChartTap('monthly-chart', ()=>_monthlyHit, ds=>_dayDetailHtml(ds));
 }
 
 function renderSubjectReport(){
@@ -7546,7 +7604,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.19.0 başlatıldı.');
+addLog('OVERCLOCK v7.19.1 başlatıldı.');
 </script>
 </body>
 </html>
