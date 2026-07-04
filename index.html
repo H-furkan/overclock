@@ -479,6 +479,33 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 /* CHARACTER STATS */
 .char-top{display:grid;grid-template-columns:auto 1fr;gap:14px}
 @media (max-width:520px){.char-top{grid-template-columns:1fr}}
+/* ── CHARACTER v7.24 (3 sütun) ── */
+.charx-grid{display:grid;grid-template-columns:250px 1fr 1.2fr;gap:14px;align-items:start}
+@media (max-width:900px){.charx-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}}
+.charx-avwrap{position:relative;display:flex;justify-content:center}
+.charx-grid .char-photo{width:100%;max-width:240px;height:auto;aspect-ratio:1/1}
+#avatar-cv{width:88%;height:88%;image-rendering:pixelated;image-rendering:crisp-edges}
+.charx-avhint{position:absolute;right:8px;bottom:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid var(--bd2);color:var(--bright);font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#avatar-pop{display:none;position:absolute;left:calc(100% + 10px);top:0;width:240px;background:var(--deep);border:1px solid var(--bd2);border-radius:10px;padding:12px;z-index:600;box-shadow:0 6px 22px rgba(0,0,0,.6)}
+@media (max-width:900px){#avatar-pop{left:50%;transform:translateX(-50%);top:calc(100% + 8px);width:min(280px,92vw)}}
+.avrow{display:flex;align-items:center;gap:5px;margin-bottom:7px}
+.avrow .avlbl{width:58px;font-size:8px;color:var(--muted);letter-spacing:1px;flex-shrink:0}
+.avrow .avbtn{width:24px;height:24px;background:var(--mid);border:1px solid var(--bd2);color:var(--bright);border-radius:5px;cursor:pointer;font-size:10px;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.avrow .avval{flex:1;text-align:center;font-size:8px;color:var(--bright);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avrow input[type=color]{width:26px;height:24px;padding:0;border:1px solid var(--bd2);border-radius:5px;background:var(--mid);cursor:pointer;flex-shrink:0}
+.charx-card{background:var(--mid);border:1px solid var(--bd);border-radius:10px;padding:14px 12px}
+.charx-lvlnum{font-family:'Orbitron',monospace;font-size:44px;font-weight:900;color:var(--white);line-height:1;margin:4px 0}
+.charx-quote{font-size:11px;color:var(--bright);line-height:1.8;letter-spacing:.5px;font-style:italic;margin-top:8px}
+.charx-quoteby{font-size:9px;color:var(--yellow);letter-spacing:2px;text-align:right;margin-top:6px}
+.cstat{background:var(--mid);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:7px}
+.cstat .cst-top{display:flex;align-items:center;gap:8px}
+.cstat .cst-name{flex:1;min-width:0;font-size:10px;color:var(--white);letter-spacing:.5px;font-weight:600}
+.cstat .cst-name small{color:var(--muted);font-weight:400;font-size:8px}
+.cstat .cst-val{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--bright);flex-shrink:0}
+.cstat .cst-plus{width:26px;height:26px;border-radius:50%;background:var(--dim);border:1px solid var(--bright);color:var(--white);font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.cstat .cst-plus:disabled{opacity:.22;cursor:not-allowed}
+.cstat .cst-desc{font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:4px}
+.charx-eqchip{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:2px 8px;margin:2px 3px 2px 0;white-space:nowrap}
 .char-left{display:flex;flex-direction:column;width:240px}
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
 .char-photo{width:240px;height:240px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
@@ -1312,49 +1339,67 @@ body.pixel-font #timer-unit{font-size:8px}
 
 </div>
 
-<!-- ══════════ PAGE: CHARACTER ══════════ -->
+<!-- ══════════ PAGE: CHARACTER (v7.24 — sıfırdan) ══════════ -->
 <div id="page-character" class="page">
   <div class="block">
-    <div class="char-top">
-      <!-- LEFT: photo + name + level -->
-      <div class="char-left">
-        <div id="char-photo" class="char-photo" onclick="charPickPhoto()" title="Fotoğraf seç">
-          <span id="char-photo-empty">📷<br>FOTO EKLE</span>
+    <div class="charx-grid">
+
+      <!-- SOL SÜTUN: AVATAR + KARAKTER ÖZETİ -->
+      <div>
+        <div class="charx-avwrap">
+          <div id="char-photo" class="char-photo" onclick="avatarEditorToggle(event)" title="Avatarı düzenle">
+            <canvas id="avatar-cv" width="26" height="26"></canvas>
+            <div class="charx-avhint">✎</div>
+          </div>
+          <!-- AVATAR TASARIM POP-UP — çerçevenin YANINDA açılır (ekran ortasında değil) -->
+          <div id="avatar-pop" onclick="event.stopPropagation()">
+            <div class="fbet" style="margin-bottom:8px"><b style="font-size:10px;color:var(--white);letter-spacing:2px">🎨 AVATAR TASARIMI</b><button onclick="avatarEditorClose()" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer">✕</button></div>
+            <div id="avatar-pop-rows"></div>
+          </div>
         </div>
-        <input type="file" id="char-photo-input" accept="image/*" style="display:none" onchange="charOnPhoto(this.files[0])">
-        <button class="btn fw" style="font-size:8px;min-height:28px;margin-top:6px" onclick="charPickPhoto()">📁 RESİM SEÇ</button>
-        <button class="btn fw" style="font-size:8px;min-height:24px;margin-top:4px;color:var(--muted);border-color:var(--bd)" onclick="charRemovePhoto()">🗑 FOTOĞRAFI KALDIR</button>
-        <div style="margin-top:10px;text-align:center">
-          <input class="inp" id="char-name" placeholder="Karakter Adı" style="text-align:center;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px" onchange="charSetName(this.value)">
-          <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--bright);letter-spacing:3px;margin-top:6px">SV <span id="char-level">1</span></div>
-          <div style="font-size:8px;color:var(--yellow);letter-spacing:2px;margin-top:2px"><span id="char-stat-points">0</span> stat puanı</div>
-          <div id="char-phase-row" style="display:none;margin-top:4px"></div>
+        <input class="inp" id="char-name" placeholder="Karakter Adı" style="text-align:center;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;margin-top:8px" onchange="charSetName(this.value)">
+        <div class="char-banner" style="margin-top:10px">
+          <div class="cb-title">★ Karakter Özeti</div>
+          <div class="cb-row"><span>Unvan</span><b id="charx-title">Öğrenci</b></div>
+          <div class="cb-row"><span>Seviye</span><b id="charx-lvl2">1</b></div>
+          <div class="cb-row"><span>Karakter XP</span><b id="charx-xp">0</b></div>
+          <div class="cb-title" style="margin-top:10px">🎒 Ekipmanlar</div>
+          <div id="charx-equip"></div>
         </div>
-        <!-- Kasa ödülü kozmetiklerin aç/kapa toggle'ları (sadece sahip olduklarını gösterir) -->
-        <div id="cosmetic-toggles" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+        <div id="cosmetic-toggles" style="margin-top:10px;display:flex;flex-direction:column;gap:5px"></div>
       </div>
-      <!-- RIGHT: stats grid -->
-      <div class="char-right">
+
+      <!-- ORTA SÜTUN: SEVİYE BARI + MOTİVASYON -->
+      <div>
+        <div class="charx-card" style="text-align:center">
+          <div style="font-size:8px;color:var(--muted);letter-spacing:3px">SEVİYE</div>
+          <div id="char-level" class="charx-lvlnum">1</div>
+          <div id="charx-title2" style="font-size:9px;color:var(--yellow);letter-spacing:2px">ÖĞRENCİ</div>
+          <div style="height:14px;background:var(--mid);border:1px solid var(--bd);border-radius:7px;overflow:hidden;margin-top:10px">
+            <div id="char-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--bright),var(--yellow));transition:width .4s"></div>
+          </div>
+          <div id="char-xp-text" style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:5px">0 / 70</div>
+          <div style="font-size:8px;color:var(--dim);letter-spacing:1px;margin-top:3px">Seviye atlama = LVL × 70 XP · seviye başına +2 stat puanı</div>
+        </div>
+        <div class="charx-card" style="margin-top:10px">
+          <div class="cb-title">🕯 Motivasyon</div>
+          <div id="charx-quote" class="charx-quote"></div>
+          <div id="charx-quote-by" class="charx-quoteby"></div>
+          <button class="btn fw" style="min-height:26px;font-size:8px;margin-top:10px" onclick="charxNextQuote()">↻ BAŞKA SÖZ</button>
+        </div>
+      </div>
+
+      <!-- SAĞ SÜTUN: STATLAR -->
+      <div>
+        <div class="fbet" style="margin-bottom:8px">
+          <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Statlar</div>
+          <span style="font-size:9px;color:var(--yellow);letter-spacing:1px">⬢ <span id="char-stat-points">0</span> puan</span>
+        </div>
         <div id="char-stats-list"></div>
-        <!-- Karakter özeti — boş alanı doldurur, sağ sütunda stats'ın altına otur -->
-        <div id="char-banner" class="char-banner"></div>
       </div>
+
     </div>
   </div>
-
-  <!-- TARGET XP BAR -->
-  <div class="block">
-    <div class="fbet mb8">
-      <span style="font-size:9px;color:var(--bright);letter-spacing:2px">⚡ HEDEF XP</span>
-      <span style="font-size:9px;color:var(--muted);letter-spacing:1px" id="char-xp-text">0 / 100</span>
-    </div>
-    <div style="height:14px;background:var(--mid);border:1px solid var(--bd);border-radius:7px;overflow:hidden">
-      <div id="char-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--bright),var(--yellow));transition:width .4s"></div>
-    </div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px;line-height:1.5">XP, planner görevi/hatırlatıcı tamamlama ve session bitirme'den birikir. SV atlayınca +1 stat puanı kazanırsın, sağdaki statlardan birine yatır.</div>
-  </div>
-
-
 </div>
 
 <!-- ══════════ PAGE: SHOP ══════════ -->
@@ -1640,7 +1685,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.23.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.0</div>
     </div>
   </div>
 </div>
@@ -1796,7 +1841,20 @@ function getStreakShieldCost(){
     if (days > 4) eff = Math.max(0, buys - (days - 4));
   }
   const c = Math.round(STREAK_SHIELD_BASE * Math.pow(2, eff));
-  return Math.min(STREAK_SHIELD_CAP, Math.max(STREAK_SHIELD_BASE, c));
+  const base = Math.min(STREAK_SHIELD_CAP, Math.max(STREAK_SHIELD_BASE, c));
+  return Math.round(base * (1 - _preservationDisc()));   // STAT: Muhafaza indirimi
+}
+// STAT: Muhafaza — koruyucu/sigorta maliyet indirimi (puan başına %2, tavan %40)
+function _preservationDisc(){
+  try{ return Math.min(0.4, 0.02*((((S.character||{}).stats||{}).muhafaza)||0)); }catch(e){ return 0; }
+}
+function getInsuranceCost(){
+  const it=SHOP_ITEMS.find(x=>x.id==='sink_topic_insurance');
+  return Math.round(((it&&it.cost)||800) * (1 - _preservationDisc()));
+}
+// STAT: Kapasite — koruyucu stok limiti (taban 2, her 10 puan +1)
+function getShieldMaxStock(){
+  try{ return STREAK_SHIELD_MAX_STOCK + Math.floor(((((S.character||{}).stats||{}).kapasite)||0)/10); }catch(e){ return STREAK_SHIELD_MAX_STOCK; }
 }
 
 // ════════════════════════════════════════
@@ -1928,14 +1986,13 @@ function defState() {
     decayLog:[],                  // [{date, amount}]
     // ── v7.12: CUSTOM BACKGROUNDS ──
     background:{ global:null, perTab:{}, dim:0.65 },   // dataURL'lar + karartma (0-0.9)
-    // ── v7.12: CHARACTER STATS ──
+    // ── v7.24: CHARACTER (sıfırdan) — pixel avatar + oyun-etkili statlar ──
     character:{
       photo:null, name:'Karakter',
       charXp:0, statPoints:0,
-      stats:{ zeka:0,irade:0,guc:0,azim:0,motivasyon:0,sabir:0,ikna:0,karizma:0 },
-      statLabels:{ zeka:'Zeka',irade:'İrade',guc:'Güç',azim:'Azim',motivasyon:'Motivasyon',sabir:'Sabır',ikna:'İkna',karizma:'Karizma' },
-      spider:{ ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0 },
-      spiderLog:[],   // [{id,date,text,cat}]
+      stats:{ ivme:0,kapasite:0,disiplin:0,muhafaza:0,taktik:0,verim:0,risk:0,istikrar:0 },
+      avatar:{ hair:0,armor:0,weapon:0,pants:0,shoes:0, colors:{hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0'} },
+      lastLevel:1,
     },
     // ── v7.12: CASES (kasa) ──
     cases:{ standard:0, gold:0, dailyClaimed:null, pity:{ rareCount:0, epicCount:0 }, openedLog:[], xpMultiplier:1, profileTitles:[], avatarBorder:null, breakBonus:0, deepWorkActive:false, sprintActive:false, taskBuffRemaining:0, sessionBuffRemaining:0 },
@@ -2043,6 +2100,17 @@ function applyDailyRollover(saved){
   S.streakProtBought = (saved.streakProtBought!=null) ? saved.streakProtBought : (saved.streakProtectors||0);
   S.streakProtUsed = (saved.streakProtUsed||0) + _frozen;
   _recalcProt();
+  // ── STAT DECAY (v7.24): korumasız boş gün → İvme -1; kırılan alışkanlık zinciri → İstikrar -1 ──
+  try{
+    const _cst=(S.character&&S.character.stats)||null;
+    if(_cst){
+      const _mark=_dayMarks[saved.lastDate];
+      const _protectedDay=(_mark==='frozen'||_mark==='rest'||_mark==='active');
+      if((saved.todayFocusSecs||0)<=0 && !_protectedDay && (_cst.ivme||0)>0){ _cst.ivme--; addLog('⚡ İvme eridi (dün hiç çalışılmadı): -1'); }
+      const _hBroke=(saved.habits||[]).some(h=> (h.streak||0)>0 && h.lastCompleted && h.lastCompleted!==saved.lastDate );
+      if(_hBroke && (_cst.istikrar||0)>0){ _cst.istikrar--; addLog('🔄 İstikrar eridi (alışkanlık zinciri kırıldı): -1'); }
+    }
+  }catch(e){}
   if(_resetIt){
     // Forgive & Forget için: kırılmadan önceki streak'i ve kaçırılan günü sakla.
     // (Sadece son sıfırlanma; forgive token bunu geri yükleyebilir.)
@@ -2079,7 +2147,9 @@ function applyDailyRollover(saved){
       S.totalXp = (S.totalXp||0) + bonus;
       S._contractWin = bonus;
     } else {
-      const deficit = Math.max(0, Math.round(tgt - workedMin));
+      // STAT: Risk Yönetimi — ceza dk başına 1 yerine max(0.1, 1-0.05×puan) XP
+      const _perMin = Math.max(0.1, 1 - 0.05*((((S.character||{}).stats||{}).risk)||0));
+      const deficit = Math.max(0, Math.round((tgt - workedMin) * _perMin));
       S.totalXp = Math.max(0, (S.totalXp||0) - deficit);
       S._contractLoss = deficit;
     }
@@ -2421,7 +2491,7 @@ function syncTimerInputs(){
   const lbl=g('timer-cfg-lbl'); if(lbl) lbl.textContent=S.focusMin+'dk/'+S.breakMin+'dk';
 }
 
-let _sessType='soru', _sessFocusMin=0, _sessSubject='';
+let _sessType='soru', _sessFocusMin=0, _sessSubject='', _sessStartHour=-1;
 function setSessionType(t){ S.sessionType = (t==='konu')?'konu':'soru'; save(); renderSessionType(); }
 function renderSessionType(){
   const t=S.sessionType||'soru';
@@ -2449,7 +2519,7 @@ function toggleTimer(){
       try { requestNotifPermission(); } catch(e){}
     }
     timerRunning=true;
-    if(!isBreak){ _sessType = S.sessionType||'soru'; _sessFocusMin = S.focusMin; _sessSubject = S.activeSubject||''; try{ _maybeSuggestDuration(); }catch(e){} }  // verimlilik için seans anlık görüntüsü
+    if(!isBreak){ _sessType = S.sessionType||'soru'; _sessFocusMin = S.focusMin; _sessSubject = S.activeSubject||''; _sessStartHour = new Date().getHours(); try{ _maybeSuggestDuration(); }catch(e){} }  // verimlilik için seans anlık görüntüsü
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
     renderTimer();   // taze→çalışıyor: tekerlek gizlenir, geri-sayım sayısı gösterilir
     g('btn-start').textContent='⏸ PAUSE';
@@ -2521,6 +2591,11 @@ function tickTimer(){
         notify('🏆 NO-DISTRACTION BAŞARILDI — 6x XP!');
         addLog('No-Distraction challenge başarıldı (6x XP).');
       }
+      // STAT: Disiplin — 04:00-07:00 arası başlayan seansa +2×puan taban XP (Erken Kuş)
+      const _dsc = charStat('disiplin');
+      if(_dsc>0 && _sessStartHour>=4 && _sessStartHour<7){ sxp += _dsc*2; notify('🌅 ERKEN KUŞ BONUSU +'+(_dsc*2)+' XP'); }
+      // STAT: Verimlilik — puan başına %1 şansla FLOW STATE (o seans ×1.2)
+      if(Math.random() < charStat('verim')*0.01){ sxp = Math.round(sxp*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); addLog('Flow State tetiklendi (×1.2).'); }
       addXP(sxp,'Session tamamlandı ('+S.focusMin+'dk)');
       notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
       if(_sessType==='soru'){ try{ _promptSessionQuestions(_sessFocusMin||S.focusMin, _sessSubject); }catch(e){} }
@@ -2655,7 +2730,11 @@ function finishTimerEarly(){
   // cumFocusSecs per-tick birikti — burada tekrar ekleme yok (çift sayım önlendi)
   renderCumulative();
   S.lastFocusEnd = Date.now();
-  addXP(sxp, 'Session erken bitti ('+elapsedMin+'dk)');
+  let _sxp2 = sxp;
+  const _dsc2 = charStat('disiplin');
+  if(_dsc2>0 && _sessStartHour>=4 && _sessStartHour<7){ _sxp2 += _dsc2*2; notify('🌅 ERKEN KUŞ BONUSU +'+(_dsc2*2)+' XP'); }
+  if(Math.random() < charStat('verim')*0.01){ _sxp2 = Math.round(_sxp2*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); }
+  addXP(_sxp2, 'Session erken bitti ('+elapsedMin+'dk)');
   notify('⏹ ERKEN BİTİŞ // +'+sxp+' XP ('+elapsedMin+' dk)');
   addLog('Session erken bitti — '+elapsedMin+' dk, +'+sxp+' XP');
   if(_sessType==='soru'){ try{ _promptSessionQuestions(elapsedMin, _sessSubject); }catch(e){} }
@@ -3026,14 +3105,29 @@ function calDelete(){ if(!_calEditId) return; if(!confirm('Bu olay silinsin mi?'
 function calToggleDone(){
   if(!_calEditId) return; const ev=(S.calEvents||[]).find(x=>x.id===_calEditId); if(!ev) return;
   ev.done=!ev.done;
-  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
+  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; const _x=_calAwardXp(ev); notify('✓ Tamamlandı +'+_x+' XP'); }
   save(); calPopClose(); renderCalendar(); scheduleCalendarReminders(); try{ renderHqCalTasks(); }catch(e){}
+}
+// Takvim görevi XP ödülü — STAT: İvme (Momentum) kombo bonusu:
+// aynı gün 2.+ tamamlanan görevde puan×%0.5 ek XP
+function _calAwardXp(ev){
+  let xp=ev.xp||0;
+  try{
+    const _doneBefore=(S.calEvents||[]).filter(x=>x.date===today() && x.done && x.id!==ev.id).length;
+    const _iv=(typeof charStat==='function')?charStat('ivme'):0;
+    if(_doneBefore>=1 && _iv>0){
+      const b=Math.round(xp*_iv*0.005);
+      if(b>0){ xp+=b; notify('⚡ İVME KOMBOSU +'+b+' XP (%'+(_iv*0.5).toFixed(1)+')'); }
+    }
+  }catch(e){}
+  addXP(xp,'Takvim: '+(ev.title||'olay'));
+  return xp;
 }
 // HQ'da bugünün takvim olayını tamamla
 function hqCalToggle(id){
   const ev=(S.calEvents||[]).find(x=>x.id===id); if(!ev) return;
   ev.done=!ev.done;
-  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
+  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; const _x=_calAwardXp(ev); notify('✓ Tamamlandı +'+_x+' XP'); }
   save(); renderHqCalTasks(); try{ if(g('page-calendar')&&g('page-calendar').classList.contains('visible')) renderCalendar(); }catch(e){}
 }
 // HQ'da bugünün takvim olayları: sayacın altında, zaman sırasına göre, açıklama + XP/soru/bildirim rozetleri, tamamla butonlu
@@ -4412,12 +4506,13 @@ function buyItem(id){
   // streak shield uses dynamic pricing + stock cap
   let effectiveCost = item.cost;
   if (item.id === 'streak_shield') {
-    if ((S.streakProtectors||0) >= STREAK_SHIELD_MAX_STOCK) {
-      notify('STOK DOLU // MAX '+STREAK_SHIELD_MAX_STOCK+' KORUYUCU');
+    if ((S.streakProtectors||0) >= getShieldMaxStock()) {
+      notify('STOK DOLU // MAX '+getShieldMaxStock()+' KORUYUCU (Kapasite statı limiti artırır)');
       return;
     }
     effectiveCost = getStreakShieldCost();
   }
+  if (item.id === 'sink_topic_insurance') effectiveCost = getInsuranceCost();   // STAT: Muhafaza
   // afford check
   if (shopBalance() < effectiveCost) {
     notify('YETERSİZ XP // '+effectiveCost+' GEREKLİ');
@@ -4684,84 +4779,176 @@ function bgClearAll(){
 // ══════════════════════════════════════════
 // CHARACTER STATS (v7.12)
 // ══════════════════════════════════════════
-const CHAR_STAT_KEYS = ['zeka','irade','guc','azim','motivasyon','sabir','ikna','karizma'];
-// Spider kategorisi → o kategoriye bağlı karakter statları (decay için)
-const CAT_STAT_MAP = {
-  ruhsal:  ['irade','sabir'],
-  zeka:    ['ikna','zeka'],
-  spor:    ['guc','azim','karizma'],
-  akademi: ['motivasyon','zeka'],
-  // eğlence kasti — decay yok
-};
-const STAT_DECAY_GRACE_DAYS = 3;   // 3 günden fazla eylem yoksa decay başlar
 const CHAR_STAT_MAX = 20;
-const SPIDER_KEYS = ['ruhsal','zeka','spor','akademi','eglence'];
-const SPIDER_ICONS = { ruhsal:'🧘', zeka:'🧠', spor:'💪', akademi:'📚', eglence:'🎮' };
-const SPIDER_LABELS = { ruhsal:'Ruhsal', zeka:'Zeka', spor:'Spor', akademi:'Akademi', eglence:'Eğlence' };
+// Oyun-etkili 8 stat — her puanın SOMUT bir mekanik etkisi var (desc canlı hesaplanır)
+const CHARX_STATS = [
+  { key:'ivme',     icon:'⚡', name:'Momentum',       en:'İvme',          desc:v=>'Aynı gün 2. ve sonraki takvim görevlerinde +%'+(v*0.5).toFixed(1)+' XP bonusu. Korumasız boş gün → bu stat -1 erir.' },
+  { key:'kapasite', icon:'🎒', name:'Kapasite',       en:'Capacity',      desc:v=>'Streak Koruyucu stok limiti +'+Math.floor(v/10)+' (her 10 puan kalıcı +1; şu an limit '+(2+Math.floor(v/10))+').' },
+  { key:'disiplin', icon:'🌅', name:'Disiplin',       en:'Discipline',    desc:v=>'04:00–07:00 arası başlatılan her seansa +'+(v*2)+' taban XP (Erken Kuş).' },
+  { key:'muhafaza', icon:'🛡', name:'Muhafaza',       en:'Preservation',  desc:v=>'Streak Koruyucu ve Konu Sigortası %'+(v*2)+' daha ucuz.' },
+  { key:'taktik',   icon:'⚔', name:'Taktik',         en:'Tactics',       desc:v=>'Boss ödülünde altın parça şansı +%'+v+', ekstra streak kırığı şansı +%'+(v*0.5).toFixed(1)+'.' },
+  { key:'verim',    icon:'🌊', name:'Verimlilik',     en:'Efficiency',    desc:v=>'Seans bitiminde %'+v+' şansla FLOW STATE: o seansın XP\'si ×1.2.' },
+  { key:'risk',     icon:'📜', name:'Risk Yönetimi',  en:'Risk Mgmt',     desc:v=>'Sözleşme cezası kaçırılan dk başına '+Math.max(0.1,1-0.05*v).toFixed(2)+' XP (standart 1.00).' },
+  { key:'istikrar', icon:'🔄', name:'İstikrar',       en:'Consistency',   desc:v=>'Alışkanlık tamamlama XP\'si +'+(v*10)+' (tavan 500). Alışkanlık zinciri kırılırsa bu stat -1.' },
+];
+function charStat(key){ try{ return Math.max(0, (_char().stats||{})[key]||0); }catch(e){ return 0; } }
+
+// Seviye unvanları: 1-10 Öğrenci, 11-20 Stajyer, 21-30 Asistan, 31-40 Profesör, 41-50 Prof. Dr., 51+ Nörolog
+function charTitle(lv){
+  if(lv>=51) return 'Nörolog';
+  if(lv>=41) return 'Profesör Doktor';
+  if(lv>=31) return 'Profesör';
+  if(lv>=21) return 'Asistan';
+  if(lv>=11) return 'Stajyer';
+  return 'Öğrenci';
+}
+
+// ── MOTİVASYON — Mevlana / Yunus Emre / Şems-i Tebrizi / Fatih Sultan Mehmet (34 söz) ──
+const CHAR_QUOTES = [
+  {q:'Ya olduğun gibi görün, ya göründüğün gibi ol.', by:'Mevlana'},
+  {q:'Dünle beraber gitti cancağızım, ne kadar söz varsa düne ait. Şimdi yeni şeyler söylemek lazım.', by:'Mevlana'},
+  {q:'Ne kadar bilirsen bil, söylediklerin karşındakinin anlayabildiği kadardır.', by:'Mevlana'},
+  {q:'Sabır, sıkıntının anahtarıdır.', by:'Mevlana'},
+  {q:'Cömertlikte ve yardım etmede akarsu gibi ol.', by:'Mevlana'},
+  {q:'Aynı dili konuşanlar değil, aynı duyguları paylaşanlar anlaşabilir.', by:'Mevlana'},
+  {q:'Nice insanlar gördüm, üzerinde elbisesi yok; nice elbiseler gördüm, içinde insan yok.', by:'Mevlana'},
+  {q:'Her gün bir yerden göçmek ne iyi, her gün bir yere konmak ne güzel.', by:'Mevlana'},
+  {q:'Ya hiç başlama, ya da başladığını bitir.', by:'Mevlana'},
+  {q:'İlim ilim bilmektir, ilim kendin bilmektir.', by:'Yunus Emre'},
+  {q:'Sevelim sevilelim, dünya kimseye kalmaz.', by:'Yunus Emre'},
+  {q:'Bir kez gönül yıktın ise, bu kıldığın namaz değil.', by:'Yunus Emre'},
+  {q:'Ne varlığa sevinirim, ne yokluğa yerinirim.', by:'Yunus Emre'},
+  {q:'Söz ola kese savaşı, söz ola kestire başı.', by:'Yunus Emre'},
+  {q:'Sabır saadeti ebedi kalır, sabır kimde ise o nasip alır.', by:'Yunus Emre'},
+  {q:'Az söz erin yüküdür, çok söz hayvan yüküdür.', by:'Yunus Emre'},
+  {q:'Cümleler doğrudur sen doğru isen; doğruluk bulunmaz sen eğri isen.', by:'Yunus Emre'},
+  {q:'Bir ben vardır bende, benden içeri.', by:'Yunus Emre'},
+  {q:'Kendini bilmeyen, Rabbini bilemez.', by:'Şems-i Tebrizi'},
+  {q:'Sabretmek öylece durup beklemek değil, ileri görüşlü olmak demektir.', by:'Şems-i Tebrizi'},
+  {q:'Geçmişe takılıp kalma, geleceğe kendini kaptırma; asıl olan şu andır.', by:'Şems-i Tebrizi'},
+  {q:'Dünya bir aynadır; ona nasıl bakarsan öyle görünür.', by:'Şems-i Tebrizi'},
+  {q:'Nereye gidersen git, kalbini de yanında götür.', by:'Şems-i Tebrizi'},
+  {q:'Karanlığından rahatsız olmayan, ışığı arayamaz.', by:'Şems-i Tebrizi'},
+  {q:'Değişime direnmek, hayatın akışına kürek çekmektir.', by:'Şems-i Tebrizi'},
+  {q:'Söz ilaç gibidir; dozunda kullanılırsa şifa verir.', by:'Şems-i Tebrizi'},
+  {q:'Ya ben İstanbul\'u alırım, ya İstanbul beni.', by:'Fatih Sultan Mehmet'},
+  {q:'İmkânın sınırını görmek için imkânsızı denemek lazım.', by:'Fatih Sultan Mehmet'},
+  {q:'Yerinde söz söylemesini bilen, özür dilemek zorunda kalmaz.', by:'Fatih Sultan Mehmet'},
+  {q:'Biz toprakları değil, gönülleri fethetmeye gidiyoruz.', by:'Fatih Sultan Mehmet'},
+  {q:'Düşmanı tanımak, tehlikeyi bertaraf etmenin yarısıdır.', by:'Fatih Sultan Mehmet'},
+  {q:'Ben tebaamın gönlünü kazanmayı, kale fethine tercih ederim.', by:'Fatih Sultan Mehmet'},
+  {q:'Zorluklar, azmi olan için birer basamaktır.', by:'Fatih Sultan Mehmet'},
+  {q:'Gecenin en karanlık anı, şafağa en yakın olduğu andır.', by:'Fatih Sultan Mehmet'},
+];
+
+// ── PIXEL AVATAR (Stardew tarzı) — 26×26 grid; 5 slot × 7 varyant, hepsi renklendirilebilir ──
+// Karakter kodları: '#'=slot rengi, 'o'=koyu ton, '+'=açık ton, 's'=ten, 'e'=göz, '.'=boş
+const AV_BASE = { x:7, y:2, rows:[   // gövde (ten) — kafa/gövde/kollar/bacaklar/ayaklar
+  '...sssss...',
+  '..sssssss..',
+  '..sssssss..',
+  '..ssesess..',
+  '..sssssss..',
+  '..ssooss...',
+  '...sssss...',
+  '....sss....',
+  'sssssssssss',
+  'sssssssssss',
+  'sssssssssss',
+  'sssssssssss',
+  'sssssssssss',
+  '..sssssss..',
+  '..sssssss..',
+  '...ss.ss...',
+  '...ss.ss...',
+  '...ss.ss...',
+  '...ss.ss...',
+  '...ss.ss...',
+  '..sss.sss..',
+  '..sss.sss..',
+]};
+const AV_HAIR = [
+  {n:'Kirpi',      x:8,y:0,rows:['.#.#.#.#.','.#######.','o#######o']},
+  {n:'Düz Kâkül',  x:8,y:1,rows:['.#######.','#########','#o.....o#']},
+  {n:'Uzun',       x:8,y:1,rows:['.#######.','#########','#########','#o.....o#','#.......#','#.......#','o.......o','o.......o']},
+  {n:'Mohawk',     x:8,y:0,rows:['....#....','....#....','...###...','...###...']},
+  {n:'Kıvırcık',   x:8,y:0,rows:['.o#.#.o..','.#######.','o#######o','#o.....o#']},
+  {n:'At Kuyruğu', x:8,y:1,rows:['.#######.','#########','#o.....o#','........#','........o','........o']},
+  {n:'Kısa Tıraş', x:8,y:1,rows:['.ooooooo.','.o#####o.']},
+];
+const AV_ARMOR = [
+  {n:'Tişört',   x:7,y:10,rows:['.#########.','.#########.','.#########.','.#########.','.#########.']},
+  {n:'Yelek',    x:7,y:10,rows:['.####o####.','.####o####.','.####o####.','.####o####.','.####o####.']},
+  {n:'Plaka Zırh',x:7,y:10,rows:['o#########o','###########','###########','###########','###########','..ooooooo..']},
+  {n:'Cübbe',    x:7,y:10,rows:['###########','###########','###########','###########','###########','.#########.','.#########.','.#########.','.ooooooooo.']},
+  {n:'Kapüşonlu',x:7,y:9,rows:['...o###o...','.#########.','.#########.','.#########.','.#########.','.####o####.']},
+  {n:'Ceket',    x:7,y:10,rows:['##+#####+##','##o#####o##','##o#####o##','##o#####o##','##o#####o##']},
+  {n:'Atlet',    x:7,y:10,rows:['..#######..','..#######..','..#######..','..#######..','..#######..']},
+];
+const AV_PANTS = [
+  {n:'Şort',     x:8,y:16,rows:['.#######.','..##.##..']},
+  {n:'Uzun',     x:8,y:16,rows:['.#######.','..##.##..','..##.##..','..##.##..','..##.##..','..##.##..']},
+  {n:'Etek',     x:8,y:16,rows:['.#######.','.#o###o#.','#########']},
+  {n:'Şalvar',   x:8,y:16,rows:['.#######.','.#######.','.#######.','.#######.','..##.##..']},
+  {n:'Dar',      x:8,y:16,rows:['.#######.','..##.##..','..##.##..','..##.##..','..#o.o#..','..#o.o#..']},
+  {n:'Yırtık',   x:8,y:16,rows:['.#######.','..##.##..','..#..##..','..##..#..','..##.##..','..##.##..']},
+  {n:'Zırhlı',   x:8,y:16,rows:['.#######.','..##.##..','..oo.oo..','..##.##..','..##.##..','..##.##..']},
+];
+const AV_SHOES = [
+  {n:'Bot',        x:8,y:22,rows:['.###.###.','.###.###.']},
+  {n:'Spor',       x:8,y:22,rows:['.###.###.','.o+o.o+o.']},
+  {n:'Sandalet',   x:8,y:22,rows:['.#.#.#.#.','.###.###.']},
+  {n:'Uzun Çizme', x:8,y:20,rows:['..##.##..','..##.##..','.###.###.','.###.###.']},
+  {n:'Çıplak Ayak',x:8,y:23,rows:['.ooo.ooo.']},
+  {n:'Sivri Burun',x:8,y:22,rows:['.###.###.','####.####']},
+  {n:'Topuklu',    x:8,y:22,rows:['.###.###.','.#o..#o..']},
+];
+const AV_WEAPON = [
+  {n:'Kılıç',  x:15,y:4,rows:['...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','..o#o......','...#.......','...#.......']},
+  {n:'Balta',  x:15,y:4,rows:['...##o.....','...###o....','...##o.....','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......']},
+  {n:'Asa',    x:15,y:2,rows:['...+#+.....','...###.....','...+#+.....','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......']},
+  {n:'Yay',    x:15,y:4,rows:['....##.....','...+..#....','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+..#....','....##.....']},
+  {n:'Hançer', x:15,y:10,rows:['...+.......','...+.......','...+.......','..o#o......','...#.......']},
+  {n:'Çekiç',  x:15,y:4,rows:['..#####....','..#####....','..o###o....','....#......','....#......','....#......','....#......','....#......','....#......','....#......','....#......']},
+  {n:'Kitap',  x:15,y:11,rows:['.######....','.#++++#....','.#++++#....','.######....']},
+];
+const AV_SLOTS = [
+  {key:'hair',   lbl:'SAÇ',      arr:AV_HAIR},
+  {key:'armor',  lbl:'ZIRH',     arr:AV_ARMOR},
+  {key:'weapon', lbl:'SİLAH',    arr:AV_WEAPON},
+  {key:'pants',  lbl:'ALT',      arr:AV_PANTS},
+  {key:'shoes',  lbl:'AYAKKABI', arr:AV_SHOES},
+];
 
 function _char(){
   if (!S.character) {
-    S.character = { photo:null, name:'Karakter', charXp:0, statPoints:0,
-      stats:{zeka:0,irade:0,guc:0,azim:0,motivasyon:0,sabir:0,ikna:0,karizma:0},
-      statLabels:{zeka:'Zeka',irade:'İrade',guc:'Güç',azim:'Azim',motivasyon:'Motivasyon',sabir:'Sabır',ikna:'İkna',karizma:'Karizma'},
-      spider:{ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0}, spiderLog:[],
-      lastDecayApplied:{} };
+    S.character = JSON.parse(JSON.stringify(defState().character));
   }
-  if (!S.character.lastDecayApplied) S.character.lastDecayApplied = {};
-  return S.character;
+  const c=S.character;
+  // v7.24 göçü: yeni stat anahtarları + avatar varsayılanları (eski zeka/irade... alanları dokunulmadan kalır)
+  c.stats = c.stats || {};
+  CHARX_STATS.forEach(s=>{ if(typeof c.stats[s.key]!=='number') c.stats[s.key]=0; });
+  if (!c.avatar) c.avatar = { hair:0,armor:0,weapon:0,pants:0,shoes:0, colors:{} };
+  c.avatar.colors = Object.assign({hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0'}, c.avatar.colors||{});
+  if (typeof c.lastLevel!=='number') c.lastLevel = getCharLevelInfo(c.charXp||0).level;
+  return c;
 }
 
-// Kategori başına en son eylem tarihini bulur (boş → null)
-function _lastActionDate(cat){
-  const c = _char();
-  let latest = null;
-  for (const x of (c.spiderLog||[])){
-    if (x.cat !== cat || !x.date) continue;
-    if (!latest || x.date > latest) latest = x.date;
-  }
-  return latest;
-}
+// (Spider sistemi v7.24'te tamamen kaldırıldı — decay artık gün-devrinde İvme/İstikrar statlarına işliyor)
+function applyStatDecay(){ return 0; }
 
-// 3+ gün eylem girilmezse SPIDER GRAFİĞİ değerleri azalır.
-// (Stat decay kaldırıldı — kullanıcı isteğiyle. Karakter statları artık
-//  sadece kullanıcı tarafından değiştirilir; otomatik azalmaz.)
-function applyStatDecay(){
-  const c = _char();
-  c.lastSpiderDecayApplied = c.lastSpiderDecayApplied || {};
-  const t = today();
-  const tMs = new Date(t).getTime();
-  let decayed = 0;
-  Object.keys(SPIDER_ICONS).forEach(cat => {
-    const latest = _lastActionDate(cat);
-    if (!latest) return;
-    const daysSince = Math.floor((tMs - new Date(latest).getTime()) / 86400000);
-    if (daysSince <= STAT_DECAY_GRACE_DAYS) return;
-    if (c.lastSpiderDecayApplied[cat] === t) return;
-    c.lastSpiderDecayApplied[cat] = t;
-    if (!c.spider) c.spider = {ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0};
-    if ((c.spider[cat]||0) > 0){
-      c.spider[cat] = Math.max(0, c.spider[cat] - 1);
-      addLog('Spider decay ('+cat+' '+daysSince+' gün): -1');
-      decayed++;
-    }
-  });
-  if (decayed) save();
-  return decayed;
-}
-
-// Level eğrisi: lvl 1→2 = 100 XP, 2→3 = 200, ..., (N→N+1) = 100*N
-// Level N için kümülatif eşik = 100 * (N-1)*N / 2
+// Level eğrisi (v7.24): lvl N → N+1 = N × 70 XP. Level N'e kümülatif eşik = 70 × (N-1)N/2
 function getCharLevelInfo(xp){
   const x = Math.max(0, xp|0);
   let lv = 1;
   while (true){
-    const need = 100 * lv * (lv+1) / 2;
+    const need = 70 * lv * (lv+1) / 2;
     if (need > x) break;
     lv++;
     if (lv > 999) break;
   }
-  const startThis = 100 * (lv-1) * lv / 2;
-  const need = 100 * lv;
+  const startThis = 70 * (lv-1) * lv / 2;
+  const need = 70 * lv;
   return { level: lv, intoLevel: x - startThis, needForNext: need, startThis };
 }
 
@@ -4772,18 +4959,19 @@ function awardCharXp(amt){
     c.charXp = (c.charXp||0) + amt;
     const now = getCharLevelInfo(c.charXp).level;
     if (now > before){
-      const gained = now - before;
+      const gained = (now - before) * 2;   // seviye başına +2 stat puanı
       c.statPoints = (c.statPoints||0) + gained;
-      notify('🆙 SEVİYE ATLADI: '+now+' (+'+gained+' stat puanı)');
-      addLog('Karakter SV '+now+' (stat +' +gained+')');
+      c.lastLevel = now;
+      const tOld = charTitle(before), tNew = charTitle(now);
+      notify('🆙 SEVİYE '+now+' (+'+gained+' stat puanı)'+(tNew!==tOld?(' — YENİ UNVAN: '+tNew.toUpperCase()):''));
+      addLog('Karakter LVL '+now+' (stat +'+gained+')'+(tNew!==tOld?(' · unvan: '+tNew):''));
     }
     save();
   }
-  try { renderCharacter(); } catch(e){}
+  try { if(g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); } catch(e){}
 }
 
-function charPickPhoto(){ const i=g('char-photo-input'); if(i) i.click(); }
-function charOnPhoto(file){
+function _UNUSED_charOnPhoto(file){
   if (!file) return;
   if (!file.type.startsWith('image/')){ notify('Sadece resim'); return; }
   const r=new FileReader();
@@ -4876,10 +5064,6 @@ function cropSave(){
   renderCharacter();
   notify('📷 Fotoğraf kaydedildi');
 }
-function charRemovePhoto(){
-  if (!confirm('Karakter fotoğrafı silinsin mi?')) return;
-  _char().photo = null; save(); renderCharacter();
-}
 function charSetName(v){
   const t=(v||'').trim().slice(0,40);
   _char().name = t || 'Karakter';
@@ -4888,19 +5072,10 @@ function charSetName(v){
 
 function addCharStat(key){
   const c=_char();
-  if ((c.statPoints||0) <= 0){ notify('Stat puanı yok — XP kasanca SV atlayınca gelir'); return; }
+  if ((c.statPoints||0) <= 0){ notify('Stat puanı yok — seviye atlayınca +2 gelir'); return; }
   if ((c.stats[key]||0) >= CHAR_STAT_MAX){ notify('Bu stat zaten max ('+CHAR_STAT_MAX+')'); return; }
   c.stats[key] = (c.stats[key]||0) + 1;
   c.statPoints--;
-  // Tüm statlar max'a ulaştıysa → PHASE atla, statları 0'a sıfırla
-  const allMaxed = CHAR_STAT_KEYS.every(k => (c.stats[k]||0) >= CHAR_STAT_MAX);
-  if (allMaxed){
-    c.phase = (c.phase||1) + 1;
-    CHAR_STAT_KEYS.forEach(k => c.stats[k] = 0);
-    notify('★ PHASE '+c.phase+' BAŞLADI — Tüm statlar sıfırlandı, bar yeni renge döndü');
-    addLog('Karakter PHASE '+c.phase+' (statlar reset, renk değişti)');
-    playBell('reminder');
-  }
   save(); renderCharacter();
 }
 
@@ -4909,133 +5084,175 @@ function applyCharCosmetics(){
   try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
 }
 
-// PHASE renkleri — her tier'da bar değişir, cyclic
-const PHASE_COLORS = ['#f0f0f0','#ff6666','#8fff8f','#ffff66','#66ccff','#cc88ff','#ffd700','#ff44ff'];
-function phaseColor(phase){
-  const p = Math.max(1, phase|0) - 1;
-  return PHASE_COLORS[p % PHASE_COLORS.length];
-}
-const PHASE_NAMES = ['INITIATE','REFORGED','ASCENDED','LUMINOUS','SAPPHIRE','VIOLET','GOLDEN','ETERNAL'];
-function phaseName(phase){
-  const p = Math.max(1, phase|0) - 1;
-  return PHASE_NAMES[p % PHASE_NAMES.length];
-}
-
-function editCharStat(key){
-  const c=_char();
-  const cur = c.statLabels[key] || key;
-  const v = prompt('Stat ismini değiştir:', cur);
-  if (v && v.trim()){
-    c.statLabels[key] = v.trim().slice(0,28);
-    save(); renderCharacter();
-  }
-}
-
-function addCharAction(){
-  const t = (g('char-act-text')||{}).value || '';
-  const cat = (g('char-act-cat')||{}).value || 'akademi';
-  if (!t.trim()){ notify('Eylem metni gerekli'); return; }
-  if (!SPIDER_KEYS.includes(cat)) return;
-  const c=_char();
-  c.spiderLog = c.spiderLog||[];
-  c.spiderLog.push({ id:Date.now(), date:today(), text:t.trim(), cat });
-  if(c.spiderLog.length>200) c.spiderLog = c.spiderLog.slice(-200);   // sınırsız büyümesin
-  c.spider = c.spider||{ruhsal:0,zeka:0,spor:0,akademi:0,eglence:0};
-  c.spider[cat] = (c.spider[cat]||0) + 1;
-  g('char-act-text').value='';
-  save(); renderCharacter();
-}
-
-function deleteCharAction(id){
-  const c=_char();
-  const ent = (c.spiderLog||[]).find(x=>x.id===id); if(!ent) return;
-  c.spiderLog = c.spiderLog.filter(x=>x.id!==id);
-  if (c.spider && c.spider[ent.cat]>0) c.spider[ent.cat]--;
-  save(); renderCharacter();
-}
-
 function renderCharacter(){
   const wrap = g('char-stats-list'); if(!wrap) return;
   const c=_char();
-  // photo + kasa ödülleri (glow border, glasses, pixel font)
+  // Çerçeve: kasa ödülü border'lar AYNI .char-photo elementinde çalışmaya devam eder
   const ph=g('char-photo');
   if (ph){
-    if (c.photo){ ph.style.backgroundImage='url("'+c.photo.replace(/"/g,'\\"')+'")'; const e=g('char-photo-empty'); if(e) e.style.display='none'; }
-    else { ph.style.backgroundImage=''; const e=g('char-photo-empty'); if(e) e.style.display='block'; }
     const cs = (S.cases||{});
     ph.classList.toggle('glow', cs.avatarBorder === 'glow');
     ph.classList.toggle('acc-glasses', Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   }
-  // Pixel font: kasadan kazanıldıysa body sınıfı set et
   try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
-  // name
+  // isim
   const ni=g('char-name'); if (ni && ni.value !== (c.name||'')) ni.value = c.name||'';
-  // PHASE: tüm statlar max'a ulaşıp sıfırlandıkça artar, bar/slot rengi cycle eder
-  const phase = c.phase || 1;
-  const pcol = phaseColor(phase);
-  const pname = phaseName(phase);
-  document.documentElement.style.setProperty('--phase-color', pcol);
-  // Phase header (level alanının yanına ekle)
-  const lvWrap = g('char-level'); if (lvWrap) lvWrap.textContent = getCharLevelInfo(c.charXp||0).level;
-  const sp=g('char-stat-points'); if(sp) sp.textContent = c.statPoints||0;
-  // Stat panel başına phase rozeti ekle
-  const phaseEl=g('char-phase-row');
-  if (phaseEl){
-    if (phase > 1){
-      phaseEl.innerHTML = '<span class="char-phase-badge">PHASE '+phase+' · '+pname+'</span>';
-      phaseEl.style.display='block';
-    } else {
-      phaseEl.innerHTML = '';
-      phaseEl.style.display='none';
-    }
-  }
-  // level + xp bar
+  // seviye + unvan + bar
   const info = getCharLevelInfo(c.charXp||0);
+  const lv = info.level, title = charTitle(lv);
+  const lvWrap = g('char-level'); if (lvWrap) lvWrap.textContent = lv;
+  const t2=g('charx-title2'); if(t2) t2.textContent = title.toUpperCase();
+  const sp=g('char-stat-points'); if(sp) sp.textContent = c.statPoints||0;
   const bar=g('char-xp-bar');
   if (bar){
     const pct = info.needForNext>0 ? Math.min(100, (info.intoLevel/info.needForNext)*100) : 100;
     bar.style.width = pct+'%';
-    // XP barı da phase rengiyle parlasın
-    bar.style.background = 'linear-gradient(90deg, '+pcol+', '+pcol+'88)';
   }
-  const txt=g('char-xp-text'); if (txt) txt.textContent = info.intoLevel+' / '+info.needForNext+'  (toplam '+ (c.charXp||0) +')';
-  // stats list
-  wrap.innerHTML = CHAR_STAT_KEYS.map(k=>{
-    const val = c.stats[k]||0;
-    const lbl = c.statLabels[k] || k;
+  const txt=g('char-xp-text'); if (txt) txt.textContent = info.intoLevel+' / '+info.needForNext+' XP  (sonraki: LVL '+(lv+1)+')';
+  // özet
+  const sT=g('charx-title'); if(sT) sT.textContent = title+' (LVL '+lv+')';
+  const sL=g('charx-lvl2'); if(sL) sL.textContent = lv;
+  const sX=g('charx-xp'); if(sX) sX.textContent = (c.charXp||0).toLocaleString('tr-TR');
+  // ekipmanlar + motivasyon + statlar + avatar
+  renderCharEquip();
+  renderCharQuote();
+  wrap.innerHTML = CHARX_STATS.map(st=>{
+    const val = c.stats[st.key]||0;
     const canAdd = (c.statPoints||0) > 0 && val < CHAR_STAT_MAX;
-    let slots='';
-    for(let i=0;i<CHAR_STAT_MAX;i++) slots += '<div class="slot'+(i<val?' on':'')+'"></div>';
-    return '<div class="char-stat-row">'+
-      '<span class="lbl"><span>'+_he(lbl)+'</span><button class="pencil" title="Yeniden adlandır" onclick="editCharStat(\''+k+'\')">✎</button></span>'+
-      '<span class="bar">'+slots+'</span>'+
-      '<button class="plus" '+(canAdd?'':'disabled')+' onclick="addCharStat(\''+k+'\')">+</button>'+
+    return '<div class="cstat">'+
+      '<div class="cst-top">'+
+        '<span style="font-size:14px;flex-shrink:0">'+st.icon+'</span>'+
+        '<span class="cst-name">'+st.name+' <small>['+st.en+']</small></span>'+
+        '<span class="cst-val">'+val+'<small style="font-size:8px;color:var(--muted)">/'+CHAR_STAT_MAX+'</small></span>'+
+        '<button class="cst-plus" '+(canAdd?'':'disabled')+' onclick="addCharStat(\''+st.key+'\')">+</button>'+
+      '</div>'+
+      '<div class="cst-desc">'+st.desc(val)+'</div>'+
     '</div>';
   }).join('');
-  // spider counters
-  SPIDER_KEYS.forEach(k=>{
-    const e=g('spd-'+k); if(e) e.textContent = (c.spider&&c.spider[k])||0;
-  });
-  // action list (today only by default)
-  const t=today();
-  const todays = (c.spiderLog||[]).filter(x=>x.date===t).sort((a,b)=>b.id-a.id);
-  const listEl=g('char-act-list'), empEl=g('char-act-empty');
-  if (empEl) empEl.style.display = todays.length?'none':'block';
-  if (listEl){
-    listEl.innerHTML = todays.map(x=>{
-      const ic = SPIDER_ICONS[x.cat]||'•';
-      const lb = SPIDER_LABELS[x.cat]||x.cat;
-      return '<div class="char-act-card"><span class="ico">'+ic+'</span><span class="txt">'+_he(x.text)+' <span style="color:var(--muted);font-size:8px">· '+_he(lb)+'</span></span><button class="x" onclick="deleteCharAction('+x.id+')">✕</button></div>';
-    }).join('');
-  }
-  // Karakter Özeti banner (sağ sütundaki boş alanı doldurur)
-  renderCharBanner();
-  // Kasa ödülü kozmetiklerin toggle'ları
   renderCosmeticToggles();
-  // Decay uyarıları
-  renderDecayWarnings();
-  // draw spider
-  setTimeout(drawSpider, 30);
+  renderAvatar();
+}
+
+// 🎒 Ekipmanlar: aktif boostlar + konsol temaları + kozmetikler + kasa unvanları
+function renderCharEquip(){
+  const el=g('charx-equip'); if(!el) return;
+  const chips=[];
+  const add=(txt,col)=>chips.push('<span class="charx-eqchip"'+(col?(' style="border-color:'+col+';color:'+col+'"'):'')+'>'+txt+'</span>');
+  // geçici boostlar
+  if(S.boostUntil && S.boostUntil>Date.now()){ const m=Math.ceil((S.boostUntil-Date.now())/60000); add('⚡ 2X XP ('+m+' dk)','#ffff66'); }
+  const cs=S.cases||{};
+  if(cs.sprintActive) add('⚡ Sprint 1.5x','#ffff66');
+  if(cs.deepWorkActive) add('🧘 Deep Work 2x','#ffff66');
+  if((cs.taskBuffRemaining||0)>0) add('✨ Task Buff ×'+cs.taskBuffRemaining,'#ffff66');
+  if((cs.sessionBuffRemaining||0)>0) add('🚀 Session Buff ×'+cs.sessionBuffRemaining,'#ffff66');
+  if((cs.xpMultiplier||1)>1) add('⚛ '+cs.xpMultiplier+'x Kalıcı','#ffaa44');
+  if((cs.breakBonus||0)>0) add('⏸ +'+Math.round(cs.breakBonus/60)+'dk Mola');
+  if(cs.premiumBreakReady) add('☕ Premium Break');
+  if(cs.challengePending) add('🛑 Challenge Bileti');
+  // konsol temaları
+  (typeof CASE_THEMES!=='undefined'?CASE_THEMES:[]).forEach(t=>{ if((S.inventory||[]).includes(t.id)) add(t.icon+' '+t.name+(S.equippedTheme===t.id?' ✓':''),'#66ccff'); });
+  // market kozmetikleri (taç vs.)
+  (S.inventory||[]).forEach(id=>{ const it=SHOP_ITEMS.find(x=>x.id===id); if(it && it.cat==='cosmetic') add(it.icon+' '+it.name+(S.equippedCosmetic===id?' ✓':''),'#cc88ff'); });
+  // kasa unvanları
+  (cs.profileTitles||[]).forEach(t=>add('🎖 '+_he(t),'#ffaa44'));
+  el.innerHTML = chips.length ? chips.join('') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;padding:4px 0">Henüz ekipman yok — kasa aç, market\'e uğra.</div>';
+}
+
+// 🕯 Motivasyon — günlük söz + elle değiştirme
+function _quoteIdx(){
+  const d=new Date();
+  let off=0; try{ off=parseInt(localStorage.getItem('oc_quote_off'))||0; }catch(e){}
+  return ((d.getFullYear()*372 + (d.getMonth()+1)*31 + d.getDate()) + off) % CHAR_QUOTES.length;
+}
+function renderCharQuote(){
+  const q=CHAR_QUOTES[_quoteIdx()];
+  const qe=g('charx-quote'); if(qe) qe.textContent='“'+q.q+'”';
+  const be=g('charx-quote-by'); if(be) be.textContent='— '+q.by;
+}
+function charxNextQuote(){
+  try{ localStorage.setItem('oc_quote_off', String((parseInt(localStorage.getItem('oc_quote_off'))||0)+1)); }catch(e){}
+  renderCharQuote();
+}
+
+// ── PIXEL AVATAR çizimi ──
+function _avShade(hex,f){
+  try{
+    const n=parseInt(String(hex).replace('#',''),16);
+    let r=(n>>16)&255, gg=(n>>8)&255, b=n&255;
+    const t=f<0?0:255, p=Math.abs(f);
+    r=Math.round(r+(t-r)*p); gg=Math.round(gg+(t-gg)*p); b=Math.round(b+(t-b)*p);
+    return '#'+((1<<24)+(r<<16)+(gg<<8)+b).toString(16).slice(1);
+  }catch(e){ return hex; }
+}
+function _avDrawSprite(ctx, spr, color, skin){
+  if(!spr) return;
+  spr.rows.forEach((row,dy)=>{
+    for(let dx=0;dx<row.length;dx++){
+      const ch=row[dx]; if(ch==='.'||ch===' ') continue;
+      let col=color;
+      if(ch==='o') col=_avShade(color,-0.35);
+      else if(ch==='+') col=_avShade(color,0.30);
+      else if(ch==='s') col=skin;
+      else if(ch==='e') col='#141414';
+      ctx.fillStyle=col;
+      ctx.fillRect(spr.x+dx, spr.y+dy, 1, 1);
+    }
+  });
+}
+function renderAvatar(){
+  const cv=g('avatar-cv'); if(!cv) return;
+  const c=_char(), av=c.avatar, col=av.colors;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const pick=(arr,i)=>arr[Math.max(0,Math.min(arr.length-1,i|0))];
+  _avDrawSprite(ctx, AV_BASE, col.skin, col.skin);                    // gövde (ten)
+  _avDrawSprite(ctx, pick(AV_SHOES,av.shoes),  col.shoes,  col.skin); // ayakkabı
+  _avDrawSprite(ctx, pick(AV_PANTS,av.pants),  col.pants,  col.skin); // alt
+  _avDrawSprite(ctx, pick(AV_ARMOR,av.armor),  col.armor,  col.skin); // zırh
+  _avDrawSprite(ctx, pick(AV_HAIR,av.hair),    col.hair,   col.skin); // saç
+  _avDrawSprite(ctx, pick(AV_WEAPON,av.weapon),col.weapon, col.skin); // silah (elde, en önde)
+}
+
+// ── AVATAR EDİTÖR POP-UP (çerçevenin yanında) ──
+function avatarEditorToggle(ev){
+  if(ev) ev.stopPropagation();
+  const p=g('avatar-pop'); if(!p) return;
+  if(p.style.display==='block'){ avatarEditorClose(); return; }
+  renderAvatarPopRows();
+  p.style.display='block';
+}
+function avatarEditorClose(){ const p=g('avatar-pop'); if(p) p.style.display='none'; }
+document.addEventListener('click', function(e){
+  const p=g('avatar-pop');
+  if(p && p.style.display==='block' && !p.contains(e.target) && !(e.target.closest && e.target.closest('#char-photo'))) avatarEditorClose();
+});
+function renderAvatarPopRows(){
+  const box=g('avatar-pop-rows'); if(!box) return;
+  const av=_char().avatar;
+  let html=AV_SLOTS.map(s=>{
+    const idx=av[s.key]|0, item=s.arr[Math.max(0,Math.min(s.arr.length-1,idx))];
+    return '<div class="avrow">'+
+      '<span class="avlbl">'+s.lbl+'</span>'+
+      '<button class="avbtn" onclick="avCycle(\''+s.key+'\',-1)">◀</button>'+
+      '<span class="avval">'+(idx+1)+'/'+s.arr.length+' '+_he(item.n)+'</span>'+
+      '<button class="avbtn" onclick="avCycle(\''+s.key+'\',1)">▶</button>'+
+      '<input type="color" value="'+(av.colors[s.key]||'#888888')+'" oninput="avColor(\''+s.key+'\',this.value)">'+
+    '</div>';
+  }).join('');
+  html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><input type="color" value="'+(av.colors.skin||'#f0c8a0')+'" oninput="avColor(\'skin\',this.value)"></div>';
+  box.innerHTML=html;
+}
+function avCycle(slot,dir){
+  const av=_char().avatar;
+  const def=AV_SLOTS.find(s=>s.key===slot); if(!def) return;
+  const n=def.arr.length;
+  av[slot]=(((av[slot]|0)+dir)%n+n)%n;
+  save(); renderAvatar(); renderAvatarPopRows();
+}
+function avColor(slot,val){
+  const av=_char().avatar;
+  av.colors[slot]=val;
+  save(); renderAvatar();
 }
 
 // Kasa ödülü kozmetiklerin aç/kapat toggle'ları (sadece sahip olduklarını gösterir)
@@ -5086,134 +5303,10 @@ function toggleCosmetic(key){
   renderCharacter();
 }
 
-function renderDecayWarnings(){
-  const block = g('decay-warn-block');
-  const list = g('decay-warn-list');
-  if (!block || !list) return;
-  const tMs = new Date(today()).getTime();
-  const warnings = [];
-  Object.keys(SPIDER_ICONS).forEach(cat => {
-    const latest = _lastActionDate(cat);
-    const ic = SPIDER_ICONS[cat]||'•';
-    const lb = SPIDER_LABELS[cat]||cat;
-    if (!latest) return; // hiç eylem yoksa uyarı gösterme (baseline'sız)
-    const days = Math.floor((tMs - new Date(latest).getTime())/86400000);
-    if (days >= STAT_DECAY_GRACE_DAYS){
-      warnings.push({ ic, lb, status:'active', txt:'⛔ '+days+' gündür eylem yok — spider değeri AZALIYOR' });
-    } else if (days >= STAT_DECAY_GRACE_DAYS - 1){
-      warnings.push({ ic, lb, status:'warn', txt:'⚠ '+(STAT_DECAY_GRACE_DAYS - days)+' gün sonra spider değeri azalmaya başlar' });
-    }
-  });
-  if (!warnings.length){ block.style.display='none'; return; }
-  block.style.display='block';
-  list.innerHTML = warnings.map(w=>{
-    const col = w.status==='active' ? 'var(--red)' : 'var(--yellow)';
-    return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid '+col+';border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:9px;color:var(--bright);letter-spacing:1px;line-height:1.5">'+
-      '<b style="color:'+col+'">'+w.ic+' '+_he(w.lb)+'</b> — '+w.txt+'</div>';
-  }).join('');
-}
-
-const CHAR_QUOTES = [
-  '"Disiplin, dünün motivasyonunun şimdiki halidir."',
-  '"Yapabileceğinin %1 fazlası, bugün."',
-  '"Her oturum bir tuğla. Duvar yarın görünür."',
-  '"Hız değil yön. Süreklilik kazanır."',
-  '"Bugünün en iyi versiyonu yarının ortalama versiyonudur."',
-  '"Konsantrasyon — bir kas. Çalış."',
-  '"Plan B yok çünkü plan A: çalışmak."',
-];
-function _quoteToday(){
-  const d = new Date();
-  const idx = (d.getFullYear()*1000 + (d.getMonth()+1)*40 + d.getDate()) % CHAR_QUOTES.length;
-  return CHAR_QUOTES[idx];
-}
-function renderCharBanner(){
-  const el = g('char-banner'); if(!el) return;
-  const c = _char();
-  const totalStat = CHAR_STAT_KEYS.reduce((s,k)=>s+(c.stats[k]||0),0);
-  const buildPct = Math.round(totalStat/(CHAR_STAT_KEYS.length*CHAR_STAT_MAX)*100);
-  const lifetimeXp = c.charXp || 0;
-  const titles = (S.cases && S.cases.profileTitles) || [];
-  const acts7 = (c.spiderLog||[]).filter(x=>{
-    if (!x.date) return false;
-    const d=new Date(x.date); const t=new Date(today());
-    return (t-d)/86400000 < 7;
-  }).length;
-  // Sahip olunan kozmetikler (eski "level rozeti yanında" eşyaları) — artık özette
-  const cosOwned = (S.inventory||[]).map(id=>SHOP_ITEMS.find(x=>x.id===id)).filter(x=>x && x.cat==='cosmetic');
-  const cosEq = S.equippedCosmetic ? (SHOP_ITEMS.find(x=>x.id===S.equippedCosmetic)||null) : null;
-  const cosDisp = cosEq ? cosEq.icon : (cosOwned.length ? cosOwned.map(c=>c.icon).join(' ') : '—');
-  el.innerHTML =
-    '<div class="cb-title">★ Karakter Özeti</div>'+
-    '<div class="cb-row"><span>Build skoru</span><b>'+totalStat+' / '+(CHAR_STAT_KEYS.length*CHAR_STAT_MAX)+' &nbsp; ('+buildPct+'%)</b></div>'+
-    '<div class="cb-row"><span>Toplam XP</span><b>'+lifetimeXp.toLocaleString('tr-TR')+'</b></div>'+
-    '<div class="cb-row"><span>Son 7 gün eylem</span><b>'+acts7+'</b></div>'+
-    '<div class="cb-row"><span>Kozmetik'+(cosEq?' (takılı)':'')+'</span><b style="font-size:18px;line-height:1">'+cosDisp+'</b></div>'+
-    (titles.length ? ('<div class="cb-titles">'+titles.map(t=>'<span class="cb-tag">'+_he(t)+'</span>').join('')+'</div>') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px">Henüz unvan yok — Gold kasalardan çıkar.</div>')+
-    '<div class="cb-quote">'+_he(_quoteToday())+'</div>';
-}
-
-function drawSpider(){
-  const cv=g('char-spider'); if(!cv) return;
-  const c=_char();
-  const dpr=window.devicePixelRatio||1;
-  const W=cv.clientWidth||300, H=cv.clientHeight||280;
-  cv.width=W*dpr; cv.height=H*dpr;
-  const ctx=cv.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
-  const cs=getComputedStyle(document.documentElement);
-  const col_dim=cs.getPropertyValue('--dim').trim();
-  const col_muted=cs.getPropertyValue('--muted').trim();
-  const col_bright=cs.getPropertyValue('--bright').trim();
-  const col_yellow=cs.getPropertyValue('--yellow').trim()||'#ffff66';
-  const cx=W/2, cy=H/2+8, R=Math.min(W,H)/2 - 30;
-  const N = SPIDER_KEYS.length;
-  // axes from TOP (270°) clockwise: order ruhsal, zeka, spor, akademi, eglence
-  // angle for index i: -PI/2 + 2*PI*i/N
-  const ang = i => -Math.PI/2 + 2*Math.PI*i/N;
-  const vals = SPIDER_KEYS.map(k => (c.spider && c.spider[k]) || 0);
-  const maxV = Math.max(5, ...vals);  // dynamic, min 5
-  // rings
-  ctx.strokeStyle = col_dim; ctx.lineWidth = 1;
-  for (let r=1;r<=4;r++){
-    ctx.beginPath();
-    for (let i=0;i<N;i++){
-      const x = cx + Math.cos(ang(i))*R*r/4;
-      const y = cy + Math.sin(ang(i))*R*r/4;
-      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.closePath(); ctx.stroke();
-  }
-  // axes lines + labels
-  ctx.fillStyle = col_muted; ctx.font="9px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='middle';
-  for (let i=0;i<N;i++){
-    const x = cx + Math.cos(ang(i))*R;
-    const y = cy + Math.sin(ang(i))*R;
-    ctx.strokeStyle = col_dim; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-    const lblX = cx + Math.cos(ang(i))*(R+14);
-    const lblY = cy + Math.sin(ang(i))*(R+14);
-    ctx.fillStyle = col_bright; ctx.fillText((SPIDER_ICONS[SPIDER_KEYS[i]]||'')+' '+(SPIDER_LABELS[SPIDER_KEYS[i]]||SPIDER_KEYS[i]).toUpperCase(), lblX, lblY);
-  }
-  // data shape
-  ctx.beginPath();
-  for (let i=0;i<N;i++){
-    const f = vals[i] / maxV;
-    const x = cx + Math.cos(ang(i))*R*f;
-    const y = cy + Math.sin(ang(i))*R*f;
-    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fill();
-  ctx.strokeStyle = col_yellow; ctx.lineWidth = 1.6; ctx.stroke();
-  // dots
-  for (let i=0;i<N;i++){
-    const f = vals[i] / maxV;
-    const x = cx + Math.cos(ang(i))*R*f;
-    const y = cy + Math.sin(ang(i))*R*f;
-    ctx.fillStyle = col_yellow; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
-  }
-}
+// (v7.24) Eski spider/banner sistemi kaldırıldı — geriye dönük çağrı uyumluluğu:
+function renderDecayWarnings(){}
+function drawSpider(){}
+function renderCharBanner(){ try{ if(g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){} }
 
 // ══════════════════════════════════════════
 // KASALAR (v7.12) — weighted RNG + pity timer + effects
@@ -5245,9 +5338,13 @@ function _synthShards(){
 // Boss yenince kasa parçası düşür (yüksek ağırlık standart, düşük ağırlık altın)
 function _dropBossFragment(){
   const cs=_cs();
-  const gold = Math.random() < 0.15;   // ~%15 altın parça, ~%85 standart parça
+  // STAT: Taktik — altın parça şansı %15 + %1×puan (tavan %45); ekstra kırık şansı %0.5×puan (tavan %10)
+  const _tk = (typeof charStat==='function') ? charStat('taktik') : 0;
+  const goldChance = Math.min(0.45, 0.15 + 0.01*_tk);
+  const gold = Math.random() < goldChance;
   if(gold){ cs.fragGold=(cs.fragGold||0)+1; notify('⚔ BOSS YENİLDİ → 🟡 +1 ALTIN kasa parçası ('+cs.fragGold+'/6)'); }
   else { cs.fragStd=(cs.fragStd||0)+1; notify('⚔ BOSS YENİLDİ → ⚪ +1 STANDART kasa parçası ('+cs.fragStd+'/3)'); }
+  if(_tk>0 && Math.random() < Math.min(0.10, 0.005*_tk)){ cs.protShards=(cs.protShards||0)+1; notify('⚔ Taktik bonusu → 🧩 +1 Streak Kırığı ('+cs.protShards+'/10)'); _synthShards(); }
   _synthFragments();
 }
 // Kullanıcının zaten sahip olduğu TEK-SEFERLİK kozmetikler (tekrar düşmesin diye havuzdan çıkarılır)
@@ -5770,8 +5867,8 @@ function renderShop(){
 
   function renderItem(item){
     const isStreak = item.id==='streak_shield';
-    const cost = isStreak ? getStreakShieldCost() : item.cost;
-    const stockFull = isStreak && (S.streakProtectors||0) >= STREAK_SHIELD_MAX_STOCK;
+    const cost = isStreak ? getStreakShieldCost() : (item.id==='sink_topic_insurance' ? getInsuranceCost() : item.cost);
+    const stockFull = isStreak && (S.streakProtectors||0) >= getShieldMaxStock();
     const owned = (item.cat!=='boost' && item.cat!=='streak' && item.cat!=='sink') && (S.inventory||[]).includes(item.id);
     const equipped = (item.cat==='theme' && S.equippedTheme===item.id) ||
                      (item.cat==='cosmetic' && S.equippedCosmetic===item.id);
@@ -7062,8 +7159,10 @@ function completeHabit(id){
   h.lastCompleted=t;
   if(!h.log) h.log={};
   h.log[t]=1;
-  addXP(h.xpReward, 'Alışkanlık: '+h.name);
-  notify('✓ ALIŞKANLIK TAMAMLANDI // +'+h.xpReward+' XP');
+  // STAT: İstikrar — alışkanlık XP'si +10×puan (toplam tavan 500)
+  const _habXp = Math.min(500, (h.xpReward||30) + charStat('istikrar')*10);
+  addXP(_habXp, 'Alışkanlık: '+h.name);
+  notify('✓ ALIŞKANLIK TAMAMLANDI // +'+_habXp+' XP'+(_habXp>(h.xpReward||30)?' (İstikrar bonuslu)':''));
   checkHabitBadges(h);
   save(); renderHabits();
   addLog('Alışkanlık: '+h.name+' [streak: '+h.streak+']');
@@ -8243,7 +8342,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.23.0 başlatıldı.');
+addLog('OVERCLOCK v7.24.0 başlatıldı.');
 </script>
 </body>
 </html>
