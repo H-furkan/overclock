@@ -524,6 +524,23 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .gym-ownchip{display:inline-flex;align-items:center;gap:4px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:8px;padding:3px 8px;cursor:pointer;user-select:none}
 .gym-ownchip.placed{border-color:var(--green);color:var(--green)}
 .gym-ownchip.armed{border-color:#ff9e64;color:#ff9e64;box-shadow:0 0 6px rgba(255,158,100,.4)}
+/* ── BAŞARIM AĞACI ── */
+.sk-sec{margin-bottom:16px}
+.sk-sec-title{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--bright);margin-bottom:10px;text-transform:uppercase}
+.sk-trees{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.sk-tree{background:var(--mid);border:1px solid var(--bd);border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center}
+.sk-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.sk-link{width:2px;height:14px;background:linear-gradient(var(--bd2),var(--dim));margin:2px auto}
+.sk-node{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:74px;max-width:104px;padding:8px 6px;background:var(--deep);border:1.5px solid var(--bd);border-radius:9px;cursor:pointer;opacity:.38;transition:opacity .2s;user-select:none}
+.sk-node .ski{font-size:17px;line-height:1;filter:grayscale(1)}
+.sk-node .skn{font-size:7px;letter-spacing:.5px;color:var(--gray);text-align:center;text-transform:uppercase;line-height:1.35}
+.sk-node.earned{opacity:1;border-color:var(--yellow);animation:skglow 2.4s ease-in-out infinite alternate}
+.sk-node.earned .ski{filter:none}
+.sk-node.earned .skn{color:var(--white)}
+@keyframes skglow{from{box-shadow:0 0 5px rgba(255,255,102,.25)}to{box-shadow:0 0 13px rgba(255,255,102,.55)}}
+.sk-chain{display:flex;flex-wrap:wrap;gap:8px}
+.sk-chain .sk-node{min-width:86px;flex:0 1 auto}
+#badge-pop{display:none;position:fixed;z-index:9993;background:var(--deep);border:1px solid var(--bd2);border-radius:8px;padding:10px 12px;font-size:9px;letter-spacing:1px;line-height:1.8;color:var(--bright);box-shadow:0 4px 18px rgba(0,0,0,.55);max-width:210px}
 .char-left{display:flex;flex-direction:column;width:240px}
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
 .char-photo{width:240px;height:240px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
@@ -1757,8 +1774,8 @@ body.pixel-font #timer-unit{font-size:8px}
 <!-- ══════════ PAGE: ACHIEVEMENTS ══════════ -->
 <div id="page-achievements" class="page">
   <div class="block">
-    <div class="blabel">■ Achievement Sistemi</div>
-    <div style="background:var(--mid);border:1px solid var(--bd2);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+    <div class="blabel">■ Başarım Ağacı</div>
+    <div style="background:var(--mid);border:1px solid var(--bd2);padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px;border-radius:10px">
       <span style="font-size:32px">🏆</span>
       <div>
         <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--white);letter-spacing:2px">LGS LEGACY</div>
@@ -1766,10 +1783,12 @@ body.pixel-font #timer-unit{font-size:8px}
         <div style="display:inline-block;font-size:8px;letter-spacing:2px;color:var(--white);background:var(--dim);padding:2px 8px;margin-top:6px">ONUR MADALYASI</div>
       </div>
     </div>
-    <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">GÜNLÜK (her gün sıfırlanır)</div>
-    <div id="daily-badges" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px"></div>
-    <div style="font-size:8px;letter-spacing:3px;color:var(--muted);margin-bottom:8px">KALICI (sıfırlanmaz)</div>
-    <div id="perm-badges" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Başarımlar birbirinden bağımsız kazanılır — bağlantılar sadece yol haritası. Kazanılan <b style="color:var(--yellow)">parlar</b>, kazanılmayan sönük durur. Üstüne gel / dokun → detay.</div>
+    <div class="sk-sec">
+      <div class="sk-sec-title">☀ Günlük <span style="color:var(--muted);font-weight:400">(her gün sıfırlanır)</span></div>
+      <div id="sk-daily" class="sk-chain"></div>
+    </div>
+    <div id="sk-trees" class="sk-trees"></div>
   </div>
 </div>
 
@@ -1835,7 +1854,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.25.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.26.0</div>
     </div>
   </div>
 </div>
@@ -1938,6 +1957,7 @@ const BADGES = [
   {id:'dawn',       icon:'🌅', name:'DAWN PROTOCOL',  desc:'06:00\'dan önce başla', type:'daily',     trig:'auto'},
   {id:'taskmaster', icon:'✅', name:'TASK MASTER',    desc:'5 task tamamla',        type:'daily',     trig:'auto'},
   {id:'overdrive',  icon:'🔥', name:'OVERDRIVE',      desc:'1 günde 3+ session',    type:'daily',     trig:'auto'},
+  {id:'hydra',      icon:'💧', name:'HYDRA',          desc:'Günde 8 bardak su iç',  type:'daily',     trig:'auto'},
   {id:'slayer',     icon:'⚔️', name:'BOSS SLAYER',    desc:'Toplam 3 boss yenildi', type:'permanent', trig:'auto'},
   {id:'scholar',    icon:'📚', name:'WAR SCHOLAR',    desc:'5 farklı konu çalış',   type:'permanent', trig:'auto'},
   {id:'tasklegend', icon:'🗂',  name:'TASK LEGEND',    desc:'Toplam 20 task bitti',  type:'permanent', trig:'auto'},
@@ -4429,22 +4449,87 @@ function earnBadge(id){
   renderBadges();
 }
 
-function renderBadges(){
-  function card(b){
-    const earned=S.earnedBadges.includes(b.id);
-    return '<div class="badge-card'+(earned?' earned':'')+'">'+
-      '<div class="badge-icon">'+b.icon+'</div>'+
-      '<div class="badge-name">'+b.name+'</div>'+
-      '<div class="badge-desc">'+b.desc+'</div>'+
-      (earned
-        ?'<div style="font-size:8px;color:var(--green);letter-spacing:2px">✓ EARNED</div>'
-        :(b.trig==='manual'
-          ?'<button onclick="earnBadge(\''+b.id+'\')" style="margin-top:4px;background:var(--dim);border:1px solid var(--bd);color:var(--bright);font-family:\'Share Tech Mono\',monospace;font-size:8px;padding:4px 10px;cursor:pointer;letter-spacing:1px">✓ KAZAN</button>'
-          :'<div style="font-size:8px;color:var(--dim)">otomatik</div>')
-      )+'</div>';
+// ── BAŞARIM AĞACI (v7.26) — skill-tree görünümü ──
+// Ağaç dizilimi: bağlantılar görsel yol haritasıdır, kazanım bağımsızdır.
+const SK_TREES=[
+  {title:'📚 Akademi',    rows:[ ['scholar'], ['slayer'], ['tasklegend'] ]},
+  {title:'🔄 Alışkanlık', rows:[ ['habit7'], ['habit21'], ['habit30'], ['habit5all','disciplined'], ['screenguard'] ]},
+  {title:'🏋 Spor',       rows:[ ['gt_acemi','gb_kalp'], ['gt_demir','gb_dambil'], ['gt_atlet','gb_krono'], ['gt_sparta','gb_ates'], ['gt_mudavim'], ['gt_demirbas'] ]},
+];
+const _GYM_BADGE_EMOJI={ gb_kalp:'🫀', gb_krono:'⏱', gb_dambil:'🏋', gb_ates:'🔥' };
+// Tek düğüm bilgisi: BADGES / GYM_TITLES / GYM_BADGES kaynaklarını birleştirir
+function _skInfo(id){
+  const b=BADGES.find(x=>x.id===id);
+  if(b) return { id, icon:b.icon, name:b.name, desc:b.desc, daily:b.type==='daily', manual:b.trig==='manual', earned:(S.earnedBadges||[]).includes(id), src:'badge' };
+  if(typeof GYM_TITLES!=='undefined'){
+    const t=GYM_TITLES.find(x=>x.id===id);
+    if(t) return { id, icon:'🎖', name:t.name, desc:t.need, daily:false, manual:false, earned:(((S.gym||{}).titles)||[]).includes(id), src:'gym' };
+    const gb=GYM_BADGES.find(x=>x.id===id);
+    if(gb) return { id, icon:_GYM_BADGE_EMOJI[id]||'📛', name:gb.name, desc:gb.need, daily:false, manual:false, earned:(((S.gym||{}).badges)||[]).includes(id), src:'gym' };
   }
-  g('daily-badges').innerHTML=BADGES.filter(b=>b.type==='daily').map(card).join('');
-  g('perm-badges').innerHTML=BADGES.filter(b=>b.type==='permanent').map(card).join('');
+  return null;
+}
+function _skNodeHtml(id){
+  const i=_skInfo(id); if(!i) return '';
+  return '<div class="sk-node'+(i.earned?' earned':'')+'" data-sk="'+id+'" onclick="showBadgePop(event,\''+id+'\')" onmouseenter="_skHover(event,\''+id+'\')" onmouseleave="_skHoverOut(event)">'+
+    '<span class="ski">'+i.icon+'</span><span class="skn">'+_he(i.name)+'</span></div>';
+}
+function renderBadges(){
+  const daily=g('sk-daily');
+  if(daily) daily.innerHTML=BADGES.filter(b=>b.type==='daily').map(b=>_skNodeHtml(b.id)).join('');
+  const trees=g('sk-trees');
+  if(trees){
+    trees.innerHTML=SK_TREES.map(t=>{
+      const rows=t.rows.map(r=>'<div class="sk-row">'+r.map(_skNodeHtml).join('')+'</div>').join('<div class="sk-link"></div>');
+      return '<div class="sk-tree"><div class="sk-sec-title" style="margin-bottom:8px">'+t.title+'</div>'+rows+'</div>';
+    }).join('');
+  }
+}
+// ── Küçük detay pop-up'ı (grafik popuplarındaki gibi, düğümün yanında; ekran ortasında DEĞİL) ──
+let _badgePopPin=false;
+function _ensureBadgePop(){
+  let p=g('badge-pop');
+  if(!p){ p=document.createElement('div'); p.id='badge-pop'; document.body.appendChild(p);
+    document.addEventListener('click',(e)=>{ const pp=g('badge-pop'); if(pp&&pp.style.display==='block'&&!pp.contains(e.target)&&!(e.target.closest&&e.target.closest('.sk-node'))){ pp.style.display='none'; _badgePopPin=false; } }, true);
+  }
+  return p;
+}
+function _badgePopHtml(i){
+  let h='<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+i.icon+' '+_he(i.name)+'</div>';
+  h+='<div style="color:var(--muted)">'+_he(i.desc)+'</div>';
+  h+='<div style="margin-top:4px">'+(i.earned?'<b style="color:var(--yellow)">✦ KAZANILDI</b>':'<span style="color:var(--muted)">Henüz kazanılmadı</span>')+(i.daily?' <span style="color:var(--dim)">· günlük</span>':'')+'</div>';
+  if(i.manual && !i.earned) h+='<button class="btn primary fw" style="min-height:26px;font-size:8px;margin-top:7px" onclick="earnBadge(\''+i.id+'\');showBadgePop(event,\''+i.id+'\')">✓ KAZANDIM</button>';
+  return h;
+}
+function _skPlacePop(p, el){
+  const r=el.getBoundingClientRect();
+  p.style.display='block';
+  const w=p.offsetWidth||190, h=p.offsetHeight||70;
+  let left=r.right+8; if(left+w>window.innerWidth-6) left=r.left-w-8; if(left<6) left=Math.min(r.left, window.innerWidth-w-6);
+  let top=r.top; if(top+h>window.innerHeight-6) top=window.innerHeight-h-6; if(top<6) top=6;
+  p.style.left=left+'px'; p.style.top=top+'px';
+}
+function showBadgePop(ev, id){
+  if(ev){ ev.stopPropagation(); }
+  const i=_skInfo(id); if(!i) return;
+  const p=_ensureBadgePop();
+  p.innerHTML=_badgePopHtml(i);
+  _badgePopPin=true;
+  const el=(ev&&ev.target&&ev.target.closest)?ev.target.closest('.sk-node'):null;
+  _skPlacePop(p, el||document.body);
+}
+function _skHover(ev, id){
+  try{ if(!window.matchMedia('(hover: hover)').matches) return; }catch(e){}
+  if(_badgePopPin) return;
+  const i=_skInfo(id); if(!i) return;
+  const p=_ensureBadgePop();
+  p.innerHTML=_badgePopHtml(i);
+  const el=ev.target.closest('.sk-node');
+  _skPlacePop(p, el);
+}
+function _skHoverOut(ev){
+  if(_badgePopPin) return;
+  const p=g('badge-pop'); if(p) p.style.display='none';
 }
 
 // ════════════════════════════════════════
@@ -8909,7 +8994,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.25.0 başlatıldı.');
+addLog('OVERCLOCK v7.26.0 başlatıldı.');
 </script>
 </body>
 </html>
