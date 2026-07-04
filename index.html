@@ -696,19 +696,18 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- SYNC LOGIN OVERLAY -->
-<div id="auth-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center;padding:24px">
+<!-- ERİŞİM KİLİDİ: varsayılan AÇIK; yalnızca izinli hesap girince kapanır (çevrimdışı/atlama yok) -->
+<div id="auth-overlay" style="display:flex;position:fixed;inset:0;background:#000;z-index:100000;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:22px">
-    <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--white);letter-spacing:3px;text-align:center">⚡ OVERCLOCK SYNC</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;text-align:center;margin:6px 0 18px;text-transform:uppercase">Telefon ↔ Tablet otomatik senkron</div>
+    <div style="font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--white);letter-spacing:3px;text-align:center">🔒 OVERCLOCK</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:2px;text-align:center;margin:6px 0 18px;text-transform:uppercase">Özel — giriş gerekli</div>
     <div class="ilabel" style="margin-bottom:4px">E-POSTA</div>
     <input class="inp" id="auth-email" type="email" autocomplete="username" placeholder="ornek@mail.com" style="margin-bottom:10px">
     <div class="ilabel" style="margin-bottom:4px">ŞİFRE</div>
-    <input class="inp" id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••" style="margin-bottom:14px">
+    <input class="inp" id="auth-pass" type="password" autocomplete="current-password" placeholder="••••••" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')authLogin()">
     <div id="auth-msg" style="font-size:8px;color:var(--red,#ff6b6b);letter-spacing:1px;min-height:12px;margin-bottom:10px"></div>
-    <button class="btn primary fw mb8" id="auth-login-btn" onclick="authLogin()">↪ GİRİŞ YAP</button>
-    <button class="btn fw mb8" onclick="authRegister()">+ YENİ HESAP OLUŞTUR</button>
-    <button class="btn fw" style="border-color:var(--bd);color:var(--muted)" onclick="authSkip()">⏭ ÇEVRİMDIŞI DEVAM ET (senkron yok)</button>
-    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:14px;text-align:center">Aynı e-posta/şifre ile iki cihazda giriş yap → veriler otomatik senkronlanır.</div>
+    <button class="btn primary fw" id="auth-login-btn" onclick="authLogin()">↪ GİRİŞ YAP</button>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:14px;text-align:center">Bu uygulama özeldir. Yalnızca yetkili hesap erişebilir.</div>
   </div>
 </div>
 
@@ -1468,7 +1467,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.6</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.7</div>
     </div>
   </div>
 </div>
@@ -7037,10 +7036,14 @@ function _deviceId(){
 }
 function setSyncStatus(txt){ const e=g('sync-status'); if(e) e.textContent=txt; }
 
+// ── GİRİŞ KİLİDİ: yalnızca bu hesap(lar) uygulamayı açabilir ──
+const ALLOWED_UIDS = ['pjhvN5VDYYeqPQVtxPJRKMOgGHF2'];
+function _isAllowedUid(uid){ return ALLOWED_UIDS.indexOf(String(uid||''))>=0; }
 function showAuth(){ const o=g('auth-overlay'); if(o) o.style.display='flex'; }
 function hideAuth(){ const o=g('auth-overlay'); if(o) o.style.display='none'; }
 function _authMsg(t){ const e=g('auth-msg'); if(e) e.textContent=t||''; }
-function authSkip(){ _sync.skipped=true; try{localStorage.setItem('oc_sync_skip','1');}catch(e){} hideAuth(); }
+// Çevrimdışı atlama kaldırıldı — giriş zorunlu. (Eski skip bayrağı temizlenir.)
+function authSkip(){ try{localStorage.removeItem('oc_sync_skip');}catch(e){} }
 
 function authLogin(){
   if(!_sync.auth) return;
@@ -7177,6 +7180,14 @@ window._syncPush = function(){
 };
 
 function _onSignedIn(user){
+  // GİRİŞ KİLİDİ: yalnızca izinli UID geçebilir; değilse çıkış yap, kilit açık kalsın
+  if(!_isAllowedUid(user.uid)){
+    _authMsg('⛔ Bu hesap yetkili değil.');
+    showAuth();
+    try{ if(_sync.unsub){ _sync.unsub(); _sync.unsub=null; } }catch(e){}
+    try{ _sync.auth.signOut(); }catch(e){}
+    return;
+  }
   _sync.uid = user.uid; _sync.email = user.email;
   hideAuth();
   const ref = _sync.db.collection('users').doc(user.uid);
@@ -7219,9 +7230,8 @@ function _onSignedOut(){
   const lo=g('sync-logout'); if(lo) lo.style.display='none';
   const op=g('sync-login-open'); if(op) op.style.display='block';
   const idw=g('sync-identity'); if(idw) idw.style.display='none';
-  setSyncStatus('Oturum kapalı — giriş yapınca senkron başlar.');
-  let skip=false; try{ skip=localStorage.getItem('oc_sync_skip')==='1'; }catch(e){}
-  if(!skip && !_sync.skipped) showAuth();
+  setSyncStatus('Oturum kapalı — giriş gerekli.');
+  showAuth();   // giriş ZORUNLU — çıkışta kilit her zaman açılır (atlama yok)
 }
 
 function initSync(){
@@ -7286,7 +7296,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.6 başlatıldı.');
+addLog('OVERCLOCK v7.17.7 başlatıldı.');
 </script>
 </body>
 </html>
