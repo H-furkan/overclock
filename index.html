@@ -875,7 +875,7 @@ body.pixel-font #timer-unit{font-size:8px}
     <span id="boss-tag">DAVET EDİLEN BOSS</span>
     <div id="boss-name">BOSS</div>
     <div id="boss-hp-wrap"><div id="boss-hp-fill"></div></div>
-    <div class="boss-hp-lbl"><span>HP: <span id="boss-hp-val">100</span>%</span><span>YENİNCE +250 XP</span></div>
+    <div class="boss-hp-lbl"><span>HP: <span id="boss-hp-val">100</span>%</span><span>YENİNCE 📦 KASA PARÇASI</span></div>
     <div class="brow">
       <button class="btn" onclick="dmgBoss(25)">-25 HP</button>
       <button class="btn primary" onclick="defeatBoss()" style="flex:1">⚔ YENİLDİ</button>
@@ -897,6 +897,15 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;line-height:1.6">Boş bir saate dokun → olay ekle. Olaya dokun → detay/düzenle. <span style="color:var(--bright)">■</span> soru <span style="color:var(--yellow)">■</span> konu <span style="color:var(--muted)">▨</span> meşgul <span style="color:#66ccff">■</span> standart</div>
     <div id="cal-grid-wrap" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch"></div>
+  </div>
+</div>
+
+<!-- ENVANTER MODAL (kutu kutu tüm eşyalar) -->
+<div id="inv-modal" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.6);align-items:center;justify-content:center;padding:14px">
+  <div style="width:100%;max-width:440px;max-height:88vh;display:flex;flex-direction:column;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:16px">
+    <div class="fbet mb8"><div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">🎒 ENVANTER</div><button onclick="closeInventory()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer">✕</button></div>
+    <div id="inv-modal-counters" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+    <div id="inv-modal-body" style="overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px"></div>
   </div>
 </div>
 
@@ -1287,9 +1296,8 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="shop-grid" id="shop-cases"></div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;margin-bottom:4px;text-transform:uppercase">Son açılışlar</div>
     <div id="cases-log" style="font-size:8px;color:var(--bright);letter-spacing:1px;line-height:1.7"></div>
-    <div class="blabel" style="margin-top:16px">🎒 ENVANTER</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Kasadan çıkan ödüller burada bekler. İstediğin an <b style="color:var(--bright)">AKTİFLEŞTİR</b> ile kullan. Süreli itemler (No-Distraction, Premium Break) basınca anında sayaç başlatır.</div>
-    <div id="shop-inventory"></div>
+    <button class="btn primary fw" style="margin-top:16px" onclick="openInventory()">🎒 ENVANTERİ AÇ <span id="inv-count-badge" style="opacity:.75"></span></button>
+    <div id="frag-summary" style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.8;margin-top:8px"></div>
   </div>
 
   <div class="block">
@@ -1532,7 +1540,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.2</div>
     </div>
   </div>
 </div>
@@ -1665,7 +1673,7 @@ const SHOP_ITEMS = [
   // ── XP SINKS (Rev D) — study-directing modules ──
   {id:'sink_topic_insurance', cat:'sink', icon:'🛡️', name:'KONU SİGORTASI', desc:'Bir yanlış-konu etiketinin SEVİYE ATLAMASINI engeller. Etiketlendiğinde otomatik harcanır.', cost:800},
   {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Ücretsiz. İMZALA, dakika hedefini gir. Tutarsan çalışılan sürenin 1.5× XP ödülü; tutmazsan eksik kalan dk kadar XP düşer.', cost:0},
-  {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince +250 XP.', cost:200},
+  {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince kasa parçası düşer.', cost:200},
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Karakter özetinde 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Karakter özetinde ⚡', cost:550},
@@ -3043,11 +3051,12 @@ function defeatBoss(){
   S.bossDefeated=true;
   S.bossSummoned=false;            // panel gizlenir
   S._summonBonus=false;
-  renderBoss(); save();
-  addXP(250,'Boss Daveti yenildi');   // kart: "Yenince +250 XP"
-  notify('⚔ BOSS YENİLDİ: '+S.bossName+' // +250 XP');
-  addLog('Boss yenildi: '+S.bossName+' (+250 XP)');
-  renderLog();
+  const _bn=S.bossName;
+  renderBoss();
+  _dropBossFragment();   // 250 XP yerine kasa parçası düşer (3 std→1 kasa, 6 altın→1 kasa)
+  save();
+  addLog('Boss yenildi: '+_bn+' → kasa parçası');
+  renderLog(); try{ renderShop(); }catch(e){}
   if(S.bossLog.length>=3) earnBadge('slayer');
 }
 
@@ -3943,33 +3952,11 @@ function buyItem(id){
       openContractModal();
       return;
     } else if (item.id === 'sink_boss_summon') {
-      // Zaten aktif (yenilmemiş) çağrılmış boss varsa, ikinci kez alma — XP'yi iade et
-      if (S.bossSummoned && !S.bossDefeated) {
+      // Ortak summon mantığı — başarısızsa XP'yi iade et
+      if (!_summonBossFromWrongTopics()){
         S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);
-        notify('⚔ Zaten aktif bir boss var — önce onu yen');
         return;
       }
-      // Adaylar: düzeltilmemiş yanlış konular, seviyeye göre
-      const entries = Object.entries(S.wrongTopics||{}).filter(([k,w])=>!w.fixed).sort((a,b)=>(b[1].level||0)-(a[1].level||0));
-      if (!entries.length) {
-        S.spentXp = Math.max(0,(S.spentXp||0)-effectiveCost);
-        notify('Yanlış konu yok — önce Net Takip\'ten yanlış konu işaretle');
-        return;
-      }
-      // DENGE/ROTASYON: son çağrılan konuları hariç tut (hep aynı konudan boss gelmesin);
-      // hepsi cooldown'daysa en yüksek seviyeliye dön.
-      const recent = S.bossSummonRecent || [];
-      const avail = entries.filter(([k])=>!recent.includes(k));
-      const [chKey, chVal] = (avail[0] || entries[0]);
-      const cap = Math.max(1, entries.length-1);   // en az 1 farklı konu hep seçilebilir kalsın
-      S.bossSummonRecent = [chKey, ...recent.filter(k=>k!==chKey)].slice(0, cap);
-      S.bossName = 'BOSS: '+(chVal.name||'KONU').toUpperCase();
-      S.bossHp = 100;
-      S.bossDefeated = false;
-      S.bossSummoned = true;
-      S._summonBonus = true;
-      notify('⚔ BOSS DAVET EDİLDİ: '+S.bossName+' — HQ\'da seni bekliyor');
-      addLog('Boss daveti: '+S.bossName+' (yenince +250 XP)');
     }
     playBell('reminder');
     save(); renderShop(); renderXP(); renderBoss();
@@ -4740,7 +4727,63 @@ function _cs(){
   if (!S.cases.openedLog) S.cases.openedLog = [];
   if (!S.cases.profileTitles) S.cases.profileTitles = [];
   if (!S.cases.xpMultiplier) S.cases.xpMultiplier = 1;
+  if (S.cases.fragStd==null) S.cases.fragStd = 0;      // standart kasa parçası (3 = 1 kasa)
+  if (S.cases.fragGold==null) S.cases.fragGold = 0;    // altın kasa parçası (6 = 1 kasa)
+  if (S.cases.protShards==null) S.cases.protShards = 0;// streak koruyucu kırığı (10 = 1 koruyucu)
   return S.cases;
+}
+
+// Kasa parçalarını sentezle: 3 standart parça → 1 Standart Kasa, 6 altın parça → 1 Gold Kasa
+function _synthFragments(){
+  const cs=_cs(); let made=[];
+  while(cs.fragStd>=3){ cs.fragStd-=3; cs.standard++; made.push('📦 Standart'); }
+  while(cs.fragGold>=6){ cs.fragGold-=6; cs.gold++; made.push('✨ Gold'); }
+  if(made.length) notify('🔧 Parçalar birleşti → '+made.join(' + ')+' Kasa!');
+}
+// Streak kırıklarını sentezle: 10 kırık → 1 Streak Koruyucu
+function _synthShards(){
+  const cs=_cs();
+  while(cs.protShards>=10){ cs.protShards-=10; S.streakProtBought=(S.streakProtBought||0)+1; try{_recalcProt();}catch(e){} notify('🧩 10 kırık birleşti → +1 Streak Koruyucu!'); }
+}
+// Boss yenince kasa parçası düşür (yüksek ağırlık standart, düşük ağırlık altın)
+function _dropBossFragment(){
+  const cs=_cs();
+  const gold = Math.random() < 0.15;   // ~%15 altın parça, ~%85 standart parça
+  if(gold){ cs.fragGold=(cs.fragGold||0)+1; notify('⚔ BOSS YENİLDİ → 🟡 +1 ALTIN kasa parçası ('+cs.fragGold+'/6)'); }
+  else { cs.fragStd=(cs.fragStd||0)+1; notify('⚔ BOSS YENİLDİ → ⚪ +1 STANDART kasa parçası ('+cs.fragStd+'/3)'); }
+  _synthFragments();
+}
+// Kullanıcının zaten sahip olduğu TEK-SEFERLİK kozmetikler (tekrar düşmesin diye havuzdan çıkarılır)
+function _ownedUnique(id){
+  const c=_cs();
+  switch(id){
+    case 's_cerrah': return (c.profileTitles||[]).includes('Cerrah');
+    case 'g_nightowl': return (c.profileTitles||[]).includes('Night Owl');
+    case 's_title_terminal': return (c.profileTitles||[]).includes('Terminal Operatörü');
+    case 's_title_pozitivist': return (c.profileTitles||[]).includes('Pozitivist');
+    case 's_title_norolog': return (c.profileTitles||[]).includes('Nörolog');
+    case 's_pixelfont': return !!c.pixelFont;
+    case 'g_accessory': return (c.avatarAccessory||[]).includes('glasses');
+    case 'g_border': return c.avatarBorder==='glow';
+    case 'g_permmul': return (c.xpMultiplier||1) >= 1.2;
+    default: return false;
+  }
+}
+// Ücretsiz boss daveti (bilet ile) — buyItem'daki summon mantığının ortak hali
+function _summonBossFromWrongTopics(){
+  if (S.bossSummoned && !S.bossDefeated){ notify('⚔ Zaten aktif bir boss var — önce onu yen'); return false; }
+  const entries = Object.entries(S.wrongTopics||{}).filter(([k,w])=>!w.fixed).sort((a,b)=>(b[1].level||0)-(a[1].level||0));
+  if (!entries.length){ notify('Yanlış konu yok — önce Net Takip\'ten yanlış konu işaretle'); return false; }
+  const recent = S.bossSummonRecent || [];
+  const avail = entries.filter(([k])=>!recent.includes(k));
+  const [chKey, chVal] = (avail[0] || entries[0]);
+  const cap = Math.max(1, entries.length-1);
+  S.bossSummonRecent = [chKey, ...recent.filter(k=>k!==chKey)].slice(0, cap);
+  S.bossName = 'BOSS: '+(chVal.name||'KONU').toUpperCase();
+  S.bossHp = 100; S.bossDefeated = false; S.bossSummoned = true; S._summonBonus = true;
+  notify('⚔ BOSS DAVET EDİLDİ: '+S.bossName+' — HQ\'da seni bekliyor');
+  addLog('Boss daveti: '+S.bossName+' (yenince kasa parçası)');
+  return true;
 }
 
 const TIER_COLORS = { common:'#bbbbbb', uncommon:'#8fff8f', rare:'#66ccff', epic:'#cc88ff', legendary:'#ffaa44' };
@@ -4749,6 +4792,12 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_sprint',    weight:50,   tier:'common',    icon:'⚡',  name:'30dk Sprint',           desc:'Sonraki 30dk session 1.5x XP'           , fx:()=>{ _cs().sprintActive=true;   notify('⚡ Sprint AKTİF — sonraki 30dk session 1.5x XP'); } },
   { id:'s_deepwork',  weight:25,   tier:'common',    icon:'🧘', name:'Deep Work',             desc:'Kesintisiz blokta 2x XP (durdurulursa iptal)', fx:()=>{ _cs().deepWorkActive=true; notify('🧘 Deep Work AKTİF — pause yapma!'); } },
   { id:'s_open',      weight:10,   tier:'uncommon',  icon:'🎁', name:'Bedava Standard',       desc:'Bir Standard Kasa daha al'              , fx:()=>{ _cs().standard++; notify('🎁 +1 Standard Kasa'); } },
+  { id:'s_xpfrag',    weight:30,   tier:'common',    icon:'🔹', name:'XP Parçacıkları',        desc:'Anında 50-100 arası XP bakiyene eklenir', fx:()=>{ const a=50+Math.floor(Math.random()*51); addXP(a,'Kasa: XP parçacığı'); notify('🔹 +'+a+' XP parçacığı'); } },
+  { id:'s_shard',     weight:12,   tier:'uncommon',  icon:'🧩', name:'Streak Koruyucu Kırığı', desc:'10 tane toplayınca 1 tam Streak Koruyucu olur', fx:()=>{ const c=_cs(); c.protShards=(c.protShards||0)+1; notify('🧩 +1 Streak Kırığı ('+c.protShards+'/10)'); _synthShards(); } },
+  { id:'s_bossticket',weight:6,    tier:'uncommon',  icon:'🎟', name:'Boss Karşılaşma Bileti', desc:'200 XP ödemeden doğrudan bir Boss Daveti çağırır (envanterden aktifleştir)', fx:()=>{} },
+  { id:'s_title_terminal',  weight:0.7, tier:'epic', icon:'🖥', name:'"Terminal Operatörü" Unvanı', desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Terminal Operatörü')) _cs().profileTitles.push('Terminal Operatörü'); notify('🖥 Unvan: Terminal Operatörü'); } },
+  { id:'s_title_pozitivist',weight:0.7, tier:'epic', icon:'➕', name:'"Pozitivist" Unvanı',        desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Pozitivist')) _cs().profileTitles.push('Pozitivist'); notify('➕ Unvan: Pozitivist'); } },
+  { id:'s_title_norolog',   weight:0.6, tier:'epic', icon:'🧠', name:'"Nörolog" Unvanı',          desc:'Profil unvanına eklenir', fx:()=>{ if(!_cs().profileTitles.includes('Nörolog')) _cs().profileTitles.push('Nörolog'); notify('🧠 Unvan: Nörolog'); } },
   { id:'s_taskbuff',  weight:8,    tier:'uncommon',  icon:'✨', name:'Task Buff',              desc:'Sonraki 3 hatırlatıcı/planner görevi 2x XP', fx:()=>{ _cs().taskBuffRemaining=3; notify('✨ Sonraki 3 görev 2x XP'); } },
   { id:'s_pixelfont', weight:4,    tier:'rare',      icon:'🕹', name:'Pixel Font',             desc:'Sayaç fontu retro 8-bit (HQ\'da sayaç sayıları). Karakter sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.pixelFont=true; c.unlocked=c.unlocked||{}; c.unlocked.pixelFont=true; notify('🕹 Pixel font aktif — HQ sayaç sayıları değişti'); } },
   { id:'s_break15',   weight:1.5,  tier:'rare',      icon:'⏸', name:'+15dk Mola',            desc:'Bir sonraki mola +15dk uzar (tek seferlik)', fx:()=>{ _cs().breakBonus = (_cs().breakBonus||0) + 15*60; notify('⏸ Sonraki mola +15dk'); } },
@@ -4823,7 +4872,10 @@ function openCase(type){
   const cs=_cs();
   if (type==='standard' && cs.standard<=0){ notify('Standard kasa yok — Market\'ten al veya günlük kasanı bekle'); return; }
   if (type==='gold' && cs.gold<=0){ notify('Gold kasa yok — Market\'ten al veya 7-gün streak yap'); return; }
-  const items = (type==='gold') ? CASE_ITEMS_GOLD : CASE_ITEMS_STANDARD;
+  const allItems = (type==='gold') ? CASE_ITEMS_GOLD : CASE_ITEMS_STANDARD;
+  // Sahip olunan tek-seferlik kozmetikleri havuzdan çıkar (aynı unvan/çerçeve tekrar düşmesin)
+  let items = allItems.filter(it=>!_ownedUnique(it.id));
+  if(!items.length) items = allItems;   // her şeye sahipse yine de bir şey ver
   const item = _rollWithPity(items, cs);
   if (type==='gold') cs.gold--; else cs.standard--;
   cs.openedLog = cs.openedLog || [];
@@ -4965,24 +5017,45 @@ function addToInventory(id){
   const it=_findCaseItem(id);
   notify('🎒 Envantere eklendi: '+(it?it.name:id));
 }
-function renderInventory(){
-  const el=g('shop-inventory'); if(!el) return;
+// Market sayfasındaki özet (buton rozeti + parça/kırık/unvan satırı)
+function renderFragSummary(){
   const c=_cs(); const inv=c.inv||{};
+  const invN=Object.keys(inv).reduce((a,id)=>a+(inv[id]>0?inv[id]:0),0);
+  const badge=g('inv-count-badge'); if(badge) badge.textContent=invN?('('+invN+' eşya)'):'(boş)';
+  const sum=g('frag-summary');
+  if(sum){
+    const parts=[];
+    parts.push('⚪ Standart parça: <b style="color:var(--bright)">'+(c.fragStd||0)+'</b>/3');
+    parts.push('🟡 Altın parça: <b style="color:var(--yellow)">'+(c.fragGold||0)+'</b>/6');
+    parts.push('🧩 Streak kırığı: <b style="color:var(--bright)">'+(c.protShards||0)+'</b>/10');
+    if((c.profileTitles||[]).length) parts.push('🎖 Unvanlar: <b style="color:var(--white)">'+c.profileTitles.map(_he).join(', ')+'</b>');
+    sum.innerHTML=parts.join(' &nbsp;·&nbsp; ');
+  }
+}
+function openInventory(){ renderInventory(); const m=g('inv-modal'); if(m) m.style.display='flex'; }
+function closeInventory(){ const m=g('inv-modal'); if(m) m.style.display='none'; }
+function renderInventory(){
+  renderFragSummary();
+  const body=g('inv-modal-body'), cnt=g('inv-modal-counters');
+  const c=_cs(); const inv=c.inv||{};
+  // üst sayaç kutucukları (parça/kırık)
+  if(cnt){
+    const chip=(ic,lbl,val,goal,col)=>'<div style="flex:1;min-width:88px;background:var(--mid);border:1px solid var(--bd);border-radius:8px;padding:7px 8px;text-align:center"><div style="font-size:16px">'+ic+'</div><div style="font-size:14px;font-weight:700;color:'+col+'">'+val+'<span style="font-size:8px;color:var(--muted)">/'+goal+'</span></div><div style="font-size:7px;color:var(--muted);letter-spacing:1px">'+lbl+'</div></div>';
+    cnt.innerHTML=chip('⚪','STD PARÇA',c.fragStd||0,3,'var(--bright)')+chip('🟡','ALTIN PARÇA',c.fragGold||0,6,'var(--yellow)')+chip('🧩','STREAK KIRIĞI',c.protShards||0,10,'var(--bright)');
+  }
+  if(!body) return;
   const ids=Object.keys(inv).filter(id=>inv[id]>0);
-  if(!ids.length){ el.innerHTML='<div style="font-size:9px;color:var(--muted);letter-spacing:1px;padding:6px 0">Envanter boş — kasa aç, ödüller buraya düşsün.</div>'; return; }
+  if(!ids.length){ body.innerHTML='<div style="grid-column:1/-1;font-size:9px;color:var(--muted);letter-spacing:1px;padding:10px 0;text-align:center">Envanter boş — kasa aç, ödüller buraya düşsün.</div>'; return; }
   const order={legendary:0,epic:1,rare:2,uncommon:3,common:4};
   ids.sort((a,b)=>{ const A=_findCaseItem(a),B=_findCaseItem(b); return (order[(A||{}).tier]==null?9:order[A.tier])-(order[(B||{}).tier]==null?9:order[B.tier]); });
-  el.innerHTML = ids.map(id=>{
+  body.innerHTML = ids.map(id=>{
     const it=_findCaseItem(id); if(!it) return '';
     const col=TIER_COLORS[it.tier]||'#fff';
     const qty=inv[id];
-    return '<div class="shop-card" style="border:1px solid '+col+';border-radius:10px;flex-direction:row;align-items:center;gap:10px;text-align:left;padding:10px 12px">'+
-      '<div style="font-size:26px;line-height:1;flex-shrink:0">'+it.icon+'</div>'+
-      '<div style="flex:1;min-width:0">'+
-        '<div class="shop-name" style="color:'+col+';text-align:left">'+_he(it.name)+(qty>1?(' <span style="color:var(--white)">×'+qty+'</span>'):'')+'</div>'+
-        '<div class="shop-desc" style="text-align:left">'+_he(it.desc)+'</div>'+
-      '</div>'+
-      '<button class="shop-btn primary" style="width:auto;flex-shrink:0" onclick="activateInventoryItem(\''+id+'\')">AKTİFLEŞTİR</button>'+
+    return '<div style="border:1px solid '+col+';border-radius:10px;padding:9px 7px;text-align:center;display:flex;flex-direction:column;gap:5px;box-shadow:0 0 8px '+col+'33" title="'+_he(it.desc)+'">'+
+      '<div style="font-size:26px;line-height:1">'+it.icon+(qty>1?('<span style="font-size:10px;color:var(--white);vertical-align:super">×'+qty+'</span>'):'')+'</div>'+
+      '<div style="font-size:8px;color:'+col+';letter-spacing:.5px;line-height:1.2;min-height:20px;display:flex;align-items:center;justify-content:center">'+_he(it.name)+'</div>'+
+      '<button class="btn" style="min-height:24px;font-size:8px;padding:3px 4px;width:100%" onclick="activateInventoryItem(\''+id+'\')">AKTİFLEŞTİR</button>'+
     '</div>';
   }).join('');
 }
@@ -4994,11 +5067,13 @@ function activateInventoryItem(id){
   else if(id==='g_premiumbk'){ if(!startPremiumBreak()) return; }
   else if(id==='g_forgive'){ if(!useForgiveToken()) return; }
   else if(id==='g_halfday'){ if(!useHalfDayPass()) return; }
+  else if(id==='s_bossticket'){ if(!_summonBossFromWrongTopics()) return; }
   else { try{ it.fx(); }catch(e){} }
   c.inv[id]--; if(c.inv[id]<=0) delete c.inv[id];
   try{ applyCharCosmetics(); }catch(e){}
   try{ if (g('page-character') && g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){}
   save(); renderShop();
+  try{ if(g('inv-modal') && g('inv-modal').style.display==='flex') renderInventory(); }catch(e){}
   addLog('Envanter aktif: '+it.name);
 }
 // 2 saat No-Distraction challenge — anında 120dk session başlar; uygulamadan çıkarsan fail, tamamlarsan 6x XP
@@ -7604,7 +7679,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.19.1 başlatıldı.');
+addLog('OVERCLOCK v7.19.2 başlatıldı.');
 </script>
 </body>
 </html>
