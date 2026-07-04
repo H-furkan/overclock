@@ -509,6 +509,21 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .cstat .cst-plus:disabled{opacity:.22;cursor:not-allowed}
 .cstat .cst-desc{font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:4px}
 .charx-eqchip{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:2px 8px;margin:2px 3px 2px 0;white-space:nowrap}
+/* ── GYM ── */
+.gym-top{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
+.gym-bottom{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start}
+@media (max-width:860px){.gym-top,.gym-bottom{grid-template-columns:1fr}}
+.gbody{fill:#1d232c;stroke:#3a434f;stroke-width:1}
+.gmus{fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.12);stroke-width:.7;transition:fill .25s}
+.gmus.on{fill:rgba(255,92,92,.42);stroke:rgba(255,130,130,.75)}
+.glbl{fill:#8a8a8a;font-size:7px;letter-spacing:2px;text-anchor:middle;font-family:'Share Tech Mono',monospace}
+.gym-mchip{display:inline-flex;align-items:center;font-size:8px;letter-spacing:.5px;color:var(--muted);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:3px 8px;margin:2px 3px 2px 0;cursor:pointer;user-select:none}
+.gym-mchip.on{color:#ff9e8f;border-color:#ff7a6a;background:rgba(255,110,90,.12)}
+.gym-exrow{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--bd);border-left:3px solid #ff9e64;background:var(--mid);border-radius:8px;margin-bottom:6px}
+.gym-shoprow{display:flex;gap:7px;align-items:center;padding:6px 8px;border:1px solid var(--bd);background:var(--mid);border-radius:7px;margin-bottom:5px}
+.gym-ownchip{display:inline-flex;align-items:center;gap:4px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:8px;padding:3px 8px;cursor:pointer;user-select:none}
+.gym-ownchip.placed{border-color:var(--green);color:var(--green)}
+.gym-ownchip.armed{border-color:#ff9e64;color:#ff9e64;box-shadow:0 0 6px rgba(255,158,100,.4)}
 .char-left{display:flex;flex-direction:column;width:240px}
 @media (max-width:520px){.char-left{width:auto;align-items:center}}
 .char-photo{width:240px;height:240px;background:var(--mid);border:2px solid var(--bd2);border-radius:10px;display:flex;align-items:center;justify-content:center;background-size:cover;background-position:center;color:var(--muted);font-size:9px;letter-spacing:2px;text-align:center;cursor:pointer;overflow:visible;position:relative}
@@ -812,6 +827,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem" onclick="goTab(this,'calendar')">📅 TAKVİM</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'reading')">📚 OKUMA SALONU</button>
+  <button class="navitem" onclick="goTab(this,'gym')">🏋 GYM</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
@@ -1010,10 +1026,137 @@ body.pixel-font #timer-unit{font-size:8px}
 
   <!-- GÜNLÜK OKUMA GRAFİĞİ -->
   <div class="block">
-    <div class="blabel">■ Günlük Okunan Sayfa</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">Son 30 gün. Bir güne dokun → o günün sayfa/dk hızı.</div>
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Günlük Okunan Sayfa</div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:8px;color:var(--yellow);letter-spacing:1px">🎯 GÜNLÜK HEDEF</span>
+        <input class="inp" id="read-goal-inp" type="number" min="0" placeholder="0" style="width:64px;min-height:26px;padding:3px 6px;font-size:10px;text-align:center" onchange="setReadGoal(this.value)">
+      </div>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">Son 30 gün. Bir güne dokun → o günün sayfa/dk hızı. Hedef girersen sarı kesikli baraj çizgisi olarak görünür (0 = kapalı).</div>
     <canvas id="read-chart" style="width:100%;height:130px;display:block"></canvas>
     <div id="read-chart-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;text-align:center;padding:10px 0;display:none">Henüz okuma seansı yok — okuma sayacını çalıştır.</div>
+  </div>
+</div>
+
+
+<!-- ══════════ PAGE: GYM (izole MP ekonomisi) ══════════ -->
+<div id="page-gym" class="page">
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ GYM</div>
+      <div style="text-align:right">
+        <div style="font-size:7px;color:var(--muted);letter-spacing:2px">MP BAKİYE</div>
+        <div id="gym-mp" style="font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:#ff9e64;line-height:1.1">0 MP</div>
+      </div>
+    </div>
+    <div class="gym-top">
+      <!-- SOL 1/3: ANATOMİ -->
+      <div class="charx-card" style="text-align:center">
+        <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">BUGÜN ÇALIŞAN KASLAR</div>
+        <svg id="gym-anatomy" viewBox="0 0 150 130" style="width:100%;max-width:240px">
+          <g>
+      <circle cx="36" cy="11" r="8" class="gbody"/>
+      <rect x="31" y="19" width="10" height="5" class="gbody"/>
+      <rect x="20" y="23" width="32" height="34" rx="7" class="gbody"/>
+      <rect x="11" y="25" width="9" height="18" rx="4.5" class="gbody"/>
+      <rect x="52" y="25" width="9" height="18" rx="4.5" class="gbody"/>
+      <rect x="12" y="44" width="8" height="16" rx="4" class="gbody"/>
+      <rect x="52" y="44" width="8" height="16" rx="4" class="gbody"/>
+      <rect x="21" y="57" width="13" height="31" rx="5.5" class="gbody"/>
+      <rect x="38" y="57" width="13" height="31" rx="5.5" class="gbody"/>
+      <rect x="23" y="88" width="11" height="25" rx="4.5" class="gbody"/>
+      <rect x="38" y="88" width="11" height="25" rx="4.5" class="gbody"/>
+      <rect x="21" y="113" width="14" height="5" rx="2.5" class="gbody"/>
+      <rect x="37" y="113" width="14" height="5" rx="2.5" class="gbody"/>
+            <circle cx="20" cy="26" r="4.6" class="gmus" data-m="on_omuz"/>
+            <circle cx="52" cy="26" r="4.6" class="gmus" data-m="on_omuz"/>
+            <circle cx="13.5" cy="27.5" r="4" class="gmus" data-m="yan_omuz"/>
+            <circle cx="58.5" cy="27.5" r="4" class="gmus" data-m="yan_omuz"/>
+            <rect x="12" y="30" width="7.5" height="13" rx="3.7" class="gmus" data-m="kol"/>
+            <rect x="52.5" y="30" width="7.5" height="13" rx="3.7" class="gmus" data-m="kol"/>
+            <rect x="12.5" y="45" width="7" height="14.5" rx="3.5" class="gmus" data-m="bilek"/>
+            <rect x="52.5" y="45" width="7" height="14.5" rx="3.5" class="gmus" data-m="bilek"/>
+            <rect x="26" y="37" width="20" height="19" rx="3.5" class="gmus" data-m="karin"/>
+            <rect x="22.5" y="58.5" width="10.5" height="27" rx="4.5" class="gmus" data-m="bacak"/>
+            <rect x="39" y="58.5" width="10.5" height="27" rx="4.5" class="gmus" data-m="bacak"/>
+            <rect x="25" y="90" width="7" height="20" rx="3.5" class="gmus" data-m="tibialis"/>
+            <rect x="40" y="90" width="7" height="20" rx="3.5" class="gmus" data-m="tibialis"/>
+            <text x="36" y="127" class="glbl">ÖN</text>
+          </g>
+          <g transform="translate(78,0)">
+      <circle cx="36" cy="11" r="8" class="gbody"/>
+      <rect x="31" y="19" width="10" height="5" class="gbody"/>
+      <rect x="20" y="23" width="32" height="34" rx="7" class="gbody"/>
+      <rect x="11" y="25" width="9" height="18" rx="4.5" class="gbody"/>
+      <rect x="52" y="25" width="9" height="18" rx="4.5" class="gbody"/>
+      <rect x="12" y="44" width="8" height="16" rx="4" class="gbody"/>
+      <rect x="52" y="44" width="8" height="16" rx="4" class="gbody"/>
+      <rect x="21" y="57" width="13" height="31" rx="5.5" class="gbody"/>
+      <rect x="38" y="57" width="13" height="31" rx="5.5" class="gbody"/>
+      <rect x="23" y="88" width="11" height="25" rx="4.5" class="gbody"/>
+      <rect x="38" y="88" width="11" height="25" rx="4.5" class="gbody"/>
+      <rect x="21" y="113" width="14" height="5" rx="2.5" class="gbody"/>
+      <rect x="37" y="113" width="14" height="5" rx="2.5" class="gbody"/>
+            <circle cx="20" cy="26" r="4.6" class="gmus" data-m="arka_omuz"/>
+            <circle cx="52" cy="26" r="4.6" class="gmus" data-m="arka_omuz"/>
+            <rect x="12" y="30" width="7.5" height="13" rx="3.7" class="gmus" data-m="kol"/>
+            <rect x="52.5" y="30" width="7.5" height="13" rx="3.7" class="gmus" data-m="kol"/>
+            <rect x="23" y="25" width="26" height="17" rx="4" class="gmus" data-m="sirt"/>
+            <rect x="26.5" y="44" width="19" height="10.5" rx="3" class="gmus" data-m="bel"/>
+            <rect x="22.5" y="58.5" width="10.5" height="27" rx="4.5" class="gmus" data-m="arka_bacak"/>
+            <rect x="39" y="58.5" width="10.5" height="27" rx="4.5" class="gmus" data-m="arka_bacak"/>
+            <rect x="24.5" y="89" width="8" height="19" rx="4" class="gmus" data-m="kalf"/>
+            <rect x="39.5" y="89" width="8" height="19" rx="4" class="gmus" data-m="kalf"/>
+            <text x="36" y="127" class="glbl">ARKA</text>
+          </g>
+        </svg>
+        <div id="gym-anatomy-note" style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px">Bugün planlı egzersiz yok</div>
+      </div>
+      <!-- SAĞ 2/3: EGZERSİZ -->
+      <div>
+        <div class="charx-card">
+          <div class="blabel" style="font-size:9px">＋ Egzersiz Ekle</div>
+          <input class="inp" id="gx-name" placeholder="Egzersiz adı (örn. Bench Press 3×10)" style="margin-bottom:8px">
+          <div class="irow mb8">
+            <div class="igrp"><div class="ilabel">KAZANDIRACAĞI MP</div><input class="inp" id="gx-mp" type="number" min="1" value="20"></div>
+            <div class="igrp"><div class="ilabel">TARİH</div><input class="inp" id="gx-date" type="date"></div>
+          </div>
+          <div class="ilabel" style="margin-bottom:4px">ÇALIŞTIRDIĞI KASLAR</div>
+          <div id="gx-muscles" style="margin-bottom:10px"></div>
+          <button class="btn primary fw" onclick="gymAddExercise()">＋ EKLE</button>
+        </div>
+        <div id="gym-today-wrap" style="margin-top:12px">
+          <div class="blabel" style="font-size:9px">🔥 Bugünün Antrenmanı</div>
+          <div id="gym-today"></div>
+          <div id="gym-today-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;padding:6px 0">Bugün için egzersiz yok.</div>
+        </div>
+        <div id="gym-upcoming-wrap" style="margin-top:10px;display:none">
+          <div class="blabel" style="font-size:9px">📅 Gelecek</div>
+          <div id="gym-upcoming"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="gym-bottom">
+      <!-- SOL 2/3: ODA DEKORASYONU -->
+      <div>
+        <div class="fbet mb8">
+          <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Oda Dekorasyonu</div>
+          <span id="gym-room-hint" style="font-size:8px;color:var(--muted);letter-spacing:1px"></span>
+        </div>
+        <canvas id="gym-room" width="120" height="72" style="width:100%;image-rendering:pixelated;image-rendering:crisp-edges;border:1px solid var(--bd2);border-radius:8px;display:block;cursor:pointer"></canvas>
+        <div id="gym-owned-items" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px"></div>
+      </div>
+      <!-- SAĞ 1/3: NUTRITION CENTER -->
+      <div>
+        <div class="blabel">■ Nutrition Center</div>
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.6;margin-bottom:8px">MP ile mobilya & kıyafet al; unvan ve rozetler antrenman kilometre taşlarıyla otomatik açılır.</div>
+        <div id="gym-shop"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1364,6 +1507,7 @@ body.pixel-font #timer-unit{font-size:8px}
           </div>
         </div>
         <input class="inp" id="char-name" placeholder="Karakter Adı" style="text-align:center;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;margin-top:8px" onchange="charSetName(this.value)">
+        <div id="charx-gym-titles" style="text-align:center;font-size:8px;color:#ff9e64;letter-spacing:1px;margin-top:4px;line-height:1.6"></div>
         <div class="char-banner" style="margin-top:10px">
           <div class="cb-title">★ Karakter Özeti</div>
           <div class="cb-row"><span>Unvan</span><b id="charx-title">Öğrenci</b></div>
@@ -1691,7 +1835,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.25.0</div>
     </div>
   </div>
 </div>
@@ -1969,6 +2113,8 @@ function defState() {
     calEvents:[],                 // takvim: [{id,date,startMin,endMin,title,desc,type,questions,remind,xp,done}]
     books:[],                     // okuma salonu: [{id,title,author,pages,read,summary,color,added}]
     readLog:[],                   // okuma seansları: [{date,bookId,mins,pages,ppm}]
+    readGoal:0,                   // günlük sayfa hedefi (0 = kapalı) — grafikte sarı kesikli baraj
+    gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] },   // GYM — izole MP ekonomisi
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
     subjectCoeff:{},              // ders → zorluk katsayısı (boşsa _DEF_COEFF kullanılır)
@@ -2261,6 +2407,7 @@ function goTab(btn, name) {
   if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
   if (name === 'calendar') setTimeout(()=>{ try{ renderCalendar(); }catch(e){} }, 20);
   if (name === 'reading') setTimeout(()=>{ try{ renderReading(); }catch(e){} }, 20);
+  if (name === 'gym') setTimeout(()=>{ try{ renderGym(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
   applyBackground(name);
@@ -3232,7 +3379,14 @@ function renderReading(){
     if(cur && !_bookById(cur)){ _readBookId=null; sel.value=''; }
   }
   updateReadBookLabel();
+  const rg=g('read-goal-inp'); if(rg && document.activeElement!==rg) rg.value=(S.readGoal||'')===0?'':(S.readGoal||'');
   try{ drawReadChart(); }catch(e){}
+}
+function setReadGoal(v){
+  const n=Math.max(0,parseInt(v)||0);
+  S.readGoal=n;
+  save(); try{ drawReadChart(); }catch(e){}
+  notify(n>0?('🎯 Günlük hedef: '+n+' sayfa'):'Hedef kapatıldı');
 }
 function _readDayDetailHtml(ds){
   const rows=(S.readLog||[]).filter(r=>r.date===ds);
@@ -3260,7 +3414,7 @@ function drawReadChart(){
   const cs=getComputedStyle(document.documentElement);
   const col_dim=cs.getPropertyValue('--dim').trim(), col_muted=cs.getPropertyValue('--muted').trim(), col_bright=cs.getPropertyValue('--bright').trim(), col_white=cs.getPropertyValue('--white').trim();
   const padL=26,padR=10,padT=10,padB=16, cw=W-padL-padR, ch=H-padT-padB;
-  const maxP=Math.max(...days.map(d=>d.pages),10);
+  const maxP=Math.max(...days.map(d=>d.pages), (S.readGoal||0)*1.15, 10);
   ctx.font="7px 'Share Tech Mono',monospace";
   [0,.5,1].forEach(f=>{ const y=padT+ch*(1-f); ctx.strokeStyle=col_dim; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); ctx.fillStyle=col_muted; ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(Math.round(f*maxP),padL-3,y); });
   const bw=cw/30;
@@ -3273,6 +3427,18 @@ function drawReadChart(){
   let first=true; days.forEach((d,i)=>{ const x=padL+i*bw+bw/2, y=padT+ch*(1-d.pages/maxP); if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y); }); ctx.stroke();
   // dots
   days.forEach((d,i)=>{ if(d.pages<=0 && !(i===29)) return; const x=padL+i*bw+bw/2, y=padT+ch*(1-d.pages/maxP); ctx.fillStyle=i===29?col_white:col_bright; ctx.beginPath(); ctx.arc(x,y,i===29?3:1.5,0,Math.PI*2); ctx.fill(); });
+  // 🎯 günlük hedef barajı — sarı kesikli çizgi
+  if((S.readGoal||0)>0){
+    const gy=padT+ch*(1-Math.min(1,(S.readGoal||0)/maxP));
+    const col_yellow=cs.getPropertyValue('--yellow').trim()||'#ffff66';
+    ctx.strokeStyle=col_yellow; ctx.lineWidth=1.2;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.moveTo(padL,gy); ctx.lineTo(W-padR,gy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=col_yellow; ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.font="7px 'Share Tech Mono',monospace";
+    ctx.fillText('🎯 '+S.readGoal, padL+2, gy-2);
+  }
   // x labels
   ctx.fillStyle=col_muted; ctx.textAlign='center'; ctx.textBaseline='top';
   [0,7,14,21,29].forEach(i=>{ const d=days[i]; if(!d) return; const dt=new Date(d.date); ctx.fillText(dt.getDate()+'.'+(dt.getMonth()+1),padL+i*bw+bw/2,padT+ch+3); });
@@ -3354,6 +3520,320 @@ function readTimerStop(){
   save(); renderReading();
 }
 function readTimerReset(){ clearInterval(_readIv); _readIv=null; _readRunning=false; _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00'; const sb=g('read-start-btn'); if(sb) sb.textContent='▶ BAŞLAT'; const n=g('read-speed-note'); if(n) n.textContent=''; }
+
+
+// ════════════════════════════════════════
+// GYM — izole MP ekonomisi (v7.25)
+// ════════════════════════════════════════
+function _gym(){
+  if(!S.gym) S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] };
+  const gm=S.gym;
+  gm.exercises=gm.exercises||[]; gm.ownedItems=gm.ownedItems||[]; gm.titles=gm.titles||[]; gm.badges=gm.badges||[];
+  gm.room=gm.room||{placed:[],wall:'wall_gri',floor:'floor_ahsap'}; gm.room.placed=gm.room.placed||[];
+  if(!gm.room.wall) gm.room.wall='wall_gri';
+  if(!gm.room.floor) gm.room.floor='floor_ahsap';
+  return gm;
+}
+function gymMp(){ const gm=_gym(); return Math.max(0,(gm.mpEarned||0)-(gm.mpSpent||0)); }
+function _gymDoneCount(){ return _gym().exercises.filter(e=>e.done).length; }
+
+const GYM_MUSCLES=[
+  {k:'kol',lbl:'Kol'},{k:'on_omuz',lbl:'Ön Omuz'},{k:'yan_omuz',lbl:'Yan Omuz'},{k:'arka_omuz',lbl:'Arka Omuz'},
+  {k:'sirt',lbl:'Sırt'},{k:'bel',lbl:'Bel'},{k:'karin',lbl:'Karın'},{k:'bacak',lbl:'Bacak (Quad)'},
+  {k:'arka_bacak',lbl:'Arka Bacak'},{k:'kalf',lbl:'Kalf'},{k:'tibialis',lbl:'Tibialis'},{k:'bilek',lbl:'Bilek/Önkol'},
+];
+let _gxMs=new Set(), _gymSel=null;
+
+// ── NUTRITION CENTER kataloğu ──
+// Mobilya sprite'ları: '#'=ana renk, 'o'=koyu, '+'=açık (oto kontur+ışık motoru uygulanır)
+const GYM_ITEMS=[
+  {id:'fx_tread', name:'Yıpranmış Koşu Bandı', icon:'🏃', price:220, zone:'floor', c:'#7a8a99', rows:['..........##','..........#.','..........#.','############','+##########+','.o........o.']},
+  {id:'fx_pullup', name:'Duvar Barfiksi', icon:'💪', price:120, zone:'wall', c:'#8a8f96', rows:['#..........#','############','#..........#','#..........#']},
+  {id:'fx_parall', name:'Ahşap Paralletler', icon:'🤸', price:80, zone:'floor', c:'#8b5a2b', rows:['.########.','.o......o.','.o......o.']},
+  {id:'fx_rack', name:'Dambıl Rafı', icon:'🏋', price:180, zone:'floor', c:'#5a6470', rows:['#..........#','############','#.oo.oo.oo.#','############','o..........o']},
+  {id:'fx_bag', name:'Kum Torbası', icon:'🥊', price:140, zone:'wall', c:'#8b3a3a', rows:['..#..','..#..','#####','#####','#####','#####','.###.']},
+  {id:'fx_sofa', name:'Sofa', icon:'🛋', price:160, zone:'floor', c:'#3a5a8b', rows:['.##########.','.#++++++++#.','############','#++#++++#++#','############','.o........o.']},
+  {id:'fx_bed', name:'Yatak', icon:'🛏', price:200, zone:'floor', c:'#6a2a4a', rows:['##..........','##++++++++++','############','#oooooooooo#','.o.........o']},
+  {id:'fx_window', name:'Pencere', icon:'🪟', price:90, zone:'wall', c:'#66ccff', rows:['##########','#+++##+++#','#+++##+++#','##########','#+++##+++#','#+++##+++#','##########']},
+  {id:'fx_curtain', name:'Perde', icon:'🪞', price:70, zone:'wall', c:'#7a3a5a', rows:['############','###......###','###......###','###......###','###......###','#o#......#o#']},
+  {id:'fx_fridge', name:'Buzdolabı', icon:'🧊', price:170, zone:'floor', c:'#9aa4ad', rows:['#######','#+++++#','#+++++#','#######','#+++++#','#+++++#','#+++++#','#######','.o...o.']},
+  {id:'fx_piano', name:'Piyano', icon:'🎹', price:320, zone:'floor', c:'#2a2f36', rows:['##############','##############','#++++++++++++#','##############','+#+#+#+#+#+#+#','##############','#o..........o#','#o..........o#']},
+  {id:'fx_dresser', name:'Şifonyer', icon:'🗄', price:130, zone:'floor', c:'#7a5a2a', rows:['###########','#+++++++++#','#....o....#','#+++++++++#','#....o....#','###########','.o.......o.']},
+  {id:'fx_rug', name:'Halı', icon:'🧶', price:60, zone:'floor', c:'#6a4a2f', rows:['.##############.','#++++++++++++++#','#+############+#','.##############.']},
+  {id:'fx_lamp', name:'Lambader', icon:'💡', price:75, zone:'floor', c:'#c9a54a', rows:['.###.','#####','..o..','..o..','..o..','.ooo.']},
+  {id:'fx_plant', name:'Saksı Bitkisi', icon:'🪴', price:55, zone:'floor', c:'#3a7a4a', rows:['..#.#..','.#####.','..###..','...o...','.ooooo.','.o+++o.','..ooo..']},
+  {id:'fx_poster', name:'Motivasyon Posteri', icon:'🖼', price:45, zone:'wall', c:'#8b6a2a', rows:['#######','#+++++#','#++o++#','#+++++#','#######']},
+];
+const GYM_WALLS=[
+  {id:'wall_gri',  name:'Gri Beton Duvar', price:0,  c:'#2a303a'},
+  {id:'wall_krem', name:'Krem Duvar',      price:60, c:'#4a4234'},
+  {id:'wall_mavi', name:'Gece Mavisi Duvar',price:80,c:'#232b42'},
+];
+const GYM_FLOORS=[
+  {id:'floor_ahsap', name:'Ahşap Zemin', price:0,  c:'#5a3d28'},
+  {id:'floor_fayans',name:'Fayans Zemin',price:70, c:'#3a4148'},
+  {id:'floor_hali',  name:'Halı Zemin',  price:90, c:'#4a2f3f'},
+];
+const GYM_CLOTHES=[
+  {id:'cl_hoodie', name:'Oversize Hoodie', icon:'🧥', price:150, slot:'armor'},
+  {id:'cl_street', name:'Sokak Tişörtü (bol)', icon:'👕', price:110, slot:'armor'},
+  {id:'cl_cargo', name:'Bol Kargo Pantolon', icon:'👖', price:130, slot:'pants'},
+  {id:'cl_jogger', name:'Eşofman (jogger)', icon:'🩳', price:100, slot:'pants'},
+];
+const GYM_TITLES=[
+  {id:'gt_acemi', name:'Acemi Sporcu',  need:'100 MP kazan',            test:g=>(g.mpEarned||0)>=100},
+  {id:'gt_demir', name:'Demir Bükücü',  need:'400 MP kazan',            test:g=>(g.mpEarned||0)>=400},
+  {id:'gt_atlet', name:'Atlet',         need:'1000 MP kazan',           test:g=>(g.mpEarned||0)>=1000},
+  {id:'gt_sparta',name:'Spartalı',      need:'2500 MP kazan',           test:g=>(g.mpEarned||0)>=2500},
+  {id:'gt_mudavim',name:'Müdavim',      need:'25 egzersiz tamamla',     test:g=>_gymDoneCount()>=25},
+  {id:'gt_demirbas',name:'Demirbaş',    need:'100 egzersiz tamamla',    test:g=>_gymDoneCount()>=100},
+];
+const GYM_BADGES=[
+  {id:'gb_kalp',  name:'Anatomik Kalp', need:'İlk egzersizini tamamla', c:'#ff5a6a', rows:['.##.##.','#######','#######','.#####.','..###..','...#...'], test:g=>_gymDoneCount()>=1},
+  {id:'gb_krono', name:'Kronometre',    need:'10 egzersiz tamamla',     c:'#66ccff', rows:['..++..','.####.','#+..+#','#+.#+#','#+..+#','.####.'], test:g=>_gymDoneCount()>=10},
+  {id:'gb_dambil',name:'Dambıl',        need:'500 MP kazan',            c:'#c0c0c0', rows:['##....##','########','##....##'], test:g=>(g.mpEarned||0)>=500},
+  {id:'gb_ates',  name:'Ateş',          need:'7 farklı günde antrenman',c:'#ff9e3d', rows:['...#..','..##..','.###+.','######','.####.'], test:g=>{ const days=new Set(_gym().exercises.filter(e=>e.done&&e.doneDate).map(e=>e.doneDate)); return days.size>=7; }},
+];
+function _gymItemById(id){ return GYM_ITEMS.find(x=>x.id===id)||GYM_WALLS.find(x=>x.id===id)||GYM_FLOORS.find(x=>x.id===id)||GYM_CLOTHES.find(x=>x.id===id); }
+
+// ── RENDER ana ──
+function renderGym(){
+  const mp=g('gym-mp'); if(mp) mp.textContent=gymMp()+' MP';
+  const gd=g('gx-date'); if(gd && !gd.value) gd.value=today();
+  renderGymMuscleChips();
+  renderGymExercises();
+  gymRenderAnatomy();
+  gymRenderRoom();
+  renderGymOwned();
+  renderGymShop();
+}
+function renderGymMuscleChips(){
+  const box=g('gx-muscles'); if(!box) return;
+  box.innerHTML=GYM_MUSCLES.map(m=>'<span class="gym-mchip'+(_gxMs.has(m.k)?' on':'')+'" onclick="gymToggleMs(\''+m.k+'\')">'+m.lbl+'</span>').join('');
+}
+function gymToggleMs(k){ if(_gxMs.has(k)) _gxMs.delete(k); else _gxMs.add(k); renderGymMuscleChips(); }
+function gymAddExercise(){
+  const name=(g('gx-name').value||'').trim();
+  if(!name){ notify('Egzersiz adı gir'); return; }
+  const mp=Math.max(1,parseInt(g('gx-mp').value)||20);
+  const date=g('gx-date').value||today();
+  if(!_gxMs.size){ notify('En az bir kas grubu seç'); return; }
+  const gm=_gym();
+  gm.exercises.push({ id:String(Date.now()), name, mp, muscles:[..._gxMs], date, done:false });
+  if(gm.exercises.length>400) gm.exercises=gm.exercises.slice(-400);
+  g('gx-name').value=''; _gxMs=new Set();
+  save(); renderGym(); notify('🏋 Egzersiz eklendi: '+name);
+}
+function gymCompleteEx(id){
+  const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex||ex.done) return;
+  ex.done=true; ex.doneDate=today();
+  gm.mpEarned=(gm.mpEarned||0)+(ex.mp||0);
+  save(); gymCheckMilestones();
+  renderGym(); notify('💪 '+ex.name+' → +'+ex.mp+' MP');
+  addLog('GYM: '+ex.name+' tamamlandı (+'+ex.mp+' MP)');
+}
+function gymDeleteEx(id){
+  const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex) return;
+  if(!confirm('Egzersiz silinsin mi? ('+ex.name+')')) return;
+  gm.exercises=gm.exercises.filter(e=>e.id!==id);
+  save(); renderGym();
+}
+function renderGymExercises(){
+  const t=today();
+  const gm=_gym();
+  const todays=gm.exercises.filter(e=>e.date<=t && !e.done).sort((a,b)=>a.date<b.date?-1:1);
+  const doneToday=gm.exercises.filter(e=>e.done && e.doneDate===t);
+  const upcoming=gm.exercises.filter(e=>e.date>t && !e.done).sort((a,b)=>a.date<b.date?-1:1).slice(0,10);
+  const mlbl=k=>{ const m=GYM_MUSCLES.find(x=>x.k===k); return m?m.lbl:k; };
+  const el=g('gym-today'), emp=g('gym-today-empty');
+  if(el){
+    el.innerHTML=todays.map(e=>{
+      const late=e.date<t;
+      return '<div class="gym-exrow"'+(late?' style="border-left-color:var(--red)"':'')+'>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:10px;color:var(--white);letter-spacing:.5px;font-weight:600">'+(late?'⚠ ':'')+_he(e.name)+'</div>'+
+          '<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;margin-top:2px">'+e.muscles.map(mlbl).join(' · ')+(late?(' · '+e.date.slice(5)):'')+'</div>'+
+        '</div>'+
+        '<b style="font-family:Orbitron,monospace;font-size:11px;color:#ff9e64;flex-shrink:0">+'+e.mp+' MP</b>'+
+        '<button class="btn primary" style="min-height:28px;padding:3px 10px;font-size:8px;flex-shrink:0" onclick="gymCompleteEx(\''+e.id+'\')">✓ YAPTIM</button>'+
+        '<button class="btn" style="min-height:28px;padding:3px 8px;font-size:8px;flex-shrink:0" onclick="gymDeleteEx(\''+e.id+'\')">🗑</button>'+
+      '</div>';
+    }).join('') + doneToday.map(e=>'<div class="gym-exrow" style="opacity:.45;border-left-color:var(--green)"><div style="flex:1;font-size:9px;color:var(--bright);text-decoration:line-through">✓ '+_he(e.name)+'</div><b style="font-size:9px;color:var(--green)">+'+e.mp+' MP</b></div>').join('');
+  }
+  if(emp) emp.style.display=(todays.length||doneToday.length)?'none':'block';
+  const uw=g('gym-upcoming-wrap'), ul=g('gym-upcoming');
+  if(uw) uw.style.display=upcoming.length?'block':'none';
+  if(ul) ul.innerHTML=upcoming.map(e=>'<div class="gym-exrow" style="opacity:.7"><div style="flex:1;min-width:0;font-size:9px;color:var(--bright)">'+_he(e.name)+' <span style="color:var(--muted);font-size:8px">· '+e.date.slice(5).replace('-','.')+' · '+e.muscles.map(mlbl).join(', ')+'</span></div><b style="font-size:9px;color:#ff9e64">+'+e.mp+' MP</b><button class="btn" style="min-height:24px;padding:2px 7px;font-size:8px" onclick="gymDeleteEx(\''+e.id+'\')">🗑</button></div>').join('');
+}
+function gymRenderAnatomy(){
+  const t=today();
+  const set=new Set();
+  _gym().exercises.filter(e=>e.date<=t && !e.done).forEach(e=>(e.muscles||[]).forEach(m=>set.add(m)));
+  document.querySelectorAll('#gym-anatomy .gmus').forEach(el=>{
+    el.classList.toggle('on', set.has(el.getAttribute('data-m')));
+  });
+  const note=g('gym-anatomy-note');
+  if(note){
+    if(!set.size) note.textContent='Bugün planlı egzersiz yok';
+    else note.textContent=[...set].map(k=>{ const m=GYM_MUSCLES.find(x=>x.k===k); return m?m.lbl:k; }).join(' · ');
+  }
+}
+
+// ── ODA DEKORASYONU ──
+function _gymPaintBuf(ctx, buf, W, H){
+  const filled=(x,y)=> x>=0&&x<W&&y>=0&&y<H && !!buf[y][x];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!buf[y][x]) continue;
+    let cc=buf[y][x];
+    if(!filled(x,y-1)) cc=_avShade(cc,0.15);
+    else if(!filled(x,y+1)) cc=_avShade(cc,-0.15);
+    ctx.fillStyle=cc; ctx.fillRect(x,y,1,1);
+  }
+  ctx.fillStyle='rgba(8,10,14,.85)';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(buf[y][x]) continue;
+    if(filled(x+1,y)||filled(x-1,y)||filled(x,y+1)||filled(x,y-1)) ctx.fillRect(x,y,1,1);
+  }
+}
+function gymRenderRoom(){
+  const cv=g('gym-room'); if(!cv) return;
+  const W=cv.width,H=cv.height;
+  const ctx=cv.getContext('2d');
+  const gm=_gym(), room=gm.room;
+  const wall=GYM_WALLS.find(w=>w.id===room.wall)||GYM_WALLS[0];
+  const floor=GYM_FLOORS.find(f=>f.id===room.floor)||GYM_FLOORS[0];
+  const FLOOR_Y=46;
+  // duvar + hafif dikey doku
+  ctx.fillStyle=wall.c; ctx.fillRect(0,0,W,FLOOR_Y);
+  ctx.fillStyle='rgba(255,255,255,.03)';
+  for(let x=0;x<W;x+=12) ctx.fillRect(x,0,6,FLOOR_Y);
+  // süpürgelik
+  ctx.fillStyle=_avShade(wall.c,-0.4); ctx.fillRect(0,FLOOR_Y-2,W,2);
+  // zemin + doku
+  ctx.fillStyle=floor.c; ctx.fillRect(0,FLOOR_Y,W,H-FLOOR_Y);
+  if(room.floor==='floor_ahsap'){ ctx.fillStyle='rgba(0,0,0,.22)'; for(let x=0;x<W;x+=14) ctx.fillRect(x,FLOOR_Y,1,H-FLOOR_Y); ctx.fillRect(0,FLOOR_Y+13,W,1); }
+  else if(room.floor==='floor_fayans'){ ctx.fillStyle='rgba(0,0,0,.25)'; for(let x=0;x<W;x+=10) ctx.fillRect(x,FLOOR_Y,1,H-FLOOR_Y); for(let y=FLOOR_Y;y<H;y+=9) ctx.fillRect(0,y,W,1); }
+  else { ctx.fillStyle='rgba(255,255,255,.05)'; for(let y=FLOOR_Y+2;y<H;y+=4) for(let x=(y%8===2?0:2);x<W;x+=5) ctx.fillRect(x,y,1,1); }
+  // mobilyalar: arka şerit → ön şerit sırasıyla (önler üstte çizilir)
+  const buf=Array.from({length:H},()=>new Array(W).fill(null));
+  const putItem=(p)=>{
+    const it=GYM_ITEMS.find(x=>x.id===p.item); if(!it) return;
+    const rows=it.rows, h=rows.length, w=rows[0].length;
+    const bottom = p.lane==='wall' ? 38 : (p.lane==='back' ? 56 : 69);
+    const y0=bottom-h, x0=Math.max(1,Math.min(W-w-1,p.x|0));
+    rows.forEach((row,dy)=>{ for(let dx=0;dx<row.length;dx++){ const ch=row[dx]; if(ch==='.'||ch===' ') continue;
+      let cc=it.c; if(ch==='o') cc=_avShade(it.c,-0.35); else if(ch==='+') cc=_avShade(it.c,0.30);
+      const yy=y0+dy,xx=x0+dx; if(yy>=0&&yy<H&&xx>=0&&xx<W) buf[yy][xx]=cc; }});
+  };
+  const order={wall:0,back:1,front:2};
+  room.placed.slice().sort((a,b)=>(order[a.lane]||0)-(order[b.lane]||0)).forEach(putItem);
+  _gymPaintBuf(ctx, buf, W, H);
+}
+function _wireGymRoom(){
+  const cv=g('gym-room'); if(!cv||cv._wired) return; cv._wired=true;
+  cv.addEventListener('click',(ev)=>{
+    const gm=_gym();
+    if(!_gymSel) return;
+    const it=GYM_ITEMS.find(x=>x.id===_gymSel); if(!it) return;
+    const r=cv.getBoundingClientRect();
+    const lx=Math.round((ev.clientX-r.left)/r.width*cv.width);
+    const ly=Math.round((ev.clientY-r.top)/r.height*cv.height);
+    const w=it.rows[0].length;
+    const lane = it.zone==='wall' ? 'wall' : (ly<58?'back':'front');
+    gm.room.placed=gm.room.placed.filter(p=>p.item!==_gymSel);
+    gm.room.placed.push({ item:_gymSel, x:Math.max(1,Math.min(cv.width-w-1,lx-Math.floor(w/2))), lane });
+    _gymSel=null;
+    const hint=g('gym-room-hint'); if(hint) hint.textContent='';
+    save(); gymRenderRoom(); renderGymOwned();
+  });
+}
+function renderGymOwned(){
+  const box=g('gym-owned-items'); if(!box) return;
+  _wireGymRoom();
+  const gm=_gym();
+  const furn=gm.ownedItems.map(id=>GYM_ITEMS.find(x=>x.id===id)).filter(Boolean);
+  if(!furn.length){ box.innerHTML='<span style="font-size:8px;color:var(--muted);letter-spacing:1px">Mobilyan yok — Nutrition Center\'dan al, buradan odaya yerleştir.</span>'; return; }
+  box.innerHTML=furn.map(it=>{
+    const placed=gm.room.placed.some(p=>p.item===it.id);
+    const armed=_gymSel===it.id;
+    return '<span class="gym-ownchip'+(placed?' placed':'')+(armed?' armed':'')+'" onclick="gymChipTap(\''+it.id+'\')">'+it.icon+' '+_he(it.name)+(placed?' ✓':'')+'</span>';
+  }).join('');
+}
+function gymChipTap(id){
+  const gm=_gym();
+  const placed=gm.room.placed.some(p=>p.item===id);
+  const hint=g('gym-room-hint');
+  if(placed){ gm.room.placed=gm.room.placed.filter(p=>p.item!==id); _gymSel=null; if(hint) hint.textContent=''; save(); gymRenderRoom(); renderGymOwned(); notify('Kaldırıldı'); return; }
+  _gymSel = (_gymSel===id) ? null : id;
+  if(hint) hint.textContent=_gymSel?'🏠 Odada bir yere dokun':'';
+  renderGymOwned();
+}
+
+// ── MAĞAZA ──
+function gymBuy(id){
+  const it=_gymItemById(id); if(!it) return;
+  const gm=_gym();
+  if(gm.ownedItems.includes(id)){ notify('Zaten sahipsin'); return; }
+  if(gymMp()<it.price){ notify('YETERSİZ MP // '+it.price+' gerekli'); return; }
+  gm.mpSpent=(gm.mpSpent||0)+it.price;
+  gm.ownedItems.push(id);
+  if(GYM_WALLS.some(w=>w.id===id)) gm.room.wall=id;
+  if(GYM_FLOORS.some(f=>f.id===id)) gm.room.floor=id;
+  save(); renderGym();
+  notify('🛒 '+it.name+' alındı (-'+it.price+' MP)');
+  addLog('GYM mağaza: '+it.name+' (-'+it.price+' MP)');
+}
+function gymApplySurface(id){
+  const gm=_gym();
+  if(!gm.ownedItems.includes(id) && !(id==='wall_gri'||id==='floor_ahsap')){ notify('Önce satın al'); return; }
+  if(GYM_WALLS.some(w=>w.id===id)) gm.room.wall=id;
+  if(GYM_FLOORS.some(f=>f.id===id)) gm.room.floor=id;
+  save(); gymRenderRoom(); renderGymShop();
+}
+function renderGymShop(){
+  const box=g('gym-shop'); if(!box) return;
+  const gm=_gym(); const bal=gymMp();
+  const row=(it,extra)=>{
+    const owned=gm.ownedItems.includes(it.id)||it.price===0;
+    let btn;
+    if(owned && extra==='surface'){
+      const active=(gm.room.wall===it.id||gm.room.floor===it.id);
+      btn=active?'<span style="font-size:8px;color:var(--green)">✓ AKTİF</span>':'<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px" onclick="gymApplySurface(\''+it.id+'\')">UYGULA</button>';
+    }
+    else if(owned) btn='<span style="font-size:8px;color:var(--green)">✓</span>';
+    else btn='<button class="btn '+(bal>=it.price?'primary':'')+'" style="min-height:24px;padding:2px 8px;font-size:8px" '+(bal>=it.price?'':'disabled ')+'onclick="gymBuy(\''+it.id+'\')">'+it.price+' MP</button>';
+    return '<div class="gym-shoprow"><span style="font-size:13px;flex-shrink:0">'+(it.icon||'🎨')+'</span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright);letter-spacing:.5px">'+_he(it.name)+'</span>'+btn+'</div>';
+  };
+  let html='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:6px 0 4px">🏋 KİNETİK & EV MOBİLYASI</div>';
+  html+=GYM_ITEMS.map(it=>row(it)).join('');
+  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">🧱 DUVAR / ZEMİN</div>';
+  html+=GYM_WALLS.map(it=>row(it,'surface')).join('')+GYM_FLOORS.map(it=>row(it,'surface')).join('');
+  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">👕 KIYAFET (avatara giydirilir)</div>';
+  html+=GYM_CLOTHES.map(it=>row(it)).join('');
+  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">🎖 GYM UNVANLARI (kilometre taşı)</div>';
+  html+=GYM_TITLES.map(t=>{
+    const got=gm.titles.includes(t.id);
+    return '<div class="gym-shoprow"'+(got?' style="border-color:#ff9e64"':'')+'><span style="flex:1;font-size:9px;color:'+(got?'#ff9e64':'var(--bright)')+'">'+(got?'✓ ':'')+t.name+'</span><span style="font-size:8px;color:var(--muted)">'+t.need+'</span></div>';
+  }).join('');
+  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">📛 PROFİL ROZETLERİ</div>';
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+GYM_BADGES.map(b=>{
+    const got=gm.badges.includes(b.id);
+    return '<div style="text-align:center;width:56px" title="'+_he(b.need)+'"><canvas class="gym-badge-cv" data-b="'+b.id+'" width="'+b.rows[0].length+'" height="'+b.rows.length+'" style="width:34px;image-rendering:pixelated;'+(got?'':'opacity:.22;filter:grayscale(1)')+'"></canvas><div style="font-size:7px;color:'+(got?'var(--bright)':'var(--muted)')+';letter-spacing:.5px;line-height:1.3">'+b.name+'</div></div>';
+  }).join('')+'</div>';
+  box.innerHTML=html;
+  // rozet sprite'larını çiz
+  document.querySelectorAll('.gym-badge-cv').forEach(cv=>{
+    const b=GYM_BADGES.find(x=>x.id===cv.getAttribute('data-b')); if(!b) return;
+    const ctx=cv.getContext('2d');
+    b.rows.forEach((r,dy)=>{ for(let dx=0;dx<r.length;dx++){ const ch=r[dx]; if(ch==='.') continue; ctx.fillStyle=(ch==='o')?_avShade(b.c,-0.35):(ch==='+')?_avShade(b.c,0.3):b.c; ctx.fillRect(dx,dy,1,1); }});
+  });
+}
+function gymCheckMilestones(){
+  const gm=_gym(); let changed=false;
+  GYM_TITLES.forEach(t=>{ if(!gm.titles.includes(t.id) && t.test(gm)){ gm.titles.push(t.id); changed=true; notify('🎖 GYM UNVANI: '+t.name+'!'); addLog('GYM unvanı: '+t.name); } });
+  GYM_BADGES.forEach(b=>{ if(!gm.badges.includes(b.id) && b.test(gm)){ gm.badges.push(b.id); changed=true; notify('📛 GYM ROZETİ: '+b.name+'!'); addLog('GYM rozeti: '+b.name); } });
+  if(changed){ save(); try{ if(g('page-character')&&g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){} }
+}
 
 function renderBank(){
   const bal=g('bank-balance'); if(bal) bal.textContent=_fmtTL(_bankKurus());
@@ -4936,6 +5416,17 @@ const AV_WEAPON = [
   {n:'Çekiç',  x:15,y:4,rows:['..#####....','..#####....','..o###o....','....#......','....#......','....#......','....#......','....#......','....#......','....#......','....#......']},
   {n:'Kitap',  x:15,y:11,rows:['.######....','.#++++#....','.#++++#....','.######....']},
 ];
+// GYM kıyafetleri — Nutrition Center'dan alınınca açılır (req = gym item id)
+AV_ARMOR.push(
+  {n:'Oversize Hoodie', req:'cl_hoodie', x:7,y:9,rows:['...o###o...','o#########o','###########','###########','###########','###########','.o#######o.']},
+  {n:'Sokak Tişörtü',   req:'cl_street', x:7,y:10,rows:['o#########o','###########','###########','###########','.#########.','.o#######o.']}
+);
+AV_PANTS.push(
+  {n:'Bol Kargo',  req:'cl_cargo',  x:8,y:16,rows:['.#######.','.#######.','.#o###o#.','.##...##.','.##...##.','.oo...oo.']},
+  {n:'Jogger',     req:'cl_jogger', x:8,y:16,rows:['.#######.','..##.##..','..##.##..','..#o.o#..','..##.##..','..oo.oo..']}
+);
+function _avOwned(entry){ return !entry || !entry.req || ((S.gym&&S.gym.ownedItems)||[]).includes(entry.req); }
+
 const AV_SLOTS = [
   {key:'hair',   lbl:'SAÇ',      arr:AV_HAIR},
   {key:'armor',  lbl:'ZIRH',     arr:AV_ARMOR},
@@ -5137,6 +5628,13 @@ function renderCharacter(){
   const sT=g('charx-title'); if(sT) sT.textContent = title+' (LVL '+lv+')';
   const sL=g('charx-lvl2'); if(sL) sL.textContent = lv;
   const sX=g('charx-xp'); if(sX) sX.textContent = (c.charXp||0).toLocaleString('tr-TR');
+  // GYM unvanları — isim altında (fiziksel kilometre taşları, akademik unvandan ayrı)
+  const gt=g('charx-gym-titles');
+  if(gt){
+    const names=(((S.gym||{}).titles)||[]).map(id=>{ const t=(typeof GYM_TITLES!=='undefined')?GYM_TITLES.find(x=>x.id===id):null; return t?t.name:null; }).filter(Boolean);
+    gt.innerHTML=names.length?('🏋 '+names.map(_he).join(' · ')):'';
+    gt.style.display=names.length?'block':'none';
+  }
   // ekipmanlar + motivasyon + statlar + avatar
   renderCharEquip();
   renderCharQuote();
@@ -5179,6 +5677,8 @@ function renderCharEquip(){
   (S.inventory||[]).forEach(id=>{ const it=SHOP_ITEMS.find(x=>x.id===id); if(it && it.cat==='cosmetic') add(it.icon+' '+it.name+(S.equippedCosmetic===id?' ✓':''),'#cc88ff'); });
   // kasa unvanları
   (cs.profileTitles||[]).forEach(t=>add('🎖 '+_he(t),'#ffaa44'));
+  // GYM rozetleri (özet matrisine sabitli)
+  (((S.gym||{}).badges)||[]).forEach(id=>{ const b=(typeof GYM_BADGES!=='undefined')?GYM_BADGES.find(x=>x.id===id):null; if(b) add('📛 '+b.name,'#ff9e64'); });
   el.innerHTML = chips.length ? chips.join('') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;padding:4px 0">Henüz ekipman yok — kasa aç, market\'e uğra.</div>';
 }
 
@@ -5242,7 +5742,7 @@ function _avComposite(av, col, W, H){
       }
     });
   };
-  const pick=(arr,i)=>arr[Math.max(0,Math.min(arr.length-1,i|0))];
+  const pick=(arr,i)=>{ const e=arr[Math.max(0,Math.min(arr.length-1,i|0))]; return _avOwned(e)?e:arr[0]; };
   put(AV_BASE, col.skin, col.skin);
   put(pick(AV_SHOES,av.shoes),  col.shoes,  col.skin);
   put(pick(AV_PANTS,av.pants),  col.pants,  col.skin);
@@ -5293,11 +5793,13 @@ function renderAvatarPopRows(){
   const box=g('avatar-pop-rows'); if(!box) return;
   const av=_char().avatar;
   let html=AV_SLOTS.map(s=>{
-    const idx=av[s.key]|0, item=s.arr[Math.max(0,Math.min(s.arr.length-1,idx))];
+    let idx=av[s.key]|0; let item=s.arr[Math.max(0,Math.min(s.arr.length-1,idx))];
+    if(!_avOwned(item)){ idx=0; item=s.arr[0]; }
+    const avail=s.arr.filter(_avOwned).length;
     return '<div class="avrow">'+
       '<span class="avlbl">'+s.lbl+'</span>'+
       '<button class="avbtn" onclick="avCycle(\''+s.key+'\',-1)">◀</button>'+
-      '<span class="avval">'+(idx+1)+'/'+s.arr.length+' '+_he(item.n)+'</span>'+
+      '<span class="avval">'+(s.arr.filter((e,i)=>i<=idx&&_avOwned(e)).length)+'/'+avail+' '+_he(item.n)+'</span>'+
       '<button class="avbtn" onclick="avCycle(\''+s.key+'\',1)">▶</button>'+
       '<input type="color" value="'+(av.colors[s.key]||'#888888')+'" oninput="avColor(\''+s.key+'\',this.value)">'+
     '</div>';
@@ -5309,7 +5811,9 @@ function avCycle(slot,dir){
   const av=_char().avatar;
   const def=AV_SLOTS.find(s=>s.key===slot); if(!def) return;
   const n=def.arr.length;
-  av[slot]=(((av[slot]|0)+dir)%n+n)%n;
+  let idx=av[slot]|0, guard=0;
+  do{ idx=((idx+dir)%n+n)%n; guard++; }while(!_avOwned(def.arr[idx]) && guard<=n);
+  av[slot]=idx;
   save(); renderAvatar(); renderAvatarPopRows();
 }
 function avColor(slot,val){
@@ -8405,7 +8909,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.24.2 başlatıldı.');
+addLog('OVERCLOCK v7.25.0 başlatıldı.');
 </script>
 </body>
 </html>
