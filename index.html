@@ -181,6 +181,9 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
   #timer-wrap{width:min(34vh,300px)}
 }
 /* ── FULLSCREEN TIMER OVERLAY ── */
+#mini-timer{position:fixed;z-index:9960;display:none;align-items:center;justify-content:center;background:var(--deep);border:1.5px solid var(--bright);border-radius:22px;padding:8px 15px;box-shadow:0 4px 16px rgba(0,0,0,.55);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
+#mini-timer:active{cursor:grabbing}
+#mini-timer-num{font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:var(--white);letter-spacing:1px;line-height:1}
 #fs-timer{position:fixed;inset:0;z-index:9970;background:radial-gradient(ellipse at center,rgb(20,20,28),rgb(0,0,0));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.22,.9,.3,1),opacity .35s ease;padding:env(safe-area-inset-top,0) 20px env(safe-area-inset-bottom,0)}
 #fs-timer.show{transform:translateY(0);opacity:1;pointer-events:auto}
 #fs-close{position:absolute;top:calc(env(safe-area-inset-top,0) + 16px);right:18px;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--bd2);color:var(--bright);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;z-index:20;pointer-events:auto}
@@ -585,6 +588,9 @@ body.pixel-font #timer-unit{font-size:8px}
 <div id="notif"></div>
 
 <!-- FULLSCREEN TIMER OVERLAY -->
+<!-- MINI TIMER — HQ dışındayken çalışan sayaç köşede yüzer; sürüklenebilir, dokununca tam ekran -->
+<div id="mini-timer" title="Sürükle: köşeye taşı · Dokun: tam ekran"><span id="mini-timer-num">00:00</span></div>
+
 <div id="fs-timer">
   <div id="fs-status">● STANDBY</div>
   <button id="fs-close" type="button" onclick="exitFullscreen()" aria-label="Kapat">✕</button>
@@ -1630,7 +1636,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.21.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.22.0</div>
     </div>
   </div>
 </div>
@@ -2180,6 +2186,7 @@ function goTab(btn, name) {
   applyBackground(name);
   // Resume audio context on tap (mobile policy)
   try { const ctx=getAudioCtx(); if(ctx && ctx.state==='suspended') ctx.resume(); } catch(e){}
+  try{ updateMiniTimer(); }catch(e){}   // HQ dışına çıkınca mini sayaç belirir, HQ'ya dönünce gizlenir
 }
 
 // ════════════════════════════════════════
@@ -3188,6 +3195,7 @@ function renderTimer(){
   g('timer-unit').textContent=isBreak?'MOLA':'FOCUS';
   g('timer-mode-lbl').textContent=isBreak?'Piyano Molası — '+S.breakMin+'dk':'Focus — '+S.focusMin+'dk';
   renderFsTimer();
+  try{ updateMiniTimer(); }catch(e){}
 }
 
 // Tam ekran sayaç elemanlarını senkronize et (overlay açık olsun olmasın güvenli)
@@ -3253,6 +3261,7 @@ function enterFullscreen(){
     fs.addEventListener('click', function(ev){ if(ev.target===fs) exitFullscreen(); });
   }
   if(timerRunning){ try{ _acquireWakeLock(); }catch(e){} }  // ekran kilidini sadece sayaç çalışırken tut (pil)
+  try{ updateMiniTimer(); }catch(e){}
 }
 function exitFullscreen(){
   const fs=g('fs-timer'); if(!fs) return;
@@ -3266,11 +3275,55 @@ function exitFullscreen(){
   if(!timerRunning){ try{ _releaseWakeLock(); }catch(e){} }
   // tam ekran kapanınca HQ sekmesine dön
   try{ goTab(document.querySelector('.navitem'), 'cockpit'); }catch(e){}
+  try{ updateMiniTimer(); }catch(e){}
 }
 // ESC ile tam ekrandan çık
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){ const fs=g('fs-timer'); if(fs && fs.classList.contains('show')) exitFullscreen(); }
 });
+
+// ════════════════════════════════════════
+// MINI TIMER — HQ dışındayken köşede yüzen sayaç (sürüklenebilir, dokun→tam ekran)
+// ════════════════════════════════════════
+let _miniCorner = 'br';
+try{ _miniCorner = localStorage.getItem('oc_mini_corner') || 'br'; }catch(e){}
+function _applyMiniCorner(){
+  const el=g('mini-timer'); if(!el) return; const m=12;
+  el.style.top=el.style.bottom=el.style.left=el.style.right='auto';
+  if(_miniCorner==='tl'){ el.style.top=m+'px'; el.style.left=m+'px'; }
+  else if(_miniCorner==='tr'){ el.style.top=m+'px'; el.style.right=m+'px'; }
+  else if(_miniCorner==='bl'){ el.style.bottom=m+'px'; el.style.left=m+'px'; }
+  else { el.style.bottom=m+'px'; el.style.right=m+'px'; }
+}
+function updateMiniTimer(){
+  const el=g('mini-timer'); if(!el) return;
+  if(!el._wired){ try{ _wireMiniDrag(); }catch(e){} }
+  const onCockpit = g('page-cockpit') && g('page-cockpit').classList.contains('visible');
+  const fsOpen = g('fs-timer') && g('fs-timer').classList.contains('show');
+  const show = timerRunning && !onCockpit && !fsOpen;
+  if(!show){ el.style.display='none'; return; }
+  const num=g('mini-timer-num'); if(num) num.textContent=_fmtClock(Math.max(0,timerSecs));
+  el.style.borderColor = isBreak ? 'var(--yellow)' : 'var(--bright)';
+  if(el.style.display!=='flex'){ el.style.display='flex'; _applyMiniCorner(); }
+}
+function _wireMiniDrag(){
+  const el=g('mini-timer'); if(!el || el._wired) return; el._wired=true;
+  let dragging=false, moved=false, sx=0, sy=0;
+  const down=(e)=>{ dragging=true; moved=false; const p=e.touches?e.touches[0]:e; sx=p.clientX; sy=p.clientY; el.style.transition='none'; if(e.cancelable) e.preventDefault(); };
+  const move=(e)=>{ if(!dragging) return; const p=e.touches?e.touches[0]:e; if(Math.abs(p.clientX-sx)>4||Math.abs(p.clientY-sy)>4) moved=true; el.style.bottom=el.style.right='auto'; el.style.left=(p.clientX-el.offsetWidth/2)+'px'; el.style.top=(p.clientY-el.offsetHeight/2)+'px'; if(e.cancelable) e.preventDefault(); };
+  const up=(e)=>{ if(!dragging) return; dragging=false; el.style.transition='';
+    if(!moved){ enterFullscreen(); return; }
+    const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const left=cx<window.innerWidth/2, top=cy<window.innerHeight/2;
+    _miniCorner=(top?'t':'b')+(left?'l':'r');
+    try{ localStorage.setItem('oc_mini_corner',_miniCorner); }catch(_e){}
+    _applyMiniCorner();
+  };
+  el.addEventListener('mousedown',down); el.addEventListener('touchstart',down,{passive:false});
+  window.addEventListener('mousemove',move); window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('mouseup',up); window.addEventListener('touchend',up);
+}
+try{ _wireMiniDrag(); }catch(e){}
 
 // ── Tam ekran: sayaca dokununca kaydırmalı süre ayarı ──
 // Yalnızca başlatılmamış (taze) sayaçta çalışır. Başlatılıp DURDURULMUŞ sayaçta
@@ -8116,7 +8169,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.21.2 başlatıldı.');
+addLog('OVERCLOCK v7.22.0 başlatıldı.');
 </script>
 </body>
 </html>
