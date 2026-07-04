@@ -1227,7 +1227,10 @@ body.pixel-font #timer-unit{font-size:8px}
 
   <!-- İDEAL ÇALIŞMA SÜRESI (soru-bazlı verimlilik) -->
   <div class="block">
-    <div class="blabel">■ İdeal Çalışma Süresi</div>
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ İdeal Çalışma Süresi</div>
+      <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="resetIdealDuration()">↺ SIFIRLA</button>
+    </div>
     <div id="ideal-dur"></div>
   </div>
 
@@ -1688,7 +1691,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.2</div>
     </div>
   </div>
 </div>
@@ -2812,6 +2815,15 @@ function _idealDuration(){
   const towardTarget = ps.filter(s=> s.durationMin >= (targetMin-2) && _sessRate(s) >= 0.85*bestRate).length;
   const avgBrk = ps.reduce((a,s)=>a+(s.breakMin||0),0)/ps.length;
   return { ready:true, n:ps.length, idealMin, step, targetMin, towardTarget, buckets:filled, avgBrk, breakAware:true };
+}
+// İdeal süre hesaplayıcısını sıfırla — tüm verimlilik örnekleri (prodSessions) silinir, motor baştan öğrenir
+function resetIdealDuration(){
+  const n=(S.prodSessions||[]).length;
+  if(!confirm('İdeal süre hesaplayıcısı sıfırlansın mı?\n'+n+' seans verisi silinecek, motor baştan öğrenecek.\n(Soru istatistikleri ve XP etkilenmez.)')) return;
+  S.prodSessions=[]; _pendingBreakSecs=0;
+  save(); try{ renderIdealDuration(); }catch(e){}
+  notify('↺ İdeal süre verisi sıfırlandı ('+n+' seans silindi)');
+  addLog('İdeal süre hesaplayıcısı sıfırlandı ('+n+' seans).');
 }
 // A1: ideal süre için daha fazla veri toplama önerisi (günde 1 kez, soru seansı başında)
 function _maybeSuggestDuration(){
@@ -4916,8 +4928,8 @@ const AV_SHOES = [
   {n:'Topuklu',    x:8,y:22,rows:['.###.###.','.#o..#o..']},
 ];
 const AV_WEAPON = [
-  {n:'Kılıç',  x:15,y:4,rows:['...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','...+.......','..o#o......','...#.......','...#.......']},
-  {n:'Balta',  x:15,y:4,rows:['...##o.....','...###o....','...##o.....','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......']},
+  {n:'Kılıç',  x:15,y:3,rows:['..+#.......','..+#.......','..+#.......','..+#.......','..+#.......','..+#.......','..+#.......','..+#.......','..+#.......','.o###o.....','...#.......','...o.......']},
+  {n:'Balta',  x:15,y:3,rows:['..###o.....','..####o....','..+###o....','...##o.....','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...#.......','...o.......']},
   {n:'Asa',    x:15,y:2,rows:['...+#+.....','...###.....','...+#+.....','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......','....o......']},
   {n:'Yay',    x:15,y:4,rows:['....##.....','...+..#....','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+...#...','...+..#....','....##.....']},
   {n:'Hançer', x:15,y:10,rows:['...+.......','...+.......','...+.......','..o#o......','...#.......']},
@@ -5211,18 +5223,57 @@ function _avDrawSprite(ctx, spr, color, skin){
     }
   });
 }
+// Katmanları önce tampon grid'e bas, sonra OTOMATİK KONTUR + IŞIKLANDIRMA uygula
+// (profesyonel pixel-art görünümü: siluet çevresinde koyu kontur, üstten ışık / alttan gölge)
+function _avComposite(av, col, W, H){
+  const buf=Array.from({length:H},()=>new Array(W).fill(null));
+  const put=(spr,color,skin)=>{
+    if(!spr) return;
+    spr.rows.forEach((row,dy)=>{
+      for(let dx=0;dx<row.length;dx++){
+        const ch=row[dx]; if(ch==='.'||ch===' ') continue;
+        let cc=color;
+        if(ch==='o') cc=_avShade(color,-0.35);
+        else if(ch==='+') cc=_avShade(color,0.30);
+        else if(ch==='s') cc=skin;
+        else if(ch==='e') cc='#141414';
+        const y=spr.y+dy, x=spr.x+dx;
+        if(y>=0&&y<H&&x>=0&&x<W) buf[y][x]=cc;
+      }
+    });
+  };
+  const pick=(arr,i)=>arr[Math.max(0,Math.min(arr.length-1,i|0))];
+  put(AV_BASE, col.skin, col.skin);
+  put(pick(AV_SHOES,av.shoes),  col.shoes,  col.skin);
+  put(pick(AV_PANTS,av.pants),  col.pants,  col.skin);
+  put(pick(AV_ARMOR,av.armor),  col.armor,  col.skin);
+  put(pick(AV_HAIR,av.hair),    col.hair,   col.skin);
+  put(pick(AV_WEAPON,av.weapon),col.weapon, col.skin);
+  return buf;
+}
+function _avPaint(ctx, buf, W, H){
+  const filled=(x,y)=> x>=0&&x<W&&y>=0&&y<H && !!buf[y][x];
+  ctx.clearRect(0,0,W,H);
+  // 1. taban pikseller + otomatik ışık (üstü açık piksel aydınlanır, altı açık piksel gölgelenir)
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!buf[y][x]) continue;
+    let cc=buf[y][x];
+    if(!filled(x,y-1)) cc=_avShade(cc,0.16);
+    else if(!filled(x,y+1)) cc=_avShade(cc,-0.16);
+    ctx.fillStyle=cc; ctx.fillRect(x,y,1,1);
+  }
+  // 2. siluet çevresine 1px koyu kontur
+  ctx.fillStyle='#0c1016';
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(buf[y][x]) continue;
+    if(filled(x+1,y)||filled(x-1,y)||filled(x,y+1)||filled(x,y-1)) ctx.fillRect(x,y,1,1);
+  }
+}
 function renderAvatar(){
   const cv=g('avatar-cv'); if(!cv) return;
   const c=_char(), av=c.avatar, col=av.colors;
-  const ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
-  const pick=(arr,i)=>arr[Math.max(0,Math.min(arr.length-1,i|0))];
-  _avDrawSprite(ctx, AV_BASE, col.skin, col.skin);                    // gövde (ten)
-  _avDrawSprite(ctx, pick(AV_SHOES,av.shoes),  col.shoes,  col.skin); // ayakkabı
-  _avDrawSprite(ctx, pick(AV_PANTS,av.pants),  col.pants,  col.skin); // alt
-  _avDrawSprite(ctx, pick(AV_ARMOR,av.armor),  col.armor,  col.skin); // zırh
-  _avDrawSprite(ctx, pick(AV_HAIR,av.hair),    col.hair,   col.skin); // saç
-  _avDrawSprite(ctx, pick(AV_WEAPON,av.weapon),col.weapon, col.skin); // silah (elde, en önde)
+  const buf=_avComposite(av, col, cv.width, cv.height);
+  _avPaint(cv.getContext('2d'), buf, cv.width, cv.height);
 }
 
 // ── AVATAR EDİTÖR POP-UP (çerçevenin yanında) ──
@@ -8354,7 +8405,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.24.1 başlatıldı.');
+addLog('OVERCLOCK v7.24.2 başlatıldı.');
 </script>
 </body>
 </html>
