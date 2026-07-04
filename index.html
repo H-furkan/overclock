@@ -309,10 +309,13 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .cal-hcell.today{color:var(--white);background:rgba(255,255,255,.05)}
 .cal-timecol{position:relative}
 .cal-hour{font-size:7px;color:var(--muted);text-align:right;padding-right:3px;border-top:1px solid var(--bd);box-sizing:border-box;line-height:1}
-.cal-daycol{position:relative;border-left:1px solid var(--bd);background:repeating-linear-gradient(to bottom,transparent 0 51px,var(--bd) 51px 52px);cursor:pointer}
-.cal-daycol.today{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 51px,var(--bd) 51px 52px)}
+.cal-daycol{position:relative;border-left:1px solid var(--bd);background:repeating-linear-gradient(to bottom,transparent 0 63px,var(--bd) 63px 64px);cursor:pointer}
+.cal-daycol.today{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 63px,var(--bd) 63px 64px)}
 .cal-ev{position:absolute;border-radius:4px;padding:2px 3px;font-size:8px;color:#fff;overflow:hidden;line-height:1.15;box-sizing:border-box;cursor:pointer}
 .cal-ev.done{opacity:.5;text-decoration:line-through}
+.cal-ev.thin{padding:0 3px;display:flex;align-items:center;overflow:hidden}
+.cal-ev.thin .cal-ev-t{display:none}
+.cal-ev.thin .cal-ev-top{line-height:1;font-size:7px;width:100%}
 .cal-ev-top{display:flex;gap:3px;align-items:baseline}
 .cal-ev-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600}
 .cal-ev-q{flex-shrink:0;font-size:8px;opacity:.9;font-weight:700}
@@ -1685,7 +1688,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.24.1</div>
     </div>
   </div>
 </div>
@@ -2905,7 +2908,7 @@ function bankWithdraw(){
 // ════════════════════════════════════════
 // TAKVİM (haftalık zaman gridi + olay ekleme)
 // ════════════════════════════════════════
-const CAL_START=5, CAL_END=24, CAL_HPX=52;
+const CAL_START=5, CAL_END=24, CAL_HPX=64;
 let _calWeekOffset=0, _calEditId=null, _calDraft=null;
 const CAL_TYPE_STYLE={ std:{bg:'#2a5a8a',bd:'#66ccff'}, soru:{bg:'#2f6b2f',bd:'var(--green)'}, konu:{bg:'#6b6b1a',bd:'var(--yellow)'}, blok:{bg:'transparent',bd:'#777'} };
 function _calWeekDatesArr(off){ const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+off*7); const a=[]; for(let i=0;i<7;i++){const d=new Date(mon); d.setDate(d.getDate()+i); a.push(_dstr(d));} return a; }
@@ -2930,8 +2933,17 @@ function renderCalendar(){
     const laid=_layoutDayEvents((S.calEvents||[]).filter(e=>e.date===ds));
     laid.forEach(({ev,col,cols})=>{
       const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std;
-      const top=Math.max(0,((ev.startMin||0)-CAL_START*60)/60*CAL_HPX);
-      const eh=Math.max(16,(((ev.endMin||((ev.startMin||0)+60))-(ev.startMin||0))/60)*CAL_HPX-2);
+      const evStart=ev.startMin||0;
+      const evEnd=Math.max(evStart+1, ev.endMin||(evStart+60));
+      const top=Math.max(0,(evStart-CAL_START*60)/60*CAL_HPX);
+      // Görsel yükseklik: min 14px OKUNURLUK için, AMA alttaki bloğun tepesini ASLA geçmez
+      // (08:50-09:00 gibi kısa olay, 09:00 bloğunun içine taşmaz — gerçek süresi kadar ince şerit olur)
+      const realH=((evEnd-evStart)/60)*CAL_HPX-2;
+      let nextS=null;
+      laid.forEach(o=>{ const os=o.ev.startMin||0; if(o.ev!==ev && os>=evEnd && (nextS==null||os<nextS)) nextS=os; });
+      let eh=Math.max(14,realH);
+      if(nextS!=null){ const maxH=((nextS-evStart)/60)*CAL_HPX-2; eh=Math.max(Math.max(realH,6), Math.min(eh,maxH)); }
+      const thin = eh<14;
       const blok=ev.type==='blok';
       const bgStyle=blok?'background:transparent;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 5px,transparent 5px 11px);':('background:'+st.bg+';');
       // çakışan olaylar için sütun genişliği (dikey bölme)
@@ -2940,7 +2952,7 @@ function renderCalendar(){
       const widthCss='calc('+wpct+'% - '+(4+gap)+'px)';
       const qbadge=(ev.type==='soru'&&ev.questions>0)?('<span class="cal-ev-q">'+ev.questions+'❓</span>'):'';
       const titleTxt=_he(ev.title||(blok?'Meşgul':'(başlıksız)'));
-      html+='<div class="cal-ev'+(ev.done?' done':'')+'" data-evid="'+ev.id+'" style="top:'+top+'px;height:'+eh+'px;left:'+leftCss+';width:'+widthCss+';'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+
+      html+='<div class="cal-ev'+(ev.done?' done':'')+(thin?' thin':'')+'" data-evid="'+ev.id+'" style="top:'+top+'px;height:'+eh+'px;left:'+leftCss+';width:'+widthCss+';'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+
         '<div class="cal-ev-top">'+(ev.done?'✓ ':'')+'<span class="cal-ev-title">'+titleTxt+'</span>'+qbadge+'</div>'+
         '<span class="cal-ev-t">'+_minToTime(ev.startMin||0)+'</span></div>';
     });
@@ -8342,7 +8354,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.24.0 başlatıldı.');
+addLog('OVERCLOCK v7.24.1 başlatıldı.');
 </script>
 </body>
 </html>
