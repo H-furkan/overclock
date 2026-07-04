@@ -1079,6 +1079,21 @@ body.pixel-font #timer-unit{font-size:8px}
     <div id="ideal-dur"></div>
   </div>
 
+  <!-- SORU ÇÖZÜM İSTATİSTİĞİ (Net Takip'ten taşındı) -->
+  <div class="block">
+    <div class="blabel">■ Soru Çözüm İstatistiği</div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">DERS</div>
+        <select class="inp" id="q-subject"></select>
+      </div>
+      <div class="igrp"><div class="ilabel">SORU SAYISI</div><input class="inp" id="q-count" type="number" min="1" max="2000" placeholder="Örn: 40"></div>
+    </div>
+    <button class="btn primary fw mb8" onclick="addQuestions()">+ EKLE</button>
+    <div id="q-total" style="font-size:10px;color:var(--bright);letter-spacing:1px;margin-bottom:8px">∑ TOPLAM ÇÖZÜLEN: <b style="color:var(--white)">0</b> soru</div>
+    <div id="q-stats-list"></div>
+    <div id="q-stats-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz soru kaydı yok.</div>
+  </div>
+
   <!-- HAFTALIK KARŞILAŞTIRMA -->
   <div class="block">
     <div class="fbet mb8">
@@ -1359,19 +1374,6 @@ body.pixel-font #timer-unit{font-size:8px}
     <div id="exam-history-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz deneme kaydı yok.</div>
   </div>
 
-  <div class="block">
-    <div class="blabel">■ Soru Çözüm İstatistiği</div>
-    <div class="irow mb8">
-      <div class="igrp"><div class="ilabel">DERS</div>
-        <select class="inp" id="q-subject"></select>
-      </div>
-      <div class="igrp"><div class="ilabel">SORU SAYISI</div><input class="inp" id="q-count" type="number" min="1" max="2000" placeholder="Örn: 40"></div>
-    </div>
-    <button class="btn primary fw mb8" onclick="addQuestions()">+ EKLE</button>
-    <div id="q-total" style="font-size:10px;color:var(--bright);letter-spacing:1px;margin-bottom:8px">∑ TOPLAM ÇÖZÜLEN: <b style="color:var(--white)">0</b> soru</div>
-    <div id="q-stats-list"></div>
-    <div id="q-stats-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px">Henüz soru kaydı yok.</div>
-  </div>
 
 </div>
 
@@ -1530,7 +1532,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.19.0</div>
     </div>
   </div>
 </div>
@@ -1548,6 +1550,9 @@ body.pixel-font #timer-unit{font-size:8px}
           <option value="numeric">📊 Sayısal</option>
         </select>
       </div>
+    </div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">🔔 HATIRLATMA SAATİ (opsiyonel)</div><input class="inp" id="inp-habit-remind" type="time" placeholder="--:--"></div>
     </div>
     <div id="habit-numeric-opts" style="display:none" class="irow mb8">
       <div class="igrp"><div class="ilabel">HEDEFİN ALTINDA İYİ? (örn. ekran süresi)</div>
@@ -2434,7 +2439,7 @@ document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     // going to background: make sure the OS-level alerts are armed
     if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-    scheduleBossNotification(); try{ scheduleSrsNotification(); }catch(e){}
+    scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); }catch(e){}
     return;
   }
   // back in foreground
@@ -2458,7 +2463,7 @@ document.addEventListener('visibilitychange', function(){
 // extra safety: arm alerts right before the page is frozen/hidden on Android
 ['pagehide','freeze','blur'].forEach(ev=>window.addEventListener(ev,function(){
   if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-  scheduleBossNotification(); try{ scheduleSrsNotification(); }catch(e){}
+  scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); }catch(e){}
 }));
 
 // ════════════════════════════════════════
@@ -3801,6 +3806,23 @@ function scheduleSrsNotification(){
 function cancelSrsNotification(){
   if (_isNative()){ _nativeCancel(_NID_SRS); return; }
   swPost({ type:'cancel', tag:'overclock-srs' });
+}
+
+// ── Alışkanlık hatırlatıcıları (her gün belirtilen saatte) ──
+const _HABIT_ID_OFFSET = 300000;
+function _habitNotifId(hid){ return _HABIT_ID_OFFSET + (Math.abs(Number(hid)||0) % 1000000000); }
+function _nextHabitTime(hhmm){ const p=String(hhmm).split(':'); const t=new Date(); t.setHours(parseInt(p[0])||0, parseInt(p[1])||0, 0, 0); if(t.getTime()<=Date.now()) t.setDate(t.getDate()+1); return t; }
+function scheduleHabitReminders(){
+  try{
+    (S.habits||[]).forEach(h=>{
+      const id=_habitNotifId(h.id), tag='ochabit-'+h.id;
+      if(!h.remindTime){ if(_isNative()) _nativeCancel(id); else swPost({type:'cancel',tag}); return; }
+      const when=_nextHabitTime(h.remindTime);
+      const title='🔄 ALIŞKANLIK', body=h.name+' — zamanı geldi!';
+      if(_isNative()){ _nativeSchedule(id, when.getTime(), title, body); }
+      else if(('Notification' in window) && Notification.permission==='granted'){ swPost({type:'schedule', at:when.getTime(), tag, kind:'habit', title, body, icon:_NOTIF_ICON}); }
+    });
+  }catch(e){}
 }
 
 // ── Silent-audio keepalive ──
@@ -6372,6 +6394,7 @@ function addHabit(){
   const h = {
     id:Date.now(), name, xpReward:xpAmt, htype,
     streak:0, bestStreak:0, lastCompleted:null,
+    remindTime: (g('inp-habit-remind')||{}).value || '',   // 'HH:MM' — boşsa hatırlatma yok
     // for numeric habits
     target: htype==='numeric'?(parseInt(g('inp-habit-target').value)||60):null,
     lowerBetter: htype==='numeric'?(g('inp-habit-lower-better').value==='1'):false,
@@ -6380,9 +6403,11 @@ function addHabit(){
   S.habits = [...(S.habits||[]), h];
   g('inp-habit-name').value='';
   g('inp-habit-xp').value='30';
+  const rt=g('inp-habit-remind'); if(rt) rt.value='';
   g('inp-habit-type').value='boolean';
   toggleHabitNumericOpts();
-  save(); renderHabits(); addLog('Alışkanlık eklendi: '+name);
+  save(); renderHabits(); addLog('Alışkanlık eklendi: '+name+(h.remindTime?(' 🔔'+h.remindTime):''));
+  try{ scheduleHabitReminders(); }catch(e){}
 }
 
 function completeHabit(id){
@@ -6464,6 +6489,7 @@ function checkHabitBadges(h){
 }
 
 function deleteHabit(id){
+  try{ const nid=_habitNotifId(id); if(_isNative()) _nativeCancel(nid); else swPost({type:'cancel',tag:'ochabit-'+id}); }catch(e){}
   S.habits=(S.habits||[]).filter(h=>h.id!==id);
   if(_calHabitId===id) _calHabitId=null;
   save(); renderHabits();
@@ -6503,7 +6529,7 @@ function renderHabits(){
     item.innerHTML=
       '<div class="habit-top">'+
         '<div class="habit-check'+(done?' done':'')+'">'+( done?'✓':'')+'</div>'+
-        '<div class="habit-name">'+h.name+'<div style="font-size:8px;color:var(--muted);margin-top:3px;letter-spacing:1px">'+h.xpReward+' XP / gün &nbsp;'+(isNum?'📊 Sayısal':'')+'</div>'+statusLine+'</div>'+
+        '<div class="habit-name">'+h.name+'<div style="font-size:8px;color:var(--muted);margin-top:3px;letter-spacing:1px">'+h.xpReward+' XP / gün &nbsp;'+(isNum?'📊 Sayısal':'')+(h.remindTime?' &nbsp;<span style="color:var(--bright)">🔔'+h.remindTime+'</span>':'')+'</div>'+statusLine+'</div>'+
         '<div class="habit-streak">'+
           '<div class="habit-streak-num'+(fireStreak?' fire':'')+'">'+( h.streak||0)+'</div>'+
           '<div class="habit-streak-lbl">'+(fireStreak?'🔥 ':'')+'STREAK</div>'+
@@ -6860,6 +6886,7 @@ function renderStats(){
   const sTotF=g('stat-total-focus'); if(sTotF) sTotF.textContent=fmtHM(S.cumFocusSecs||0);
   const sTotT=g('stat-total-tasks'); if(sTotT) sTotT.textContent=S.tasksDoneTotal||0;
   const sTotB=g('stat-total-bosses'); if(sTotB) sTotB.textContent=(S.bossLog||[]).length;
+  try{ renderQuestionSubjects(); renderQuestionStats(); }catch(e){}   // soru istatistiği İstatistik'e taşındı
   // all charts
   setTimeout(()=>{
     drawFocusChart();
@@ -7508,6 +7535,7 @@ try { cancelBossNotification(); } catch(e){}
 // schedule any pending reminder-time notifications (OS-level alarms in APK; web setTimeout fallback)
 try { rescheduleAllReminders(); } catch(e){}
 try { scheduleSrsNotification(); } catch(e){}
+try { scheduleHabitReminders(); } catch(e){}
 try { scheduleWeeklyNotification(); } catch(e){}
 setTimeout(()=>{ try { maybeShowWeeklyReport(); } catch(e){} }, 800);   // açılış oturunca haftalık raporu göster
 setTimeout(()=>{ try { _checkPendingQ(); } catch(e){} }, 1000);   // arkaplanda biten soru-seansı promptu varsa sor
@@ -7518,7 +7546,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.18.2 başlatıldı.');
+addLog('OVERCLOCK v7.19.0 başlatıldı.');
 </script>
 </body>
 </html>
