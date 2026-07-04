@@ -281,6 +281,17 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .hq-today-go{color:var(--muted);font-size:14px}
 .sync-spin{width:46px;height:46px;border:3px solid rgba(255,255,255,.18);border-top-color:var(--bright);border-radius:50%;animation:syncspin .8s linear infinite}
 @keyframes syncspin{to{transform:rotate(360deg)}}
+/* ── TAKVİM ── */
+.cal-grid{display:inline-grid;grid-template-columns:40px repeat(7,86px)}
+.cal-hcell{padding:5px 2px;text-align:center;font-size:9px;font-weight:700;color:var(--bright);letter-spacing:1px;border-bottom:1px solid var(--bd2)}
+.cal-hcell.today{color:var(--white);background:rgba(255,255,255,.05)}
+.cal-timecol{position:relative}
+.cal-hour{font-size:7px;color:var(--muted);text-align:right;padding-right:3px;border-top:1px solid var(--bd);box-sizing:border-box;line-height:1}
+.cal-daycol{position:relative;border-left:1px solid var(--bd);background:repeating-linear-gradient(to bottom,transparent 0 43px,var(--bd) 43px 44px);cursor:pointer}
+.cal-daycol.today{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 43px,var(--bd) 43px 44px)}
+.cal-ev{position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 3px;font-size:8px;color:#fff;overflow:hidden;line-height:1.15;box-sizing:border-box;cursor:pointer}
+.cal-ev.done{opacity:.5;text-decoration:line-through}
+.cal-ev-t{display:block;font-size:7px;opacity:.75;margin-top:1px}
 
 /* notifications */
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -733,8 +744,7 @@ body.pixel-font #timer-unit{font-size:8px}
     <button onclick="closeNav()" aria-label="Kapat">✕</button>
   </div>
   <button class="navitem active" onclick="goTab(this,'cockpit')">⬛ HQ</button>
-  <button class="navitem" onclick="goTab(this,'tasks')">🔔 HATIRLATICILAR</button>
-  <button class="navitem" onclick="goTab(this,'planner')">📅 DAILY PLANNER</button>
+  <button class="navitem" onclick="goTab(this,'calendar')">📅 TAKVİM</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
@@ -873,6 +883,51 @@ body.pixel-font #timer-unit{font-size:8px}
   </div>
 
 </div><!-- /cockpit -->
+
+<!-- ══════════ PAGE: TAKVİM ══════════ -->
+<div id="page-calendar" class="page">
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Takvim</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:12px" onclick="calNav(-1)">◀</button>
+        <span id="cal-week-label" style="font-size:9px;color:var(--bright);letter-spacing:1px;min-width:90px;text-align:center">Bu Hafta</span>
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:12px" onclick="calNav(1)">▶</button>
+      </div>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;line-height:1.6">Boş bir saate dokun → olay ekle. Olaya dokun → detay/düzenle. <span style="color:var(--bright)">■</span> soru <span style="color:var(--yellow)">■</span> konu <span style="color:var(--muted)">▨</span> meşgul <span style="color:#66ccff">■</span> standart</div>
+    <div id="cal-grid-wrap" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch"></div>
+  </div>
+</div>
+
+<!-- OLAY EKLE/DÜZENLE POPUP -->
+<div id="cal-pop" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:330px;max-height:88vh;overflow-y:auto;background:var(--deep);border:1px solid var(--bd2);border-radius:10px;padding:16px">
+    <div class="fbet mb8"><div id="cal-pop-title" style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--white);letter-spacing:2px">OLAY EKLE</div><button onclick="calPopClose()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button></div>
+    <div class="ilabel" style="margin-bottom:3px">BAŞLIK</div>
+    <input class="inp" id="cal-f-title" placeholder="Olay başlığı" style="margin-bottom:8px">
+    <div class="ilabel" style="margin-bottom:3px">AÇIKLAMA</div>
+    <textarea class="inp" id="cal-f-desc" placeholder="(opsiyonel) detay" style="margin-bottom:8px;min-height:44px;resize:vertical"></textarea>
+    <div class="ilabel" style="margin-bottom:3px">TİP</div>
+    <select class="inp" id="cal-f-type" onchange="calPopTypeChange()" style="margin-bottom:8px">
+      <option value="std">📌 Standart</option>
+      <option value="soru">📝 Soru Çözümü</option>
+      <option value="konu">📖 Konu Çalışması</option>
+      <option value="blok">▨ Meşgul / Blok</option>
+    </select>
+    <div id="cal-f-qwrap" style="display:none;margin-bottom:8px"><div class="ilabel" style="margin-bottom:3px">KAÇ SORU (hedef)</div><input class="inp" id="cal-f-q" type="number" min="0" placeholder="ör. 30"></div>
+    <div class="irow mb8">
+      <div class="igrp"><div class="ilabel">BAŞLANGIÇ</div><input class="inp" id="cal-f-start" type="time"></div>
+      <div class="igrp"><div class="ilabel">BİTİŞ</div><input class="inp" id="cal-f-end" type="time"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);margin-bottom:8px;cursor:pointer"><input type="checkbox" id="cal-f-remind"> 🔔 Hatırlatıcı kur</label>
+    <div class="ilabel" style="margin-bottom:3px">XP ÖDÜLÜ (tamamlayınca)</div>
+    <input class="inp" id="cal-f-xp" type="number" min="0" value="0" style="margin-bottom:12px">
+    <div id="cal-pop-detail" style="display:none;font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px"></div>
+    <button class="btn primary fw mb8" id="cal-save-btn" onclick="calSave()">✓ KAYDET</button>
+    <div class="brow"><button class="btn" style="flex:1" id="cal-done-btn" onclick="calToggleDone()" >✓ TAMAMLANDI</button><button class="btn" id="cal-del-btn" style="border-color:var(--red);color:var(--red)" onclick="calDelete()">🗑 SİL</button></div>
+  </div>
+</div>
 
 <!-- ══════════ PAGE: REMINDERS ══════════ -->
 <div id="page-tasks" class="page">
@@ -1475,7 +1530,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.1</div>
     </div>
   </div>
 </div>
@@ -1734,6 +1789,7 @@ function defState() {
     bankEarnedKurus:0,            // toplam kazanılan kuruş (soru + deneme + XP'den aktarım)
     bankSpentKurus:0,             // toplam çekilen kuruş (XP hesabına aktarım)
     bankLog:[],                   // [{t,date,type,text,delta}] — hesap aktiviteleri
+    calEvents:[],                 // takvim: [{id,date,startMin,endMin,title,desc,type,questions,remind,xp,done}]
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
     subjectCoeff:{},              // ders → zorluk katsayısı (boşsa _DEF_COEFF kullanılır)
@@ -2012,6 +2068,7 @@ function goTab(btn, name) {
   if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
   if (name === 'srs') setTimeout(()=>{ try{ renderSrs(); }catch(e){} }, 20);
   if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
+  if (name === 'calendar') setTimeout(()=>{ try{ renderCalendar(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
   applyBackground(name);
@@ -2622,6 +2679,100 @@ function xpToBank(){
   save(); renderBank(); try{ renderXP(); }catch(e){}
   notify('✓ '+k+' kuruş aktarıldı');
 }
+// ════════════════════════════════════════
+// TAKVİM (haftalık zaman gridi + olay ekleme)
+// ════════════════════════════════════════
+const CAL_START=6, CAL_END=24, CAL_HPX=44;
+let _calWeekOffset=0, _calEditId=null, _calDraft=null;
+const CAL_TYPE_STYLE={ std:{bg:'#2a5a8a',bd:'#66ccff'}, soru:{bg:'#2f6b2f',bd:'var(--green)'}, konu:{bg:'#6b6b1a',bd:'var(--yellow)'}, blok:{bg:'transparent',bd:'#777'} };
+function _calWeekDatesArr(off){ const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+off*7); const a=[]; for(let i=0;i<7;i++){const d=new Date(mon); d.setDate(d.getDate()+i); a.push(_dstr(d));} return a; }
+function calNav(d){ _calWeekOffset+=d; renderCalendar(); }
+function _minToTime(m){ m=Math.max(0,Math.min(1439,Math.round(m||0))); return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+function _timeToMin(t){ if(!t) return null; const p=t.split(':'); return (parseInt(p[0])||0)*60+(parseInt(p[1])||0); }
+function renderCalendar(){
+  const wrap=g('cal-grid-wrap'); if(!wrap) return;
+  const dates=_calWeekDatesArr(_calWeekOffset);
+  const wl=g('cal-week-label'); if(wl) wl.textContent=_weekLabelText(_calWeekOffset);
+  const dayLbl=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  const bodyH=(CAL_END-CAL_START)*CAL_HPX;
+  const t=today();
+  let html='<div class="cal-grid">';
+  html+='<div class="cal-hcell"></div>';
+  dates.forEach((ds,i)=>{ html+='<div class="cal-hcell'+(ds===t?' today':'')+'">'+dayLbl[i]+'<br><span style="font-size:8px;color:var(--muted);font-weight:400">'+ds.slice(5).replace('-','.')+'</span></div>'; });
+  html+='<div class="cal-timecol" style="height:'+bodyH+'px">';
+  for(let h=CAL_START;h<CAL_END;h++){ html+='<div class="cal-hour" style="height:'+CAL_HPX+'px">'+String(h).padStart(2,'0')+'</div>'; }
+  html+='</div>';
+  dates.forEach((ds)=>{
+    html+='<div class="cal-daycol'+(ds===t?' today':'')+'" style="height:'+bodyH+'px" onclick="calGridClick(event,\''+ds+'\')">';
+    (S.calEvents||[]).filter(e=>e.date===ds).forEach(ev=>{
+      const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std;
+      const top=Math.max(0,((ev.startMin||0)-CAL_START*60)/60*CAL_HPX);
+      const eh=Math.max(15,(((ev.endMin||((ev.startMin||0)+60))-(ev.startMin||0))/60)*CAL_HPX-2);
+      const blok=ev.type==='blok';
+      const bgStyle=blok?'background:transparent;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 5px,transparent 5px 11px);':('background:'+st.bg+';');
+      html+='<div class="cal-ev'+(ev.done?' done':'')+'" style="top:'+top+'px;height:'+eh+'px;'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+(ev.done?'✓ ':'')+_he(ev.title||(blok?'Meşgul':'(başlıksız)'))+'<span class="cal-ev-t">'+_minToTime(ev.startMin||0)+'</span></div>';
+    });
+    html+='</div>';
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+function calGridClick(ev, ds){
+  const col=ev.currentTarget, rect=col.getBoundingClientRect();
+  let min=CAL_START*60 + Math.floor((ev.clientY-rect.top)/CAL_HPX)*60;
+  min=Math.max(CAL_START*60, Math.min((CAL_END-1)*60, min));
+  calPopOpen(null, ds, min, min+60);
+}
+function calOpenEvent(id){ calPopOpen(id); }
+function calPopTypeChange(){ const t=(g('cal-f-type')||{}).value; const w=g('cal-f-qwrap'); if(w) w.style.display=(t==='soru')?'block':'none'; }
+function calPopClose(){ const p=g('cal-pop'); if(p) p.style.display='none'; _calEditId=null; }
+function calPopOpen(id, date, startMin, endMin){
+  const isNew=!id;
+  const ev = isNew ? {date, startMin, endMin, type:'std', title:'', desc:'', questions:0, remind:false, xp:0} : (S.calEvents||[]).find(x=>x.id===id);
+  if(!ev) return;
+  _calEditId=id||null; _calDraft={date:ev.date};
+  g('cal-pop-title').textContent = isNew?'OLAY EKLE':'OLAYI DÜZENLE';
+  g('cal-f-title').value=ev.title||'';
+  g('cal-f-desc').value=ev.desc||'';
+  g('cal-f-type').value=ev.type||'std';
+  g('cal-f-q').value=ev.questions||'';
+  g('cal-f-start').value=_minToTime(ev.startMin!=null?ev.startMin:CAL_START*60);
+  g('cal-f-end').value=_minToTime(ev.endMin!=null?ev.endMin:((ev.startMin||CAL_START*60)+60));
+  g('cal-f-remind').checked=!!ev.remind;
+  g('cal-f-xp').value=ev.xp||0;
+  calPopTypeChange();
+  const db=g('cal-done-btn'), dl=g('cal-del-btn');
+  if(db){ db.style.display=isNew?'none':'block'; db.textContent=ev.done?'↺ Geri Al':'✓ TAMAMLANDI'; }
+  if(dl) dl.style.display=isNew?'none':'block';
+  g('cal-pop').style.display='flex';
+  setTimeout(()=>{ try{ g('cal-f-title').focus(); }catch(e){} }, 50);
+}
+function calSave(){
+  const title=(g('cal-f-title').value||'').trim();
+  const type=(g('cal-f-type').value)||'std';
+  const startMin=_timeToMin(g('cal-f-start').value);
+  let endMin=_timeToMin(g('cal-f-end').value);
+  if(startMin==null){ notify('Başlangıç saati gir'); return; }
+  if(endMin==null||endMin<=startMin) endMin=startMin+60;
+  if(!title && type!=='blok'){ notify('Başlık gir'); return; }
+  const q=parseInt(g('cal-f-q').value)||0, xp=Math.max(0,parseInt(g('cal-f-xp').value)||0), remind=g('cal-f-remind').checked, desc=g('cal-f-desc').value||'';
+  S.calEvents=S.calEvents||[];
+  if(_calEditId){
+    const ev=S.calEvents.find(x=>x.id===_calEditId); if(ev) Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remind,xp});
+  } else {
+    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date:_calDraft.date, startMin, endMin, title, desc, type, questions:q, remind, xp, done:false });
+  }
+  save(); calPopClose(); renderCalendar();
+  notify('✓ Kaydedildi');
+}
+function calDelete(){ if(!_calEditId) return; if(!confirm('Bu olay silinsin mi?')) return; S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_calEditId); save(); calPopClose(); renderCalendar(); notify('🗑 Silindi'); }
+function calToggleDone(){
+  if(!_calEditId) return; const ev=(S.calEvents||[]).find(x=>x.id===_calEditId); if(!ev) return;
+  ev.done=!ev.done;
+  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
+  save(); calPopClose(); renderCalendar();
+}
+
 function renderBank(){
   const bal=g('bank-balance'); if(bal) bal.textContent=_fmtTL(_bankKurus());
   const xn=g('bank-xp-note'); if(xn) xn.textContent='Harcanabilir XP: '+shopBalance()+'  ·  Bakiye: '+_bankKurus()+' kuruş';
@@ -7367,7 +7518,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.18.0 başlatıldı.');
+addLog('OVERCLOCK v7.18.1 başlatıldı.');
 </script>
 </body>
 </html>
