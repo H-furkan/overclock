@@ -306,10 +306,13 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .cal-hcell.today{color:var(--white);background:rgba(255,255,255,.05)}
 .cal-timecol{position:relative}
 .cal-hour{font-size:7px;color:var(--muted);text-align:right;padding-right:3px;border-top:1px solid var(--bd);box-sizing:border-box;line-height:1}
-.cal-daycol{position:relative;border-left:1px solid var(--bd);background:repeating-linear-gradient(to bottom,transparent 0 43px,var(--bd) 43px 44px);cursor:pointer}
-.cal-daycol.today{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 43px,var(--bd) 43px 44px)}
-.cal-ev{position:absolute;left:2px;right:2px;border-radius:4px;padding:2px 3px;font-size:8px;color:#fff;overflow:hidden;line-height:1.15;box-sizing:border-box;cursor:pointer}
+.cal-daycol{position:relative;border-left:1px solid var(--bd);background:repeating-linear-gradient(to bottom,transparent 0 51px,var(--bd) 51px 52px);cursor:pointer}
+.cal-daycol.today{background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 51px,var(--bd) 51px 52px)}
+.cal-ev{position:absolute;border-radius:4px;padding:2px 3px;font-size:8px;color:#fff;overflow:hidden;line-height:1.15;box-sizing:border-box;cursor:pointer}
 .cal-ev.done{opacity:.5;text-decoration:line-through}
+.cal-ev-top{display:flex;gap:3px;align-items:baseline}
+.cal-ev-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-weight:600}
+.cal-ev-q{flex-shrink:0;font-size:8px;opacity:.9;font-weight:700}
 .cal-ev-t{display:block;font-size:7px;opacity:.75;margin-top:1px}
 /* ── OKUMA SALONU ── */
 #book-shelf-wrap{display:flex;flex-wrap:wrap;gap:7px 5px;align-items:flex-end;padding:14px 10px 0;background:repeating-linear-gradient(to bottom,transparent 0 132px,rgba(90,61,43,.0) 132px);border-bottom:7px solid #5a3d2b;border-radius:2px;box-shadow:0 6px 8px -6px rgba(0,0,0,.5)}
@@ -897,6 +900,9 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
   </div>
 
+  <!-- Bugünün takvim programı (sayacın altında) -->
+  <div class="block" id="hq-cal-tasks" style="display:none"></div>
+
   <!-- DAVET EDİLEN BOSS — yalnızca Market'ten "Boss Daveti" alınınca görünür -->
   <div id="boss-panel" style="display:none">
     <span id="boss-tag">DAVET EDİLEN BOSS</span>
@@ -1012,11 +1018,13 @@ body.pixel-font #timer-unit{font-size:8px}
       <option value="blok">▨ Meşgul / Blok</option>
     </select>
     <div id="cal-f-qwrap" style="display:none;margin-bottom:8px"><div class="ilabel" style="margin-bottom:3px">KAÇ SORU (hedef)</div><input class="inp" id="cal-f-q" type="number" min="0" placeholder="ör. 30"></div>
+    <div class="ilabel" style="margin-bottom:3px">GÜN (taşımak için değiştir)</div>
+    <input class="inp" id="cal-f-date" type="date" style="margin-bottom:8px">
     <div class="irow mb8">
       <div class="igrp"><div class="ilabel">BAŞLANGIÇ</div><input class="inp" id="cal-f-start" type="time"></div>
       <div class="igrp"><div class="ilabel">BİTİŞ</div><input class="inp" id="cal-f-end" type="time"></div>
     </div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);margin-bottom:8px;cursor:pointer"><input type="checkbox" id="cal-f-remind"> 🔔 Hatırlatıcı kur</label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);margin-bottom:8px;cursor:pointer"><input type="checkbox" id="cal-f-remind"> 🔔 Hatırlatıcı kur (olay saatinde bildirim)</label>
     <div class="ilabel" style="margin-bottom:3px">XP ÖDÜLÜ (tamamlayınca)</div>
     <input class="inp" id="cal-f-xp" type="number" min="0" value="0" style="margin-bottom:12px">
     <div id="cal-pop-detail" style="display:none;font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px"></div>
@@ -1329,25 +1337,6 @@ body.pixel-font #timer-unit{font-size:8px}
   </div>
 
 
-  <!-- DAILY ACTIONS -->
-  <div class="block">
-    <div class="blabel">■ Bugünkü Yaptıkların</div>
-    <input class="inp" id="char-act-text" placeholder="Örn: 1 saat fizik çalıştım" style="margin-bottom:8px">
-    <div class="irow mb8">
-      <div class="igrp"><div class="ilabel">KATEGORİ</div>
-        <select class="inp" id="char-act-cat">
-          <option value="ruhsal">🧘 RUHSAL</option>
-          <option value="zeka">🧠 ZEKA</option>
-          <option value="spor">💪 SPOR</option>
-          <option value="akademi" selected>📚 AKADEMİ</option>
-          <option value="eglence">🎮 EĞLENCE</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn primary fw mb8" onclick="addCharAction()">+ EKLE</button>
-    <div id="char-act-list"></div>
-    <div id="char-act-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;padding:8px 0">Bugün için kayıt yok.</div>
-  </div>
 </div>
 
 <!-- ══════════ PAGE: SHOP ══════════ -->
@@ -1484,9 +1473,12 @@ body.pixel-font #timer-unit{font-size:8px}
     <div style="font-size:8px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:8px">Her çözülen soru <b style="color:var(--bright)">1 kuruş</b>. Deneme neti: 100–105 → 1000₺ · 105–110 → 2500₺ · 110+ → 5000₺. &nbsp; <b style="color:var(--bright)">1 kuruş = 100 XP</b>.</div>
   </div>
   <div class="block">
-    <div class="blabel">■ Aktarım</div>
-    <button class="btn primary fw mb8" onclick="bankToXP()">💸 XP HESABINA AKTAR (bankadan)</button>
-    <button class="btn fw" onclick="xpToBank()">🏦 SORU BANKASINA AKTAR (XP'den)</button>
+    <div class="blabel">■ İşlemler</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn primary" style="flex:1;flex-direction:column;gap:2px;padding:8px 4px;font-size:8px;line-height:1.3" onclick="bankToXP()"><span style="font-size:16px">💸</span>XP'YE AKTAR</button>
+      <button class="btn" style="flex:1;flex-direction:column;gap:2px;padding:8px 4px;font-size:8px;line-height:1.3" onclick="xpToBank()"><span style="font-size:16px">🏦</span>XP'DEN AL</button>
+      <button class="btn" style="flex:1;flex-direction:column;gap:2px;padding:8px 4px;font-size:8px;line-height:1.3;border-color:var(--yellow);color:var(--yellow)" onclick="bankWithdraw()"><span style="font-size:16px">💵</span>PARA ÇEK</button>
+    </div>
   </div>
   <div class="block">
     <div class="blabel">■ Hesap Aktiviteleri</div>
@@ -1630,7 +1622,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.20.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.21.0</div>
     </div>
   </div>
 </div>
@@ -2540,7 +2532,7 @@ document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     // going to background: make sure the OS-level alerts are armed
     if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-    scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); }catch(e){}
+    scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); scheduleCalendarReminders(); }catch(e){}
     return;
   }
   // back in foreground
@@ -2564,7 +2556,7 @@ document.addEventListener('visibilitychange', function(){
 // extra safety: arm alerts right before the page is frozen/hidden on Android
 ['pagehide','freeze','blur'].forEach(ev=>window.addEventListener(ev,function(){
   if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
-  scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); }catch(e){}
+  scheduleBossNotification(); try{ scheduleSrsNotification(); scheduleHabitReminders(); scheduleCalendarReminders(); }catch(e){}
 }));
 
 // ════════════════════════════════════════
@@ -2785,10 +2777,21 @@ function xpToBank(){
   save(); renderBank(); try{ renderXP(); }catch(e){}
   notify('✓ '+k+' kuruş aktarıldı');
 }
+function bankWithdraw(){
+  const bal=_bankKurus(); if(bal<=0){ notify('Bakiye yok'); return; }
+  const raw=prompt('Kaç TL çekmek istiyorsun?\n(bakiye: '+_fmtTL(bal)+')', String(Math.floor(bal/100)));
+  if(raw===null) return;
+  let tl=parseFloat(String(raw).replace(',','.')); if(!(tl>0)){ notify('Geçersiz miktar'); return; }
+  let k=Math.round(tl*100); if(k>bal) k=bal;
+  S.bankSpentKurus=(S.bankSpentKurus||0)+k;
+  _bankLogAdd('withdraw','💵 Para çekildi: '+_fmtTL(k), -k);
+  save(); renderBank();
+  notify('💵 '+_fmtTL(k)+' çekildi');
+}
 // ════════════════════════════════════════
 // TAKVİM (haftalık zaman gridi + olay ekleme)
 // ════════════════════════════════════════
-const CAL_START=5, CAL_END=24, CAL_HPX=44;
+const CAL_START=5, CAL_END=24, CAL_HPX=52;
 let _calWeekOffset=0, _calEditId=null, _calDraft=null;
 const CAL_TYPE_STYLE={ std:{bg:'#2a5a8a',bd:'#66ccff'}, soru:{bg:'#2f6b2f',bd:'var(--green)'}, konu:{bg:'#6b6b1a',bd:'var(--yellow)'}, blok:{bg:'transparent',bd:'#777'} };
 function _calWeekDatesArr(off){ const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+off*7); const a=[]; for(let i=0;i<7;i++){const d=new Date(mon); d.setDate(d.getDate()+i); a.push(_dstr(d));} return a; }
@@ -2810,18 +2813,51 @@ function renderCalendar(){
   html+='</div>';
   dates.forEach((ds)=>{
     html+='<div class="cal-daycol'+(ds===t?' today':'')+'" style="height:'+bodyH+'px" onclick="calGridClick(event,\''+ds+'\')">';
-    (S.calEvents||[]).filter(e=>e.date===ds).forEach(ev=>{
+    const laid=_layoutDayEvents((S.calEvents||[]).filter(e=>e.date===ds));
+    laid.forEach(({ev,col,cols})=>{
       const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std;
       const top=Math.max(0,((ev.startMin||0)-CAL_START*60)/60*CAL_HPX);
-      const eh=Math.max(15,(((ev.endMin||((ev.startMin||0)+60))-(ev.startMin||0))/60)*CAL_HPX-2);
+      const eh=Math.max(16,(((ev.endMin||((ev.startMin||0)+60))-(ev.startMin||0))/60)*CAL_HPX-2);
       const blok=ev.type==='blok';
       const bgStyle=blok?'background:transparent;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 5px,transparent 5px 11px);':('background:'+st.bg+';');
-      html+='<div class="cal-ev'+(ev.done?' done':'')+'" style="top:'+top+'px;height:'+eh+'px;'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+(ev.done?'✓ ':'')+_he(ev.title||(blok?'Meşgul':'(başlıksız)'))+'<span class="cal-ev-t">'+_minToTime(ev.startMin||0)+'</span></div>';
+      // çakışan olaylar için sütun genişliği (dikey bölme)
+      const wpct=100/cols, gap=cols>1?1.5:0;
+      const leftCss='calc('+(col*wpct)+'% + 2px)';
+      const widthCss='calc('+wpct+'% - '+(4+gap)+'px)';
+      const qbadge=(ev.type==='soru'&&ev.questions>0)?('<span class="cal-ev-q">'+ev.questions+'❓</span>'):'';
+      const titleTxt=_he(ev.title||(blok?'Meşgul':'(başlıksız)'));
+      html+='<div class="cal-ev'+(ev.done?' done':'')+'" style="top:'+top+'px;height:'+eh+'px;left:'+leftCss+';width:'+widthCss+';'+bgStyle+'border-left:3px solid '+st.bd+'" onclick="event.stopPropagation();calOpenEvent(\''+ev.id+'\')">'+
+        '<div class="cal-ev-top">'+(ev.done?'✓ ':'')+'<span class="cal-ev-title">'+titleTxt+'</span>'+qbadge+'</div>'+
+        '<span class="cal-ev-t">'+_minToTime(ev.startMin||0)+'</span></div>';
     });
     html+='</div>';
   });
   html+='</div>';
   wrap.innerHTML=html;
+}
+// Bir günün olaylarını çakışmaya göre sütunlara yerleştir (dikey bölme)
+function _layoutDayEvents(evs){
+  const arr=evs.map(ev=>({ev, _s:ev.startMin||0, _e:Math.max((ev.startMin||0)+16, ev.endMin||((ev.startMin||0)+60))}));
+  arr.sort((a,b)=> (a._s-b._s) || (a._e-b._e));
+  const out=[]; let cluster=[], clusterEnd=-1;
+  const flush=()=>{
+    const colEnds=[];
+    cluster.forEach(it=>{
+      let placed=-1;
+      for(let c=0;c<colEnds.length;c++){ if(colEnds[c]<=it._s){ placed=c; colEnds[c]=it._e; break; } }
+      if(placed<0){ placed=colEnds.length; colEnds.push(it._e); }
+      it._col=placed;
+    });
+    const nc=Math.max(1,colEnds.length);
+    cluster.forEach(it=> out.push({ev:it.ev, col:it._col, cols:nc}));
+    cluster=[];
+  };
+  arr.forEach(it=>{
+    if(cluster.length && it._s>=clusterEnd){ flush(); clusterEnd=-1; }
+    cluster.push(it); clusterEnd=Math.max(clusterEnd, it._e);
+  });
+  if(cluster.length) flush();
+  return out;
 }
 function calGridClick(ev, ds){
   const col=ev.currentTarget, rect=col.getBoundingClientRect();
@@ -2838,6 +2874,7 @@ function calPopOpen(id, date, startMin, endMin){
   if(!ev) return;
   _calEditId=id||null; _calDraft={date:ev.date};
   g('cal-pop-title').textContent = isNew?'OLAY EKLE':'OLAYI DÜZENLE';
+  const df=g('cal-f-date'); if(df) df.value=ev.date||today();
   g('cal-f-title').value=ev.title||'';
   g('cal-f-desc').value=ev.desc||'';
   g('cal-f-type').value=ev.type||'std';
@@ -2862,21 +2899,71 @@ function calSave(){
   if(endMin==null||endMin<=startMin) endMin=startMin+60;
   if(!title && type!=='blok'){ notify('Başlık gir'); return; }
   const q=parseInt(g('cal-f-q').value)||0, xp=Math.max(0,parseInt(g('cal-f-xp').value)||0), remind=g('cal-f-remind').checked, desc=g('cal-f-desc').value||'';
+  const date=((g('cal-f-date')||{}).value)||_calDraft.date||today();
   S.calEvents=S.calEvents||[];
   if(_calEditId){
-    const ev=S.calEvents.find(x=>x.id===_calEditId); if(ev) Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remind,xp});
+    const ev=S.calEvents.find(x=>x.id===_calEditId); if(ev) Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remind,xp,date});
   } else {
-    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date:_calDraft.date, startMin, endMin, title, desc, type, questions:q, remind, xp, done:false });
+    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remind, xp, done:false });
   }
-  save(); calPopClose(); renderCalendar();
-  notify('✓ Kaydedildi');
+  save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
+  if(remind){ _ensureNotifPerm(); scheduleCalendarReminders(); notify('🔔 Kaydedildi — hatırlatıcı kuruldu'); }
+  else { scheduleCalendarReminders(); notify('✓ Kaydedildi'); }
 }
-function calDelete(){ if(!_calEditId) return; if(!confirm('Bu olay silinsin mi?')) return; S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_calEditId); save(); calPopClose(); renderCalendar(); notify('🗑 Silindi'); }
+// ── Takvim hatırlatıcıları (olay başlangıç saatinde bildirim) ──
+const _CAL_ID_OFFSET = 400000;
+function _hashStr(s){ s=String(s); let h=0; for(let i=0;i<s.length;i++){ h=(h*31 + s.charCodeAt(i))|0; } return Math.abs(h); }
+function _calNotifId(id){ return _CAL_ID_OFFSET + (_hashStr(id) % 1000000000); }
+function _eventStartDate(ev){ if(!ev.date) return null; const p=ev.date.split('-').map(Number); const dt=new Date(p[0],(p[1]||1)-1,p[2]||1); dt.setHours(0,0,0,0); dt.setMinutes(ev.startMin||0); return dt; }
+function _ensureNotifPerm(){ try{ if(('Notification' in window) && Notification.permission==='default') Notification.requestPermission(); }catch(e){} }
+function scheduleCalendarReminders(){
+  try{
+    (S.calEvents||[]).forEach(ev=>{
+      const id=_calNotifId(ev.id), tag='occal-'+ev.id;
+      const when=_eventStartDate(ev);
+      if(!ev.remind || ev.done || !when || when.getTime()<=Date.now()){ if(_isNative()) _nativeCancel(id); else swPost({type:'cancel',tag}); return; }
+      const title='📅 TAKVİM', body=(ev.title||'Olay')+' — '+_minToTime(ev.startMin||0)+' başlıyor';
+      if(_isNative()){ _nativeSchedule(id, when.getTime(), title, body); }
+      else if(('Notification' in window) && Notification.permission==='granted'){ swPost({type:'schedule', at:when.getTime(), tag, kind:'cal', title, body, icon:_NOTIF_ICON}); }
+    });
+  }catch(e){}
+}
+function calDelete(){ if(!_calEditId) return; if(!confirm('Bu olay silinsin mi?')) return; const _id=_calEditId; S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_id); try{ if(_isNative()) _nativeCancel(_calNotifId(_id)); else swPost({type:'cancel',tag:'occal-'+_id}); }catch(e){} save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){} notify('🗑 Silindi'); }
 function calToggleDone(){
   if(!_calEditId) return; const ev=(S.calEvents||[]).find(x=>x.id===_calEditId); if(!ev) return;
   ev.done=!ev.done;
   if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
-  save(); calPopClose(); renderCalendar();
+  save(); calPopClose(); renderCalendar(); scheduleCalendarReminders(); try{ renderHqCalTasks(); }catch(e){}
+}
+// HQ'da bugünün takvim olayını tamamla
+function hqCalToggle(id){
+  const ev=(S.calEvents||[]).find(x=>x.id===id); if(!ev) return;
+  ev.done=!ev.done;
+  if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; addXP(ev.xp,'Takvim: '+(ev.title||'olay')); notify('✓ Tamamlandı +'+ev.xp+' XP'); }
+  save(); renderHqCalTasks(); try{ if(g('page-calendar')&&g('page-calendar').classList.contains('visible')) renderCalendar(); }catch(e){}
+}
+// HQ'da bugünün takvim olayları: sayacın altında, zaman sırasına göre, açıklama görünür, tamamla butonlu
+function renderHqCalTasks(){
+  const box=g('hq-cal-tasks'); if(!box) return;
+  const t=today();
+  const evs=(S.calEvents||[]).filter(e=>e.date===t).sort((a,b)=>(a.startMin||0)-(b.startMin||0));
+  if(!evs.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.style.display='block';
+  const rows=evs.map(ev=>{
+    const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std;
+    const time=_minToTime(ev.startMin||0)+(ev.endMin?('-'+_minToTime(ev.endMin)):'');
+    const qtag=(ev.type==='soru'&&ev.questions>0)?(' · '+ev.questions+' soru'):'';
+    const desc=ev.desc?('<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.5;margin-top:2px">'+_he(ev.desc)+'</div>'):'';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-left:3px solid '+st.bd+';background:var(--mid);border-radius:6px;margin-bottom:5px'+(ev.done?';opacity:.5':'')+'">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:8px;color:var(--bright);letter-spacing:1px">'+time+qtag+'</div>'+
+        '<div style="font-size:10px;color:var(--white);letter-spacing:.5px'+(ev.done?';text-decoration:line-through':'')+'">'+_he(ev.title||'(başlıksız)')+'</div>'+
+        desc+
+      '</div>'+
+      '<button onclick="hqCalToggle(\''+ev.id+'\')" style="flex-shrink:0;background:none;border:1px solid '+(ev.done?'var(--green)':'var(--bd2)')+';color:'+(ev.done?'var(--green)':'var(--muted)')+';border-radius:5px;font-size:12px;width:26px;height:26px;cursor:pointer">✓</button>'+
+    '</div>';
+  }).join('');
+  box.innerHTML='<div class="blabel" style="margin-bottom:6px">📅 Bugünün Programı</div>'+rows;
 }
 
 // ════════════════════════════════════════
@@ -6160,7 +6247,7 @@ function srAddFromTopic(name, quiet){
   }
   const id=String(Date.now())+'-'+Math.floor((typeof performance!=='undefined'?performance.now():0)%100000);
   S.srItems.push({ id, topic:name, ease:2.5, interval:0, reps:0, lapses:0, due:today(), created:today(), last:null });
-  try{ renderSrs(); renderHqToday(); scheduleSrsNotification(); }catch(e){}
+  try{ renderSrs(); renderHqToday(); renderHqCalTasks(); scheduleSrsNotification(); }catch(e){}
   if(!quiet){ notify('🧠 Tekrara eklendi: '+name); addLog('Tekrara eklendi (Deneme Ağacı): '+name); }
   return true;
 }
@@ -7924,6 +8011,7 @@ try { cancelBossNotification(); } catch(e){}
 try { rescheduleAllReminders(); } catch(e){}
 try { scheduleSrsNotification(); } catch(e){}
 try { scheduleHabitReminders(); } catch(e){}
+try { scheduleCalendarReminders(); } catch(e){}
 try { scheduleWeeklyNotification(); } catch(e){}
 setTimeout(()=>{ try { maybeShowWeeklyReport(); } catch(e){} }, 800);   // açılış oturunca haftalık raporu göster
 setTimeout(()=>{ try { _checkPendingQ(); } catch(e){} }, 1000);   // arkaplanda biten soru-seansı promptu varsa sor
@@ -7934,7 +8022,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.20.1 başlatıldı.');
+addLog('OVERCLOCK v7.21.0 başlatıldı.');
 </script>
 </body>
 </html>
