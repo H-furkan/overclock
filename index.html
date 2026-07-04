@@ -279,6 +279,8 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .hq-today-row{display:flex;justify-content:space-between;align-items:center;width:100%;background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:9px 11px;margin-bottom:6px;cursor:pointer;text-align:left;border-radius:4px}
 .hq-today-row:last-child{margin-bottom:0}
 .hq-today-go{color:var(--muted);font-size:14px}
+.sync-spin{width:46px;height:46px;border:3px solid rgba(255,255,255,.18);border-top-color:var(--bright);border-radius:50%;animation:syncspin .8s linear infinite}
+@keyframes syncspin{to{transform:rotate(360deg)}}
 
 /* notifications */
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:9500;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
@@ -696,6 +698,12 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- SYNC LOGIN OVERLAY -->
+<!-- SENKRON YÜKLEME (buluttan çekerken) -->
+<div id="sync-overlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.55);align-items:center;justify-content:center;flex-direction:column;gap:14px">
+  <div class="sync-spin"></div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--bright);letter-spacing:3px">SENKRONLANIYOR…</div>
+</div>
+
 <!-- ERİŞİM KİLİDİ: varsayılan AÇIK; yalnızca izinli hesap girince kapanır (çevrimdışı/atlama yok) -->
 <div id="auth-overlay" style="display:flex;position:fixed;inset:0;background:#000;z-index:100000;align-items:center;justify-content:center;padding:24px">
   <div style="width:100%;max-width:340px;background:var(--deep);border:1px solid var(--bd2);padding:22px">
@@ -1465,7 +1473,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.8</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.9</div>
     </div>
   </div>
 </div>
@@ -7039,6 +7047,10 @@ const ALLOWED_UIDS = ['pjhvN5VDYYeqPQVtxPJRKMOgGHF2'];
 function _isAllowedUid(uid){ return ALLOWED_UIDS.indexOf(String(uid||''))>=0; }
 function showAuth(){ const o=g('auth-overlay'); if(o) o.style.display='flex'; }
 function hideAuth(){ const o=g('auth-overlay'); if(o) o.style.display='none'; }
+// Senkron yükleme göstergesi (buluttan çekerken)
+let _syncOvTO=null;
+function showSyncing(){ const o=g('sync-overlay'); if(o) o.style.display='flex'; clearTimeout(_syncOvTO); _syncOvTO=setTimeout(hideSyncing, 8000); }
+function hideSyncing(){ clearTimeout(_syncOvTO); const o=g('sync-overlay'); if(o) o.style.display='none'; }
 function _authMsg(t){ const e=g('auth-msg'); if(e) e.textContent=t||''; }
 // Çevrimdışı atlama kaldırıldı — giriş zorunlu. (Eski skip bayrağı temizlenir.)
 function authSkip(){ try{localStorage.removeItem('oc_sync_skip');}catch(e){} }
@@ -7188,6 +7200,7 @@ function _onSignedIn(user){
   }
   _sync.uid = user.uid; _sync.email = user.email;
   hideAuth();
+  showSyncing();   // açılışta buluttan çekerken yükleme göster
   const ref = _sync.db.collection('users').doc(user.uid);
   ref.get().then(snap=>{
     const remote = snap.exists ? snap.data() : null;
@@ -7198,6 +7211,7 @@ function _onSignedIn(user){
       // local daha yüksekse merge edip otomatik geri yazar.
       _applyRemote(remote);
     }
+    hideSyncing();
     // realtime updates from the other device
     _sync.unsub = ref.onSnapshot(s=>{
       if(!s.exists) return;
@@ -7208,7 +7222,7 @@ function _onSignedIn(user){
       if(d._device === _deviceId()) return;            // kendi yazımızın echo'su
       _applyRemote(d);
     }, ()=>{});
-  }).catch(()=>{ setSyncStatus('⚠ Buluta erişilemedi.'); });
+  }).catch(()=>{ hideSyncing(); setSyncStatus('⚠ Buluta erişilemedi.'); logErr('Buluta erişilemedi — bağlantını kontrol et'); });
   const lo=g('sync-logout'); if(lo) lo.style.display='block';
   const op=g('sync-login-open'); if(op) op.style.display='none';
   // hesap kimliği (UID) göster — engelleme/kural ayarı için kullanıcı console'a girmeden görebilsin
@@ -7294,7 +7308,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.8 başlatıldı.');
+addLog('OVERCLOCK v7.17.9 başlatıldı.');
 </script>
 </body>
 </html>
