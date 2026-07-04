@@ -282,7 +282,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .sync-spin{width:46px;height:46px;border:3px solid rgba(255,255,255,.18);border-top-color:var(--bright);border-radius:50%;animation:syncspin .8s linear infinite}
 @keyframes syncspin{to{transform:rotate(360deg)}}
 /* ── TAKVİM ── */
-.cal-grid{display:inline-grid;grid-template-columns:40px repeat(7,86px)}
+.cal-grid{display:grid;width:100%;grid-template-columns:34px repeat(7,minmax(58px,1fr))}
 .cal-hcell{padding:5px 2px;text-align:center;font-size:9px;font-weight:700;color:var(--bright);letter-spacing:1px;border-bottom:1px solid var(--bd2)}
 .cal-hcell.today{color:var(--white);background:rgba(255,255,255,.05)}
 .cal-timecol{position:relative}
@@ -1530,7 +1530,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.2</div>
     </div>
   </div>
 </div>
@@ -2682,7 +2682,7 @@ function xpToBank(){
 // ════════════════════════════════════════
 // TAKVİM (haftalık zaman gridi + olay ekleme)
 // ════════════════════════════════════════
-const CAL_START=6, CAL_END=24, CAL_HPX=44;
+const CAL_START=5, CAL_END=24, CAL_HPX=44;
 let _calWeekOffset=0, _calEditId=null, _calDraft=null;
 const CAL_TYPE_STYLE={ std:{bg:'#2a5a8a',bd:'#66ccff'}, soru:{bg:'#2f6b2f',bd:'var(--green)'}, konu:{bg:'#6b6b1a',bd:'var(--yellow)'}, blok:{bg:'transparent',bd:'#777'} };
 function _calWeekDatesArr(off){ const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+off*7); const a=[]; for(let i=0;i<7;i++){const d=new Date(mon); d.setDate(d.getDate()+i); a.push(_dstr(d));} return a; }
@@ -7518,7 +7518,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.18.1 başlatıldı.');
+addLog('OVERCLOCK v7.18.2 başlatıldı.');
 </script>
 </body>
 </html>
