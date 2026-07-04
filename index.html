@@ -737,6 +737,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem" onclick="goTab(this,'planner')">📅 DAILY PLANNER</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
+  <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
   <button class="navitem" onclick="goTab(this,'srs')">🧠 ARALIKLI TEKRAR</button>
   <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
@@ -1161,25 +1162,6 @@ body.pixel-font #timer-unit{font-size:8px}
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px;line-height:1.5">XP, planner görevi/hatırlatıcı tamamlama ve session bitirme'den birikir. SV atlayınca +1 stat puanı kazanırsın, sağdaki statlardan birine yatır.</div>
   </div>
 
-  <!-- SPIDER CHART -->
-  <div class="block">
-    <div class="blabel">■ Spider — Hayat Dağılımı</div>
-    <canvas id="char-spider" style="width:100%;max-width:360px;height:280px;display:block;margin:0 auto"></canvas>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;font-size:9px;color:var(--bright);letter-spacing:1px">
-      <span>🧘 RUHSAL: <b id="spd-ruhsal" style="color:var(--white)">0</b></span>
-      <span>🧠 ZEKA: <b id="spd-zeka" style="color:var(--white)">0</b></span>
-      <span>💪 SPOR: <b id="spd-spor" style="color:var(--white)">0</b></span>
-      <span>📚 AKADEMİ: <b id="spd-akademi" style="color:var(--white)">0</b></span>
-      <span>🎮 EĞLENCE: <b id="spd-eglence" style="color:var(--white)">0</b></span>
-    </div>
-  </div>
-
-  <!-- SPIDER DECAY WARNINGS -->
-  <div class="block" id="decay-warn-block" style="display:none">
-    <div class="blabel" style="color:var(--red)">⚠ SPIDER DECAY UYARILARI</div>
-    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.7">3 günden fazla bir kategoriye eylem girmezsen, spider grafiğindeki o değer her gün -1 azalır. (Statlar artık azalmaz — sadece spider.)</div>
-    <div id="decay-warn-list"></div>
-  </div>
 
   <!-- DAILY ACTIONS -->
   <div class="block">
@@ -1338,6 +1320,26 @@ body.pixel-font #timer-unit{font-size:8px}
 
 </div>
 
+<!-- ══════════ PAGE: SORU BANKASI ══════════ -->
+<div id="page-bank" class="page">
+  <div class="block" style="text-align:center">
+    <div style="font-size:8px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">🏦 SORU BANKASI · BAKİYE</div>
+    <div id="bank-balance" style="font-family:'Orbitron',monospace;font-size:34px;font-weight:900;color:var(--green);line-height:1.1">0,00 TL</div>
+    <div id="bank-xp-note" style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px"></div>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;line-height:1.7;margin-top:8px">Her çözülen soru <b style="color:var(--bright)">1 kuruş</b>. Deneme neti: 100–105 → 1000₺ · 105–110 → 2500₺ · 110+ → 5000₺. &nbsp; <b style="color:var(--bright)">1 kuruş = 100 XP</b>.</div>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Aktarım</div>
+    <button class="btn primary fw mb8" onclick="bankToXP()">💸 XP HESABINA AKTAR (bankadan)</button>
+    <button class="btn fw" onclick="xpToBank()">🏦 SORU BANKASINA AKTAR (XP'den)</button>
+  </div>
+  <div class="block">
+    <div class="blabel">■ Hesap Aktiviteleri</div>
+    <div id="bank-log"></div>
+    <div id="bank-log-empty" style="font-size:10px;color:var(--dim);letter-spacing:1px;padding:12px 0">Henüz işlem yok. Soru çöz / deneme gir → bakiye birikir.</div>
+  </div>
+</div>
+
 <!-- ══════════ PAGE: DENEME AĞACI ══════════ -->
 <div id="page-tree" class="page">
   <div class="block">
@@ -1473,7 +1475,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.17.9</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.18.0</div>
     </div>
   </div>
 </div>
@@ -1728,6 +1730,10 @@ function defState() {
     exams:[],                     // [{id,date,type,name,nets:{},total,wrongTopics:[normKey]}]
     topicProgress:{},             // (deprecated v7.5)
     questionLog:{},               // {subject: totalCount}
+    // ── SORU BANKASI (para) ── bakiye = earned - spent (kuruş), ikisi monoton (sync-güvenli)
+    bankEarnedKurus:0,            // toplam kazanılan kuruş (soru + deneme + XP'den aktarım)
+    bankSpentKurus:0,             // toplam çekilen kuruş (XP hesabına aktarım)
+    bankLog:[],                   // [{t,date,type,text,delta}] — hesap aktiviteleri
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
     subjectCoeff:{},              // ders → zorluk katsayısı (boşsa _DEF_COEFF kullanılır)
@@ -2005,6 +2011,7 @@ function goTab(btn, name) {
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
   if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
   if (name === 'srs') setTimeout(()=>{ try{ renderSrs(); }catch(e){} }, 20);
+  if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
   applyBackground(name);
@@ -2510,9 +2517,10 @@ function qModalSubmit(){
   S.prodSessions = S.prodSessions||[];
   S.prodSessions.push({ date: today(), subject: subj, durationMin: _qCtx.durationMin, questions: n, points: pts });
   if(S.prodSessions.length>300) S.prodSessions = S.prodSessions.slice(-300);
+  bankEarn(n, 'soru', n+' soru çözüldü ('+subj+')');   // her soru 1 kuruş → soru bankası
   S._pendingQ=null; _qCtx=null; save();
-  try{ renderQuestionStats(); renderIdealDuration(); }catch(e){}
-  notify('✓ '+n+' soru kaydedildi (+'+pts+' puan)');
+  try{ renderQuestionStats(); renderIdealDuration(); renderBank(); }catch(e){}
+  notify('✓ '+n+' soru kaydedildi (+'+pts+' puan · +'+n+' kr)');
   addLog('Seans sonu: '+n+' soru ('+subj+', '+pts+' puan)');
 }
 function qModalSkip(){ const m=g('q-modal'); if(m) m.style.display='none'; _qCtx=null; S._pendingQ=null; save(); }
@@ -2580,6 +2588,54 @@ function renderCoeffEditor(){
   ).join('');
 }
 function setCoeff(subject, val){ const v=parseFloat(val); if(!(v>0)) return; S.subjectCoeff=S.subjectCoeff||{}; S.subjectCoeff[subject]=v; save(); }
+
+// ════════════════════════════════════════
+// SORU BANKASI (para) — 1 soru = 1 kuruş, 1 kuruş = 100 XP
+// ════════════════════════════════════════
+function _bankKurus(){ return Math.max(0, (S.bankEarnedKurus||0) - (S.bankSpentKurus||0)); }
+function _fmtTL(k){ return (k/100).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL'; }
+function _bankLogAdd(type,text,delta){ S.bankLog=S.bankLog||[]; S.bankLog.unshift({t:nowStr(),date:today(),type,text,delta}); if(S.bankLog.length>200) S.bankLog=S.bankLog.slice(0,200); }
+function bankEarn(kurus,type,text){ if(!(kurus>0)) return; S.bankEarnedKurus=(S.bankEarnedKurus||0)+Math.round(kurus); _bankLogAdd(type,text,+Math.round(kurus)); }
+function _examNetRewardKurus(total){ if(total>=110) return 5000*100; if(total>=105) return 2500*100; if(total>=100) return 1000*100; return 0; }
+function bankToXP(){
+  const bal=_bankKurus(); if(bal<=0){ notify('Bakiye yok'); return; }
+  const raw=prompt('Kaç kuruş XP hesabına aktarılsın?\n(bakiye: '+bal+' kuruş = '+_fmtTL(bal)+')  ·  1 kuruş = 100 XP', String(bal));
+  if(raw===null) return;
+  let k=Math.floor(parseFloat(raw)); if(!(k>0)){ notify('Geçersiz miktar'); return; }
+  k=Math.min(k,bal);
+  S.bankSpentKurus=(S.bankSpentKurus||0)+k;
+  S.totalXp=(S.totalXp||0)+k*100;
+  _bankLogAdd('transfer','Bankadan XP\'ye: '+k+' kr → +'+(k*100)+' XP', -k);
+  save(); renderBank(); try{ renderXP(); }catch(e){}
+  notify('✓ '+(k*100)+' XP aktarıldı');
+}
+function xpToBank(){
+  const xpBal=shopBalance(); if(xpBal<100){ notify('Yeterli XP yok (en az 100 XP)'); return; }
+  const raw=prompt('Kaç XP soru bankasına aktarılsın?\n(harcanabilir XP: '+xpBal+')  ·  100 XP = 1 kuruş', String(xpBal-(xpBal%100)));
+  if(raw===null) return;
+  let x=Math.floor(parseFloat(raw)); if(!(x>=100)){ notify('En az 100 XP gerekli'); return; }
+  x=Math.min(x,xpBal); x=x-(x%100);
+  const k=x/100;
+  S.spentXp=(S.spentXp||0)+x;
+  S.bankEarnedKurus=(S.bankEarnedKurus||0)+k;
+  _bankLogAdd('transfer','XP\'den bankaya: '+x+' XP → +'+k+' kr', +k);
+  save(); renderBank(); try{ renderXP(); }catch(e){}
+  notify('✓ '+k+' kuruş aktarıldı');
+}
+function renderBank(){
+  const bal=g('bank-balance'); if(bal) bal.textContent=_fmtTL(_bankKurus());
+  const xn=g('bank-xp-note'); if(xn) xn.textContent='Harcanabilir XP: '+shopBalance()+'  ·  Bakiye: '+_bankKurus()+' kuruş';
+  const el=g('bank-log'); if(!el) return;
+  const log=S.bankLog||[];
+  const emp=g('bank-log-empty'); if(emp) emp.style.display=log.length?'none':'block';
+  el.innerHTML=log.map(e=>{
+    const pos=(e.delta||0)>=0;
+    return '<div class="fbet" style="padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.06)">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:9px;color:var(--bright);word-break:break-word">'+_he(e.text||'')+'</div>'+
+      '<div style="font-size:7px;color:var(--muted)">'+_he(e.date||'')+' '+_he(e.t||'')+'</div></div>'+
+      '<b style="font-family:Orbitron,monospace;font-size:10px;color:'+(pos?'var(--green)':'var(--red)')+';flex-shrink:0;margin-left:8px">'+(pos?'+':'')+(e.delta||0)+' kr</b></div>';
+  }).join('');
+}
 
 function renderTimer(){
   const total=(isBreak?S.breakMin:S.focusMin)*60;
@@ -5088,15 +5144,18 @@ function addExam(){
   S.exams.sort((a,b)=> (a.date<b.date?-1:a.date>b.date?1:a.id-b.id));
   wrongTopicKeys.forEach(key => registerWrongTopic(key, examId, date));
   _examWrongChips = [];
+  // Soru bankası: deneme netine göre ödül (100-105→1000TL, 105-110→2500TL, 110+→5000TL)
+  const _netReward = _examNetRewardKurus(Math.round(total*100)/100);
+  if(_netReward>0){ bankEarn(_netReward, 'deneme', 'Deneme '+type+' — '+total.toFixed(2)+' net → '+_fmtTL(_netReward)); }
   save();
   // clear net inputs
   examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); if(el) el.value=''; });
   const nm=g('exam-name'); if(nm) nm.value='';
   updateExamPreview();
-  notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET'+(wrongTopicKeys.length?' // +'+wrongTopicKeys.length+' yanlış konu':''));
-  addLog('Deneme: '+type+(name?' ('+name+')':'')+' — '+total.toFixed(2)+' net'+(wrongTopicKeys.length?' ['+wrongTopicKeys.length+' konu]':''));
+  notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET'+(_netReward>0?' // 🏦 +'+_fmtTL(_netReward):'')+(wrongTopicKeys.length?' // +'+wrongTopicKeys.length+' yanlış konu':''));
+  addLog('Deneme: '+type+(name?' ('+name+')':'')+' — '+total.toFixed(2)+' net'+(_netReward>0?' (+'+_fmtTL(_netReward)+' banka)':'')+(wrongTopicKeys.length?' ['+wrongTopicKeys.length+' konu]':''));
   _netChartType=type; document.querySelectorAll('#ng-TYT,#ng-AYT').forEach(b=>b.classList.toggle('active',b.id==='ng-'+type));
-  renderExam();
+  renderExam(); try{ renderBank(); }catch(e){}
 }
 
 function deleteExam(id){
@@ -6529,7 +6588,7 @@ function drawNumericChart(h,cid){
 // ════════════════════════════════════════
 function renderAll(){
   renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown(); try{ renderSrsBadge(); }catch(e){}
-  try{ renderSessionType(); renderIdealDuration(); renderCoeffEditor(); }catch(e){}
+  try{ renderSessionType(); renderIdealDuration(); renderCoeffEditor(); renderBank(); }catch(e){}
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
   renderRestDayUI();
@@ -7082,7 +7141,7 @@ function authLogout(){
 // Kümülatif alanlar sync sırasında ASLA geri gitmemeli — cihaz saatine güvenmek
 // yerine bunlarda her zaman max(local, remote) alınır. Böylece bir cihaz eski
 // veriyle yazsa bile XP/süre düşmez.
-const _CUM_GLOBAL = ['totalXp','cumFocusSecs','cumBreakSecs','tasksDoneTotal','bestStreak','spentXp'];
+const _CUM_GLOBAL = ['totalXp','cumFocusSecs','cumBreakSecs','tasksDoneTotal','bestStreak','spentXp','bankEarnedKurus','bankSpentKurus'];
 const _CUM_DAILY  = ['xp','todayFocusSecs','todayBreakSecs','tasksDoneToday','waterCount','sessions','kills'];
 function _mergeIncoming(incoming){
   const merged = Object.assign(defState(), incoming);
@@ -7308,7 +7367,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.17.9 başlatıldı.');
+addLog('OVERCLOCK v7.18.0 başlatıldı.');
 </script>
 </body>
 </html>
