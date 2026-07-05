@@ -1872,7 +1872,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.2</div>
     </div>
   </div>
 </div>
@@ -3370,6 +3370,7 @@ function calPopOpen(id, date, startMin, endMin, occDs){
     const _rec=ev.repeat&&ev.repeat!=='none';
     db.textContent=_dOn?('↺ Geri Al'+(_rec?' ('+_calEditDate.slice(5).replace('-','.')+')':'')):('✓ TAMAMLANDI'+(_rec?' ('+_calEditDate.slice(5).replace('-','.')+')':'')); }
   if(dl) dl.style.display=isNew?'none':'block';
+  _calDelReset();
   g('cal-pop').style.display='flex';
   setTimeout(()=>{ try{ g('cal-f-title').focus(); }catch(e){} }, 50);
 }
@@ -3438,7 +3439,31 @@ function scheduleCalendarReminders(){
     });
   }catch(e){}
 }
-function calDelete(){ if(!_calEditId) return; if(!confirm('Bu olay silinsin mi?')) return; const _id=_calEditId; S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_id); try{ if(_isNative()) _nativeCancel(_calNotifId(_id)); else swPost({type:'cancel',tag:'occal-'+_id}); }catch(e){} save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){} notify('🗑 Silindi'); }
+// SİL — native confirm() bazı ortamlarda (LibreWolf/WebView) sessizce engelleniyor;
+// onun yerine İKİ AŞAMALI buton: ilk basış "EMİN MİSİN?", 3.5sn içinde ikinci basış siler.
+let _calDelArm=null, _calDelArmT=null;
+function _calDelReset(){
+  clearTimeout(_calDelArmT); _calDelArm=null;
+  const btn=g('cal-del-btn');
+  if(btn){ btn.textContent='🗑 SİL'; btn.style.background='none'; btn.style.color='var(--red)'; }
+}
+function calDelete(){
+  if(!_calEditId) return;
+  const btn=g('cal-del-btn');
+  if(_calDelArm!==_calEditId){
+    _calDelArm=_calEditId;
+    if(btn){ btn.textContent='❗ EMİN MİSİN?'; btn.style.background='var(--red)'; btn.style.color='#fff'; }
+    clearTimeout(_calDelArmT);
+    _calDelArmT=setTimeout(_calDelReset, 3500);
+    return;
+  }
+  const _id=_calEditId;
+  _calDelReset();
+  S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_id);
+  try{ if(_isNative()) _nativeCancel(_calNotifId(_id)); else swPost({type:'cancel',tag:'occal-'+_id}); }catch(e){}
+  save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
+  notify('🗑 Silindi');
+}
 function calToggleDone(){
   if(!_calEditId) return; const ev=(S.calEvents||[]).find(x=>x.id===_calEditId); if(!ev) return;
   const _x=_evToggleDone(ev, _calEditDate||ev.date);
@@ -9395,7 +9420,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.30.1 başlatıldı.');
+addLog('OVERCLOCK v7.30.2 başlatıldı.');
 </script>
 </body>
 </html>
