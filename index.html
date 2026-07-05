@@ -1865,7 +1865,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.29.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.29.1</div>
     </div>
   </div>
 </div>
@@ -3850,14 +3850,16 @@ function _isoShadow(i,j,fw,fd){
 }
 const GYMX_DRAW={
   fx_bed:(i,j,C)=>{ let o=_isoShadow(i,j,2,3);
-    o+=_isoBox(i,j,2,0.3,24,'#3a2a20');                                    // başlık (duvara yaslı, uzun)
+    o+=_isoBox(i,j,2,0.3,24,'#3a2a20');                                    // başlık (yatağın baş ucu — duvara koyunca yaslanır)
     o+=_isoBox(i,j+0.3,2,2.7,9,'#efece2');                                 // şilte
     const up=p=>[p[0],p[1]-9];
-    o+=_poly([up(_iP(i,j+1.15)),up(_iP(i+2,j+1.15)),up(_iP(i+2,j+3)),up(_iP(i,j+3))],C,_avShade(C,-0.3),1);  // yorgan (üst yüz)
-    o+=_poly([up(_iP(i,j+1.15)),up(_iP(i+2,j+1.15)),up(_iP(i+2,j+1.3)),up(_iP(i,j+1.3))],_avShade(C,0.3),'none',0).replace(' stroke="none" stroke-width="0"','');  // kıvrım
-    o+=_poly([up(_iP(i+2,j+1.15)),[_iP(i+2,j+1.15)[0],_iP(i+2,j+1.15)[1]-0],_iP(i+2,j+3),up(_iP(i+2,j+3))].slice(0,0).concat([up(_iP(i+2,j+1.15)),_iP(i+2,j+1.15),_iP(i+2,j+3),up(_iP(i+2,j+3))]), _avShade(C,-0.35),'none',0).replace(' stroke="none" stroke-width="0"','');
-    o+=_isoBox(i+0.2,j+0.42,0.7,0.5,4,'#ffffff');                          // yastık 1
-    o+=_isoBox(i+1.1,j+0.42,0.7,0.5,4,'#ffffff');                          // yastık 2
+    const A=_iP(i,j+1.4),B=_iP(i+2,j+1.4),Cc=_iP(i+2,j+3),Dd=_iP(i,j+3);
+    o+=_poly([up(B),[B[0],B[1]],[Cc[0],Cc[1]],up(Cc)],_avShade(C,-0.28),'none',0).replace(' stroke="none" stroke-width="0"','');   // yorgan sağ yan
+    o+=_poly([up(Dd),[Dd[0],Dd[1]],[Cc[0],Cc[1]],up(Cc)],_avShade(C,-0.45),'none',0).replace(' stroke="none" stroke-width="0"','');// yorgan sol yan
+    o+=_poly([up(A),up(B),up(Cc),up(Dd)],C,_avShade(C,-0.3),1);            // yorgan üst
+    o+=_poly([up(A),up(B),[_iP(i+2,j+1.55)[0],_iP(i+2,j+1.55)[1]-9],[_iP(i,j+1.55)[0],_iP(i,j+1.55)[1]-9]],_avShade(C,0.28),'none',0).replace(' stroke="none" stroke-width="0"','');  // kıvrım bandı
+    o+=_isoBox(i+0.2,j+0.42,0.7,0.5,4,'#ffffff');
+    o+=_isoBox(i+1.1,j+0.42,0.7,0.5,4,'#ffffff');
     return o; },
   fx_sofa:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
     o+=_isoBox(i,j,2,0.25,16,_avShade(C,-0.12));                           // sırt
@@ -3873,11 +3875,11 @@ const GYMX_DRAW={
     o+='<line x1="'+(a[0]-2)+'" y1="'+(a[1]-27)+'" x2="'+(a[0]-2)+'" y2="'+(a[1]-23)+'" stroke="'+D+'" stroke-width="1.6"/><line x1="'+(a[0]-2)+'" y1="'+(a[1]-19)+'" x2="'+(a[0]-2)+'" y2="'+(a[1]-13)+'" stroke="'+D+'" stroke-width="1.6"/>';
     return o; },
   fx_piano:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
-    o+=_isoBox(i,j,2,0.85,17,C);                                           // gövde
-    o+=_isoBox(i,j,2,0.3,20,_avShade(C,0.12));                             // kapak (arkada hafif yüksek)
+    o+=_isoBox(i,j,2,0.85,14,C);                                           // gövde
+    o+=_isoBox(i,j,2,0.28,17,_avShade(C,0.14));                            // kapak
     const a=_iP(i,j+0.85), b=_iP(i+2,j+0.85);
-    o+=_poly([[a[0],a[1]-10],[b[0],b[1]-10],[b[0],b[1]-5],[a[0],a[1]-5]],'#f2eee2','#14171c',0.8);  // tuş şeridi
-    for(let k=1;k<12;k++){ const p=_iP(i+k*(2/12),j+0.85); o+='<line x1="'+p[0]+'" y1="'+(p[1]-10)+'" x2="'+p[0]+'" y2="'+(p[1]-'+((k%2)?7:5)+')+'" stroke="#14171c" stroke-width="'+((k%3===0)?1.1:0.7)+'"/>'; }
+    o+=_poly([[a[0],a[1]-9],[b[0],b[1]-9],[b[0],b[1]-4.5],[a[0],a[1]-4.5]],'#f2eee2','#14171c',0.8);  // tuş şeridi
+    for(let k=1;k<12;k++){ const p=_iP(i+k*(2/12),j+0.85); const yTop=p[1]-9, yBot=p[1]-((k%2)?6.5:4.5); o+='<line x1="'+p[0]+'" y1="'+yTop+'" x2="'+p[0]+'" y2="'+yBot+'" stroke="#14171c" stroke-width="'+((k%3===0)?1:0.6)+'"/>'; }
     return o; },
   fx_dresser:(i,j,C)=>{ let o=_isoShadow(i,j,2,1); const D=_avShade(C,-0.4);
     o+=_isoBox(i,j,2,0.8,14,C);
@@ -3887,19 +3889,26 @@ const GYMX_DRAW={
     return o; },
   fx_tread:(i,j,C)=>{ let o=_isoShadow(i,j,1,2);
     o+=_isoBox(i,j+0.25,1,1.75,3,'#22262d');                               // koşu yüzeyi
-    const t1=_iP(i+0.5,j+0.7), t2=_iP(i+0.5,j+1.6);
-    o+='<line x1="'+t1[0]+'" y1="'+(t1[1]-3)+'" x2="'+t2[0]+'" y2="'+(t2[1]-3)+'" stroke="#3a4148" stroke-width="0.8" stroke-dasharray="1.5 1.5"/>';   // bant çizgisi
-    o+=_isoBox(i,j,1,0.22,15,C);                                            // konsol direği
-    o+=_isoBox(i-0.02,j-0.02,1.04,0.14,17,_avShade(C,0.15));                // konsol ekranı
-    const r1=_iP(i+0.06,j+0.25), r2=_iP(i+0.06,j+1.1);
-    o+='<line x1="'+r1[0]+'" y1="'+(r1[1]-13)+'" x2="'+r2[0]+'" y2="'+(r2[1]-8)+'" stroke="'+_avShade(C,-0.3)+'" stroke-width="1.4"/>'; // korkuluk
+    const t1=_iP(i+0.5,j+0.65), t2=_iP(i+0.5,j+1.7);
+    o+='<line x1="'+t1[0]+'" y1="'+(t1[1]-3)+'" x2="'+t2[0]+'" y2="'+(t2[1]-3)+'" stroke="#3a4148" stroke-width="0.8" stroke-dasharray="1.6 1.6"/>';
+    o+=_isoBox(i,j,1,0.2,11,C);                                            // konsol
+    const c1=_iP(i+0.5,j+0.1);
+    o+='<rect x="'+(c1[0]-3.4)+'" y="'+(c1[1]-11.5)+'" width="6.8" height="2.6" rx="0.8" fill="'+_avShade(C,0.3)+'"/>';   // küçük ekran
+    const r1=_iP(i+0.04,j+0.2), r2=_iP(i+0.04,j+0.95);
+    o+='<line x1="'+r1[0]+'" y1="'+(r1[1]-10)+'" x2="'+r2[0]+'" y2="'+(r2[1]-6)+'" stroke="'+_avShade(C,-0.25)+'" stroke-width="1.2"/>';
+    const r3=_iP(i+0.96,j+0.2), r4=_iP(i+0.96,j+0.95);
+    o+='<line x1="'+r3[0]+'" y1="'+(r3[1]-10)+'" x2="'+r4[0]+'" y2="'+(r4[1]-6)+'" stroke="'+_avShade(C,-0.25)+'" stroke-width="1.2"/>';
     return o; },
-  fx_rack:(i,j,C)=>{ let o=_isoShadow(i,j,2,1); const D=_avShade(C,-0.4);
-    o+=_isoBox(i,j+0.3,0.15,0.4,16,C)+_isoBox(i+1.85,j+0.3,0.15,0.4,16,C);
-    [6,12].forEach(hh=>{ const a=_iP(i+0.15,j+0.5),b=_iP(i+1.85,j+0.5);
-      o+='<line x1="'+a[0]+'" y1="'+(a[1]-hh)+'" x2="'+b[0]+'" y2="'+(b[1]-hh)+'" stroke="'+D+'" stroke-width="1.8"/>';
-      for(let k=0;k<3;k++){ const p=_iP(i+0.5+k*0.5,j+0.5); o+='<rect x="'+(p[0]-2.6)+'" y="'+(p[1]-hh-2.6)+'" width="5.2" height="2.6" rx="1.3" fill="#454d57" stroke="#20242a" stroke-width="0.7"/>'; }
-    });
+  fx_rack:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
+    o+=_isoBox(i,j,2,1,5,C);                                               // alt tabla
+    o+=_isoBox(i,j,0.14,1,13,_avShade(C,-0.1));                            // sol dikme
+    o+=_isoBox(i+1.86,j,0.14,1,13,_avShade(C,-0.1));                       // sağ dikme
+    o+=_isoBox(i+0.14,j,1.72,1,10,_avShade(C,0.08));                       // üst raf tablası (h10 seviye)
+    for(let r2=0;r2<2;r2++){ const hh=r2? 15.5:7.5;
+      for(let k=0;k<3;k++){ const p=_iP(i+0.45+k*0.55, j+0.5);
+        o+='<rect x="'+(p[0]-4)+'" y="'+(p[1]-hh-2)+'" width="8" height="3.4" rx="1.7" fill="#454d57" stroke="#20242a" stroke-width="0.7"/>';
+        o+='<rect x="'+(p[0]-1.2)+'" y="'+(p[1]-hh-1.3)+'" width="2.4" height="2" fill="#5a6470"/>';
+      } }
     return o; },
   fx_bag:(i,j,C)=>{ let o=_isoShadow(i,j,1,1);
     o+=_isoBox(i+0.15,j+0.15,0.7,0.7,2,'#262b32');
@@ -5786,76 +5795,82 @@ function _pxPainter(buf){
   return {set,R,RR,ELL,TRI};
 }
 function _avFace(P,SK){
-  P.RR(13,13,6,8,2,'#ffffff'); P.RR(25,13,6,8,2,'#ffffff');       // göz akı
-  P.RR(15,15,3,5,1,'#241d1a'); P.RR(27,15,3,5,1,'#241d1a');       // bebek
-  P.set(15,15,'#ffffff'); P.set(27,15,'#ffffff');                  // parıltı
-  P.ELL(10.5,22,2.2,1.4,'#f0a296'); P.ELL(33.5,22,2.2,1.4,'#f0a296'); // allık
-  P.set(20,24,'#8a5a4a'); P.set(21,25,'#8a5a4a'); P.set(22,25,'#8a5a4a'); P.set(23,24,'#8a5a4a'); // gülümseme
+  // kaşlar — kalın, hafif çatık (sert bakış)
+  P.R(12,12,7,2,'#2b211b'); P.R(25,12,7,2,'#2b211b');
+  P.set(18,13,'#2b211b'); P.set(25,13,'#2b211b');
+  // gözler — küçük, keskin
+  P.R(13,15,4,5,'#ffffff'); P.R(27,15,4,5,'#ffffff');
+  P.R(14,16,2,4,'#241d1a'); P.R(28,16,2,4,'#241d1a');
+  P.set(14,16,'#ffffff'); P.set(28,16,'#ffffff');
+  // burun gölgesi + düz sert ağız
+  P.R(21,20,2,1,_avShade(SK,-0.18));
+  P.R(19,25,6,1,'#7a4a3a');
 }
 function _avBaseDraw(P,SK){
   const D=_avShade(SK,-0.14);
-  P.RR(12,29,20,14,4,SK);            // gövde
-  P.RR(7,30,5,12,2,SK); P.RR(32,30,5,12,2,SK);   // kollar
-  P.RR(7,41,5,4,2,SK);  P.RR(32,41,5,4,2,SK);    // eller
-  P.R(15,43,6,8,SK); P.R(23,43,6,8,SK);           // bacaklar
-  P.R(14,50,7,4,SK); P.R(23,50,7,4,SK);           // ayaklar
-  P.RR(6,2,32,27,9,SK);              // kafa (en üstte gövdeyi hafif örter)
-  P.R(12,27,20,3,D);                 // çene altı gölge
+  P.RR(11,29,22,15,3,SK);            // gövde (geniş omuz)
+  P.RR(5,29,5,14,2,SK); P.RR(34,29,5,14,2,SK);   // kollar — gövdeden AYRIK (kontur araya girer)
+  P.RR(5,42,5,5,2,SK);  P.RR(34,42,5,5,2,SK);    // eller
+  P.R(15,44,6,7,SK); P.R(23,44,6,7,SK);           // bacaklar
+  P.R(14,51,7,3,SK); P.R(23,51,7,3,SK);           // ayaklar
+  P.RR(7,2,30,20,8,SK);              // kafa üst (yuvarlak)
+  P.RR(7,12,30,16,3,SK);             // çene — köşeli (sert)
+  P.R(12,28,20,2,D);                 // çene altı gölge
   _avFace(P,SK);
 }
 const AV_HAIR=[
-  {n:'Taç Kirpi', d:(P,C)=>{const H=_avH(C); P.RR(5,7,34,9,3,C); for(let i=0;i<5;i++){ P.TRI(6+i*6,0,7,8,i%2? H.L:C); } P.R(5,14,3,6,C); P.R(36,14,3,6,C); P.R(5,15,34,1,H.D); }},
-  {n:'Düz Kâkül', d:(P,C)=>{const H=_avH(C); P.RR(5,2,34,12,6,C); for(let i=0;i<6;i++) P.set(8+i*5,13,H.D); P.R(5,10,4,8,C); P.R(35,10,4,8,C); }},
-  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.RR(5,2,34,12,6,C); P.RR(4,9,6,28,3,C); P.RR(34,9,6,28,3,C); P.R(5,34,4,2,H.D); P.R(35,34,4,2,H.D); }},
-  {n:'Mohawk', d:(P,C)=>{const H=_avH(C); P.R(19,1,6,10,C); P.TRI(18,-4,8,6,C); P.set(20,0,H.L); P.set(23,2,H.L); }},
-  {n:'Kıvırcık', d:(P,C)=>{const H=_avH(C); P.ELL(11,10,5,5,C); P.ELL(18,6,6,5,C); P.ELL(26,6,6,5,C); P.ELL(33,10,5,5,C); P.ELL(7,15,4,4,C); P.ELL(37,15,4,4,C); P.ELL(22,9,5,4,H.L); }},
-  {n:'At Kuyruğu', d:(P,C)=>{const H=_avH(C); P.RR(5,2,34,12,6,C); P.ELL(39,11,3,3,C); P.RR(38,13,4,16,2,C); P.R(38,20,4,1,H.D); P.R(38,27,4,2,H.D); }},
-  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.RR(6,3,32,8,5,C); P.R(8,10,28,1,H.D); }},
+  {n:'Taç Kirpi', d:(P,C)=>{const H=_avH(C); P.RR(6,6,32,11,6,C); for(let i=0;i<5;i++){ P.TRI(7+i*6,0,6,7,i%2? H.L:C); } P.R(6,15,3,5,C); P.R(35,15,3,5,C); P.R(7,15,30,1,H.D); }},
+  {n:'Düz Kâkül', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); for(let i=0;i<6;i++) P.set(9+i*5,13,H.D); P.R(6,10,4,7,C); P.R(34,10,4,7,C); }},
+  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); P.RR(4,8,5,28,2,C); P.RR(35,8,5,28,2,C); P.R(4,33,4,2,H.D); P.R(36,33,4,2,H.D); }},
+  {n:'Mohawk', d:(P,C)=>{const H=_avH(C); P.R(19,1,6,10,C); P.set(20,0,C); P.set(22,0,C); P.set(24,0,C); P.R(19,4,2,6,H.L); }},
+  {n:'Kıvırcık', d:(P,C)=>{const H=_avH(C); P.ELL(11,10,5.5,5,C); P.ELL(17,6,5.5,5,C); P.ELL(24,5,6,5,C); P.ELL(31,7,5.5,5,C); P.ELL(36,12,4.5,4.5,C); P.ELL(8,15,4,4,C); P.ELL(36,16,3.5,3.5,C); P.ELL(21,8,4,3.5,H.L); }},
+  {n:'At Kuyruğu', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); P.ELL(38,10,3,3,C); P.RR(37,12,4,17,2,C); P.R(37,19,4,1,H.D); P.R(37,27,4,2,H.D); }},
+  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.RR(7,2,30,11,8,C); P.R(8,11,28,2,H.D); }},
 ];
 const AV_ARMOR=[
-  {n:'Tişört', d:(P,C)=>{const H=_avH(C); P.RR(11,29,22,13,3,C); P.R(7,30,5,8,C); P.R(32,30,5,8,C); P.R(19,29,6,1,H.D); P.R(11,40,22,2,H.D); }},
-  {n:'Yelek', d:(P,C)=>{const H=_avH(C); P.RR(11,29,8,13,2,C); P.RR(25,29,8,13,2,C); P.R(18,29,1,13,H.L); P.R(25,29,1,13,H.L); P.R(11,40,8,2,H.D); P.R(25,40,8,2,H.D); }},
-  {n:'Plaka Zırh', d:(P,C)=>{const H=_avH(C); P.RR(11,29,22,12,3,C); P.R(7,30,5,7,C); P.R(32,30,5,7,C); P.R(21,29,1,11,H.D); P.R(11,40,22,3,H.D); P.set(14,32,H.L); P.set(29,32,H.L); P.set(14,37,H.L); P.set(29,37,H.L); P.ELL(9,30.5,4.4,3.2,H.L); P.ELL(35,30.5,4.4,3.2,H.L); P.ELL(9,30,3,2,C); P.ELL(35,30,3,2,C); }},
-  {n:'Cübbe', d:(P,C)=>{const H=_avH(C); P.RR(10,29,24,22,4,C); P.R(7,30,5,13,C); P.R(32,30,5,13,C); P.R(10,39,24,2,H.D); P.R(11,48,22,1,H.L); }},
-  {n:'Kapüşonlu', d:(P,C)=>{const H=_avH(C); P.RR(11,29,22,14,3,C); P.R(7,30,6,13,C); P.R(31,30,6,13,C); P.RR(15,36,14,6,2,H.L); P.R(15,36,14,1,H.D); P.R(19,30,1,4,H.L); P.R(24,30,1,4,H.L); }, o:(P,C,SK)=>{const H=_avH(C); P.RR(4,0,36,31,11,C); P.RR(8,4,28,25,9,SK); P.R(8,26,28,3,_avShade(SK,-0.14)); _avFace(P,SK); P.R(6,26,4,4,H.D); P.R(34,26,4,4,H.D); }},
-  {n:'Ceket', d:(P,C)=>{const H=_avH(C); P.RR(11,29,22,14,3,C); P.R(7,30,6,13,C); P.R(31,30,6,13,C); P.R(21,30,2,12,H.L); P.TRI(15,29,5,4,H.D); P.TRI(24,29,5,4,H.D); P.R(11,41,22,2,H.D); }},
-  {n:'Atlet', d:(P,C)=>{const H=_avH(C); P.RR(14,30,16,12,2,C); P.R(16,28,3,3,C); P.R(25,28,3,3,C); P.R(14,40,16,2,H.D); }},
+  {n:'Tişört', d:(P,C)=>{const H=_avH(C); P.RR(5,29,5,9,2,C); P.RR(34,29,5,9,2,C); P.RR(11,29,22,14,3,C); P.R(19,29,6,1,H.D); P.R(11,41,22,2,H.D); }},
+  {n:'Yelek', d:(P,C)=>{const H=_avH(C); P.R(13,29,8,14,C); P.R(23,29,8,14,C); P.R(21,29,2,14,'#20242a'); P.R(13,29,1,14,H.L); P.R(30,29,1,14,H.L); P.R(13,41,18,2,H.D); }},
+  {n:'Plaka Zırh', d:(P,C)=>{const H=_avH(C); P.RR(5,31,5,8,2,C); P.RR(34,31,5,8,2,C); P.RR(11,29,22,13,3,C); P.R(21,29,1,12,H.D); P.R(11,40,22,3,H.D); P.set(14,32,H.L); P.set(29,32,H.L); P.set(14,37,H.L); P.set(29,37,H.L); P.ELL(7.5,30.5,4.5,3.4,H.L); P.ELL(36.5,30.5,4.5,3.4,H.L); P.ELL(7.5,30,3,2.2,C); P.ELL(36.5,30,3,2.2,C); }},
+  {n:'Cübbe', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,17,2,C); P.RR(34,29,6,17,2,C); P.RR(10,29,24,23,4,C); P.R(10,39,24,2,H.D); P.R(11,49,22,1,H.L); }},
+  {n:'Kapüşonlu', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,15,2,C); P.RR(34,29,6,15,2,C); P.RR(11,29,22,15,3,C); P.RR(15,36,14,7,2,H.L); P.R(15,36,14,1,H.D); P.R(19,30,1,4,H.L); P.R(24,30,1,4,H.L); }, o:(P,C,SK)=>{const H=_avH(C); P.RR(4,0,36,31,11,C); P.RR(8,3,28,24,8,SK); P.R(8,25,28,3,_avShade(SK,-0.14)); _avFace(P,SK); P.R(5,26,4,4,H.D); P.R(35,26,4,4,H.D); }},
+  {n:'Ceket', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,15,2,C); P.RR(34,29,6,15,2,C); P.RR(11,29,22,15,3,C); P.R(21,29,2,15,H.L); P.TRI(14,29,5,4,H.D); P.TRI(25,29,5,4,H.D); P.R(11,42,22,2,H.D); }},
+  {n:'Atlet', d:(P,C)=>{const H=_avH(C); P.RR(14,30,16,13,2,C); P.R(16,28,3,3,C); P.R(25,28,3,3,C); P.R(14,41,16,2,H.D); }},
 ];
 const AV_PANTS=[
-  {n:'Şort', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(15,45,6,3,C); P.R(23,45,6,3,C); P.R(15,47,6,1,H.D); P.R(23,47,6,1,H.D); }},
-  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(15,45,6,6,C); P.R(23,45,6,6,C); }},
-  {n:'Etek', d:(P,C)=>{const H=_avH(C); for(let yy=0;yy<7;yy++){ const w=18+yy*1.4; P.R(Math.round(22-w/2),41+yy,Math.round(w),1,C); } P.R(13,47,18,1,H.D); }},
-  {n:'Şalvar', d:(P,C)=>{const H=_avH(C); P.RR(12,41,20,8,3,C); P.R(14,48,7,2,H.D); P.R(23,48,7,2,H.D); }},
-  {n:'Dar', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(16,45,5,6,C); P.R(24,45,5,6,C); }},
-  {n:'Yırtık', d:(P,C,SK)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(15,45,6,6,C); P.R(23,45,6,6,C); P.R(16,47,3,1,SK); P.R(25,49,3,1,SK); }},
-  {n:'Dizlikli Kot', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(15,45,6,6,C); P.R(23,45,6,6,C); P.RR(15,46,6,3,1,H.L); P.RR(23,46,6,3,1,H.L); }},
+  {n:'Şort', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,3,C); P.R(23,46,6,3,C); P.R(15,48,6,1,H.D); P.R(23,48,6,1,H.D); }},
+  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); }},
+  {n:'Etek', d:(P,C)=>{const H=_avH(C); for(let yy=0;yy<7;yy++){ const w=18+yy*1.4; P.R(Math.round(22-w/2),42+yy,Math.round(w),1,C); } P.R(13,48,18,1,H.D); }},
+  {n:'Şalvar', d:(P,C)=>{const H=_avH(C); P.RR(12,42,20,8,3,C); P.R(14,49,7,2,H.D); P.R(23,49,7,2,H.D); }},
+  {n:'Dar', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,4,2,C); P.R(15,45,6,7,C); P.R(23,45,6,7,C); P.R(15,45,1,7,H.D); P.R(20,45,1,7,H.D); P.R(23,45,1,7,H.D); P.R(28,45,1,7,H.D); }},
+  {n:'Yırtık', d:(P,C,SK)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); P.R(16,48,3,1,SK); P.R(25,50,3,1,SK); }},
+  {n:'Dizlikli Kot', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); P.RR(15,47,6,3,1,H.L); P.RR(23,47,6,3,1,H.L); }},
 ];
 const AV_SHOES=[
   {n:'Bot', d:(P,C)=>{const H=_avH(C); P.RR(11,50,11,5,2,C); P.RR(22,50,11,5,2,C); P.R(11,54,11,1,H.D); P.R(22,54,11,1,H.D); P.R(12,50,4,1,H.L); P.R(28,50,4,1,H.L); }},
   {n:'Spor', d:(P,C)=>{const H=_avH(C); P.RR(12,51,10,4,2,C); P.RR(22,51,10,4,2,C); P.R(12,54,10,1,'#e8e8e8'); P.R(22,54,10,1,'#e8e8e8'); P.set(15,51,H.L); P.set(25,51,H.L); }},
   {n:'Sandalet', d:(P,C)=>{const H=_avH(C); P.R(12,53,10,2,H.D); P.R(22,53,10,2,H.D); P.R(14,51,2,2,C); P.R(18,51,2,2,C); P.R(24,51,2,2,C); P.R(28,51,2,2,C); }},
-  {n:'Uzun Çizme', d:(P,C)=>{const H=_avH(C); P.RR(13,44,9,11,2,C); P.RR(22,44,9,11,2,C); P.R(13,46,9,1,H.L); P.R(22,46,9,1,H.L); P.R(13,54,9,1,H.D); P.R(22,54,9,1,H.D); }},
+  {n:'Uzun Çizme', d:(P,C)=>{const H=_avH(C); P.RR(13,45,9,10,2,C); P.RR(22,45,9,10,2,C); P.R(13,47,9,1,H.L); P.R(22,47,9,1,H.L); P.R(13,54,9,1,H.D); P.R(22,54,9,1,H.D); }},
   {n:'Çıplak Ayak', d:(P,C,SK)=>{const D=_avShade(SK,-0.3); P.set(15,53,D); P.set(18,53,D); P.set(25,53,D); P.set(28,53,D); }},
   {n:'Sivri Burun', d:(P,C)=>{const H=_avH(C); P.RR(12,50,10,5,2,C); P.RR(22,50,10,5,2,C); P.R(9,52,3,2,C); P.set(9,51,C); P.R(32,52,3,2,C); P.set(34,51,C); P.R(12,54,10,1,H.D); P.R(22,54,10,1,H.D); }},
   {n:'Topuklu', d:(P,C)=>{const H=_avH(C); P.RR(12,51,10,3,1,C); P.RR(22,51,10,3,1,C); P.R(13,54,2,2,H.D); P.R(29,54,2,2,H.D); }},
 ];
 const AV_WEAPON=[
-  {n:'Kılıç', d:(P,C)=>{const H=_avH(C); P.TRI(35,6,5,4,H.L); P.R(36,10,1,26,H.L); P.R(37,10,2,26,C); P.R(39,10,1,26,H.D); P.RR(33,36,9,3,1,H.D); P.R(36,39,3,6,'#4a3626'); P.ELL(37.5,46.5,2,2,C); }},
-  {n:'Balta', d:(P,C)=>{const H=_avH(C); P.R(37,12,3,32,'#4a3626'); P.ELL(33,19,5,7,C); P.R(30,13,3,13,H.L); P.set(36,13,H.D); }},
-  {n:'Asa', d:(P,C)=>{const H=_avH(C); P.R(37,16,3,30,'#4a3626'); P.ELL(38.5,11,4,4,C); P.ELL(38.5,11,5.2,5.2,null); P.set(37,9,'#ffffff'); P.ELL(38.5,11,5,5,H.L); P.ELL(38.5,11,3.4,3.4,C); }},
-  {n:'Yay', d:(P,C)=>{const H=_avH(C); for(let t=0;t<=24;t++){ const yy=12+t*(32/24); const bow=Math.sin(Math.PI*t/24); P.set(Math.round(36+bow*6),Math.round(yy),C); P.set(Math.round(36+bow*6)+ (bow>0.2?-1:0),Math.round(yy),H.D);} P.R(36,12,1,33,H.L); P.R(41,26,2,5,'#4a3626'); }},
-  {n:'Hançer', d:(P,C)=>{const H=_avH(C); P.TRI(35,24,5,4,H.L); P.R(36,28,1,9,H.L); P.R(37,28,2,9,C); P.RR(34,37,8,2,1,H.D); P.R(37,39,2,5,'#4a3626'); }},
-  {n:'Çekiç', d:(P,C)=>{const H=_avH(C); P.R(37,20,3,26,'#4a3626'); P.RR(31,12,13,9,2,C); P.R(31,12,3,9,H.L); P.R(42,12,2,9,H.D); }},
-  {n:'Kitap', d:(P,C)=>{const H=_avH(C); P.RR(32,30,11,9,1,C); P.R(32,30,2,9,H.D); P.R(35,32,7,1,H.L); P.R(35,34,7,1,H.L); P.R(35,36,7,1,H.L); }},
+  {n:'Kılıç', d:(P,C)=>{const H=_avH(C); P.TRI(38,4,4,4,H.L); P.R(38,8,1,28,H.L); P.R(39,8,2,28,C); P.R(41,8,1,28,H.D); P.RR(35,36,9,3,1,H.D); P.R(38,39,3,7,'#4a3626'); P.ELL(39.5,47.5,2,2,C); }},
+  {n:'Balta', d:(P,C)=>{const H=_avH(C); P.R(39,10,3,36,'#4a3626'); P.ELL(35,17,5,7,C); P.R(31,11,3,13,H.L); P.set(38,11,H.D); }},
+  {n:'Asa', d:(P,C)=>{const H=_avH(C); P.R(39,14,3,32,'#4a3626'); P.ELL(40.5,9,4.5,4.5,H.L); P.ELL(40.5,9,3,3,C); P.set(39,7,'#ffffff'); }},
+  {n:'Yay', d:(P,C)=>{const H=_avH(C); for(let t=0;t<=26;t++){ const yy=10+t*(34/26); const bow=Math.sin(Math.PI*t/26); P.set(Math.round(38+bow*5),Math.round(yy),C); } P.R(38,10,1,35,H.L); P.RR(41,25,3,6,1,'#4a3626'); }},
+  {n:'Hançer', d:(P,C)=>{const H=_avH(C); P.TRI(38,24,4,4,H.L); P.R(38,28,1,10,H.L); P.R(39,28,2,10,C); P.RR(36,38,8,2,1,H.D); P.R(39,40,2,6,'#4a3626'); }},
+  {n:'Çekiç', d:(P,C)=>{const H=_avH(C); P.R(39,18,3,28,'#4a3626'); P.RR(33,10,11,9,2,C); P.R(33,10,3,9,H.L); P.R(42,10,2,9,H.D); }},
+  {n:'Kitap', d:(P,C)=>{const H=_avH(C); P.RR(33,32,11,9,1,C); P.R(33,32,2,9,H.D); P.R(36,34,7,1,H.L); P.R(36,36,7,1,H.L); P.R(36,38,7,1,H.L); }},
 ];
 // GYM kıyafetleri — Nutrition Center'dan alınınca açılır (req = gym item id)
 AV_ARMOR.push(
-  {n:'Oversize Hoodie', req:'cl_hoodie', d:(P,C)=>{const H=_avH(C); P.RR(13,26,18,4,2,H.D); P.RR(9,29,26,18,4,C); P.R(6,30,6,14,C); P.R(32,30,6,14,C); P.RR(15,38,14,7,2,H.L); P.R(15,38,14,1,H.D); P.R(19,30,1,5,H.L); P.R(24,30,1,5,H.L); P.R(9,45,26,2,H.D); }},
-  {n:'Sokak Tişörtü', req:'cl_street', d:(P,C)=>{const H=_avH(C); P.RR(10,29,24,17,3,C); P.R(6,30,7,10,C); P.R(31,30,7,10,C); P.R(12,30,1,14,H.D); P.R(31,30,1,14,H.D); P.R(10,44,24,2,H.D); }}
+  {n:'Oversize Hoodie', req:'cl_hoodie', d:(P,C)=>{const H=_avH(C); P.RR(13,26,18,4,2,H.D); P.RR(3,29,7,17,3,C); P.RR(34,29,7,17,3,C); P.RR(10,29,24,19,4,C); P.RR(15,39,14,7,2,H.L); P.R(15,39,14,1,H.D); P.R(19,30,1,5,H.L); P.R(24,30,1,5,H.L); P.R(10,46,24,2,H.D); }},
+  {n:'Sokak Tişörtü', req:'cl_street', d:(P,C)=>{const H=_avH(C); P.RR(4,29,7,11,3,C); P.RR(33,29,7,11,3,C); P.RR(10,29,24,18,3,C); P.R(11,30,1,15,H.D); P.R(32,30,1,15,H.D); P.R(10,45,24,2,H.D); }}
 );
 AV_PANTS.push(
-  {n:'Bol Kargo', req:'cl_cargo', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(14,45,7,6,C); P.R(23,45,7,6,C); P.RR(12,46,3,4,1,H.L); P.RR(29,46,3,4,1,H.L); }},
-  {n:'Jogger', req:'cl_jogger', d:(P,C)=>{const H=_avH(C); P.RR(13,41,18,5,2,C); P.R(15,45,6,5,C); P.R(23,45,6,5,C); P.R(16,50,4,2,H.D); P.R(24,50,4,2,H.D); P.R(15,45,1,5,H.L); P.R(28,45,1,5,H.L); }}
+  {n:'Bol Kargo', req:'cl_cargo', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(14,46,7,6,C); P.R(23,46,7,6,C); P.RR(12,47,3,4,1,H.L); P.RR(29,47,3,4,1,H.L); }},
+  {n:'Jogger', req:'cl_jogger', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,5,C); P.R(23,46,6,5,C); P.R(16,51,4,2,H.D); P.R(24,51,4,2,H.D); P.R(15,46,1,5,H.L); P.R(28,46,1,5,H.L); }}
 );
 function _avOwned(entry){ return !entry || !entry.req || ((S.gym&&S.gym.ownedItems)||[]).includes(entry.req); }
 
@@ -9325,7 +9340,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.29.0 başlatıldı.');
+addLog('OVERCLOCK v7.29.1 başlatıldı.');
 </script>
 </body>
 </html>
