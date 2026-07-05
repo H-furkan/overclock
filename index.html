@@ -512,7 +512,7 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .charx-eqchip{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:2px 8px;margin:2px 3px 2px 0;white-space:nowrap}
 /* ── GYM ── */
 .gym-top{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
-.gym-bottom{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start}
+.gym-bottom{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start}
 @media (max-width:860px){.gym-top,.gym-bottom{grid-template-columns:1fr}}
 .gbody{fill:#1d232c;stroke:#3a434f;stroke-width:1}
 .gneut{fill:#232a34;stroke:#39424e;stroke-width:.8}
@@ -526,6 +526,16 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 .gym-ownchip{display:inline-flex;align-items:center;gap:4px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:8px;padding:3px 8px;cursor:pointer;user-select:none}
 .gym-ownchip.placed{border-color:var(--green);color:var(--green)}
 .gym-ownchip.armed{border-color:#ff9e64;color:#ff9e64;box-shadow:0 0 6px rgba(255,158,100,.4)}
+/* ── NUTRITION CAFÉ: karton koli rafları ── */
+.cafe-shelf-wrap{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:flex-end;padding:12px 8px 0;border-bottom:7px solid #5a3d2b;border-radius:2px;box-shadow:0 6px 8px -6px rgba(0,0,0,.5)}
+.cafe-box{width:74px;cursor:pointer;flex-shrink:0;transition:transform .15s;text-align:center}
+.cafe-box:hover{transform:translateY(-5px)}
+.cafe-carton{position:relative;height:56px;border-radius:3px;background:linear-gradient(160deg,#b98d5a 0%,#a9793f 55%,#8f6532 100%);box-shadow:inset 0 8px 10px -8px rgba(255,255,255,.5),inset 0 -8px 10px -6px rgba(0,0,0,.35),2px 3px 6px rgba(0,0,0,.4)}
+.cafe-carton::before{content:'';position:absolute;left:0;right:0;top:9px;height:8px;background:linear-gradient(180deg,#caa06b,#b3874d);opacity:.9}   /* koli bandı */
+.cafe-carton::after{content:'';position:absolute;left:50%;top:0;width:1px;height:9px;background:rgba(0,0,0,.25)}                                    /* kapak çizgisi */
+.cafe-label{position:absolute;left:6px;right:6px;bottom:6px;background:#f2ead8;border:1px solid #6b4a26;border-radius:2px;font-size:7px;letter-spacing:.3px;color:#3a2a16;padding:2px 2px;line-height:1.25;font-weight:700;text-transform:uppercase;overflow:hidden}
+.cafe-price{font-size:8px;color:#ff9e64;letter-spacing:.5px;margin-top:3px;font-family:'Orbitron',monospace}
+.depot-row{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--bd);background:var(--mid);border-radius:7px;margin-bottom:5px}
 /* ── BAŞARIM AĞACI ── */
 .sk-sec{margin-bottom:16px}
 .sk-sec-title{font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--bright);margin-bottom:10px;text-transform:uppercase}
@@ -1157,20 +1167,22 @@ body.pixel-font #timer-unit{font-size:8px}
 
   <div class="block">
     <div class="gym-bottom">
-      <!-- SOL 2/3: ODA DEKORASYONU -->
+      <!-- SOL: MP'S CLOTHING (gardırop mağazası) -->
       <div>
-        <div class="fbet mb8">
-          <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Oda Dekorasyonu</div>
-          <span id="gym-room-hint" style="font-size:8px;color:var(--muted);letter-spacing:1px"></span>
-        </div>
-        <div id="gym-room" style="width:100%;border:1px solid var(--bd2);border-radius:10px;overflow:hidden;cursor:pointer;background:#0c0f14"></div>
-        <div id="gym-owned-items" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px"></div>
+        <div class="blabel">■ MP's Clothing</div>
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.6;margin-bottom:8px">Avatar çıplak ve kel başlar — görünüm MP ile kazanılır. Satın aldıkların Character &gt; avatar menüsünde açılır.</div>
+        <div id="gym-clothing"></div>
+        <div class="blabel" style="margin-top:14px;font-size:9px">🎖 Unvanlar & Rozetler</div>
+        <div id="gym-honors"></div>
       </div>
-      <!-- SAĞ 1/3: NUTRITION CENTER -->
+      <!-- SAĞ: NUTRITION CAFÉ + DEPO -->
       <div>
-        <div class="blabel">■ Nutrition Center</div>
-        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.6;margin-bottom:8px">MP ile mobilya & kıyafet al; unvan ve rozetler antrenman kilometre taşlarıyla otomatik açılır.</div>
-        <div id="gym-shop"></div>
+        <div class="blabel">■ Nutrition Café</div>
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.6;margin-bottom:8px">Takviyeler kolilerde — al, depoya girsin; içince etki başlar.</div>
+        <div id="gym-cafe" class="cafe-shelf-wrap"></div>
+        <div class="blabel" style="margin-top:14px;font-size:9px">📦 Depo</div>
+        <div id="gym-depot"></div>
+        <div id="gym-buffs" style="margin-top:8px"></div>
       </div>
     </div>
   </div>
@@ -1873,7 +1885,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.32.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.33.0</div>
     </div>
   </div>
 </div>
@@ -2171,7 +2183,7 @@ function defState() {
     books:[],                     // okuma salonu: [{id,title,author,pages,read,summary,color,added}]
     readLog:[],                   // okuma seansları: [{date,bookId,mins,pages,ppm}]
     readGoal:0,                   // günlük sayfa hedefi (0 = kapalı) — grafikte sarı kesikli baraj
-    gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] },   // GYM — izole MP ekonomisi
+    gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[], depot:{}, exLib:[], buffs:{}, _roomGone:true },   // GYM — izole MP ekonomisi
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
     subjectCoeff:{},              // ders → zorluk katsayısı (boşsa _DEF_COEFF kullanılır)
@@ -2315,7 +2327,9 @@ function applyDailyRollover(saved){
     if(_cst){
       const _mark=_dayMarks[saved.lastDate];
       const _protectedDay=(_mark==='frozen'||_mark==='rest'||_mark==='active');
-      if((saved.todayFocusSecs||0)<=0 && !_protectedDay && (_cst.ivme||0)>0){ _cst.ivme--; addLog('⚡ İvme eridi (dün hiç çalışılmadı): -1'); }
+      const _cold=(saved.gym&&saved.gym.buffs&&saved.gym.buffs.cold===saved.lastDate);
+      if((saved.todayFocusSecs||0)<=0 && !_protectedDay && !_cold && (_cst.ivme||0)>0){ _cst.ivme--; addLog('⚡ İvme eridi (dün hiç çalışılmadı): -1'); }
+      if(_cold && (saved.todayFocusSecs||0)<=0) addLog('🚿 Soğuk Duş — İvme korundu.');
       const _hBroke=(saved.habits||[]).some(h=> (h.streak||0)>0 && h.lastCompleted && h.lastCompleted!==saved.lastDate );
       if(_hBroke && (_cst.istikrar||0)>0){ _cst.istikrar--; addLog('🔄 İstikrar eridi (alışkanlık zinciri kırıldı): -1'); }
     }
@@ -3750,12 +3764,19 @@ function readTimerReset(){ clearInterval(_readIv); _readIv=null; _readRunning=fa
 // GYM — izole MP ekonomisi (v7.25)
 // ════════════════════════════════════════
 function _gym(){
-  if(!S.gym) S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] };
+  if(!S.gym) S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[] };
   const gm=S.gym;
   gm.exercises=gm.exercises||[]; gm.ownedItems=gm.ownedItems||[]; gm.titles=gm.titles||[]; gm.badges=gm.badges||[];
-  gm.room=gm.room||{placed:[],wall:'wall_gri',floor:'floor_ahsap'}; gm.room.placed=(gm.room.placed||[]).filter(p=>p && (p.i!=null || p.wall));   // eski x/lane kayıtları izometrik göçte atılır
-  if(!gm.room.wall) gm.room.wall='wall_gri';
-  if(!gm.room.floor) gm.room.floor='floor_ahsap';
+  gm.depot=gm.depot||{}; gm.exLib=gm.exLib||[]; gm.buffs=gm.buffs||{};
+  // ── ODA SÖKÜMÜ GÖÇÜ (v7.33): mobilya/kaplama harcamaları iade edilir ──
+  if(!gm._roomGone){
+    const OLD_PRICES={fx_tread:220,fx_pullup:120,fx_parall:80,fx_rack:180,fx_bag:140,fx_sofa:160,fx_bed:200,fx_window:90,fx_curtain:70,fx_fridge:170,fx_piano:320,fx_dresser:130,fx_rug:60,fx_lamp:75,fx_plant:55,fx_poster:45,wall_krem:60,wall_mavi:80,floor_fayans:70,floor_hali:90};
+    let refund=0;
+    gm.ownedItems=gm.ownedItems.filter(id=>{ if(OLD_PRICES[id]!=null){ refund+=OLD_PRICES[id]; return false; } return true; });
+    if(refund>0){ gm.mpSpent=Math.max(0,(gm.mpSpent||0)-refund); try{ notify('🏠 Oda kapandı — '+refund+' MP iade edildi'); addLog('Oda dekorasyonu kaldırıldı, +'+refund+' MP iade.'); }catch(e){} }
+    delete gm.room;
+    gm._roomGone=true;
+  }
   return gm;
 }
 // GYM'i komple sıfırla — MP, egzersizler, mağaza eşyaları, oda, unvan ve rozetler silinir
@@ -3763,7 +3784,8 @@ function gymReset(ev){
   const gm=_gym();
   const info='MP: '+gymMp()+' · egzersiz: '+gm.exercises.length+' · eşya: '+gm.ownedItems.length;
   armBtn(ev,'gymreset',()=>{
-  S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] };
+  S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[], depot:{}, exLib:[], buffs:{}, _roomGone:true };
+  S.gymEnergyBuff=false; S.gymKafeinBuff=false;
   _gymSel=null; _gxMs=new Set();
   save(); renderGym();
   try{ renderAvatar(); }catch(e){}            // kilitli kıyafet giyiliyse varsayılana düşer
@@ -3776,6 +3798,83 @@ function gymReset(ev){
 function gymMp(){ const gm=_gym(); return Math.max(0,(gm.mpEarned||0)-(gm.mpSpent||0)); }
 function _gymDoneCount(){ return _gym().exercises.filter(e=>e.done).length; }
 
+// ── NUTRITION CAFÉ ürünleri (3 kullanıcı + 4 benim) ──
+const CAFE_ITEMS=[
+  {id:'cf_pre',    icon:'⚡', name:'Pre-Workout',   price:60,  desc:'İçilen günkü ilk egzersiz 2× MP'},
+  {id:'cf_shake',  icon:'🥤', name:'Brotein Shake', price:40,  desc:'İçtikten sonraki ilk egzersiz 1.5× MP'},
+  {id:'cf_energy', icon:'🧃', name:'Energy Drink',  price:120, desc:'Sıradaki study session XP\'si 1.2×'},
+  {id:'cf_kreatin',icon:'💪', name:'Kreatin',       price:200, desc:'Bugün TÜM egzersizler +%25 MP'},
+  {id:'cf_kafein', icon:'☕', name:'Kafein Hapı',   price:80,  desc:'Sıradaki session\'da Flow State şansı +%15'},
+  {id:'cf_roller', icon:'🧻', name:'Foam Roller',   price:150, desc:'Gecikmiş (⚠) bir egzersizi cezasız bugüne taşır'},
+  {id:'cf_dus',    icon:'🚿', name:'Soğuk Duş',     price:70,  desc:'Bu gece İvme statın erimez (çalışmasan bile)'},
+];
+function gymConsume(id){
+  const gm=_gym(); gm.depot=gm.depot||{};
+  if(!(gm.depot[id]>0)){ notify('Depoda yok'); return; }
+  const t=today(); gm.buffs=gm.buffs||{};
+  if(id==='cf_pre'){ if(gm.buffs.pre===t){ notify('Bugün zaten içtin'); return; } gm.buffs.pre=t; }
+  else if(id==='cf_shake'){ if(gm.buffs.shake){ notify('Zaten aktif'); return; } gm.buffs.shake=true; }
+  else if(id==='cf_energy'){ if(S.gymEnergyBuff){ notify('Zaten aktif'); return; } S.gymEnergyBuff=true; }
+  else if(id==='cf_kreatin'){ if(gm.buffs.kreatin===t){ notify('Bugün zaten aktif'); return; } gm.buffs.kreatin=t; }
+  else if(id==='cf_kafein'){ if(S.gymKafeinBuff){ notify('Zaten aktif'); return; } S.gymKafeinBuff=true; }
+  else if(id==='cf_dus'){ gm.buffs.cold=t; }
+  else if(id==='cf_roller'){
+    const late=gm.exercises.find(e=>!e.done && e.date<t);
+    if(!late){ notify('Gecikmiş egzersiz yok'); return; }
+    late.date=t; notify('🧻 '+late.name+' bugüne taşındı');
+  }
+  gm.depot[id]--; if(gm.depot[id]<=0) delete gm.depot[id];
+  const it=CAFE_ITEMS.find(x=>x.id===id);
+  save(); renderGym();
+  if(id!=='cf_roller') notify('🥤 '+(it?it.name:id)+' içildi — etki aktif');
+  addLog('Café: '+(it?it.name:id)+' kullanıldı.');
+}
+function _gymBuffChips(){
+  const gm=_gym(); const t=today(); const b=gm.buffs||{}; const out=[];
+  const chip=txt=>'<span style="display:inline-flex;font-size:8px;letter-spacing:.5px;color:#ff9e64;border:1px solid #ff9e6444;background:#ff9e6414;border-radius:10px;padding:2px 7px;margin:2px 3px 0 0">'+txt+'</span>';
+  if(b.pre===t) out.push(chip('⚡ Pre-Workout: günün ilk egzersizi 2×'));
+  if(b.shake) out.push(chip('🥤 Shake: sıradaki egzersiz 1.5×'));
+  if(b.kreatin===t) out.push(chip('💪 Kreatin: bugün +%25'));
+  if(S.gymEnergyBuff) out.push(chip('🧃 Energy: sıradaki session 1.2× XP'));
+  if(S.gymKafeinBuff) out.push(chip('☕ Kafein: sıradaki session flow +%15'));
+  if(b.cold===t) out.push(chip('🚿 Soğuk Duş: İvme bu gece korunur'));
+  if(gm.challenge && !gm.challenge.resolved) out.push(chip('🎫 Meydan Okuma: '+gm.challenge.done+'/'+gm.challenge.target+' · son gün '+gm.challenge.end.slice(5).replace('-','.')));
+  return out.length?('<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:2px">AKTİF ETKİLER</div>'+out.join('')):'';
+}
+// ── 🎫 HAFTALIK MEYDAN OKUMA ──
+function gymChallengeBuy(ev){
+  const gm=_gym();
+  if(gm.challenge && !gm.challenge.resolved){ notify('Zaten aktif bir meydan okuma var'); return; }
+  if(gymMp()<150){ notify('YETERSİZ MP // 150 gerekli'); return; }
+  armBtn(ev,'gymch',()=>{
+    const gm2=_gym();
+    gm2.mpSpent=(gm2.mpSpent||0)+150;
+    const end=new Date(); end.setDate(end.getDate()+6);
+    gm2.challenge={ start:today(), end:_dstr(end), target:5, done:0, resolved:false };
+    save(); renderGym();
+    notify('🎫 MEYDAN OKUMA BAŞLADI — 7 günde 5 egzersiz! Başarırsan 300 MP');
+    addLog('GYM meydan okuma başladı (-150 MP).');
+  });
+}
+function _gymChallengeTick(completedToday){
+  const gm=_gym(); const ch=gm.challenge; if(!ch||ch.resolved) return;
+  const t=today();
+  if(completedToday && t>=ch.start && t<=ch.end){
+    ch.done++;
+    if(ch.done>=ch.target){
+      ch.resolved=true; ch.won=true;
+      gm.mpEarned=(gm.mpEarned||0)+300;
+      gm.chWins=(gm.chWins||0)+1;
+      notify('🏆 MEYDAN OKUMA KAZANILDI! +300 MP');
+      addLog('GYM meydan okuma kazanıldı (+300 MP).');
+      gymCheckMilestones();
+    }
+  }
+}
+function _gymChallengeExpire(){
+  const gm=_gym(); const ch=gm.challenge; if(!ch||ch.resolved) return;
+  if(today()>ch.end){ ch.resolved=true; ch.won=false; notify('🎫 Meydan okuma süresi doldu — '+ch.done+'/'+ch.target); addLog('GYM meydan okuma başarısız ('+ch.done+'/'+ch.target+').'); }
+}
 const GYM_MUSCLES=[
   {k:'gogus',lbl:'Göğüs'},{k:'kol',lbl:'Kol'},{k:'on_omuz',lbl:'Ön Omuz'},{k:'yan_omuz',lbl:'Yan Omuz'},{k:'arka_omuz',lbl:'Arka Omuz'},
   {k:'trapez',lbl:'Trapez'},{k:'sirt',lbl:'Sırt'},{k:'bel',lbl:'Bel'},{k:'karin',lbl:'Karın'},{k:'kalca',lbl:'Kalça'},
@@ -3785,34 +3884,6 @@ let _gxMs=new Set(), _gymSel=null;
 
 // ── NUTRITION CENTER kataloğu ──
 // Mobilya sprite'ları: '#'=ana renk, 'o'=koyu, '+'=açık (oto kontur+ışık motoru uygulanır)
-const GYM_ITEMS=[
-  {id:'fx_tread',  name:'Yıpranmış Koşu Bandı', icon:'🏃', price:220, zone:'floor', c:'#7a8a99', fw:1, fd:2},
-  {id:'fx_pullup', name:'Duvar Barfiksi',        icon:'💪', price:120, zone:'wall',  c:'#8a8f96', ww:2},
-  {id:'fx_parall', name:'Ahşap Paralletler',     icon:'🤸', price:80,  zone:'floor', c:'#8b5a2b', fw:1, fd:1},
-  {id:'fx_rack',   name:'Dambıl Rafı',           icon:'🏋', price:180, zone:'floor', c:'#5a6470', fw:2, fd:1},
-  {id:'fx_bag',    name:'Kum Torbası',           icon:'🥊', price:140, zone:'floor', c:'#8b3a3a', fw:1, fd:1},
-  {id:'fx_sofa',   name:'Sofa',                  icon:'🛋', price:160, zone:'floor', c:'#3a5a8b', fw:2, fd:1},
-  {id:'fx_bed',    name:'Yatak',                 icon:'🛏', price:200, zone:'floor', c:'#6a2a4a', fw:2, fd:3},
-  {id:'fx_window', name:'Pencere',               icon:'🪟', price:90,  zone:'wall',  c:'#66ccff', ww:2},
-  {id:'fx_curtain',name:'Perde',                 icon:'🪞', price:70,  zone:'wall',  c:'#7a3a5a', ww:2},
-  {id:'fx_fridge', name:'Buzdolabı',             icon:'🧊', price:170, zone:'floor', c:'#9aa4ad', fw:1, fd:1},
-  {id:'fx_piano',  name:'Piyano',                icon:'🎹', price:320, zone:'floor', c:'#23272e', fw:2, fd:1},
-  {id:'fx_dresser',name:'Şifonyer',              icon:'🗄', price:130, zone:'floor', c:'#7a5a2a', fw:2, fd:1},
-  {id:'fx_rug',    name:'Halı',                  icon:'🧶', price:60,  zone:'floor', c:'#6a4a2f', fw:2, fd:3, flat:true},
-  {id:'fx_lamp',   name:'Lambader',              icon:'💡', price:75,  zone:'floor', c:'#c9a54a', fw:1, fd:1},
-  {id:'fx_plant',  name:'Saksı Bitkisi',         icon:'🪴', price:55,  zone:'floor', c:'#3a7a4a', fw:1, fd:1},
-  {id:'fx_poster', name:'Motivasyon Posteri',    icon:'🖼', price:45,  zone:'wall',  c:'#8b6a2a', ww:1},
-];
-const GYM_WALLS=[
-  {id:'wall_gri',  name:'Gri Beton Duvar', price:0,  c:'#2a303a'},
-  {id:'wall_krem', name:'Krem Duvar',      price:60, c:'#4a4234'},
-  {id:'wall_mavi', name:'Gece Mavisi Duvar',price:80,c:'#232b42'},
-];
-const GYM_FLOORS=[
-  {id:'floor_ahsap', name:'Ahşap Zemin', price:0,  c:'#5a3d28'},
-  {id:'floor_fayans',name:'Fayans Zemin',price:70, c:'#3a4148'},
-  {id:'floor_hali',  name:'Halı Zemin',  price:90, c:'#4a2f3f'},
-];
 const GYM_CLOTHES=[
   {id:'cl_hoodie', name:'Oversize Hoodie', icon:'🧥', price:150, slot:'armor'},
   {id:'cl_street', name:'Sokak Tişörtü (bol)', icon:'👕', price:110, slot:'armor'},
@@ -3828,6 +3899,7 @@ const GYM_TITLES=[
   {id:'gt_demirbas',name:'Demirbaş',    need:'100 egzersiz tamamla',    test:g=>_gymDoneCount()>=100},
   {id:'gt_gladyator',name:'Gladyatör',  need:'5000 MP kazan',           test:g=>(g.mpEarned||0)>=5000},
   {id:'gt_maraton', name:'Maratoncu',   need:'30 farklı günde antrenman',test:g=>{ const d=new Set(_gym().exercises.filter(e=>e.done&&e.doneDate).map(e=>e.doneDate)); return d.size>=30; }},
+  {id:'gt_meydan',  name:'Meydan Okuyucu', need:'3 meydan okuma kazan',   test:g=>(g.chWins||0)>=3},
 ];
 const GYM_BADGES=[
   {id:'gb_kalp',  name:'Anatomik Kalp', need:'İlk egzersizini tamamla', c:'#ff5a6a', rows:['.##.##.','#######','#######','.#####.','..###..','...#...'], test:g=>_gymDoneCount()>=1},
@@ -3835,22 +3907,39 @@ const GYM_BADGES=[
   {id:'gb_dambil',name:'Dambıl',        need:'500 MP kazan',            c:'#c0c0c0', rows:['##....##','########','##....##'], test:g=>(g.mpEarned||0)>=500},
   {id:'gb_ates',  name:'Ateş',          need:'7 farklı günde antrenman',c:'#ff9e3d', rows:['...#..','..##..','.###+.','######','.####.'], test:g=>{ const days=new Set(_gym().exercises.filter(e=>e.done&&e.doneDate).map(e=>e.doneDate)); return days.size>=7; }},
 ];
-function _gymItemById(id){ return GYM_ITEMS.find(x=>x.id===id)||GYM_WALLS.find(x=>x.id===id)||GYM_FLOORS.find(x=>x.id===id)||GYM_CLOTHES.find(x=>x.id===id); }
-
+function _gymItemById(id){ return GYM_CLOTHES.find(x=>x.id===id)||CAFE_ITEMS.find(x=>x.id===id)||_gymPortItem(id); }
 // ── RENDER ana ──
 function renderGym(){
   const mp=g('gym-mp'); if(mp) mp.textContent=gymMp()+' MP';
   const gd=g('gx-date'); if(gd && !gd.value) gd.value=today();
+  _gymChallengeExpire();
   renderGymMuscleChips();
   renderGymExercises();
   gymRenderAnatomy();
-  gymRenderRoom();
-  renderGymOwned();
   renderGymShop();
 }
 function renderGymMuscleChips(){
   const box=g('gx-muscles'); if(!box) return;
   box.innerHTML=GYM_MUSCLES.map(m=>'<span class="gym-mchip'+(_gxMs.has(m.k)?' on':'')+'" onclick="gymToggleMs(\''+m.k+'\')">'+m.lbl+'</span>').join('');
+  // 📚 kayıtlı egzersiz önerileri: seçili kaslarla kesişenler (hiç seçim yoksa son 6)
+  const sug=g('gx-suggest');
+  if(sug){
+    const lib=(_gym().exLib||[]);
+    const list=_gxMs.size ? lib.filter(x=>(x.muscles||[]).some(k=>_gxMs.has(k))) : lib.slice(-6);
+    sug.innerHTML=list.length
+      ? '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin:4px 0 2px">📚 KAYITLI EGZERSİZLER — dokun, formu doldursun</div>'+
+        list.slice(0,12).map((x,i)=>'<span class="gym-mchip" style="border-color:#ff9e6455;color:#ffb98a" onclick="gymPickLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\')">'+_he(x.name)+' <span style="opacity:.6">'+x.mp+'MP</span></span>').join('')
+      : '';
+  }
+}
+function gymPickLib(name){
+  const lib=(_gym().exLib||[]);
+  const x=lib.find(v=>v.name===name || _he(v.name)===name); if(!x) return;
+  g('gx-name').value=x.name;
+  g('gx-mp').value=x.mp;
+  _gxMs=new Set(x.muscles||[]);
+  renderGymMuscleChips();
+  notify('📚 '+x.name+' yüklendi');
 }
 function gymToggleMs(k){ if(_gxMs.has(k)) _gxMs.delete(k); else _gxMs.add(k); renderGymMuscleChips(); }
 function gymAddExercise(){
@@ -3862,16 +3951,29 @@ function gymAddExercise(){
   const gm=_gym();
   gm.exercises.push({ id:String(Date.now()), name, mp, muscles:[..._gxMs], date, done:false });
   if(gm.exercises.length>400) gm.exercises=gm.exercises.slice(-400);
+  // egzersiz kütüphanesine kaydet (aynı isim → güncelle)
+  gm.exLib=gm.exLib||[];
+  const key=name.toLowerCase();
+  const ex0=gm.exLib.find(x=>x.name.toLowerCase()===key);
+  if(ex0){ ex0.mp=mp; ex0.muscles=[..._gxMs]; }
+  else { gm.exLib.push({name, mp, muscles:[..._gxMs]}); if(gm.exLib.length>100) gm.exLib=gm.exLib.slice(-100); }
   g('gx-name').value=''; _gxMs=new Set();
   save(); renderGym(); notify('🏋 Egzersiz eklendi: '+name);
 }
 function gymCompleteEx(id){
   const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex||ex.done) return;
   ex.done=true; ex.doneDate=today();
-  gm.mpEarned=(gm.mpEarned||0)+(ex.mp||0);
+  // ── Café buff'ları ──
+  let mp=ex.mp||0; const t=today(); const b=gm.buffs||{}; const fx=[];
+  const doneTodayBefore=gm.exercises.filter(e=>e.done && e.doneDate===t && e.id!==id).length;
+  if(b.pre===t && doneTodayBefore===0){ mp=Math.round(mp*2); b.pre=null; fx.push('⚡2×'); }
+  if(b.shake){ mp=Math.round(mp*1.5); b.shake=false; fx.push('🥤1.5×'); }
+  if(b.kreatin===t){ mp=Math.round(mp*1.25); fx.push('💪1.25×'); }
+  gm.mpEarned=(gm.mpEarned||0)+mp;
+  _gymChallengeTick(true);
   save(); gymCheckMilestones();
-  renderGym(); notify('💪 '+ex.name+' → +'+ex.mp+' MP');
-  addLog('GYM: '+ex.name+' tamamlandı (+'+ex.mp+' MP)');
+  renderGym(); notify('💪 '+ex.name+' → +'+mp+' MP'+(fx.length?(' ('+fx.join(' ')+')'):''));
+  addLog('GYM: '+ex.name+' tamamlandı (+'+mp+' MP'+(fx.length?(' '+fx.join(' ')):'')+')');
 }
 function gymDeleteEx(ev,id){
   const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex) return;
@@ -3921,332 +4023,95 @@ function gymRenderAnatomy(){
   }
 }
 
-// ── ODA DEKORASYONU — İZOMETRİK köşe oda (2 duvar + elmas zemin) ──
-const ISO={ TS:14, CX:120, CY:58, N:8, WH:52 };   // tile, köşe, grid, duvar yüksekliği
-function _iP(i,j){ return [ISO.CX+(i-j)*ISO.TS, ISO.CY+(i+j)*ISO.TS/2]; }
-function _poly(pts,fill,stroke,sw,extra){ return '<polygon points="'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')+'" fill="'+fill+'"'+(stroke?(' stroke="'+stroke+'" stroke-width="'+(sw||1)+'"'):'')+(extra||'')+'/>'; }
-// İzometrik kutu: taban (i,j), taban boyutu fw×fd tile, yükseklik h px
-function _isoBox(i,j,fw,fd,h,C,op){
-  const D=_avShade(C,-0.34), DD=_avShade(C,-0.5), L=_avShade(C,0.22);
-  const A=_iP(i,j),B=_iP(i+fw,j),Cc=_iP(i+fw,j+fd),Dd=_iP(i,j+fd);
-  const up=p=>[p[0],p[1]-h];
-  let out='';
-  out+=_poly([up(Dd),up(Cc),Cc,Dd], DD, DD, 1, op);          // sol-ön yüz (koyu)
-  out+=_poly([up(B),up(Cc),Cc,B], C, D, 1, op);              // sağ-ön yüz
-  out+=_poly([up(A),up(B),up(Cc),up(Dd)], L, D, 1, op);      // üst yüz (açık)
+
+
+// ── MAĞAZA: MP's Clothing + Nutrition Café + Depo ──
+// Portre gardırop kataloğu (AV_PORTRAIT girişlerinden fiyatlılar)
+function _gymPortCatalog(){
+  const out=[];
+  try{
+    Object.keys(AV_PORTRAIT.slots).forEach(slot=>{
+      AV_PORTRAIT.slots[slot].forEach(ent=>{ if(ent.gid && ent.price) out.push({id:ent.gid, name:ent.n, price:ent.price, icon:ent.icon||'👕', slot}); });
+    });
+  }catch(e){}
   return out;
 }
-// Duvar düzlemi noktası: sağ duvar t∈[0,8] taban çizgisi; sol duvar simetrik
-function _wP(wall,t){ return wall==='R' ? [ISO.CX+t*ISO.TS, ISO.CY+t*ISO.TS/2] : [ISO.CX-t*ISO.TS, ISO.CY+t*ISO.TS/2]; }
-function _wallQuad(wall,t0,t1,hTop,hBot,fill,stroke){
-  const a=_wP(wall,t0), b=_wP(wall,t1);
-  return _poly([[a[0],a[1]-hTop],[b[0],b[1]-hTop],[b[0],b[1]-hBot],[a[0],a[1]-hBot]], fill, stroke, 1);
-}
-// ── Mobilya çizimleri (izometrik, referans-mockup geometrisi) ──
-function _isoShadow(i,j,fw,fd){
-  const A=_iP(i-0.08,j-0.08),B=_iP(i+fw+0.15,j-0.08),Cc=_iP(i+fw+0.15,j+fd+0.15),Dd=_iP(i-0.08,j+fd+0.15);
-  return _poly([A,B,Cc,Dd],'rgba(0,0,0,.20)','none',0).replace(' stroke="none" stroke-width="0"','');
-}
-const GYMX_DRAW={
-  fx_bed:(i,j,C)=>{ let o=_isoShadow(i,j,2,3);
-    o+=_isoBox(i,j,2,0.3,24,'#3a2a20');                                    // başlık (yatağın baş ucu — duvara koyunca yaslanır)
-    o+=_isoBox(i,j+0.3,2,2.7,9,'#efece2');                                 // şilte
-    const up=p=>[p[0],p[1]-9];
-    const A=_iP(i,j+1.4),B=_iP(i+2,j+1.4),Cc=_iP(i+2,j+3),Dd=_iP(i,j+3);
-    o+=_poly([up(B),[B[0],B[1]],[Cc[0],Cc[1]],up(Cc)],_avShade(C,-0.28),'none',0).replace(' stroke="none" stroke-width="0"','');   // yorgan sağ yan
-    o+=_poly([up(Dd),[Dd[0],Dd[1]],[Cc[0],Cc[1]],up(Cc)],_avShade(C,-0.45),'none',0).replace(' stroke="none" stroke-width="0"','');// yorgan sol yan
-    o+=_poly([up(A),up(B),up(Cc),up(Dd)],C,_avShade(C,-0.3),1);            // yorgan üst
-    o+=_poly([up(A),up(B),[_iP(i+2,j+1.55)[0],_iP(i+2,j+1.55)[1]-9],[_iP(i,j+1.55)[0],_iP(i,j+1.55)[1]-9]],_avShade(C,0.28),'none',0).replace(' stroke="none" stroke-width="0"','');  // kıvrım bandı
-    o+=_isoBox(i+0.2,j+0.42,0.7,0.5,4,'#ffffff');
-    o+=_isoBox(i+1.1,j+0.42,0.7,0.5,4,'#ffffff');
-    return o; },
-  fx_sofa:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
-    o+=_isoBox(i,j,2,0.25,16,_avShade(C,-0.12));                           // sırt
-    o+=_isoBox(i,j+0.25,0.22,0.75,11,_avShade(C,-0.06));                   // kol sol
-    o+=_isoBox(i+1.78,j+0.25,0.22,0.75,11,_avShade(C,-0.06));              // kol sağ
-    o+=_isoBox(i+0.22,j+0.25,0.78,0.75,8,C);                               // minder 1
-    o+=_isoBox(i+1.0,j+0.25,0.78,0.75,8,C);                                // minder 2
-    return o; },
-  fx_fridge:(i,j,C)=>{ let o=_isoShadow(i,j,1,1);
-    o+=_isoBox(i+0.08,j+0.08,0.84,0.84,32,C);
-    const a=_iP(i+0.92,j+0.5); const D=_avShade(C,-0.45);
-    o+='<line x1="'+_iP(i+0.08,j+0.92)[0]+'" y1="'+(_iP(i+0.08,j+0.92)[1]-21)+'" x2="'+_iP(i+0.92,j+0.92)[0]+'" y2="'+(_iP(i+0.92,j+0.92)[1]-21)+'" stroke="'+D+'" stroke-width="1"/>';   // kapı ayrımı
-    o+='<line x1="'+(a[0]-2)+'" y1="'+(a[1]-27)+'" x2="'+(a[0]-2)+'" y2="'+(a[1]-23)+'" stroke="'+D+'" stroke-width="1.6"/><line x1="'+(a[0]-2)+'" y1="'+(a[1]-19)+'" x2="'+(a[0]-2)+'" y2="'+(a[1]-13)+'" stroke="'+D+'" stroke-width="1.6"/>';
-    return o; },
-  fx_piano:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
-    o+=_isoBox(i,j,2,0.85,14,C);                                           // gövde
-    o+=_isoBox(i,j,2,0.28,17,_avShade(C,0.14));                            // kapak
-    const a=_iP(i,j+0.85), b=_iP(i+2,j+0.85);
-    o+=_poly([[a[0],a[1]-9],[b[0],b[1]-9],[b[0],b[1]-4.5],[a[0],a[1]-4.5]],'#f2eee2','#14171c',0.8);  // tuş şeridi
-    for(let k=1;k<12;k++){ const p=_iP(i+k*(2/12),j+0.85); const yTop=p[1]-9, yBot=p[1]-((k%2)?6.5:4.5); o+='<line x1="'+p[0]+'" y1="'+yTop+'" x2="'+p[0]+'" y2="'+yBot+'" stroke="#14171c" stroke-width="'+((k%3===0)?1:0.6)+'"/>'; }
-    return o; },
-  fx_dresser:(i,j,C)=>{ let o=_isoShadow(i,j,2,1); const D=_avShade(C,-0.4);
-    o+=_isoBox(i,j,2,0.8,14,C);
-    const a=_iP(i,j+0.8), b=_iP(i+2,j+0.8);
-    [4.5,9].forEach(hh=>{ o+='<line x1="'+a[0]+'" y1="'+(a[1]-hh)+'" x2="'+b[0]+'" y2="'+(b[1]-hh)+'" stroke="'+D+'" stroke-width="0.9"/>'; });
-    [[0.5,2.2],[1.5,2.2],[0.5,6.7],[1.5,6.7],[0.5,11.2],[1.5,11.2]].forEach(kk=>{ const p=_iP(i+kk[0],j+0.8); o+='<rect x="'+(p[0]-1.6)+'" y="'+(p[1]-kk[1]-0.6)+'" width="3.2" height="1.2" rx="0.6" fill="'+D+'"/>'; });
-    return o; },
-  fx_tread:(i,j,C)=>{ let o=_isoShadow(i,j,1,2);
-    o+=_isoBox(i,j+0.25,1,1.75,3,'#22262d');                               // koşu yüzeyi
-    const t1=_iP(i+0.5,j+0.65), t2=_iP(i+0.5,j+1.7);
-    o+='<line x1="'+t1[0]+'" y1="'+(t1[1]-3)+'" x2="'+t2[0]+'" y2="'+(t2[1]-3)+'" stroke="#3a4148" stroke-width="0.8" stroke-dasharray="1.6 1.6"/>';
-    o+=_isoBox(i,j,1,0.2,11,C);                                            // konsol
-    const c1=_iP(i+0.5,j+0.1);
-    o+='<rect x="'+(c1[0]-3.4)+'" y="'+(c1[1]-11.5)+'" width="6.8" height="2.6" rx="0.8" fill="'+_avShade(C,0.3)+'"/>';   // küçük ekran
-    const r1=_iP(i+0.04,j+0.2), r2=_iP(i+0.04,j+0.95);
-    o+='<line x1="'+r1[0]+'" y1="'+(r1[1]-10)+'" x2="'+r2[0]+'" y2="'+(r2[1]-6)+'" stroke="'+_avShade(C,-0.25)+'" stroke-width="1.2"/>';
-    const r3=_iP(i+0.96,j+0.2), r4=_iP(i+0.96,j+0.95);
-    o+='<line x1="'+r3[0]+'" y1="'+(r3[1]-10)+'" x2="'+r4[0]+'" y2="'+(r4[1]-6)+'" stroke="'+_avShade(C,-0.25)+'" stroke-width="1.2"/>';
-    return o; },
-  fx_rack:(i,j,C)=>{ let o=_isoShadow(i,j,2,1);
-    o+=_isoBox(i,j,2,1,5,C);                                               // alt tabla
-    o+=_isoBox(i,j,0.14,1,13,_avShade(C,-0.1));                            // sol dikme
-    o+=_isoBox(i+1.86,j,0.14,1,13,_avShade(C,-0.1));                       // sağ dikme
-    o+=_isoBox(i+0.14,j,1.72,1,10,_avShade(C,0.08));                       // üst raf tablası (h10 seviye)
-    for(let r2=0;r2<2;r2++){ const hh=r2? 15.5:7.5;
-      for(let k=0;k<3;k++){ const p=_iP(i+0.45+k*0.55, j+0.5);
-        o+='<rect x="'+(p[0]-4)+'" y="'+(p[1]-hh-2)+'" width="8" height="3.4" rx="1.7" fill="#454d57" stroke="#20242a" stroke-width="0.7"/>';
-        o+='<rect x="'+(p[0]-1.2)+'" y="'+(p[1]-hh-1.3)+'" width="2.4" height="2" fill="#5a6470"/>';
-      } }
-    return o; },
-  fx_bag:(i,j,C)=>{ let o=_isoShadow(i,j,1,1);
-    o+=_isoBox(i+0.15,j+0.15,0.7,0.7,2,'#262b32');
-    const p=_iP(i+0.5,j+0.5);
-    o+='<line x1="'+p[0]+'" y1="'+(p[1]-2)+'" x2="'+p[0]+'" y2="'+(p[1]-36)+'" stroke="#3a4148" stroke-width="2.2"/><line x1="'+p[0]+'" y1="'+(p[1]-36)+'" x2="'+(p[0]+8)+'" y2="'+(p[1]-33)+'" stroke="#3a4148" stroke-width="2.2"/>';
-    o+='<line x1="'+(p[0]+8)+'" y1="'+(p[1]-33)+'" x2="'+(p[0]+8)+'" y2="'+(p[1]-30)+'" stroke="#20242a" stroke-width="1"/>';
-    o+='<rect x="'+(p[0]+4.2)+'" y="'+(p[1]-30)+'" width="7.6" height="17" rx="3.8" fill="'+C+'" stroke="'+_avShade(C,-0.4)+'" stroke-width="1"/>';
-    o+='<rect x="'+(p[0]+4.2)+'" y="'+(p[1]-30)+'" width="7.6" height="3" rx="1.5" fill="'+_avShade(C,-0.25)+'"/>';
-    return o; },
-  fx_parall:(i,j,C)=>{ let o=_isoShadow(i,j,1,1); const D=_avShade(C,-0.35);
-    [0.18,0.62].forEach(off=>{ o+=_isoBox(i+0.12,j+off,0.12,0.14,6,C)+_isoBox(i+0.76,j+off,0.12,0.14,6,C);
-      const a=_iP(i+0.12,j+off+0.07),b=_iP(i+0.88,j+off+0.07);
-      o+='<line x1="'+a[0]+'" y1="'+(a[1]-6.5)+'" x2="'+b[0]+'" y2="'+(b[1]-6.5)+'" stroke="'+D+'" stroke-width="1.8" stroke-linecap="round"/>'; });
-    return o; },
-  fx_rug:(i,j,C)=>{ const D=_avShade(C,-0.3), L=_avShade(C,0.22);
-    const A=_iP(i,j),B=_iP(i+2,j),Cc=_iP(i+2,j+3),Dd=_iP(i,j+3);
-    let o=_poly([A,B,Cc,Dd],C,D,1);
-    const A2=_iP(i+0.2,j+0.3),B2=_iP(i+1.8,j+0.3),C2=_iP(i+1.8,j+2.7),D2=_iP(i+0.2,j+2.7);
-    o+=_poly([A2,B2,C2,D2],'none',L,1.1);
-    const A3=_iP(i+0.4,j+0.6),B3=_iP(i+1.6,j+0.6),C3=_iP(i+1.6,j+2.4),D3=_iP(i+0.4,j+2.4);
-    o+=_poly([A3,B3,C3,D3],'none',L,0.6);
-    return o; },
-  fx_lamp:(i,j,C)=>{ let o=_isoShadow(i,j,1,1);
-    const p=_iP(i+0.5,j+0.5);
-    o+=_isoBox(i+0.3,j+0.3,0.4,0.4,2,'#262b32');
-    o+='<line x1="'+p[0]+'" y1="'+(p[1]-2)+'" x2="'+p[0]+'" y2="'+(p[1]-30)+'" stroke="#3a4148" stroke-width="1.7"/>';
-    o+='<circle cx="'+p[0]+'" cy="'+(p[1]-33)+'" r="11" fill="'+C+'" opacity=".13"/>';
-    o+='<path d="M'+(p[0]-7)+' '+(p[1]-30)+' L'+(p[0]+7)+' '+(p[1]-30)+' L'+(p[0]+4.5)+' '+(p[1]-38)+' L'+(p[0]-4.5)+' '+(p[1]-38)+' Z" fill="'+C+'" stroke="'+_avShade(C,-0.35)+'" stroke-width="1"/>';
-    o+='<path d="M'+(p[0]-7)+' '+(p[1]-30)+' L'+(p[0]+7)+' '+(p[1]-30)+' L'+(p[0]+6)+' '+(p[1]-28.5)+' L'+(p[0]-6)+' '+(p[1]-28.5)+' Z" fill="'+_avShade(C,0.35)+'" opacity=".8"/>';
-    return o; },
-  fx_plant:(i,j,C)=>{ let o=_isoShadow(i,j,1,1);
-    const p=_iP(i+0.5,j+0.5); const L=_avShade(C,0.25), D=_avShade(C,-0.2);
-    o+=_isoBox(i+0.3,j+0.3,0.4,0.4,6,'#8b5a2b');
-    o+='<circle cx="'+(p[0]-4.5)+'" cy="'+(p[1]-13)+'" r="5" fill="'+D+'"/><circle cx="'+(p[0]+4.5)+'" cy="'+(p[1]-14)+'" r="5.5" fill="'+L+'"/><circle cx="'+p[0]+'" cy="'+(p[1]-20)+'" r="5.5" fill="'+C+'"/><circle cx="'+(p[0]+1.5)+'" cy="'+(p[1]-21.5)+'" r="1.6" fill="'+_avShade(C,0.45)+'"/>';
-    return o; },
-};
-const GYMX_WALL_DRAW={
-  fx_window:(wall,t,C)=>{ const FR='#e8e6df', D='#3a434f';
-    let o=_wallQuad(wall,t-0.08,t+2.08,43,11,FR,D);                       // dış çerçeve
-    o+=_wallQuad(wall,t+0.08,t+1.92,41,13,'#9fd9f7',D);                    // cam
-    o+=_wallQuad(wall,t+0.08,t+1.92,34,32.5,'#cdeefb','none').replace(' stroke="none" stroke-width="1"','');  // parıltı bandı
-    o+=_wallQuad(wall,t+0.94,t+1.06,41,13,FR,D);                           // dikey kayıt
-    const a=_wP(wall,t+0.08), b=_wP(wall,t+1.92);
-    o+='<line x1="'+a[0]+'" y1="'+(a[1]-27)+'" x2="'+b[0]+'" y2="'+(b[1]-27)+'" stroke="'+FR+'" stroke-width="2.4"/><line x1="'+a[0]+'" y1="'+(a[1]-27)+'" x2="'+b[0]+'" y2="'+(b[1]-27)+'" stroke="'+D+'" stroke-width="0.5"/>';
-    o+=_wallQuad(wall,t-0.14,t+2.14,11,9,FR,D);                            // denizlik
-    return o; },
-  fx_curtain:(wall,t,C)=>{ const D=_avShade(C,-0.35);
-    let o=_wallQuad(wall,t-0.2,t+2.2,44.5,42.5,'#c9a54a','#8b6a2a');
-    o+=_wallQuad(wall,t,t+0.85,42.5,10,C,D);
-    o+=_wallQuad(wall,t+1.15,t+2,42.5,10,C,D);
-    [0.18,0.42,0.66,1.33,1.57,1.81].forEach(dt=>{ const a=_wP(wall,t+dt); o+='<line x1="'+a[0]+'" y1="'+(a[1]-42.5)+'" x2="'+a[0]+'" y2="'+(a[1]-10)+'" stroke="'+_avShade(C,(dt%0.48<0.3)?0.18:-0.18)+'" stroke-width="1.6"/>'; });
-    return o; },
-  fx_poster:(wall,t,C)=>{ const D=_avShade(C,-0.4);
-    let o=_wallQuad(wall,t+0.05,t+0.95,37,19,'#f2efe6',C);
-    const top=_wP(wall,t+0.5);
-    o+='<circle cx="'+top[0]+'" cy="'+(top[1]-32.5)+'" r="2.4" fill="#ffd76a"/>';
-    o+='<line x1="'+top[0]+'" y1="'+(top[1]-30)+'" x2="'+top[0]+'" y2="'+(top[1]-24.5)+'" stroke="#4a9a5a" stroke-width="1.4"/>';
-    const l1=_wP(wall,t+0.3), l2=_wP(wall,t+0.7);
-    o+='<line x1="'+top[0]+'" y1="'+(top[1]-27.5)+'" x2="'+l1[0]+'" y2="'+(l1[1]-25)+'" stroke="#4a9a5a" stroke-width="1.2"/><line x1="'+top[0]+'" y1="'+(top[1]-27.5)+'" x2="'+l2[0]+'" y2="'+(l2[1]-25)+'" stroke="#4a9a5a" stroke-width="1.2"/>';
-    o+='<line x1="'+top[0]+'" y1="'+(top[1]-24.5)+'" x2="'+l1[0]+'" y2="'+(l1[1]-20.5)+'" stroke="#4a9a5a" stroke-width="1.2"/><line x1="'+top[0]+'" y1="'+(top[1]-24.5)+'" x2="'+l2[0]+'" y2="'+(l2[1]-20.5)+'" stroke="#4a9a5a" stroke-width="1.2"/>';
-    return o; },
-  fx_pullup:(wall,t,C)=>{ const D=_avShade(C,-0.4);
-    const a=_wP(wall,t+0.15), b=_wP(wall,t+1.85);
-    let o='';
-    [a,b].forEach(p=>{ o+='<line x1="'+p[0]+'" y1="'+(p[1]-30)+'" x2="'+p[0]+'" y2="'+(p[1]-36)+'" stroke="'+D+'" stroke-width="2.2"/>'; o+='<circle cx="'+p[0]+'" cy="'+(p[1]-36)+'" r="1.1" fill="'+D+'"/>'; });
-    o+='<line x1="'+a[0]+'" y1="'+(a[1]-30)+'" x2="'+b[0]+'" y2="'+(b[1]-30)+'" stroke="'+C+'" stroke-width="2.6" stroke-linecap="round"/>';
-    o+='<line x1="'+a[0]+'" y1="'+(a[1]-31)+'" x2="'+b[0]+'" y2="'+(b[1]-31)+'" stroke="'+_avShade(C,0.35)+'" stroke-width="0.8"/>';
-    return o; },
-};
-function gymRenderRoom(){
-  const box=g('gym-room'); if(!box) return;
-  const gm=_gym(), room=gm.room;
-  const wallDef=GYM_WALLS.find(w=>w.id===room.wall)||GYM_WALLS[0];
-  const floorDef=GYM_FLOORS.find(f=>f.id===room.floor)||GYM_FLOORS[0];
-  const WC=wallDef.c, FC=floorDef.c;
-  const N=ISO.N, H=ISO.WH;
-  const TL=_wP('L',N), TR=_wP('R',N), BC=_iP(N,N);
-  let svg='<svg viewBox="0 0 240 176" style="width:100%;display:block">';
-  // duvarlar (sol hafif koyu — ışık sağdan)
-  svg+=_poly([[ISO.CX,ISO.CY-H],[TL[0],TL[1]-H],TL,[ISO.CX,ISO.CY]], _avShade(WC,-0.12), _avShade(WC,-0.4), 1);
-  svg+=_poly([[ISO.CX,ISO.CY-H],[TR[0],TR[1]-H],TR,[ISO.CX,ISO.CY]], WC, _avShade(WC,-0.4), 1);
-  // duvar dokusu (panel çizgileri)
-  for(let t=2;t<N;t+=2){ const a=_wP('L',t),b=_wP('R',t); svg+='<line x1="'+a[0]+'" y1="'+(a[1]-H)+'" x2="'+a[0]+'" y2="'+a[1]+'" stroke="rgba(255,255,255,.04)" stroke-width="3"/>'; svg+='<line x1="'+b[0]+'" y1="'+(b[1]-H)+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgba(255,255,255,.05)" stroke-width="3"/>'; }
-  // süpürgelik
-  svg+=_wallQuad('L',0,N,3,0,_avShade(WC,-0.35),'none').replace('stroke="none" stroke-width="1"','');
-  svg+=_wallQuad('R',0,N,3,0,_avShade(WC,-0.3),'none').replace('stroke="none" stroke-width="1"','');
-  // zemin elması
-  svg+=_poly([[ISO.CX,ISO.CY],TR,BC,TL], FC, _avShade(FC,-0.4), 1.2);
-  // zemin dokusu
-  if(room.floor==='floor_fayans'){
-    for(let k=1;k<N;k++){ const a=_iP(k,0),b=_iP(k,N); svg+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgba(0,0,0,.28)" stroke-width="0.8"/>'; const c2=_iP(0,k),d2=_iP(N,k); svg+='<line x1="'+c2[0]+'" y1="'+c2[1]+'" x2="'+d2[0]+'" y2="'+d2[1]+'" stroke="rgba(0,0,0,.28)" stroke-width="0.8"/>'; }
-  } else if(room.floor==='floor_ahsap'){
-    for(let k=1;k<N*2;k++){ const t=k/2; if(t>=N) break; const a=_iP(t,0),b=_iP(t,N); svg+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgba(0,0,0,.18)" stroke-width="0.7"/>'; }
-  } else {
-    for(let ii=0;ii<N;ii++)for(let jj=0;jj<N;jj++){ if((ii+jj)%2) continue; const p=_iP(ii+0.5,jj+0.5); svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="0.9" fill="rgba(255,255,255,.07)"/>'; }
-    const A2=_iP(0.4,0.4),B2=_iP(N-0.4,0.4),C2=_iP(N-0.4,N-0.4),D2=_iP(0.4,N-0.4);
-    svg+=_poly([A2,B2,C2,D2],'none',_avShade(FC,0.25),1);
-  }
-  // duvar eşyaları
-  room.placed.filter(p=>p.wall).forEach(p=>{ const it=GYM_ITEMS.find(x=>x.id===p.item); const fn=GYMX_WALL_DRAW[p.item]; if(it&&fn) svg+=fn(p.wall,p.t,it.c); });
-  // zemin eşyaları (arkadan öne)
-  room.placed.filter(p=>p.i!=null).slice().sort((a,b)=>(a.i+a.j)-(b.i+b.j)).forEach(p=>{
-    const it=GYM_ITEMS.find(x=>x.id===p.item); const fn=GYMX_DRAW[p.item];
-    if(it&&fn) svg+=fn(p.i,p.j,it.c);
-  });
-  svg+='</svg>';
-  box.innerHTML=svg;
-}
-// Doluluk kontrolü — eşyalar ÜST ÜSTE KONAMAZ
-function _gymFloorFree(i0,j0,fw,fd,ignoreItem){
-  const gm=_gym();
-  if(i0<0||j0<0||i0+fw>ISO.N||j0+fd>ISO.N) return false;
-  return !gm.room.placed.some(p=>{
-    if(p.i==null || p.item===ignoreItem) return false;
-    const it=GYM_ITEMS.find(x=>x.id===p.item); if(!it) return false;
-    return !(i0+fw<=p.i || p.i+(it.fw||1)<=i0 || j0+fd<=p.j || p.j+(it.fd||1)<=j0);
-  });
-}
-function _gymWallFree(wall,t0,ww,ignoreItem){
-  const gm=_gym();
-  if(t0<0||t0+ww>ISO.N) return false;
-  return !gm.room.placed.some(p=>{
-    if(!p.wall || p.wall!==wall || p.item===ignoreItem) return false;
-    const it=GYM_ITEMS.find(x=>x.id===p.item); if(!it) return false;
-    return !(t0+ww<=p.t || p.t+(it.ww||1)<=t0);
-  });
-}
-function _wireGymRoom(){
-  const box=g('gym-room'); if(!box||box._wired) return; box._wired=true;
-  box.addEventListener('click',(ev)=>{
-    if(!_gymSel) return;
-    const it=GYM_ITEMS.find(x=>x.id===_gymSel); if(!it) return;
-    const gm=_gym();
-    const r=box.getBoundingClientRect();
-    const x=(ev.clientX-r.left)/r.width*240, y=(ev.clientY-r.top)/r.height*176;
-    const hint=g('gym-room-hint');
-    if(it.zone==='wall'){
-      const wall = x>=ISO.CX ? 'R' : 'L';
-      const traw = Math.abs(x-ISO.CX)/ISO.TS;
-      const t0=Math.max(0,Math.min(ISO.N-(it.ww||1), Math.round(traw-(it.ww||1)/2)));
-      if(!_gymWallFree(wall,t0,it.ww||1,_gymSel)){ notify('🚫 Orası dolu — duvarda boş yer seç'); return; }
-      gm.room.placed=gm.room.placed.filter(p=>p.item!==_gymSel);
-      gm.room.placed.push({item:_gymSel, wall, t:t0});
-    } else {
-      const X=x-ISO.CX, Y=y-ISO.CY;
-      const fi=(Y/(ISO.TS/2)+X/ISO.TS)/2, fj=(Y/(ISO.TS/2)-X/ISO.TS)/2;
-      if(fi<0||fj<0||fi>ISO.N||fj>ISO.N){ notify('Zemine dokun'); return; }
-      const fw=it.fw||1, fd=it.fd||1;
-      const i0=Math.max(0,Math.min(ISO.N-fw, Math.round(fi-fw/2)));
-      const j0=Math.max(0,Math.min(ISO.N-fd, Math.round(fj-fd/2)));
-      if(!_gymFloorFree(i0,j0,fw,fd,_gymSel)){ notify('🚫 Orası dolu — eşyalar üst üste konamaz'); return; }
-      gm.room.placed=gm.room.placed.filter(p=>p.item!==_gymSel);
-      gm.room.placed.push({item:_gymSel, i:i0, j:j0});
-    }
-    _gymSel=null; if(hint) hint.textContent='';
-    save(); gymRenderRoom(); renderGymOwned();
-  });
-}
-function renderGymOwned(){
-  const box=g('gym-owned-items'); if(!box) return;
-  _wireGymRoom();
-  const gm=_gym();
-  const furn=gm.ownedItems.map(id=>GYM_ITEMS.find(x=>x.id===id)).filter(Boolean);
-  if(!furn.length){ box.innerHTML='<span style="font-size:8px;color:var(--muted);letter-spacing:1px">Mobilyan yok — Nutrition Center\'dan al, buradan odaya yerleştir.</span>'; return; }
-  box.innerHTML=furn.map(it=>{
-    const placed=gm.room.placed.some(p=>p.item===it.id);
-    const armed=_gymSel===it.id;
-    return '<span class="gym-ownchip'+(placed?' placed':'')+(armed?' armed':'')+'" onclick="gymChipTap(\''+it.id+'\')">'+it.icon+' '+_he(it.name)+(placed?' ✓':'')+'</span>';
-  }).join('');
-}
-function gymChipTap(id){
-  const gm=_gym();
-  const placed=gm.room.placed.some(p=>p.item===id);
-  const hint=g('gym-room-hint');
-  if(placed){ gm.room.placed=gm.room.placed.filter(p=>p.item!==id); _gymSel=null; if(hint) hint.textContent=''; save(); gymRenderRoom(); renderGymOwned(); notify('Kaldırıldı'); return; }
-  _gymSel = (_gymSel===id) ? null : id;
-  if(hint) hint.textContent=_gymSel?'🏠 Odada bir yere dokun':'';
-  renderGymOwned();
-}
-
-// ── MAĞAZA ──
+function _gymPortItem(id){ return _gymPortCatalog().find(x=>x.id===id); }
 function gymBuy(id){
   const it=_gymItemById(id); if(!it) return;
   const gm=_gym();
-  if(gm.ownedItems.includes(id)){ notify('Zaten sahipsin'); return; }
+  const isCafe=CAFE_ITEMS.some(x=>x.id===id);
+  if(!isCafe && gm.ownedItems.includes(id)){ notify('Zaten sahipsin'); return; }
   if(gymMp()<it.price){ notify('YETERSİZ MP // '+it.price+' gerekli'); return; }
   gm.mpSpent=(gm.mpSpent||0)+it.price;
-  gm.ownedItems.push(id);
-  if(GYM_WALLS.some(w=>w.id===id)) gm.room.wall=id;
-  if(GYM_FLOORS.some(f=>f.id===id)) gm.room.floor=id;
+  if(isCafe){ gm.depot=gm.depot||{}; gm.depot[id]=(gm.depot[id]||0)+1; notify('📦 '+it.name+' depoya kondu (-'+it.price+' MP)'); }
+  else { gm.ownedItems.push(id); notify('🛒 '+it.name+' açıldı (-'+it.price+' MP)'); try{ renderAvatar(); renderAvatarPopRows(); }catch(e){} }
   save(); renderGym();
-  notify('🛒 '+it.name+' alındı (-'+it.price+' MP)');
   addLog('GYM mağaza: '+it.name+' (-'+it.price+' MP)');
 }
-function gymApplySurface(id){
-  const gm=_gym();
-  if(!gm.ownedItems.includes(id) && !(id==='wall_gri'||id==='floor_ahsap')){ notify('Önce satın al'); return; }
-  if(GYM_WALLS.some(w=>w.id===id)) gm.room.wall=id;
-  if(GYM_FLOORS.some(f=>f.id===id)) gm.room.floor=id;
-  save(); gymRenderRoom(); renderGymShop();
+// SOL: gardırop mağazası
+function renderMpClothing(){
+  const box=g('gym-clothing'); if(!box) return;
+  const gm=_gym(), bal=gymMp();
+  const cat=_gymPortCatalog();
+  const slotLbl={eyes:'GÖZLER',hair:'SAÇ EKTİRME',armor:'GİYSİLER'};
+  const order=['armor','hair','eyes'];
+  let html='';
+  order.forEach(slot=>{
+    const items=cat.filter(x=>x.slot===slot); if(!items.length) return;
+    html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:8px 0 4px">'+(slotLbl[slot]||slot)+'</div>';
+    html+=items.map(it=>{
+      const owned=gm.ownedItems.includes(it.id);
+      const btn=owned?'<span style="font-size:8px;color:var(--green)">✓ SAHİPSİN</span>'
+        :'<button class="btn '+(bal>=it.price?'primary':'')+'" style="min-height:24px;padding:2px 8px;font-size:8px" '+(bal>=it.price?'':'disabled ')+'onclick="gymBuy(\''+it.id+'\')">'+it.price.toLocaleString('tr-TR')+' MP</button>';
+      return '<div class="gym-shoprow"><span style="font-size:13px;flex-shrink:0">'+it.icon+'</span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright);letter-spacing:.5px">'+_he(it.name)+'</span>'+btn+'</div>';
+    }).join('');
+  });
+  box.innerHTML=html||'<div style="font-size:9px;color:var(--muted)">Katalog boş.</div>';
 }
-function renderGymShop(){
-  const box=g('gym-shop'); if(!box) return;
-  const gm=_gym(); const bal=gymMp();
-  const row=(it,extra)=>{
-    const owned=gm.ownedItems.includes(it.id)||it.price===0;
-    let btn;
-    if(owned && extra==='surface'){
-      const active=(gm.room.wall===it.id||gm.room.floor===it.id);
-      btn=active?'<span style="font-size:8px;color:var(--green)">✓ AKTİF</span>':'<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px" onclick="gymApplySurface(\''+it.id+'\')">UYGULA</button>';
-    }
-    else if(owned) btn='<span style="font-size:8px;color:var(--green)">✓</span>';
-    else btn='<button class="btn '+(bal>=it.price?'primary':'')+'" style="min-height:24px;padding:2px 8px;font-size:8px" '+(bal>=it.price?'':'disabled ')+'onclick="gymBuy(\''+it.id+'\')">'+it.price+' MP</button>';
-    return '<div class="gym-shoprow"><span style="font-size:13px;flex-shrink:0">'+(it.icon||'🎨')+'</span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright);letter-spacing:.5px">'+_he(it.name)+'</span>'+btn+'</div>';
-  };
-  let html='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:6px 0 4px">🏋 KİNETİK & EV MOBİLYASI</div>';
-  html+=GYM_ITEMS.map(it=>row(it)).join('');
-  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">🧱 DUVAR / ZEMİN</div>';
-  html+=GYM_WALLS.map(it=>row(it,'surface')).join('')+GYM_FLOORS.map(it=>row(it,'surface')).join('');
-  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">👕 KIYAFET (avatara giydirilir)</div>';
-  html+=GYM_CLOTHES.map(it=>row(it)).join('');
-  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">🎖 GYM UNVANLARI (kilometre taşı)</div>';
-  html+=GYM_TITLES.map(t=>{
+// SAĞ: kafe rafı (karton koliler)
+function renderCafe(){
+  const box=g('gym-cafe'); if(!box) return;
+  const bal=gymMp();
+  box.innerHTML=CAFE_ITEMS.map(it=>{
+    const can=bal>=it.price;
+    return '<div class="cafe-box" onclick="gymBuy(\''+it.id+'\')" title="'+_he(it.desc)+'">'+
+      '<div class="cafe-carton"><div class="cafe-label">'+_he(it.name)+'</div></div>'+
+      '<div class="cafe-price" style="'+(can?'':'opacity:.45')+'">'+it.price+' MP</div>'+
+    '</div>';
+  }).join('');
+}
+// Depo (GYM'e özel envanter) + aktif etkiler
+function renderDepot(){
+  const box=g('gym-depot'); if(!box) return;
+  const gm=_gym(); const dep=gm.depot||{};
+  const ids=Object.keys(dep).filter(k=>dep[k]>0);
+  box.innerHTML=ids.length? ids.map(id=>{
+    const it=CAFE_ITEMS.find(x=>x.id===id); if(!it) return '';
+    return '<div class="depot-row"><span style="font-size:12px">'+it.icon+'</span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright)">'+_he(it.name)+' <b style="color:var(--white)">×'+dep[id]+'</b><br><span style="font-size:7px;color:var(--muted)">'+_he(it.desc)+'</span></span><button class="btn primary" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="gymConsume(\''+id+'\')">İÇ</button></div>';
+  }).join('') : '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;padding:4px 0">Depo boş — kafeden koli al.</div>';
+  const bf=g('gym-buffs'); if(bf) bf.innerHTML=_gymBuffChips();
+}
+// Unvan + rozetler (eski bölüm, sola taşındı)
+function renderGymHonors(){
+  const box=g('gym-honors'); if(!box) return;
+  const gm=_gym();
+  let html=GYM_TITLES.map(t=>{
     const got=gm.titles.includes(t.id);
     return '<div class="gym-shoprow"'+(got?' style="border-color:#ff9e64"':'')+'><span style="flex:1;font-size:9px;color:'+(got?'#ff9e64':'var(--bright)')+'">'+(got?'✓ ':'')+t.name+'</span><span style="font-size:8px;color:var(--muted)">'+t.need+'</span></div>';
   }).join('');
-  html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:10px 0 4px">📛 PROFİL ROZETLERİ</div>';
-  html+='<div style="display:flex;gap:8px;flex-wrap:wrap">'+GYM_BADGES.map(b=>{
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'+GYM_BADGES.map(b=>{
     const got=gm.badges.includes(b.id);
     return '<div style="text-align:center;width:56px" title="'+_he(b.need)+'"><canvas class="gym-badge-cv" data-b="'+b.id+'" width="'+b.rows[0].length+'" height="'+b.rows.length+'" style="width:34px;image-rendering:pixelated;'+(got?'':'opacity:.22;filter:grayscale(1)')+'"></canvas><div style="font-size:7px;color:'+(got?'var(--bright)':'var(--muted)')+';letter-spacing:.5px;line-height:1.3">'+b.name+'</div></div>';
   }).join('')+'</div>';
   box.innerHTML=html;
-  // rozet sprite'larını çiz
   document.querySelectorAll('.gym-badge-cv').forEach(cv=>{
     const b=GYM_BADGES.find(x=>x.id===cv.getAttribute('data-b')); if(!b) return;
     const ctx=cv.getContext('2d');
     b.rows.forEach((r,dy)=>{ for(let dx=0;dx<r.length;dx++){ const ch=r[dx]; if(ch==='.') continue; ctx.fillStyle=(ch==='o')?_avShade(b.c,-0.35):(ch==='+')?_avShade(b.c,0.3):b.c; ctx.fillRect(dx,dy,1,1); }});
   });
 }
+function renderGymShop(){ renderMpClothing(); renderCafe(); renderDepot(); renderGymHonors(); }
 function gymCheckMilestones(){
   const gm=_gym(); let changed=false;
   GYM_TITLES.forEach(t=>{ if(!gm.titles.includes(t.id) && t.test(gm)){ gm.titles.push(t.id); changed=true; notify('🎖 GYM UNVANI: '+t.name+'!'); addLog('GYM unvanı: '+t.name); } });
@@ -6267,26 +6132,28 @@ const AV_PORTRAIT={
   base:'sprites/avatar/taban.png',
   slots:{
     eyes:[
-      {n:'Sert Bakış', src:'sprites/avatar/goz_1.png'},
-      {n:'Kısık', src:'sprites/avatar/goz_2.png'},
-      {n:'Sakin', src:'sprites/avatar/goz_3.png'},
+      {n:'Sakin', src:'sprites/avatar/goz_3.png', free:true},
+      {n:'Sert Bakış', src:'sprites/avatar/goz_1.png', gid:'pc_goz1', price:3000, icon:'👁'},
+      {n:'Kısık', src:'sprites/avatar/goz_2.png', gid:'pc_goz2', price:3000, icon:'👁'},
       {n:'Boş'}
     ],
     hair:[
-      {n:'Dağınık Saç', src:'sprites/avatar/sac_1.png'},
-      {n:'Kısa Saç', src:'sprites/avatar/sac_2.png'},
-      {n:'Goku', src:'sprites/avatar/sac_3.png'},
+      {n:'Kısa Saç', src:'sprites/avatar/sac_2.png', gid:'pc_sac2', price:3300, icon:'💇'},
+      {n:'Uzun Saç', src:'sprites/avatar/sac_1.png', gid:'pc_sac1', price:11400, icon:'💇'},
+      {n:'SON GOKU ✌️', src:'sprites/avatar/sac_3.png', gid:'pc_sac3', price:23000, icon:'🐉'},
       {n:'Boş'}
     ],
     armor:[
-      {n:'Plaka Zırh', src:'sprites/avatar/ust_1.png'},
-      {n:'Atlet', src:'sprites/avatar/ust_2.png'},
-      {n:'Tişört', src:'sprites/avatar/ust_3.png'},
-      {n:'Gömlek', src:'sprites/avatar/ust_4.png'},
+      {n:'Atlet', src:'sprites/avatar/ust_2.png', gid:'pc_atlet', price:1200, icon:'🎽'},
+      {n:'Tişört', src:'sprites/avatar/ust_3.png', gid:'pc_tisort', price:6400, icon:'👕'},
+      {n:'Yakalı Gömlek', src:'sprites/avatar/ust_4.png', gid:'pc_gomlek', price:11300, icon:'👔'},
+      {n:'Plaka Zırh', src:'sprites/avatar/ust_1.png', gid:'pc_zirh', price:17000, icon:'🛡'},
       {n:'Boş'}
     ],
   }
 };
+// Portre parçası sahiplik: free / Boş → serbest; gid'liler MP's Clothing'den alınmalı
+function _avPortOwned(ent){ return !ent || !ent.gid || ((S.gym&&S.gym.ownedItems)||[]).includes(ent.gid); }
 const _avImgCache={};
 function _avImg(src){
   let e=_avImgCache[src];
@@ -6300,29 +6167,31 @@ function _avImg(src){
   return e;
 }
 const _avTintCache={};
+// Boyama — getImageData YOK (LibreWolf resistFingerprinting geri-okumayı zehirliyor).
+// 'color' compositing: kaynağın ton+doygunluğu, çizimin PARLAKLIĞI → gölgeler korunur,
+// saf beyaz beyaz kalır, kontur siyah kalır. Sonra 'destination-in' ile alfa geri kırpılır.
 function _avTintCanvas(src,color){
   const key=src+'|'+(color||'');
   if(_avTintCache[key]) return _avTintCache[key];
   const e=_avImgCache[src]; if(!e||!e.loaded) return null;
+  const w=e.img.naturalWidth||512, h=e.img.naturalHeight||512;
   const cv=document.createElement('canvas');
-  cv.width=e.img.naturalWidth||512; cv.height=e.img.naturalHeight||512;
-  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  cv.width=w; cv.height=h;
+  const ctx=cv.getContext('2d');
   ctx.drawImage(e.img,0,0);
   if(color){
     try{
-      const id=ctx.getImageData(0,0,cv.width,cv.height), d=id.data;
-      const n=parseInt(color.slice(1),16), tr=(n>>16)&255, tg=(n>>8)&255, tb=n&255;
-      for(let i=0;i<d.length;i+=4){
-        if(!d[i+3]) continue;
-        const r=d[i], g2=d[i+1], b=d[i+2];
-        if(Math.max(Math.abs(r-g2),Math.abs(g2-b),Math.abs(r-b))<=10){
-          const f=(r+g2+b)/765;
-          if(f>0.85){ const t=0.35+0.65*((f-0.85)/0.15); d[i]=tr+(255-tr)*t; d[i+1]=tg+(255-tg)*t; d[i+2]=tb+(255-tb)*t; }
-          else { const k=f/0.78; d[i]=Math.min(255,tr*k); d[i+1]=Math.min(255,tg*k); d[i+2]=Math.min(255,tb*k); }
-        }
-      }
-      ctx.putImageData(id,0,0);
-    }catch(err){ /* okuma engellenirse boyamasız kullan */ }
+      ctx.globalCompositeOperation='color';
+      ctx.fillStyle=color;
+      ctx.fillRect(0,0,w,h);
+      ctx.globalCompositeOperation='destination-in';
+      ctx.drawImage(e.img,0,0);
+      ctx.globalCompositeOperation='source-over';
+    }catch(err){
+      ctx.globalCompositeOperation='source-over';
+      ctx.clearRect(0,0,w,h);
+      ctx.drawImage(e.img,0,0);   // boyama başarısızsa orijinali kullan
+    }
   }
   _avTintCache[key]=cv;
   return cv;
@@ -6341,7 +6210,8 @@ function _renderAvatarPortrait(){
   if(base) ctx.drawImage(base,0,0);
   ['eyes','pants','shoes','armor','hair','weapon'].forEach(slot=>{
     const list=AV_PORTRAIT.slots[slot]; if(!list||!list.length) return;
-    const idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+    let idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+    if(!_avPortOwned(list[idx])){ idx=list.findIndex(_avPortOwned); if(idx<0) return; }
     const ent=list[idx]; if(!ent||!ent.src) return;   // 'Boş' → çizme
     const st=_avImg(ent.src); if(!st.loaded||st.failed) return;
     const layer=_avTintCanvas(ent.src, col[slot]);
@@ -6412,11 +6282,13 @@ function renderAvatarPopRows(){
     // PORTRE MODU: sadece çizimi olan slotlar + TEN
     let html=Object.keys(AV_PORTRAIT.slots).map(slot=>{
       const list=AV_PORTRAIT.slots[slot];
-      const idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+      let idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+      if(!_avPortOwned(list[idx])) idx=Math.max(0,list.findIndex(_avPortOwned));
+      const lockedN=list.filter(e=>!_avPortOwned(e)).length;
       return '<div class="avrow">'+
         '<span class="avlbl">'+(_AV_SLOT_TR[slot]||slot.toUpperCase())+'</span>'+
         '<button class="avbtn" onclick="avCycle(\''+slot+'\',-1)">◀</button>'+
-        '<span class="avval">'+(idx+1)+'/'+list.length+' '+_he(list[idx].n)+'</span>'+
+        '<span class="avval">'+_he(list[idx].n)+(lockedN?' <span style="opacity:.5">🔒'+lockedN+'</span>':'')+'</span>'+
         '<button class="avbtn" onclick="avCycle(\''+slot+'\',1)">▶</button>'+
         '<input type="color" value="'+(av.colors[slot]||'#8a94a6')+'" oninput="avColor(\''+slot+'\',this.value)">'+
       '</div>';
@@ -6446,7 +6318,9 @@ function avCycle(slot,dir){
   if(_avPortraitOn()){
     const list=AV_PORTRAIT.slots[slot]; if(!list||!list.length) return;
     const n=list.length;
-    av[slot]=(((av[slot]|0)+dir)%n+n)%n;
+    let idx=av[slot]|0, guard=0;
+    do{ idx=((idx+dir)%n+n)%n; guard++; }while(!_avPortOwned(list[idx]) && guard<=n);
+    av[slot]=idx;
     save(); renderAvatar(); renderAvatarPopRows();
     return;
   }
@@ -9603,7 +9477,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.32.0 başlatıldı.');
+addLog('OVERCLOCK v7.33.0 başlatıldı.');
 </script>
 </body>
 </html>
