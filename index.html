@@ -1063,9 +1063,12 @@ body.pixel-font #timer-unit{font-size:8px}
   <div class="block">
     <div class="fbet mb8">
       <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ GYM</div>
-      <div style="text-align:right">
-        <div style="font-size:7px;color:var(--muted);letter-spacing:2px">MP BAKİYE</div>
-        <div id="gym-mp" style="font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:#ff9e64;line-height:1.1">0 MP</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="gymReset()">↺ SIFIRLA</button>
+        <div style="text-align:right">
+          <div style="font-size:7px;color:var(--muted);letter-spacing:2px">MP BAKİYE</div>
+          <div id="gym-mp" style="font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:#ff9e64;line-height:1.1">0 MP</div>
+        </div>
       </div>
     </div>
     <div class="gym-top">
@@ -1219,9 +1222,9 @@ body.pixel-font #timer-unit{font-size:8px}
     <div id="cal-f-qwrap" style="display:none;margin-bottom:8px"><div class="ilabel" style="margin-bottom:3px">KAÇ SORU (hedef)</div><input class="inp" id="cal-f-q" type="number" min="0" placeholder="ör. 30"></div>
     <div class="irow mb8">
       <div class="igrp"><div class="ilabel">↻ TEKRAR</div>
-        <select class="inp" id="cal-f-repeat">
+        <select class="inp" id="cal-f-repeat" onchange="calRepeatChange()">
           <option value="none">Tekrarlama</option>
-          <option value="daily">Her gün</option>
+          <option value="daily">Her gün / seçili günler</option>
           <option value="weekly">Her hafta</option>
           <option value="monthly">Her ay</option>
         </select>
@@ -1238,6 +1241,10 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="irow mb8">
       <div class="igrp"><div class="ilabel">BAŞLANGIÇ</div><input class="inp" id="cal-f-start" type="time"></div>
       <div class="igrp"><div class="ilabel">BİTİŞ</div><input class="inp" id="cal-f-end" type="time"></div>
+    </div>
+    <div id="cal-f-dayswrap" style="display:none;margin-bottom:8px">
+      <div class="ilabel" style="margin-bottom:4px">HANGİ GÜNLER? (kapattığın gün atlanır — ör. Cmt hariç her gün)</div>
+      <div id="cal-f-days" style="display:flex;flex-wrap:wrap;gap:4px"></div>
     </div>
     <div class="ilabel" style="margin-bottom:3px">🔔 NE ZAMAN HATIRLATILSIN? (boş = yok)</div>
     <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -1865,7 +1872,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.1</div>
     </div>
   </div>
 </div>
@@ -3135,7 +3142,7 @@ function _dowOf(ds){ try{ const p=ds.split('-').map(Number); return new Date(p[0
 function _evOccursOn(ev, ds){
   if(!ev.repeat || ev.repeat==='none') return ev.date===ds;
   if(ds < ev.date) return false;
-  if(ev.repeat==='daily') return true;
+  if(ev.repeat==='daily'){ const days=ev.repeatDays&&ev.repeatDays.length?ev.repeatDays:null; return !days || days.includes(_dowOf(ds)); }
   if(ev.repeat==='weekly') return _dowOf(ds)===_dowOf(ev.date);
   if(ev.repeat==='monthly') return parseInt(ds.slice(8),10)===parseInt(ev.date.slice(8),10);
   return false;
@@ -3156,6 +3163,34 @@ function _evToggleDone(ev, ds){
   return null;
 }
 const _CAL_REPEAT_LBL={ daily:'Her gün', weekly:'Her hafta', monthly:'Her ay' };
+const _CAL_DOW=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];   // JS getDay sırası
+let _calRepDays=new Set([0,1,2,3,4,5,6]);
+function calRepeatChange(){
+  const rp=(g('cal-f-repeat')||{}).value;
+  const w=g('cal-f-dayswrap'); if(w) w.style.display=(rp==='daily')?'block':'none';
+  renderCalDayChips();
+}
+function renderCalDayChips(){
+  const box=g('cal-f-days'); if(!box) return;
+  const order=[1,2,3,4,5,6,0];   // Pzt..Paz görünümü
+  box.innerHTML=order.map(d=>'<span class="gym-mchip'+(_calRepDays.has(d)?' on':'')+'" onclick="calToggleDay('+d+')">'+_CAL_DOW[d]+'</span>').join('');
+}
+function calToggleDay(d){
+  if(_calRepDays.has(d)){ if(_calRepDays.size<=1){ notify('En az 1 gün seçili kalmalı'); return; } _calRepDays.delete(d); }
+  else _calRepDays.add(d);
+  renderCalDayChips();
+}
+// Tekrar etiketi: "Her gün", "Her gün · Cmt hariç", "Haftada 3 gün (Pzt, Çar, Cum)"...
+function _repeatLbl(ev){
+  if(!ev.repeat||ev.repeat==='none') return '';
+  if(ev.repeat!=='daily') return _CAL_REPEAT_LBL[ev.repeat]||'';
+  const days=ev.repeatDays&&ev.repeatDays.length?ev.repeatDays:[0,1,2,3,4,5,6];
+  if(days.length>=7) return 'Her gün';
+  const missing=[0,1,2,3,4,5,6].filter(d=>!days.includes(d));
+  if(missing.length<=2) return 'Her gün · '+missing.map(d=>_CAL_DOW[d]).join(', ')+' hariç';
+  const order=[1,2,3,4,5,6,0];
+  return 'Haftada '+days.length+' gün ('+order.filter(d=>days.includes(d)).map(d=>_CAL_DOW[d]).join(', ')+')';
+}
 function _evBg(ev){ const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std; return ev.color || st.bg; }
 function _evBd(ev){ const st=CAL_TYPE_STYLE[ev.type]||CAL_TYPE_STYLE.std; return ev.color ? _avShade(ev.color,-0.3) : st.bd; }
 function _evTxtCol(ev){ // açık renk seçilirse yazı koyu olsun
@@ -3234,7 +3269,7 @@ function _calEvTipHtml(ev, ds){
   const done=_evDoneOn(ev, ds||ev.date);
   let h='<div style="font-weight:700;color:var(--white);margin-bottom:3px">'+(ev.color?('<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'+ev.color+';margin-right:4px"></span>'):'')+_he(ev.title||(ev.type==='blok'?'Meşgul':'(başlıksız)'))+(done?' <span style="color:var(--green)">✓</span>':'')+'</div>';
   h+='<div>'+(CAL_TYPE_LABEL[ev.type]||CAL_TYPE_LABEL.std)+' · '+time+'</div>';
-  if(ev.repeat&&ev.repeat!=='none') h+='<div>↻ '+(_CAL_REPEAT_LBL[ev.repeat]||'')+'</div>';
+  if(ev.repeat&&ev.repeat!=='none') h+='<div>↻ '+_repeatLbl(ev)+'</div>';
   if(ev.type==='soru' && ev.questions>0) h+='<div>❓ Hedef: <b style="color:var(--bright)">'+ev.questions+' soru</b></div>';
   if(ev.xp>0) h+='<div>⭐ Ödül: <b style="color:var(--yellow)">+'+ev.xp+' XP</b></div>';
   if(ev.remindAt) h+='<div>🔔 '+_he(ev.remindAt.replace('T',' '))+'</div>';
@@ -3322,6 +3357,8 @@ function calPopOpen(id, date, startMin, endMin, occDs){
     ra.value=rv||'';
   }
   const rp=g('cal-f-repeat'); if(rp) rp.value=ev.repeat||'none';
+  _calRepDays=new Set((ev.repeatDays&&ev.repeatDays.length)?ev.repeatDays:[0,1,2,3,4,5,6]);
+  calRepeatChange();
   _calColorSet=!!ev.color;
   const ci=g('cal-f-color');
   if(ci){ const st1=CAL_TYPE_STYLE[ev.type||'std']||CAL_TYPE_STYLE.std; ci.value=ev.color||((st1.bg&&st1.bg!=='transparent')?st1.bg:'#555555'); }
@@ -3347,14 +3384,15 @@ function calSave(){
   const q=parseInt(g('cal-f-q').value)||0, xp=Math.max(0,parseInt(g('cal-f-xp').value)||0), desc=g('cal-f-desc').value||'';
   const remindAt=((g('cal-f-remindat')||{}).value||'').trim()||null;
   const repeat=((g('cal-f-repeat')||{}).value)||'none';
+  const repeatDays=(repeat==='daily')?[..._calRepDays]:null;
   const color=_calColorSet ? ((g('cal-f-color')||{}).value||null) : null;
   const date=((g('cal-f-date')||{}).value)||_calDraft.date||today();
   S.calEvents=S.calEvents||[];
   if(_calEditId){
     const ev=S.calEvents.find(x=>x.id===_calEditId);
-    if(ev){ Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remindAt,repeat,color,xp,date}); ev.remind=undefined; ev.remindMin=undefined; }
+    if(ev){ Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remindAt,repeat,repeatDays,color,xp,date}); ev.remind=undefined; ev.remindMin=undefined; }
   } else {
-    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remindAt, repeat, color, xp, done:false });
+    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remindAt, repeat, repeatDays, color, xp, done:false });
   }
   save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
   if(remindAt){ _ensureNotifPerm(); scheduleCalendarReminders(); notify('🔔 Kaydedildi — '+remindAt.replace('T',' ')+' hatırlatılacak'); }
@@ -3394,7 +3432,7 @@ function scheduleCalendarReminders(){
       if(ev.remindAt){ const d=new Date(ev.remindAt); fireAt=d.getTime()||0; }
       if(!ev.remindAt || doneAll || fireAt<=Date.now()){ if(_isNative()) _nativeCancel(id); else swPost({type:'cancel',tag}); return; }
       const title='📅 TAKVİM';
-      const body=(ev.title||'Olay')+' — '+_minToTime(ev.startMin||0)+((ev.repeat&&ev.repeat!=='none')?' ('+(_CAL_REPEAT_LBL[ev.repeat]||'')+')':'');
+      const body=(ev.title||'Olay')+' — '+_minToTime(ev.startMin||0)+((ev.repeat&&ev.repeat!=='none')?' ('+_repeatLbl(ev)+')':'');
       if(_isNative()){ _nativeSchedule(id, fireAt, title, body); }
       else if(('Notification' in window) && Notification.permission==='granted'){ swPost({type:'schedule', at:fireAt, tag, kind:'cal', title, body, icon:_NOTIF_ICON}); }
     });
@@ -3444,7 +3482,7 @@ function renderHqCalTasks(){
     const ico=CAL_TYPE_ICON[ev.type]||'📌';
     const time=_minToTime(ev.startMin||0)+(ev.endMin?('–'+_minToTime(ev.endMin)):'');
     const badges=[];
-    if(ev.repeat&&ev.repeat!=='none') badges.push(chip('↻ '+(_CAL_REPEAT_LBL[ev.repeat]||''),'#a2a2a2'));
+    if(ev.repeat&&ev.repeat!=='none') badges.push(chip('↻ '+_repeatLbl(ev),'#a2a2a2'));
     if(ev.xp>0) badges.push(chip('⭐ +'+ev.xp+' XP','#ffff66'));
     if(ev.type==='soru'&&ev.questions>0) badges.push(chip('❓ '+ev.questions+' soru','#8fff8f'));
     if(ev.remindAt) badges.push(chip('🔔 '+(ev.remindAt.slice(0,10)===t ? ev.remindAt.slice(11) : ev.remindAt.replace('T',' ')),'#66ccff'));
@@ -3674,6 +3712,20 @@ function _gym(){
   if(!gm.room.wall) gm.room.wall='wall_gri';
   if(!gm.room.floor) gm.room.floor='floor_ahsap';
   return gm;
+}
+// GYM'i komple sıfırla — MP, egzersizler, mağaza eşyaları, oda, unvan ve rozetler silinir
+function gymReset(){
+  const gm=_gym();
+  const info='MP: '+gymMp()+' · egzersiz: '+gm.exercises.length+' · eşya: '+gm.ownedItems.length;
+  if(!confirm('GYM tamamen sıfırlansın mı?\n('+info+')\nMP, egzersizler, satın alınan eşyalar (kıyafetler dahil), oda dekorasyonu, GYM unvan ve rozetleri SİLİNİR. Geri alınamaz.')) return;
+  S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] };
+  _gymSel=null; _gxMs=new Set();
+  save(); renderGym();
+  try{ renderAvatar(); }catch(e){}            // kilitli kıyafet giyiliyse varsayılana düşer
+  try{ if(g('page-character')&&g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){}
+  try{ renderBadges(); }catch(e){}            // Spor ağacı söner
+  notify('↺ GYM sıfırlandı');
+  addLog('GYM sıfırlandı ('+info+').');
 }
 function gymMp(){ const gm=_gym(); return Math.max(0,(gm.mpEarned||0)-(gm.mpSpent||0)); }
 function _gymDoneCount(){ return _gym().exercises.filter(e=>e.done).length; }
@@ -9343,7 +9395,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.30.0 başlatıldı.');
+addLog('OVERCLOCK v7.30.1 başlatıldı.');
 </script>
 </body>
 </html>
