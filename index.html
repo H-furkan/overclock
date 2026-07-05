@@ -1244,7 +1244,7 @@ body.pixel-font #timer-unit{font-size:8px}
       </div>
       <div class="igrp"><div class="ilabel">🎨 BLOK RENGİ</div>
         <div style="display:flex;gap:6px;align-items:center">
-          <input type="color" id="cal-f-color" oninput="_calColorSet=true" style="flex:1;min-height:32px;height:32px;padding:2px;border:1px solid var(--bd2);border-radius:6px;background:var(--mid);cursor:pointer">
+          <button type="button" id="cal-f-color" onclick="_ocpCal(event,this)" style="flex:1;min-height:32px;height:32px;border:1px solid var(--bd2);border-radius:6px;background:var(--mid);cursor:pointer"></button>
           <button class="btn" type="button" title="Tür rengine dön" style="min-height:32px;padding:2px 8px;font-size:9px" onclick="calResetColor()">↺</button>
         </div>
       </div>
@@ -1885,7 +1885,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.33.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.34.0</div>
     </div>
   </div>
 </div>
@@ -2183,6 +2183,7 @@ function defState() {
     books:[],                     // okuma salonu: [{id,title,author,pages,read,summary,color,added}]
     readLog:[],                   // okuma seansları: [{date,bookId,mins,pages,ppm}]
     readGoal:0,                   // günlük sayfa hedefi (0 = kapalı) — grafikte sarı kesikli baraj
+    savedColors:[],               // renk seçici favorileri (hex listesi, senkronlu)
     gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[], depot:{}, exLib:[], buffs:{}, _roomGone:true },   // GYM — izole MP ekonomisi
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
@@ -3155,7 +3156,7 @@ const CAL_START=5, CAL_END=24, CAL_HPX=64;
 let _calWeekOffset=0, _calEditId=null, _calDraft=null;
 const CAL_TYPE_STYLE={ std:{bg:'#2a5a8a',bd:'#66ccff'}, soru:{bg:'#2f6b2f',bd:'var(--green)'}, konu:{bg:'#6b6b1a',bd:'var(--yellow)'}, blok:{bg:'transparent',bd:'#777'} };
 // ── Tekrarlı olaylar + özel renk yardımcıları (v7.29) ──
-let _calColorSet=false, _calEditDate=null;
+let _calColorSet=false, _calColorVal=null, _calEditDate=null;
 function _dowOf(ds){ try{ const p=ds.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]).getDay(); }catch(e){ return 0; } }
 function _evOccursOn(ev, ds){
   if(!ev.repeat || ev.repeat==='none') return ev.date===ds;
@@ -3217,10 +3218,10 @@ function _evTxtCol(ev){ // açık renk seçilirse yazı koyu olsun
     return (0.299*r+0.587*g2+0.114*b)>150 ? '#15181d' : '#fff'; }catch(e){ return '#fff'; }
 }
 function calResetColor(){
-  _calColorSet=false;
+  _calColorSet=false; _calColorVal=null;
   const t=(g('cal-f-type')||{}).value||'std';
   const st=CAL_TYPE_STYLE[t]||CAL_TYPE_STYLE.std;
-  const ci=g('cal-f-color'); if(ci) ci.value=(st.bg&&st.bg!=='transparent')?st.bg:'#555555';
+  const ci=g('cal-f-color'); if(ci) ci.style.background=(st.bg&&st.bg!=='transparent')?st.bg:'#555555';
   notify('↺ Tür rengi kullanılacak');
 }
 function _calWeekDatesArr(off){ const mon=_mondayLocal(new Date()); mon.setDate(mon.getDate()+off*7); const a=[]; for(let i=0;i<7;i++){const d=new Date(mon); d.setDate(d.getDate()+i); a.push(_dstr(d));} return a; }
@@ -3349,7 +3350,7 @@ function calGridClick(ev, ds){
   calPopOpen(null, ds, min, min+60);
 }
 function calOpenEvent(id, ds){ calPopOpen(id, null, null, null, ds); }
-function calPopTypeChange(){ const t=(g('cal-f-type')||{}).value; const w=g('cal-f-qwrap'); if(w) w.style.display=(t==='soru')?'block':'none'; if(!_calColorSet){ const st=CAL_TYPE_STYLE[t]||CAL_TYPE_STYLE.std; const ci=g('cal-f-color'); if(ci) ci.value=(st.bg&&st.bg!=='transparent')?st.bg:'#555555'; } }
+function calPopTypeChange(){ const t=(g('cal-f-type')||{}).value; const w=g('cal-f-qwrap'); if(w) w.style.display=(t==='soru')?'block':'none'; if(!_calColorSet){ const st=CAL_TYPE_STYLE[t]||CAL_TYPE_STYLE.std; const ci=g('cal-f-color'); if(ci) ci.style.background=(st.bg&&st.bg!=='transparent')?st.bg:'#555555'; } }
 function calPopClose(){ const p=g('cal-pop'); if(p) p.style.display='none'; _calEditId=null; }
 function calPopOpen(id, date, startMin, endMin, occDs){
   const isNew=!id;
@@ -3378,8 +3379,9 @@ function calPopOpen(id, date, startMin, endMin, occDs){
   _calRepDays=new Set((ev.repeatDays&&ev.repeatDays.length)?ev.repeatDays:[0,1,2,3,4,5,6]);
   calRepeatChange();
   _calColorSet=!!ev.color;
+  _calColorVal=ev.color||null;
   const ci=g('cal-f-color');
-  if(ci){ const st1=CAL_TYPE_STYLE[ev.type||'std']||CAL_TYPE_STYLE.std; ci.value=ev.color||((st1.bg&&st1.bg!=='transparent')?st1.bg:'#555555'); }
+  if(ci){ const st1=CAL_TYPE_STYLE[ev.type||'std']||CAL_TYPE_STYLE.std; ci.style.background=ev.color||((st1.bg&&st1.bg!=='transparent')?st1.bg:'#555555'); }
   g('cal-f-xp').value=ev.xp||0;
   calPopTypeChange();
   const db=g('cal-done-btn'), dl=g('cal-del-btn');
@@ -3404,7 +3406,7 @@ function calSave(){
   const remindAt=((g('cal-f-remindat')||{}).value||'').trim()||null;
   const repeat=((g('cal-f-repeat')||{}).value)||'none';
   const repeatDays=(repeat==='daily')?[..._calRepDays]:null;
-  const color=_calColorSet ? ((g('cal-f-color')||{}).value||null) : null;
+  const color=_calColorSet ? (_calColorVal||null) : null;
   const date=((g('cal-f-date')||{}).value)||_calDraft.date||today();
   S.calEvents=S.calEvents||[];
   if(_calEditId){
@@ -4712,6 +4714,155 @@ function earnBadge(id){
   addXP(50,'Rozet bonusu');
   renderBadges();
 }
+
+// ── OC RENK SEÇİCİ — tarayıcı color input'u yerine (LibreWolf 3-slider fix) ──
+// SV karesi + ton çubuğu + HEX girişi + hazır palet + KAYDEDİLEBİLİR favoriler (S.savedColors, senkronlu).
+// Çizim tamamen gradient/fillRect — getImageData YOK (LibreWolf-güvenli); renk koordinattan matematikle hesaplanır.
+const OCP_PRESETS=['#ff5a5a','#ff9e3d','#ffd24a','#8fff8f','#3a9d5c','#2aa198','#66ccff','#3a5a8b','#7a5af0','#bb88ff','#ff79c6','#f0c8a0','#c98d5f','#8b5a2b','#5a3d28','#f2f2f2','#a2a2a2','#555555','#23272e','#000000'];
+let _ocp={cb:null, el:null, h:0, s:1, v:1, hex:'#ff5a5a'};
+function _hsv2hex(h,sv,v){
+  const c=v*sv, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+  let r=0,g2=0,b=0;
+  if(h<60){r=c;g2=x;} else if(h<120){r=x;g2=c;} else if(h<180){g2=c;b=x;} else if(h<240){g2=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+  const f=n=>Math.round((n+m)*255).toString(16).padStart(2,'0');
+  return '#'+f(r)+f(g2)+f(b);
+}
+function _hex2hsv(hex){
+  try{
+    const n=parseInt(hex.slice(1),16); const r=((n>>16)&255)/255, g2=((n>>8)&255)/255, b=(n&255)/255;
+    const mx=Math.max(r,g2,b), mn=Math.min(r,g2,b), d=mx-mn;
+    let h=0;
+    if(d){ if(mx===r) h=60*(((g2-b)/d)%6); else if(mx===g2) h=60*((b-r)/d+2); else h=60*((r-g2)/d+4); }
+    if(h<0) h+=360;
+    return {h, s:mx?d/mx:0, v:mx};
+  }catch(e){ return {h:0,s:1,v:1}; }
+}
+function _ocpEnsure(){
+  let p=g('ocp-pop');
+  if(p) return p;
+  p=document.createElement('div'); p.id='ocp-pop';
+  p.style.cssText='display:none;position:fixed;z-index:9996;background:var(--deep);border:1px solid var(--bd2);border-radius:10px;padding:12px;box-shadow:0 8px 26px rgba(0,0,0,.65);width:228px';
+  p.innerHTML=
+    '<canvas id="ocp-sv" width="204" height="120" style="width:204px;height:120px;border-radius:6px;cursor:crosshair;touch-action:none;display:block"></canvas>'+
+    '<canvas id="ocp-hue" width="204" height="14" style="width:204px;height:14px;border-radius:7px;cursor:crosshair;touch-action:none;display:block;margin-top:8px"></canvas>'+
+    '<div style="display:flex;gap:6px;align-items:center;margin-top:9px">'+
+      '<div id="ocp-prev" style="width:30px;height:26px;border-radius:6px;border:1px solid var(--bd2);flex-shrink:0"></div>'+
+      '<input class="inp" id="ocp-hex" maxlength="7" style="flex:1;min-height:26px;padding:3px 6px;font-size:10px;letter-spacing:1px;text-transform:lowercase">'+
+      '<button class="btn" style="min-height:26px;padding:2px 8px;font-size:9px" title="Favorilere kaydet" onclick="_ocpSave()">💾</button>'+
+    '</div>'+
+    '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin:8px 0 3px">HAZIR RENKLER</div>'+
+    '<div id="ocp-presets" style="display:flex;flex-wrap:wrap;gap:4px"></div>'+
+    '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin:8px 0 3px">FAVORİLERİM <span style="opacity:.6">(✕ ile sil)</span></div>'+
+    '<div id="ocp-favs" style="display:flex;flex-wrap:wrap;gap:4px;min-height:10px"></div>'+
+    '<button class="btn primary fw" style="min-height:28px;font-size:9px;margin-top:9px" onclick="_ocpClose()">✓ TAMAM</button>';
+  document.body.appendChild(p);
+  p.addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('click',(e)=>{ if(p.style.display==='block' && !p.contains(e.target)) _ocpClose(); }, true);
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') _ocpClose(); });
+  // HEX girişi
+  g('ocp-hex').addEventListener('input',function(){
+    let v=this.value.trim(); if(v && v[0]!=='#') v='#'+v;
+    if(/^#[0-9a-fA-F]{6}$/.test(v)){ _ocpSet(v,true); }
+  });
+  // SV + HUE pointer
+  const svc=g('ocp-sv'), huc=g('ocp-hue');
+  const pick=(cv,evt,fn)=>{ const r=cv.getBoundingClientRect(); const pt=evt.touches?evt.touches[0]:evt;
+    fn(Math.max(0,Math.min(1,(pt.clientX-r.left)/r.width)), Math.max(0,Math.min(1,(pt.clientY-r.top)/r.height))); };
+  const wire=(cv,fn)=>{
+    let dn=false;
+    const mv=e=>{ if(!dn) return; pick(cv,e,fn); if(e.cancelable) e.preventDefault(); };
+    cv.addEventListener('mousedown',e=>{dn=true;pick(cv,e,fn);});
+    window.addEventListener('mousemove',mv);
+    window.addEventListener('mouseup',()=>dn=false);
+    cv.addEventListener('touchstart',e=>{dn=true;pick(cv,e,fn);e.preventDefault();},{passive:false});
+    cv.addEventListener('touchmove',mv,{passive:false});
+    window.addEventListener('touchend',()=>dn=false);
+  };
+  wire(svc,(x,y)=>{ _ocp.s=x; _ocp.v=1-y; _ocpApply(); });
+  wire(huc,(x,y)=>{ _ocp.h=x*360; _ocpApply(); });
+  return p;
+}
+function _ocpDraw(){
+  const svc=g('ocp-sv'), huc=g('ocp-hue'); if(!svc) return;
+  const sctx=svc.getContext('2d'), W=svc.width, H=svc.height;
+  // SV karesi: ton rengi + beyaz→şeffaf (yatay) + şeffaf→siyah (dikey)
+  sctx.fillStyle=_hsv2hex(_ocp.h,1,1); sctx.fillRect(0,0,W,H);
+  let gr=sctx.createLinearGradient(0,0,W,0); gr.addColorStop(0,'#fff'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  sctx.fillStyle=gr; sctx.fillRect(0,0,W,H);
+  gr=sctx.createLinearGradient(0,0,0,H); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'#000');
+  sctx.fillStyle=gr; sctx.fillRect(0,0,W,H);
+  // imleç
+  const mx=_ocp.s*W, my=(1-_ocp.v)*H;
+  sctx.beginPath(); sctx.arc(mx,my,5,0,Math.PI*2); sctx.strokeStyle='#fff'; sctx.lineWidth=2; sctx.stroke();
+  sctx.beginPath(); sctx.arc(mx,my,6.5,0,Math.PI*2); sctx.strokeStyle='rgba(0,0,0,.7)'; sctx.lineWidth=1; sctx.stroke();
+  // ton çubuğu
+  const hctx=huc.getContext('2d');
+  const hg=hctx.createLinearGradient(0,0,huc.width,0);
+  ['#f00','#ff0','#0f0','#0ff','#00f','#f0f','#f00'].forEach((c,i)=>hg.addColorStop(i/6,c));
+  hctx.fillStyle=hg; hctx.fillRect(0,0,huc.width,huc.height);
+  const hx=(_ocp.h/360)*huc.width;
+  hctx.fillStyle='#fff'; hctx.fillRect(hx-1.5,0,3,huc.height);
+  hctx.strokeStyle='rgba(0,0,0,.7)'; hctx.strokeRect(hx-2.5,0.5,5,huc.height-1);
+}
+function _ocpChips(){
+  const pr=g('ocp-presets'), fv=g('ocp-favs'); if(!pr) return;
+  const chip=(c,extra)=>'<span style="position:relative;display:inline-block"><button onclick="_ocpSet(\''+c+'\')" title="'+c+'" style="width:20px;height:20px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:'+c+';cursor:pointer;padding:0"></button>'+(extra||'')+'</span>';
+  pr.innerHTML=OCP_PRESETS.map(c=>chip(c)).join('');
+  const favs=S.savedColors||[];
+  fv.innerHTML=favs.length? favs.map((c,i)=>chip(c,'<button onclick="_ocpDelFav('+i+')" style="position:absolute;top:-5px;right:-5px;width:12px;height:12px;border-radius:50%;background:var(--red);color:#fff;border:none;font-size:8px;line-height:1;cursor:pointer;padding:0">×</button>')).join('')
+    : '<span style="font-size:8px;color:var(--muted)">Henüz yok — 💾 ile kaydet</span>';
+}
+function _ocpApply(fromHex){
+  _ocp.hex=_hsv2hex(_ocp.h,_ocp.s,_ocp.v);
+  const hx=g('ocp-hex'); if(hx && document.activeElement!==hx) hx.value=_ocp.hex;
+  const pv=g('ocp-prev'); if(pv) pv.style.background=_ocp.hex;
+  _ocpDraw();
+  if(_ocp.el){ try{ _ocp.el.style.background=_ocp.hex; }catch(e){} }
+  if(_ocp.cb){ try{ _ocp.cb(_ocp.hex); }catch(e){} }
+}
+function _ocpSet(hex, fromHexInput){
+  const hsv=_hex2hsv(hex);
+  _ocp.h=hsv.h; _ocp.s=hsv.s; _ocp.v=hsv.v; _ocp.hex=hex;
+  const hx=g('ocp-hex'); if(hx && !fromHexInput) hx.value=hex;
+  const pv=g('ocp-prev'); if(pv) pv.style.background=hex;
+  _ocpDraw();
+  if(_ocp.el){ try{ _ocp.el.style.background=hex; }catch(e){} }
+  if(_ocp.cb){ try{ _ocp.cb(hex); }catch(e){} }
+}
+function _ocpSave(){
+  S.savedColors=S.savedColors||[];
+  if(S.savedColors.includes(_ocp.hex)){ notify('Zaten favorilerde'); return; }
+  S.savedColors.push(_ocp.hex);
+  if(S.savedColors.length>24) S.savedColors=S.savedColors.slice(-24);
+  save(); _ocpChips(); notify('💾 '+_ocp.hex+' kaydedildi');
+}
+function _ocpDelFav(i){
+  (S.savedColors||[]).splice(i,1);
+  save(); _ocpChips();
+}
+function _ocpClose(){ const p=g('ocp-pop'); if(p) p.style.display='none'; _ocp.cb=null; _ocp.el=null; }
+function ocColorPick(ev, el, cur, cb){
+  if(ev) ev.stopPropagation();
+  const p=_ocpEnsure();
+  _ocp.cb=cb; _ocp.el=el||null;
+  const hsv=_hex2hsv(cur||'#ff5a5a');
+  _ocp.h=hsv.h; _ocp.s=hsv.s; _ocp.v=hsv.v; _ocp.hex=cur||'#ff5a5a';
+  p.style.display='block';
+  _ocpChips(); _ocpDraw();
+  const hx=g('ocp-hex'); if(hx) hx.value=_ocp.hex;
+  const pv=g('ocp-prev'); if(pv) pv.style.background=_ocp.hex;
+  // tetikleyenin yanına yerleş
+  let r=null; try{ r=(el||ev.target).getBoundingClientRect(); }catch(e){}
+  const w=p.offsetWidth||228, h=p.offsetHeight||330;
+  let left,top;
+  if(r){ left=r.right+8; if(left+w>window.innerWidth-6) left=r.left-w-8; if(left<6) left=Math.min(Math.max(6,r.left),window.innerWidth-w-6);
+    top=r.top; if(top+h>window.innerHeight-6) top=Math.max(6,window.innerHeight-h-6); }
+  else { left=(window.innerWidth-w)/2; top=70; }
+  p.style.left=left+'px'; p.style.top=top+'px';
+}
+// hazır sarmalayıcılar
+function _ocpAv(ev, slot, el){ const av=_char().avatar; ocColorPick(ev, el, av.colors[slot]||'#8a94a6', v=>{ avColor(slot,v); }); }
+function _ocpCal(ev, el){ _calColorSet=true; ocColorPick(ev, el, _calColorVal||'#4a90d9', v=>{ _calColorVal=v; }); }
 
 // ── MİNİ PROMPT — native prompt() yerine küçük, yanında-açılan giriş kutusu ──
 let _mpState=null;
@@ -6290,10 +6441,10 @@ function renderAvatarPopRows(){
         '<button class="avbtn" onclick="avCycle(\''+slot+'\',-1)">◀</button>'+
         '<span class="avval">'+_he(list[idx].n)+(lockedN?' <span style="opacity:.5">🔒'+lockedN+'</span>':'')+'</span>'+
         '<button class="avbtn" onclick="avCycle(\''+slot+'\',1)">▶</button>'+
-        '<input type="color" value="'+(av.colors[slot]||'#8a94a6')+'" oninput="avColor(\''+slot+'\',this.value)">'+
+        '<button type="button" class="avbtn" style="width:26px;background:'+(av.colors[slot]||'#8a94a6')+'" onclick="_ocpAv(event,\''+slot+'\',this)" title="Renk seç"></button>'+
       '</div>';
     }).join('');
-    html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><input type="color" value="'+(av.colors.skin||'#f0c8a0')+'" oninput="avColor(\'skin\',this.value)"></div>';
+    html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><button type="button" class="avbtn" style="width:26px;background:'+(av.colors.skin||'#f0c8a0')+'" onclick="_ocpAv(event,\'skin\',this)" title="Renk seç"></button></div>';
     html+='<div style="font-size:7px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:6px">El çizimi portre modu — yeni katman çizdikçe eklenecek.</div>';
     box.innerHTML=html;
     return;
@@ -6307,10 +6458,10 @@ function renderAvatarPopRows(){
       '<button class="avbtn" onclick="avCycle(\''+s.key+'\',-1)">◀</button>'+
       '<span class="avval">'+(s.arr.filter((e,i)=>i<=idx&&_avOwned(e)).length)+'/'+avail+' '+_he(item.n)+'</span>'+
       '<button class="avbtn" onclick="avCycle(\''+s.key+'\',1)">▶</button>'+
-      '<input type="color" value="'+(av.colors[s.key]||'#888888')+'" oninput="avColor(\''+s.key+'\',this.value)">'+
+      '<button type="button" class="avbtn" style="width:26px;background:'+(av.colors[s.key]||'#888888')+'" onclick="_ocpAv(event,\''+s.key+'\',this)" title="Renk seç"></button>'+
     '</div>';
   }).join('');
-  html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><input type="color" value="'+(av.colors.skin||'#f0c8a0')+'" oninput="avColor(\'skin\',this.value)"></div>';
+  html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><button type="button" class="avbtn" style="width:26px;background:'+(av.colors.skin||'#f0c8a0')+'" onclick="_ocpAv(event,\'skin\',this)" title="Renk seç"></button></div>';
   box.innerHTML=html;
 }
 function avCycle(slot,dir){
@@ -9477,7 +9628,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.33.0 başlatıldı.');
+addLog('OVERCLOCK v7.34.0 başlatıldı.');
 </script>
 </body>
 </html>
