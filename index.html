@@ -1873,7 +1873,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.31.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.32.0</div>
     </div>
   </div>
 </div>
@@ -2200,7 +2200,7 @@ function defState() {
       photo:null, name:'Karakter',
       charXp:0, statPoints:0,
       stats:{ ivme:0,kapasite:0,disiplin:0,muhafaza:0,taktik:0,verim:0,risk:0,istikrar:0 },
-      avatar:{ hair:0,armor:0,weapon:0,pants:0,shoes:0, colors:{hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0'} },
+      avatar:{ hair:0,armor:0,weapon:0,pants:0,shoes:0,eyes:0, colors:{hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0',eyes:'#3a2a1c'} },
       lastLevel:1,
     },
     // ── v7.12: CASES (kasa) ──
@@ -5994,7 +5994,7 @@ function _char(){
   c.stats = c.stats || {};
   CHARX_STATS.forEach(s=>{ if(typeof c.stats[s.key]!=='number') c.stats[s.key]=0; });
   if (!c.avatar) c.avatar = { hair:0,armor:0,weapon:0,pants:0,shoes:0, colors:{} };
-  c.avatar.colors = Object.assign({hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0'}, c.avatar.colors||{});
+  c.avatar.colors = Object.assign({hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0',eyes:'#3a2a1c'}, c.avatar.colors||{});
   if (typeof c.lastLevel!=='number') c.lastLevel = getCharLevelInfo(c.charXp||0).level;
   return c;
 }
@@ -6266,6 +6266,12 @@ function _avShade(hex,f){
 const AV_PORTRAIT={
   base:'sprites/avatar/taban.png',
   slots:{
+    eyes:[
+      {n:'Sert Bakış', src:'sprites/avatar/goz_1.png'},
+      {n:'Kısık', src:'sprites/avatar/goz_2.png'},
+      {n:'Sakin', src:'sprites/avatar/goz_3.png'},
+      {n:'Boş'}
+    ],
     hair:[
       {n:'Dağınık Saç', src:'sprites/avatar/sac_1.png'},
       {n:'Kısa Saç', src:'sprites/avatar/sac_2.png'},
@@ -6311,7 +6317,7 @@ function _avTintCanvas(src,color){
         const r=d[i], g2=d[i+1], b=d[i+2];
         if(Math.max(Math.abs(r-g2),Math.abs(g2-b),Math.abs(r-b))<=10){
           const f=(r+g2+b)/765;
-          if(f>0.85){ const t=(f-0.85)/0.15*0.55; d[i]=tr+(255-tr)*t; d[i+1]=tg+(255-tg)*t; d[i+2]=tb+(255-tb)*t; }
+          if(f>0.85){ const t=0.35+0.65*((f-0.85)/0.15); d[i]=tr+(255-tr)*t; d[i+1]=tg+(255-tg)*t; d[i+2]=tb+(255-tb)*t; }
           else { const k=f/0.78; d[i]=Math.min(255,tr*k); d[i+1]=Math.min(255,tg*k); d[i+2]=Math.min(255,tb*k); }
         }
       }
@@ -6323,7 +6329,7 @@ function _avTintCanvas(src,color){
 }
 function _avPortraitState(){ return _avImg(AV_PORTRAIT.base); }
 function _avPortraitOn(){ const st=_avPortraitState(); return st.loaded && !st.failed; }
-const _AV_SLOT_TR={hair:'SAÇ',armor:'ÜST',weapon:'SİLAH',pants:'ALT',shoes:'AYAKKABI'};
+const _AV_SLOT_TR={eyes:'GÖZ',hair:'SAÇ',armor:'ÜST',weapon:'SİLAH',pants:'ALT',shoes:'AYAKKABI'};
 function _renderAvatarPortrait(){
   const cv=g('avatar-cv'); if(!cv) return;
   cv.classList.add('portrait');
@@ -6333,7 +6339,7 @@ function _renderAvatarPortrait(){
   const av=_char().avatar, col=av.colors;
   const base=_avTintCanvas(AV_PORTRAIT.base, col.skin);
   if(base) ctx.drawImage(base,0,0);
-  ['pants','shoes','armor','hair','weapon'].forEach(slot=>{
+  ['eyes','pants','shoes','armor','hair','weapon'].forEach(slot=>{
     const list=AV_PORTRAIT.slots[slot]; if(!list||!list.length) return;
     const idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
     const ent=list[idx]; if(!ent||!ent.src) return;   // 'Boş' → çizme
@@ -9597,7 +9603,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.31.2 başlatıldı.');
+addLog('OVERCLOCK v7.32.0 başlatıldı.');
 </script>
 </body>
 </html>
