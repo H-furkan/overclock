@@ -1581,7 +1581,7 @@ body.pixel-font #timer-unit{font-size:8px}
             <div id="char-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--bright),var(--yellow));transition:width .4s"></div>
           </div>
           <div id="char-xp-text" style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:5px">0 / 70</div>
-          <div style="font-size:8px;color:var(--dim);letter-spacing:1px;margin-top:3px">Seviye atlama = LVL × 70 XP · seviye başına +2 stat puanı</div>
+          <div style="font-size:8px;color:var(--dim);letter-spacing:1px;margin-top:3px">Seviye atlama = LVL × 220 XP · seviye başına +1 stat puanı</div>
         </div>
         <div class="charx-card" style="margin-top:10px">
           <div class="cb-title">🕯 Motivasyon</div>
@@ -1891,7 +1891,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.36.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.37.0</div>
     </div>
   </div>
 </div>
@@ -2076,7 +2076,7 @@ function getStreakShieldCost(){
 }
 // STAT: Muhafaza — koruyucu/sigorta maliyet indirimi (puan başına %2, tavan %40)
 function _preservationDisc(){
-  try{ return Math.min(0.4, 0.02*((((S.character||{}).stats||{}).muhafaza)||0)); }catch(e){ return 0; }
+  try{ return Math.min(0.2, 0.01*((((S.character||{}).stats||{}).muhafaza)||0)); }catch(e){ return 0; }
 }
 function getInsuranceCost(){
   const it=SHOP_ITEMS.find(x=>x.id==='sink_topic_insurance');
@@ -2384,7 +2384,7 @@ function applyDailyRollover(saved){
       S._contractWin = bonus;
     } else {
       // STAT: Risk Yönetimi — ceza dk başına 1 yerine max(0.1, 1-0.05×puan) XP
-      const _perMin = Math.max(0.1, 1 - 0.05*((((S.character||{}).stats||{}).risk)||0));
+      const _perMin = Math.max(0.5, 1 - 0.02*((((S.character||{}).stats||{}).risk)||0));   // v7.37 denge: sözleşme dişli kalır
       const deficit = Math.max(0, Math.round((tgt - workedMin) * _perMin));
       S.totalXp = Math.max(0, (S.totalXp||0) - deficit);
       S._contractLoss = deficit;
@@ -2875,11 +2875,18 @@ function tickTimer(){
         notify('🏆 NO-DISTRACTION BAŞARILDI — 6x XP!');
         addLog('No-Distraction challenge başarıldı (6x XP).');
       }
-      // STAT: Disiplin — 04:00-07:00 arası başlayan seansa +2×puan taban XP (Erken Kuş)
+      // STAT: Disiplin (v7.37 denge) — 04:00-07:00 başlangıcı + ≥25 dk seans → +%1×puan XP (tavan %20; dakika farm edilemez)
       const _dsc = charStat('disiplin');
-      if(_dsc>0 && _sessStartHour>=4 && _sessStartHour<7){ sxp += _dsc*2; notify('🌅 ERKEN KUŞ BONUSU +'+(_dsc*2)+' XP'); }
-      // STAT: Verimlilik — puan başına %1 şansla FLOW STATE (o seans ×1.2)
-      if(Math.random() < charStat('verim')*0.01){ sxp = Math.round(sxp*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); addLog('Flow State tetiklendi (×1.2).'); }
+      if(_dsc>0 && _sessStartHour>=4 && _sessStartHour<7 && (S.focusMin||0)>=25){
+        const _db=Math.round(sxp*0.01*Math.min(20,_dsc));
+        if(_db>0){ sxp += _db; notify('🌅 ERKEN KUŞ +%'+Math.min(20,_dsc)+' ('+_db+' XP)'); }
+      }
+      // STAT: Verimlilik (v7.37 denge) — puan başına %0.5 şansla FLOW STATE (×1.2) (+☕ Kafein +%15)
+      let _flowCh = charStat('verim')*0.005;
+      if(S.gymKafeinBuff){ _flowCh += 0.15; S.gymKafeinBuff=false; }
+      if(Math.random() < _flowCh){ sxp = Math.round(sxp*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); addLog('Flow State tetiklendi (×1.2).'); }
+      // 🧃 Energy Drink: bu session ×1.2 XP
+      if(S.gymEnergyBuff){ sxp = Math.round(sxp*1.2); S.gymEnergyBuff=false; notify('🧃 ENERGY DRINK — session XP ×1.2'); }
       if((S.cumFocusSecs||0)>=50*3600) earnBadge('focus50h');
       if((S.cumFocusSecs||0)>=200*3600) earnBadge('focus200h');
       addXP(sxp,'Session tamamlandı ('+S.focusMin+'dk)');
@@ -3019,8 +3026,14 @@ function finishTimerEarly(ev){
   S.lastFocusEnd = Date.now();
   let _sxp2 = sxp;
   const _dsc2 = charStat('disiplin');
-  if(_dsc2>0 && _sessStartHour>=4 && _sessStartHour<7){ _sxp2 += _dsc2*2; notify('🌅 ERKEN KUŞ BONUSU +'+(_dsc2*2)+' XP'); }
-  if(Math.random() < charStat('verim')*0.01){ _sxp2 = Math.round(_sxp2*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); }
+  if(_dsc2>0 && _sessStartHour>=4 && _sessStartHour<7 && elapsedMin>=25){
+    const _db2=Math.round(_sxp2*0.01*Math.min(20,_dsc2));
+    if(_db2>0){ _sxp2 += _db2; notify('🌅 ERKEN KUŞ +%'+Math.min(20,_dsc2)+' ('+_db2+' XP)'); }
+  }
+  let _flowCh2 = charStat('verim')*0.005;
+  if(S.gymKafeinBuff){ _flowCh2 += 0.15; S.gymKafeinBuff=false; }
+  if(Math.random() < _flowCh2){ _sxp2 = Math.round(_sxp2*1.2); notify('🌊 FLOW STATE! Seans XP ×1.2'); }
+  if(S.gymEnergyBuff){ _sxp2 = Math.round(_sxp2*1.2); S.gymEnergyBuff=false; notify('🧃 ENERGY DRINK — session XP ×1.2'); }
   addXP(_sxp2, 'Session erken bitti ('+elapsedMin+'dk)');
   notify('⏹ ERKEN BİTİŞ // +'+sxp+' XP ('+elapsedMin+' dk)');
   addLog('Session erken bitti — '+elapsedMin+' dk, +'+sxp+' XP');
@@ -5954,12 +5967,12 @@ const CHAR_STAT_MAX = 20;
 const CHARX_STATS = [
   { key:'ivme',     icon:'⚡', name:'Momentum',       en:'İvme',          desc:v=>'Aynı gün 2. ve sonraki takvim görevlerinde +%'+(v*0.5).toFixed(1)+' XP bonusu. Korumasız boş gün → bu stat -1 erir.' },
   { key:'kapasite', icon:'🎒', name:'Kapasite',       en:'Capacity',      desc:v=>'Streak Koruyucu stok limiti +'+Math.floor(v/10)+' (her 10 puan kalıcı +1; şu an limit '+(2+Math.floor(v/10))+').' },
-  { key:'disiplin', icon:'🌅', name:'Disiplin',       en:'Discipline',    desc:v=>'04:00–07:00 arası başlatılan her seansa +'+(v*2)+' taban XP (Erken Kuş).' },
-  { key:'muhafaza', icon:'🛡', name:'Muhafaza',       en:'Preservation',  desc:v=>'Streak Koruyucu ve Konu Sigortası %'+(v*2)+' daha ucuz.' },
-  { key:'taktik',   icon:'⚔', name:'Taktik',         en:'Tactics',       desc:v=>'Boss ödülünde altın parça şansı +%'+v+', ekstra streak kırığı şansı +%'+(v*0.5).toFixed(1)+'.' },
-  { key:'verim',    icon:'🌊', name:'Verimlilik',     en:'Efficiency',    desc:v=>'Seans bitiminde %'+v+' şansla FLOW STATE: o seansın XP\'si ×1.2.' },
-  { key:'risk',     icon:'📜', name:'Risk Yönetimi',  en:'Risk Mgmt',     desc:v=>'Sözleşme cezası kaçırılan dk başına '+Math.max(0.1,1-0.05*v).toFixed(2)+' XP (standart 1.00).' },
-  { key:'istikrar', icon:'🔄', name:'İstikrar',       en:'Consistency',   desc:v=>'Alışkanlık tamamlama XP\'si +'+(v*10)+' (tavan 500). Alışkanlık zinciri kırılırsa bu stat -1.' },
+  { key:'disiplin', icon:'🌅', name:'Disiplin',       en:'Discipline',    desc:v=>'04:00–07:00 başlangıçlı ve ≥25 dk süren seansa +%'+Math.min(20,v)+' XP (Erken Kuş).' },
+  { key:'muhafaza', icon:'🛡', name:'Muhafaza',       en:'Preservation',  desc:v=>'Streak Koruyucu ve Konu Sigortası %'+v+' daha ucuz (tavan %20).' },
+  { key:'taktik',   icon:'⚔', name:'Taktik',         en:'Tactics',       desc:v=>'Boss altın parça şansı +%'+(v*0.5).toFixed(1)+' (tavan +%10), streak kırığı +%'+(v*0.25).toFixed(2)+' (tavan +%5).' },
+  { key:'verim',    icon:'🌊', name:'Verimlilik',     en:'Efficiency',    desc:v=>'Seans bitiminde %'+(v*0.5).toFixed(1)+' şansla FLOW STATE: o seansın XP\'si ×1.2.' },
+  { key:'risk',     icon:'📜', name:'Risk Yönetimi',  en:'Risk Mgmt',     desc:v=>'Sözleşme cezası kaçırılan dk başına '+Math.max(0.5,1-0.02*v).toFixed(2)+' XP (standart 1.00, taban 0.50).' },
+  { key:'istikrar', icon:'🔄', name:'İstikrar',       en:'Consistency',   desc:v=>'Alışkanlık tamamlama XP\'si +'+(v*3)+' (tavan 300). Alışkanlık zinciri kırılırsa bu stat -1.' },
 ];
 function charStat(key){ try{ return Math.max(0, (_char().stats||{})[key]||0); }catch(e){ return 0; } }
 
@@ -6132,11 +6145,19 @@ function _char(){
   if (!c.avatar) c.avatar = { hair:0,armor:0,weapon:0,pants:0,shoes:0, colors:{} };
   c.avatar.colors = Object.assign({hair:'#8b5a2b',armor:'#7a8a99',weapon:'#c0c0c0',pants:'#3a5a8b',shoes:'#5a3d2b',skin:'#f0c8a0',eyes:'#3a2a1c'}, c.avatar.colors||{});
   if (typeof c.lastLevel!=='number') c.lastLevel = getCharLevelInfo(c.charXp||0).level;
+  // ── v7.37 DENGE SIFIRLAMASI (kullanıcı istedi): karakter ilerlemesi temiz sayfa ──
+  if (!c._balanceReset737){
+    c.charXp=0; c.statPoints=0; c.lastLevel=1;
+    CHARX_STATS.forEach(st=>{ c.stats[st.key]=0; });
+    c._v24PtsGranted=true;   // eski telafi tekrar tetiklenmesin
+    c._balanceReset737=true;
+    try{ notify('⚖ DENGE GÜNCELLEMESİ — karakter sıfırlandı, yeni eğri: LVL×220, +1 puan/seviye'); addLog('Denge güncellemesi: karakter XP/seviye/statlar sıfırlandı.'); }catch(e){}
+  }
   // ── v7.35.1 TELAFİ: eski sekmede kazanılan seviyelerin stat puanları (yeni kural: seviye başına +2).
   // Hak edilen = (seviye-1)×2; yeni statlara yatırılmış olanlar düşülür. Tek seferlik, geri almaz.
   if (!c._v24PtsGranted){
     const lv=getCharLevelInfo(c.charXp||0).level;
-    const expected=Math.max(0,(lv-1)*2);
+    const expected=Math.max(0,(lv-1)*1);
     const invested=CHARX_STATS.reduce((a,st)=>a+((c.stats&&c.stats[st.key])||0),0);
     const due=Math.max(0, expected - invested - (c.statPoints||0));
     if(due>0){
@@ -6151,18 +6172,20 @@ function _char(){
 // (Spider sistemi v7.24'te tamamen kaldırıldı — decay artık gün-devrinde İvme/İstikrar statlarına işliyor)
 function applyStatDecay(){ return 0; }
 
-// Level eğrisi (v7.24): lvl N → N+1 = N × 70 XP. Level N'e kümülatif eşik = 70 × (N-1)N/2
+// Level eğrisi (v7.37 DENGE): lvl N → N+1 = N × 220 XP.
+// Hedef: LVL 50 (Nörolog kapısı) ≈ 269.500 XP ≈ günde ~800 XP ile ~340 gün — YKS yolculuğu boyu.
+const CHAR_LVL_FACTOR = 220;
 function getCharLevelInfo(xp){
   const x = Math.max(0, xp|0);
   let lv = 1;
   while (true){
-    const need = 70 * lv * (lv+1) / 2;
+    const need = CHAR_LVL_FACTOR * lv * (lv+1) / 2;
     if (need > x) break;
     lv++;
     if (lv > 999) break;
   }
-  const startThis = 70 * (lv-1) * lv / 2;
-  const need = 70 * lv;
+  const startThis = CHAR_LVL_FACTOR * (lv-1) * lv / 2;
+  const need = CHAR_LVL_FACTOR * lv;
   return { level: lv, intoLevel: x - startThis, needForNext: need, startThis };
 }
 
@@ -6173,7 +6196,7 @@ function awardCharXp(amt){
     c.charXp = (c.charXp||0) + amt;
     const now = getCharLevelInfo(c.charXp).level;
     if (now > before){
-      const gained = (now - before) * 2;   // seviye başına +2 stat puanı
+      const gained = (now - before) * 1;   // v7.37 denge: seviye başına +1 stat puanı
       c.statPoints = (c.statPoints||0) + gained;
       c.lastLevel = now;
       const tOld = charTitle(before), tNew = charTitle(now);
@@ -6744,13 +6767,13 @@ function _synthShards(){
 // Boss yenince kasa parçası düşür (yüksek ağırlık standart, düşük ağırlık altın)
 function _dropBossFragment(){
   const cs=_cs();
-  // STAT: Taktik — altın parça şansı %15 + %1×puan (tavan %45); ekstra kırık şansı %0.5×puan (tavan %10)
+  // STAT: Taktik (v7.37 denge) — altın parça şansı %15 + %0.5×puan (tavan %25); ekstra kırık şansı %0.25×puan (tavan %5)
   const _tk = (typeof charStat==='function') ? charStat('taktik') : 0;
-  const goldChance = Math.min(0.45, 0.15 + 0.01*_tk);
+  const goldChance = Math.min(0.25, 0.15 + 0.005*_tk);
   const gold = Math.random() < goldChance;
   if(gold){ cs.fragGold=(cs.fragGold||0)+1; notify('⚔ BOSS YENİLDİ → 🟡 +1 ALTIN kasa parçası ('+cs.fragGold+'/6)'); }
   else { cs.fragStd=(cs.fragStd||0)+1; notify('⚔ BOSS YENİLDİ → ⚪ +1 STANDART kasa parçası ('+cs.fragStd+'/3)'); }
-  if(_tk>0 && Math.random() < Math.min(0.10, 0.005*_tk)){ cs.protShards=(cs.protShards||0)+1; notify('⚔ Taktik bonusu → 🧩 +1 Streak Kırığı ('+cs.protShards+'/10)'); _synthShards(); }
+  if(_tk>0 && Math.random() < Math.min(0.05, 0.0025*_tk)){ cs.protShards=(cs.protShards||0)+1; notify('⚔ Taktik bonusu → 🧩 +1 Streak Kırığı ('+cs.protShards+'/10)'); _synthShards(); }
   _synthFragments();
 }
 // Kullanıcının zaten sahip olduğu TEK-SEFERLİK kozmetikler (tekrar düşmesin diye havuzdan çıkarılır)
@@ -8674,7 +8697,7 @@ function completeHabit(id){
   if(!h.log) h.log={};
   h.log[t]=1;
   // STAT: İstikrar — alışkanlık XP'si +10×puan (toplam tavan 500)
-  const _habXp = Math.min(500, (h.xpReward||30) + charStat('istikrar')*10);
+  const _habXp = Math.min(300, (h.xpReward||30) + charStat('istikrar')*3);
   addXP(_habXp, 'Alışkanlık: '+h.name);
   notify('✓ ALIŞKANLIK TAMAMLANDI // +'+_habXp+' XP'+(_habXp>(h.xpReward||30)?' (İstikrar bonuslu)':''));
   checkHabitBadges(h);
@@ -9885,7 +9908,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.36.0 başlatıldı.');
+addLog('OVERCLOCK v7.37.0 başlatıldı.');
 </script>
 </body>
 </html>
