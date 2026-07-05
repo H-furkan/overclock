@@ -1865,7 +1865,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.29.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.0</div>
     </div>
   </div>
 </div>
@@ -5795,40 +5795,43 @@ function _pxPainter(buf){
   return {set,R,RR,ELL,TRI};
 }
 function _avFace(P,SK){
-  // kaşlar — kalın, hafif çatık (sert bakış)
-  P.R(12,12,7,2,'#2b211b'); P.R(25,12,7,2,'#2b211b');
-  P.set(18,13,'#2b211b'); P.set(25,13,'#2b211b');
-  // gözler — küçük, keskin
-  P.R(13,15,4,5,'#ffffff'); P.R(27,15,4,5,'#ffffff');
-  P.R(14,16,2,4,'#241d1a'); P.R(28,16,2,4,'#241d1a');
-  P.set(14,16,'#ffffff'); P.set(28,16,'#ffffff');
-  // burun gölgesi + düz sert ağız
-  P.R(21,20,2,1,_avShade(SK,-0.18));
-  P.R(19,25,6,1,'#7a4a3a');
+  // ince sert kaş çizgisi (1px)
+  P.R(13,12,6,1,'#33261d'); P.R(25,12,6,1,'#33261d');
+  // Stardew gözü: solda beyaz parlama sütunu + sağda koyu iris (her göz 4px geniş, 5px uzun)
+  P.R(13,14,2,5,'#ffffff'); P.R(15,14,2,5,'#2e2016');
+  P.R(27,14,2,5,'#ffffff'); P.R(29,14,2,5,'#2e2016');
+  // minik burun gölgesi
+  P.R(21,19,2,1,_avShade(SK,-0.16));
+  // ağız yok (Stardew sprite'ları gibi) — çene gölgesi karakteri veriyor
 }
 function _avBaseDraw(P,SK){
   const D=_avShade(SK,-0.14);
-  P.RR(11,29,22,15,3,SK);            // gövde (geniş omuz)
-  P.RR(5,29,5,14,2,SK); P.RR(34,29,5,14,2,SK);   // kollar — gövdeden AYRIK (kontur araya girer)
+  P.RR(11,29,22,15,3,SK);            // gövde
+  P.RR(5,29,5,14,2,SK); P.RR(34,29,5,14,2,SK);   // kollar (ayrık)
   P.RR(5,42,5,5,2,SK);  P.RR(34,42,5,5,2,SK);    // eller
   P.R(15,44,6,7,SK); P.R(23,44,6,7,SK);           // bacaklar
   P.R(14,51,7,3,SK); P.R(23,51,7,3,SK);           // ayaklar
-  P.RR(7,2,30,20,8,SK);              // kafa üst (yuvarlak)
-  P.RR(7,12,30,16,3,SK);             // çene — köşeli (sert)
-  P.R(12,28,20,2,D);                 // çene altı gölge
+  // Stardew kafası: düz tepe + hafif trapez + köşeli çene
+  P.R(9,3,26,3,SK);                  // düz tepe bandı
+  P.RR(8,4,28,17,4,SK);              // üst yüz
+  P.RR(9,16,26,12,3,SK);             // çene (1px içeride — hafif trapez)
+  // kulaklar
+  P.R(6,14,2,5,SK); P.R(36,14,2,5,SK);
+  P.set(7,16,D); P.set(36,16,D);
+  P.R(13,27,18,2,D);                 // çene altı gölge
   _avFace(P,SK);
 }
 const AV_HAIR=[
-  {n:'Taç Kirpi', d:(P,C)=>{const H=_avH(C); P.RR(6,6,32,11,6,C); for(let i=0;i<5;i++){ P.TRI(7+i*6,0,6,7,i%2? H.L:C); } P.R(6,15,3,5,C); P.R(35,15,3,5,C); P.R(7,15,30,1,H.D); }},
-  {n:'Düz Kâkül', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); for(let i=0;i<6;i++) P.set(9+i*5,13,H.D); P.R(6,10,4,7,C); P.R(34,10,4,7,C); }},
-  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); P.RR(4,8,5,28,2,C); P.RR(35,8,5,28,2,C); P.R(4,33,4,2,H.D); P.R(36,33,4,2,H.D); }},
-  {n:'Mohawk', d:(P,C)=>{const H=_avH(C); P.R(19,1,6,10,C); P.set(20,0,C); P.set(22,0,C); P.set(24,0,C); P.R(19,4,2,6,H.L); }},
-  {n:'Kıvırcık', d:(P,C)=>{const H=_avH(C); P.ELL(11,10,5.5,5,C); P.ELL(17,6,5.5,5,C); P.ELL(24,5,6,5,C); P.ELL(31,7,5.5,5,C); P.ELL(36,12,4.5,4.5,C); P.ELL(8,15,4,4,C); P.ELL(36,16,3.5,3.5,C); P.ELL(21,8,4,3.5,H.L); }},
-  {n:'At Kuyruğu', d:(P,C)=>{const H=_avH(C); P.RR(6,2,32,12,7,C); P.ELL(38,10,3,3,C); P.RR(37,12,4,17,2,C); P.R(37,19,4,1,H.D); P.R(37,27,4,2,H.D); }},
-  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.RR(7,2,30,11,8,C); P.R(8,11,28,2,H.D); }},
+  {n:'Taç Kirpi', d:(P,C)=>{const H=_avH(C); P.RR(7,5,30,11,4,C); for(let i=0;i<5;i++){ P.TRI(8+i*6,0,6,6,C); } P.R(8,7,28,2,H.L); P.R(7,13,3,6,C); P.R(34,13,3,6,C); for(let x=9;x<=33;x+=4){ P.TRI(x,14,3,3,C); } P.set(10,1,H.L); P.set(22,1,H.L); P.set(34,1,H.L); }},
+  {n:'Düz Kâkül', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(7,4,30,10,4,C); P.R(8,5,28,2,H.L); for(let x=8;x<=32;x+=4){ P.TRI(x,12,4,3,C); } P.R(7,10,3,8,C); P.R(34,10,3,8,C); }},
+  {n:'Uzun', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(7,4,30,10,4,C); P.R(8,5,28,2,H.L); for(let x=9;x<=31;x+=5){ P.TRI(x,12,4,3,C); } P.RR(4,8,5,28,2,C); P.RR(35,8,5,28,2,C); P.R(5,10,1,20,H.L); P.R(38,10,1,20,H.L); P.R(4,33,4,2,H.D); P.R(36,33,4,2,H.D); }},
+  {n:'Mohawk', d:(P,C)=>{const H=_avH(C); P.R(18,0,8,12,C); for(let k=0;k<4;k++) P.set(19+k*2,-0+ (k%2),C); P.R(19,2,2,9,H.L); P.TRI(17,-3,5,4,C); P.TRI(22,-3,5,4,C); }},
+  {n:'Kıvırcık', d:(P,C)=>{const H=_avH(C); P.ELL(11,10,5.5,5,C); P.ELL(17,6,5.5,5,C); P.ELL(24,5,6,5,C); P.ELL(31,7,5.5,5,C); P.ELL(36,12,4.5,4.5,C); P.ELL(8,15,4,4,C); P.ELL(36,16,3.5,3.5,C); P.set(16,4,H.L); P.set(17,5,H.L); P.set(25,3,H.L); P.set(26,4,H.L); P.set(10,9,H.L); P.set(31,6,H.L); }},
+  {n:'At Kuyruğu', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(7,4,30,10,4,C); P.R(8,5,28,2,H.L); for(let x=9;x<=31;x+=5){ P.TRI(x,12,4,3,C); } P.ELL(38,10,3,3,C); P.RR(37,12,4,17,2,C); P.R(38,13,1,13,H.L); P.R(37,27,4,2,H.D); }},
+  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(8,3,28,9,4,C); P.R(9,4,26,1,H.L); P.R(9,10,26,2,H.D); }},
 ];
 const AV_ARMOR=[
-  {n:'Tişört', d:(P,C)=>{const H=_avH(C); P.RR(5,29,5,9,2,C); P.RR(34,29,5,9,2,C); P.RR(11,29,22,14,3,C); P.R(19,29,6,1,H.D); P.R(11,41,22,2,H.D); }},
+  {n:'Tişört', d:(P,C)=>{const H=_avH(C); P.RR(5,29,5,9,2,C); P.RR(34,29,5,9,2,C); P.RR(11,29,22,14,3,C); P.R(12,30,20,2,H.L); P.R(19,29,6,1,H.D); P.R(11,41,22,2,H.D); }},
   {n:'Yelek', d:(P,C)=>{const H=_avH(C); P.R(13,29,8,14,C); P.R(23,29,8,14,C); P.R(21,29,2,14,'#20242a'); P.R(13,29,1,14,H.L); P.R(30,29,1,14,H.L); P.R(13,41,18,2,H.D); }},
   {n:'Plaka Zırh', d:(P,C)=>{const H=_avH(C); P.RR(5,31,5,8,2,C); P.RR(34,31,5,8,2,C); P.RR(11,29,22,13,3,C); P.R(21,29,1,12,H.D); P.R(11,40,22,3,H.D); P.set(14,32,H.L); P.set(29,32,H.L); P.set(14,37,H.L); P.set(29,37,H.L); P.ELL(7.5,30.5,4.5,3.4,H.L); P.ELL(36.5,30.5,4.5,3.4,H.L); P.ELL(7.5,30,3,2.2,C); P.ELL(36.5,30,3,2.2,C); }},
   {n:'Cübbe', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,17,2,C); P.RR(34,29,6,17,2,C); P.RR(10,29,24,23,4,C); P.R(10,39,24,2,H.D); P.R(11,49,22,1,H.L); }},
@@ -9340,7 +9343,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.29.1 başlatıldı.');
+addLog('OVERCLOCK v7.30.0 başlatıldı.');
 </script>
 </body>
 </html>
