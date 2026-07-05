@@ -1872,7 +1872,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.3</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.4</div>
     </div>
   </div>
 </div>
@@ -7075,39 +7075,71 @@ function examDefs(){ const t=g('exam-type'); return EXAM_DEFS[(t&&t.value)||'TYT
 
 function renderExamInputs(){
   const wrap=g('exam-net-inputs'); if(!wrap) return;
-  wrap.innerHTML = examDefs().map(s=>
-    '<div class="irow mb8" style="align-items:center">'+
-      '<div style="flex:1;font-size:10px;color:var(--gray);letter-spacing:1px">'+s.label+' <span style="color:var(--dim)">/'+s.max+'</span></div>'+
-      '<input class="inp" style="max-width:90px" type="number" min="0" max="'+s.max+'" step="0.25" id="exam-in-'+s.key+'" placeholder="net" oninput="updateExamPreview()">'+
+  wrap.innerHTML =
+    '<div class="irow" style="align-items:center;gap:6px;margin-bottom:4px">'+
+      '<div style="flex:1"></div>'+
+      '<div style="width:64px;text-align:center;font-size:8px;color:var(--green);letter-spacing:1px">DOĞRU</div>'+
+      '<div style="width:64px;text-align:center;font-size:8px;color:var(--red);letter-spacing:1px">YANLIŞ</div>'+
+      '<div style="width:58px;text-align:right;font-size:8px;color:var(--muted);letter-spacing:1px">NET</div>'+
+    '</div>'+
+    examDefs().map(s=>
+    '<div class="irow mb8" style="align-items:center;gap:6px">'+
+      '<div style="flex:1;min-width:0;font-size:10px;color:var(--gray);letter-spacing:1px">'+s.label+' <span style="color:var(--dim)">/'+s.max+'</span></div>'+
+      '<input class="inp" style="width:64px;text-align:center" type="number" min="0" max="'+s.max+'" step="1" id="exam-d-'+s.key+'" placeholder="D" oninput="updateExamPreview()">'+
+      '<input class="inp" style="width:64px;text-align:center" type="number" min="0" max="'+s.max+'" step="1" id="exam-y-'+s.key+'" placeholder="Y" oninput="updateExamPreview()">'+
+      '<b id="exam-net-'+s.key+'" style="width:58px;text-align:right;font-family:Orbitron,monospace;font-size:11px;color:var(--bright)">—</b>'+
     '</div>'
   ).join('');
   const dEl=g('exam-date'); if(dEl && !dEl.value) dEl.value=today();
   updateExamPreview();
 }
+// Bir dersin D/Y değerlerini oku → {d,y,net,over} (net = D − Y/4)
+function _examDY(sdef){
+  const dEl=g('exam-d-'+sdef.key), yEl=g('exam-y-'+sdef.key);
+  const dRaw=dEl?dEl.value:'', yRaw=yEl?yEl.value:'';
+  const entered=(dRaw!==''||yRaw!=='');
+  let d=parseInt(dRaw)||0, y=parseInt(yRaw)||0;
+  d=Math.max(0,Math.min(sdef.max,d)); y=Math.max(0,Math.min(sdef.max,y));
+  const over=(d+y)>sdef.max;
+  const net=Math.round((d - y/4)*100)/100;
+  return {d,y,net,over,entered};
+}
 
 function updateExamPreview(){
   let tot=0;
-  examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); const v=el?parseFloat(el.value):0; if(!isNaN(v)) tot+=v; });
-  const p=g('exam-total-preview'); if(p) p.innerHTML='TOPLAM NET: <b style="color:var(--white)">'+tot.toFixed(2)+'</b>';
+  examDefs().forEach(sd=>{
+    const r=_examDY(sd);
+    const el=g('exam-net-'+sd.key);
+    if(el){
+      el.textContent = r.entered ? r.net.toFixed(2) : '—';
+      el.style.color = r.over ? 'var(--red)' : 'var(--bright)';
+      el.title = r.over ? 'D+Y ders soru sayısını aşıyor!' : '';
+    }
+    if(r.entered && !r.over) tot+=r.net;
+  });
+  const p=g('exam-total-preview'); if(p) p.innerHTML='TOPLAM NET: <b style="color:var(--white)">'+tot.toFixed(2)+'</b> <span style="font-size:8px;color:var(--muted)">(net = D − Y/4)</span>';
 }
 
 function addExam(){
   const type=(g('exam-type')||{}).value||'TYT';
   const date=(g('exam-date')||{}).value||today();
   const name=((g('exam-name')||{}).value||'').trim();
-  const nets={}; let total=0, any=false;
-  examDefs().forEach(s=>{
-    const el=g('exam-in-'+s.key); let v=el?parseFloat(el.value):NaN;
-    if(isNaN(v)) v=0; else any=true;
-    v=Math.max(0,Math.min(s.max,v));
-    nets[s.key]=v; total+=v;
+  const nets={}, dy={}; let total=0, any=false, overSubj=null;
+  examDefs().forEach(sd=>{
+    const r=_examDY(sd);
+    if(r.entered) any=true;
+    if(r.over && !overSubj) overSubj=sd.label;
+    nets[sd.key]=r.entered ? r.net : 0;
+    dy[sd.key]={d:r.d,y:r.y};
+    total+=nets[sd.key];
   });
-  if(!any){ notify('EN AZ BİR DERS NETİ GİR!'); return; }
+  if(!any){ notify('EN AZ BİR DERSİN DOĞRU/YANLIŞINI GİR!'); return; }
+  if(overSubj){ notify('⚠ '+overSubj+': D+Y ders soru sayısını aşıyor — düzelt'); return; }
   S.exams = S.exams||[];
   const examId = Date.now();
   // freeze the tagged wrong topics into the exam record + register into the tree
   const wrongTopicKeys = (_examWrongChips||[]).slice();
-  S.exams.push({id:examId, date, type, name, nets, total:Math.round(total*100)/100, wrongTopics:wrongTopicKeys});
+  S.exams.push({id:examId, date, type, name, nets, dy, total:Math.round(total*100)/100, wrongTopics:wrongTopicKeys});
   S.exams.sort((a,b)=> (a.date<b.date?-1:a.date>b.date?1:a.id-b.id));
   wrongTopicKeys.forEach(key => registerWrongTopic(key, examId, date));
   _examWrongChips = [];
@@ -7117,8 +7149,8 @@ function addExam(){
   const _netReward = _examNetRewardKurus(Math.round(total*100)/100);
   if(_netReward>0){ bankEarn(_netReward, 'deneme', 'Deneme '+type+' — '+total.toFixed(2)+' net → '+_fmtTL(_netReward)); }
   save();
-  // clear net inputs
-  examDefs().forEach(s=>{ const el=g('exam-in-'+s.key); if(el) el.value=''; });
+  // clear D/Y inputs
+  examDefs().forEach(sd=>{ const d=g('exam-d-'+sd.key); if(d) d.value=''; const y=g('exam-y-'+sd.key); if(y) y.value=''; });
   const nm=g('exam-name'); if(nm) nm.value='';
   updateExamPreview();
   notify('✓ DENEME KAYDEDİLDİ // '+type+' '+total.toFixed(2)+' NET'+(_netReward>0?' // 🏦 +'+_fmtTL(_netReward):'')+(wrongTopicKeys.length?' // +'+wrongTopicKeys.length+' yanlış konu':''));
@@ -9444,7 +9476,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.30.3 başlatıldı.');
+addLog('OVERCLOCK v7.30.4 başlatıldı.');
 </script>
 </body>
 </html>
