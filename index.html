@@ -686,7 +686,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <div id="fs-controls">
     <button class="btn primary" id="fs-btn-start" onclick="toggleTimer()">▶ START</button>
     <button class="btn" onclick="resetTimer()">↺ RESET</button>
-    <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
+    <button class="btn" onclick="finishTimerEarly(event)" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
     <button class="btn" onclick="openSubjectPicker()">📚 DERS SEÇ</button>
   </div>
 </div>
@@ -777,7 +777,7 @@ body.pixel-font #timer-unit{font-size:8px}
     <input type="file" id="bg-file" accept="image/*" style="display:none" onchange="bgOnFile(this.files[0])">
     <button class="btn primary fw mb8" onclick="bgPickFile()">📁 RESİM SEÇ</button>
     <button class="btn fw mb8" onclick="bgRemove()" style="border-color:var(--red);color:var(--red)">🗑 BU HEDEFTEN KALDIR</button>
-    <button class="btn fw" onclick="bgClearAll()" style="border-color:var(--bd);color:var(--muted);font-size:8px">🗑 HEPSİNİ TEMİZLE</button>
+    <button class="btn fw" onclick="bgClearAll(event)" style="border-color:var(--bd);color:var(--muted);font-size:8px">🗑 HEPSİNİ TEMİZLE</button>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:10px;line-height:1.6">Resim ekrana zorla cover edilir (kırpılabilir). Hedef "Tüm sekmeler" ise sekme bazlı seçim onu ezer. Veriler localStorage'a base64 olarak yazılır — büyük dosyalardan kaçın.</div>
   </div>
 </div>
@@ -901,7 +901,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div id="streak-panel">
       <div id="streak-msg">HEDEFE ULAŞ — ZİNCİRİ BAŞLAT</div>
-      <button id="restday-chip" onclick="askRestDay()" title="Rest Day jetonu" style="background:var(--mid);border:1px solid var(--bd2);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px">🎟 <span id="restday-count">0</span></button>
+      <button id="restday-chip" onclick="askRestDay(event)" title="Rest Day jetonu" style="background:var(--mid);border:1px solid var(--bd2);color:var(--bright);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:4px">🎟 <span id="restday-count">0</span></button>
     </div>
     <!-- Aktif boost göstergesi (sadece boost aktifken görünür) -->
     <div id="boost-banner">
@@ -949,7 +949,7 @@ body.pixel-font #timer-unit{font-size:8px}
         <div class="bgrid mb8">
           <button class="btn primary" id="btn-start" onclick="toggleTimer()">▶ START</button>
           <button class="btn" onclick="resetTimer()">↺ RESET</button>
-          <button class="btn" onclick="finishTimerEarly()" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
+          <button class="btn" onclick="finishTimerEarly(event)" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
           <button class="btn" id="btn-subject" onclick="openSubjectPicker()" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📚 DERS SEÇ</button>
         </div>
         <button class="btn fw mb8" onclick="enterFullscreen()" style="border-color:var(--bright)">⛶ TAM EKRAN</button>
@@ -1064,7 +1064,7 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="fbet mb8">
       <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ GYM</div>
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="gymReset()">↺ SIFIRLA</button>
+        <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="gymReset(event)">↺ SIFIRLA</button>
         <div style="text-align:right">
           <div style="font-size:7px;color:var(--muted);letter-spacing:2px">MP BAKİYE</div>
           <div id="gym-mp" style="font-family:'Orbitron',monospace;font-size:19px;font-weight:900;color:#ff9e64;line-height:1.1">0 MP</div>
@@ -1191,7 +1191,7 @@ body.pixel-font #timer-unit{font-size:8px}
     <textarea class="inp" id="bk-summary" placeholder="Kitabın özetini buraya yaz..." oninput="_updateSummaryCount()" style="min-height:120px;resize:vertical;margin-bottom:4px"></textarea>
     <div id="bk-summary-count" style="font-size:8px;color:var(--muted);letter-spacing:1px;text-align:right;margin-bottom:10px">0 kelime</div>
     <button class="btn primary fw mb8" onclick="saveBookSummary()">💾 ÖZETİ KAYDET</button>
-    <button class="btn fw" style="border-color:var(--red);color:var(--red)" onclick="deleteBook()">🗑 KİTABI SİL</button>
+    <button class="btn fw" style="border-color:var(--red);color:var(--red)" onclick="deleteBook(event)">🗑 KİTABI SİL</button>
   </div>
 </div>
 
@@ -1407,7 +1407,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <div class="block">
     <div class="fbet mb8">
       <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ İdeal Çalışma Süresi</div>
-      <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="resetIdealDuration()">↺ SIFIRLA</button>
+      <button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="resetIdealDuration(event)">↺ SIFIRLA</button>
     </div>
     <div id="ideal-dur"></div>
   </div>
@@ -1872,7 +1872,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.3</div>
     </div>
   </div>
 </div>
@@ -2910,30 +2910,31 @@ function resetTimer(){
 
 // End the current FOCUS session early — award proportional XP and credit cumulative
 // focus time. Does not switch to break (user can decide). Break sessions just reset.
-function finishTimerEarly(){
+function finishTimerEarly(ev){
   if (!timerRunning){
     notify('Zaten çalışmıyor');
     return;
   }
   if (isBreak){
-    // skip break — go straight back to standby
-    if (!confirm('Molayı şimdi bitir (XP yok)?')) return;
-    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
-    cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
-    isBreak=false; timerSecs=S.focusMin*60;
-    g('btn-start').textContent='▶ START';
-    setStatus('standby'); renderTimer(); save();
-    addLog('Mola erken bitti.');
+    armBtn(ev,'finish',()=>{
+      clearInterval(timerIv); timerRunning=false; timerEndAt=null;
+      cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
+      isBreak=false; timerSecs=S.focusMin*60;
+      g('btn-start').textContent='▶ START';
+      setStatus('standby'); renderTimer(); save();
+      addLog('Mola erken bitti.');
+    });
     return;
   }
-  // FOCUS early-finish: compute elapsed from the original target
-  const elapsedSec = Math.max(0, (S.focusMin*60) - timerSecs);
-  const elapsedMin = Math.max(0, Math.round(elapsedSec/60));
-  if (elapsedMin < 1){
+  if (Math.max(0, Math.round((Math.max(0,(S.focusMin*60)-timerSecs))/60)) < 1){
     notify('Henüz 1 dk geçmedi — XP yok');
     return;
   }
-  if (!confirm('Şimdi bitirilsin mi? Geçen ~'+elapsedMin+' dk için kısmi XP alacaksın (tam bitirme bonusu yok).')) return;
+  armBtn(ev,'finish',()=>{
+    if(!timerRunning || isBreak) return;
+    const elapsedSec = Math.max(0, (S.focusMin*60) - timerSecs);
+    const elapsedMin = Math.max(0, Math.round(elapsedSec/60));
+    if (elapsedMin < 1){ notify('Henüz 1 dk geçmedi — XP yok'); return; }
   clearInterval(timerIv); timerRunning=false; timerEndAt=null;
   cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
   g('btn-start').textContent='▶ START';
@@ -2953,6 +2954,7 @@ function finishTimerEarly(){
   // back to standby with a fresh focus countdown
   isBreak=false; timerSecs=S.focusMin*60;
   setStatus('standby'); renderTimer(); save();
+  });
 }
 
 // ════════════════════════════════════════
@@ -3024,13 +3026,14 @@ function _idealDuration(){
   return { ready:true, n:ps.length, idealMin, step, targetMin, towardTarget, buckets:filled, avgBrk, breakAware:true };
 }
 // İdeal süre hesaplayıcısını sıfırla — tüm verimlilik örnekleri (prodSessions) silinir, motor baştan öğrenir
-function resetIdealDuration(){
+function resetIdealDuration(ev){
   const n=(S.prodSessions||[]).length;
-  if(!confirm('İdeal süre hesaplayıcısı sıfırlansın mı?\n'+n+' seans verisi silinecek, motor baştan öğrenecek.\n(Soru istatistikleri ve XP etkilenmez.)')) return;
+  armBtn(ev,'idealreset',()=>{
   S.prodSessions=[]; _pendingBreakSecs=0;
   save(); try{ renderIdealDuration(); }catch(e){}
   notify('↺ İdeal süre verisi sıfırlandı ('+n+' seans silindi)');
   addLog('İdeal süre hesaplayıcısı sıfırlandı ('+n+' seans).');
+  });
 }
 // A1: ideal süre için daha fazla veri toplama önerisi (günde 1 kez, soru seansı başında)
 function _maybeSuggestDuration(){
@@ -3439,6 +3442,21 @@ function scheduleCalendarReminders(){
     });
   }catch(e){}
 }
+// ── GENEL İKİ-AŞAMALI ONAY (native confirm yerine) ──
+// İlk basış: buton "❗ EMİN MİSİN?" olur (kırmızı). 3.5sn içinde ikinci basış: fn çalışır.
+const _armState={};
+function _armRestore(st){ try{ st.el.innerHTML=st.html; st.el.style.background=st.bg; st.el.style.color=st.col; st.el.style.borderColor=st.bc; }catch(e){} }
+function armBtn(ev, key, fn){
+  const btn = ev && ev.target ? (ev.target.closest ? (ev.target.closest('button')||ev.target) : ev.target) : null;
+  const st=_armState[key];
+  if(st){ clearTimeout(st.t); _armRestore(st); delete _armState[key]; fn(); return; }
+  if(!btn){ fn(); return; }
+  const rec={ el:btn, html:btn.innerHTML, bg:btn.style.background, col:btn.style.color, bc:btn.style.borderColor };
+  btn.innerHTML='❗ EMİN MİSİN?';
+  btn.style.background='var(--red)'; btn.style.color='#fff'; btn.style.borderColor='var(--red)';
+  rec.t=setTimeout(()=>{ _armRestore(rec); delete _armState[key]; },3500);
+  _armState[key]=rec;
+}
 // SİL — native confirm() bazı ortamlarda (LibreWolf/WebView) sessizce engelleniyor;
 // onun yerine İKİ AŞAMALI buton: ilk basış "EMİN MİSİN?", 3.5sn içinde ikinci basış siler.
 let _calDelArm=null, _calDelArmT=null;
@@ -3678,11 +3696,12 @@ function saveBookRead(){
   _updateBookProg(b); save(); renderReading();
 }
 function saveBookSummary(){ const b=_bookById(_bookPopId); if(!b) return; b.summary=g('bk-summary').value||''; save(); notify('💾 Özet kaydedildi'); }
-function deleteBook(){
-  if(!_bookPopId) return; if(!confirm('Bu kitap silinsin mi?')) return;
+function deleteBook(ev){
+  armBtn(ev,'delbook',()=>{
   S.books=(S.books||[]).filter(b=>b.id!==_bookPopId);
   if(_readBookId===_bookPopId) _readBookId=null;
   closeBookPop(); save(); renderReading();
+  });
 }
 function updateReadBookLabel(){
   const lbl=g('read-book-lbl'); if(!lbl) return;
@@ -3739,10 +3758,10 @@ function _gym(){
   return gm;
 }
 // GYM'i komple sıfırla — MP, egzersizler, mağaza eşyaları, oda, unvan ve rozetler silinir
-function gymReset(){
+function gymReset(ev){
   const gm=_gym();
   const info='MP: '+gymMp()+' · egzersiz: '+gm.exercises.length+' · eşya: '+gm.ownedItems.length;
-  if(!confirm('GYM tamamen sıfırlansın mı?\n('+info+')\nMP, egzersizler, satın alınan eşyalar (kıyafetler dahil), oda dekorasyonu, GYM unvan ve rozetleri SİLİNİR. Geri alınamaz.')) return;
+  armBtn(ev,'gymreset',()=>{
   S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], room:{placed:[],wall:'wall_gri',floor:'floor_ahsap'}, titles:[], badges:[] };
   _gymSel=null; _gxMs=new Set();
   save(); renderGym();
@@ -3751,6 +3770,7 @@ function gymReset(){
   try{ renderBadges(); }catch(e){}            // Spor ağacı söner
   notify('↺ GYM sıfırlandı');
   addLog('GYM sıfırlandı ('+info+').');
+  });
 }
 function gymMp(){ const gm=_gym(); return Math.max(0,(gm.mpEarned||0)-(gm.mpSpent||0)); }
 function _gymDoneCount(){ return _gym().exercises.filter(e=>e.done).length; }
@@ -3852,11 +3872,12 @@ function gymCompleteEx(id){
   renderGym(); notify('💪 '+ex.name+' → +'+ex.mp+' MP');
   addLog('GYM: '+ex.name+' tamamlandı (+'+ex.mp+' MP)');
 }
-function gymDeleteEx(id){
+function gymDeleteEx(ev,id){
   const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex) return;
-  if(!confirm('Egzersiz silinsin mi? ('+ex.name+')')) return;
+  armBtn(ev,'gymdel',()=>{
   gm.exercises=gm.exercises.filter(e=>e.id!==id);
   save(); renderGym();
+  });
 }
 function renderGymExercises(){
   const t=today();
@@ -3876,14 +3897,14 @@ function renderGymExercises(){
         '</div>'+
         '<b style="font-family:Orbitron,monospace;font-size:11px;color:#ff9e64;flex-shrink:0">+'+e.mp+' MP</b>'+
         '<button class="btn primary" style="min-height:28px;padding:3px 10px;font-size:8px;flex-shrink:0" onclick="gymCompleteEx(\''+e.id+'\')">✓ YAPTIM</button>'+
-        '<button class="btn" style="min-height:28px;padding:3px 8px;font-size:8px;flex-shrink:0" onclick="gymDeleteEx(\''+e.id+'\')">🗑</button>'+
+        '<button class="btn" style="min-height:28px;padding:3px 8px;font-size:8px;flex-shrink:0" onclick="gymDeleteEx(event,\''+e.id+'\')">🗑</button>'+
       '</div>';
     }).join('') + doneToday.map(e=>'<div class="gym-exrow" style="opacity:.45;border-left-color:var(--green)"><div style="flex:1;font-size:9px;color:var(--bright);text-decoration:line-through">✓ '+_he(e.name)+'</div><b style="font-size:9px;color:var(--green)">+'+e.mp+' MP</b></div>').join('');
   }
   if(emp) emp.style.display=(todays.length||doneToday.length)?'none':'block';
   const uw=g('gym-upcoming-wrap'), ul=g('gym-upcoming');
   if(uw) uw.style.display=upcoming.length?'block':'none';
-  if(ul) ul.innerHTML=upcoming.map(e=>'<div class="gym-exrow" style="opacity:.7"><div style="flex:1;min-width:0;font-size:9px;color:var(--bright)">'+_he(e.name)+' <span style="color:var(--muted);font-size:8px">· '+e.date.slice(5).replace('-','.')+' · '+e.muscles.map(mlbl).join(', ')+'</span></div><b style="font-size:9px;color:#ff9e64">+'+e.mp+' MP</b><button class="btn" style="min-height:24px;padding:2px 7px;font-size:8px" onclick="gymDeleteEx(\''+e.id+'\')">🗑</button></div>').join('');
+  if(ul) ul.innerHTML=upcoming.map(e=>'<div class="gym-exrow" style="opacity:.7"><div style="flex:1;min-width:0;font-size:9px;color:var(--bright)">'+_he(e.name)+' <span style="color:var(--muted);font-size:8px">· '+e.date.slice(5).replace('-','.')+' · '+e.muscles.map(mlbl).join(', ')+'</span></div><b style="font-size:9px;color:#ff9e64">+'+e.mp+' MP</b><button class="btn" style="min-height:24px;padding:2px 7px;font-size:8px" onclick="gymDeleteEx(event,\''+e.id+'\')">🗑</button></div>').join('');
 }
 function gymRenderAnatomy(){
   const t=today();
@@ -5780,11 +5801,12 @@ function bgRemove(){
   save(); applyBackground(); bgUpdatePreview();
   notify('🖼 Arkaplan kaldırıldı');
 }
-function bgClearAll(){
-  if (!confirm('Tüm arkaplanlar (genel + sekme özel) silinsin mi?')) return;
+function bgClearAll(ev){
+  armBtn(ev,'bgclear',()=>{
   S.background = { global:null, perTab:{} };
   save(); applyBackground(); bgUpdatePreview();
   notify('🖼 Tüm arkaplanlar temizlendi');
+  });
 }
 
 // ══════════════════════════════════════════
@@ -7487,10 +7509,11 @@ function markTopicFixed(key){
   save(); renderTree();
 }
 
-function deleteTopic(key){
-  if(!confirm('"'+(S.wrongTopics||{})[key]?.name+'" konusu silinsin mi?')) return;
+function deleteTopic(ev,key){
+  armBtn(ev,'deltopic',()=>{
   delete (S.wrongTopics||{})[key];
   save(); renderTree();
+  });
 }
 
 function renderTree(){
@@ -7517,7 +7540,7 @@ function renderTree(){
       '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">Hedef: <b style="color:var(--bright)">'+target+'</b> soru <button onclick="treeSetTarget(event,\''+safeKey+'\')" title="Hedefi elle belirle" style="background:none;border:1px solid var(--bd2);color:var(--bright);border-radius:4px;font-size:8px;padding:0 5px;cursor:pointer;vertical-align:middle">✏</button> &nbsp; · &nbsp; Çözülen: <b style="color:var(--bright)">'+(w.solved||0)+'</b></div>'+
       '<div style="height:6px;background:var(--dim);margin-bottom:8px"><div style="height:100%;width:'+pct+'%;background:'+(w.fixed?'var(--green)':'var(--bright)')+'"></div></div>'+
       (w.fixed
-        ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑 SİL</button></div>'
+        ? '<div style="display:flex;gap:6px"><span style="flex:1;font-size:8px;color:var(--green);letter-spacing:2px">DÜZELTİLDİ '+(w.fixedAt||'')+'</span><button class="btn" style="min-height:26px;padding:2px 10px;font-size:8px" onclick="deleteTopic(event,\''+safeKey+'\')">🗑 SİL</button></div>'
         : '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">'+
             '<button class="btn" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" onclick="treeManualSolved(event,\''+safeKey+'\')">✏ SORU GİR (manuel)</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treeAddSolved(\''+safeKey+'\',5)">+5</button>'+
@@ -7528,7 +7551,7 @@ function renderTree(){
             '<button class="btn primary" style="flex:1;min-height:28px;padding:2px 8px;font-size:8px" '+(solved>=target?'':'disabled ')+'onclick="markTopicFixed(\''+safeKey+'\')">✓ DÜZELTİLDİ (+'+target+' XP)</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="treePlanToCalendar(\''+safeKey+'\')" title="Çözümü takvime planla">📅 PLANLA</button>'+
             '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="srAddTopicFromTree(\''+safeKey+'\')" title="Aralıklı tekrara ekle">🧠</button>'+
-            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="deleteTopic(\''+safeKey+'\')">🗑</button>'+
+            '<button class="btn" style="min-height:28px;padding:2px 8px;font-size:8px" onclick="deleteTopic(event,\''+safeKey+'\')">🗑</button>'+
           '</div>')+
     '</div>';
   }).join('');
@@ -7623,10 +7646,11 @@ function srRate(id, q){
   it.due=_srAddDays(today(), it.interval);
   save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
 }
-function srDelete(id){
-  if(!confirm('Bu tekrar konusu silinsin mi?')) return;
+function srDelete(ev,id){
+  armBtn(ev,'srdel',()=>{
   S.srItems=(S.srItems||[]).filter(x=>x.id!==id);
   save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
+  });
 }
 // Deneme Ağacı → aralıklı tekrara konu ekle (sistemleri birbirine bağlar)
 function srAddFromTopic(name, quiet){
@@ -7673,7 +7697,7 @@ function renderSrs(){
     return '<div class="fbet" style="background:var(--mid);border:1px solid var(--bd);padding:8px 10px;margin-bottom:6px">'+
       '<span style="font-size:10px;color:var(--bright);flex:1;word-break:break-word">'+_he(it.topic)+'</span>'+
       '<span style="display:flex;align-items:center;gap:8px;flex-shrink:0"><span style="font-size:8px;color:var(--muted)">⏭ '+when+' · '+(it.reps||0)+'x</span>'+
-      '<button onclick="srDelete(\''+it.id+'\')" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px">✕</button></span></div>';
+      '<button onclick="srDelete(event,\''+it.id+'\')" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px">✕</button></span></div>';
   }).join('');
 }
 // HQ "Bugün" kutusu: tekrar + gecikmiş hatırlatıcı + net düşüşü tek yerde
@@ -7871,10 +7895,10 @@ function pickSubject(val){
 
 function isRestDayActive(){ return S.restDayActiveDate === today(); }
 
-function askRestDay(){
+function askRestDay(ev){
   const m = g('restday-modal'); if(!m) return;
   if (isRestDayActive()){
-    if (confirm('Bugünün dinlenme modu zaten aktif. İptal edilsin mi? (Jeton iade edilir.)')) cancelRestDay();
+    armBtn(ev,'restcancel',()=>cancelRestDay());
     return;
   }
   const tokens = S.restDayTokens||0;
@@ -9420,7 +9444,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.30.2 başlatıldı.');
+addLog('OVERCLOCK v7.30.3 başlatıldı.');
 </script>
 </body>
 </html>
