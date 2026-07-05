@@ -1644,6 +1644,8 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="blabel" style="margin-top:16px">🎨 Konsol Temaları <span style="font-size:8px;color:var(--muted)">(sadece kasadan açılır)</span></div>
     <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;line-height:1.6">Nadir syntax-highlight paletleri. <b style="color:var(--bright)">Konsol Teması</b> item'i kasadan çıkınca rastgele biri açılır; buradan aktifleştir.</div>
     <div class="shop-grid" id="shop-console-themes"></div>
+    <div class="blabel" style="margin-top:16px">🖼 Avatar Fonları <span style="font-size:8px;color:var(--muted)">(XP ile — MP'likler GYM mağazasında)</span></div>
+    <div class="shop-grid" id="shop-bgs"></div>
   </div>
 
   <div class="block">
@@ -1885,7 +1887,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.34.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.35.0</div>
     </div>
   </div>
 </div>
@@ -2043,6 +2045,11 @@ const SHOP_ITEMS = [
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Karakter özetinde ⚡', cost:550},
   {id:'cos_crown',   cat:'cosmetic', icon:'👑', name:'TAÇ',          desc:'Karakter özetinde 👑', cost:2000},
   {id:'cos_diamond', cat:'cosmetic', icon:'💎', name:'ELMAS',        desc:'Karakter özetinde 💎', cost:1500},
+  // Avatar çerçeve fonları (XP ile)
+  {id:'bg_gunbatimi', cat:'bg', icon:'🌇', name:'FON: GÜN BATIMI',      desc:'Avatar çerçeve arka planı', cost:6000},
+  {id:'bg_bliss',     cat:'bg', icon:'🌄', name:'FON: BLISS (XP)',      desc:'Avatar çerçeve arka planı', cost:5000},
+  {id:'bg_koridor',   cat:'bg', icon:'🌸', name:'FON: ÇİÇEKLİ KORİDOR', desc:'Avatar çerçeve arka planı', cost:4500},
+  {id:'bg_backrooms', cat:'bg', icon:'🟨', name:'FON: BACKROOMS',       desc:'Avatar çerçeve arka planı', cost:3500},
 ];
 
 // ── Streak Protector dynamic pricing (Rev B) ──
@@ -3909,7 +3916,7 @@ const GYM_BADGES=[
   {id:'gb_dambil',name:'Dambıl',        need:'500 MP kazan',            c:'#c0c0c0', rows:['##....##','########','##....##'], test:g=>(g.mpEarned||0)>=500},
   {id:'gb_ates',  name:'Ateş',          need:'7 farklı günde antrenman',c:'#ff9e3d', rows:['...#..','..##..','.###+.','######','.####.'], test:g=>{ const days=new Set(_gym().exercises.filter(e=>e.done&&e.doneDate).map(e=>e.doneDate)); return days.size>=7; }},
 ];
-function _gymItemById(id){ return GYM_CLOTHES.find(x=>x.id===id)||CAFE_ITEMS.find(x=>x.id===id)||_gymPortItem(id); }
+function _gymItemById(id){ const bg=AV_BGS.find(x=>x.id===id&&x.mp); if(bg) return {id:bg.id,name:bg.n,price:bg.mp,icon:'🖼'}; return GYM_CLOTHES.find(x=>x.id===id)||CAFE_ITEMS.find(x=>x.id===id)||_gymPortItem(id); }
 // ── RENDER ana ──
 function renderGym(){
   const mp=g('gym-mp'); if(mp) mp.textContent=gymMp()+' MP';
@@ -4069,6 +4076,17 @@ function renderMpClothing(){
       return '<div class="gym-shoprow"><span style="font-size:13px;flex-shrink:0">'+it.icon+'</span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright);letter-spacing:.5px">'+_he(it.name)+'</span>'+btn+'</div>';
     }).join('');
   });
+  // 🖼 GYM fonları (MP)
+  const mpBgs=AV_BGS.filter(b=>b.mp);
+  if(mpBgs.length){
+    html+='<div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin:8px 0 4px">ÇERÇEVE FONLARI</div>';
+    html+=mpBgs.map(b=>{
+      const owned=_bgOwned(b);
+      const btn=owned?'<span style="font-size:8px;color:var(--green)">✓ SAHİPSİN</span>'
+        :'<button class="btn '+(bal>=b.mp?'primary':'')+'" style="min-height:24px;padding:2px 8px;font-size:8px" '+(bal>=b.mp?'':'disabled ')+'onclick="gymBuy(\''+b.id+'\')">'+b.mp.toLocaleString('tr-TR')+' MP</button>';
+      return '<div class="gym-shoprow"><span style="width:30px;height:22px;border-radius:4px;background:url(\''+b.src+'\') center/cover;flex-shrink:0;border:1px solid var(--bd2)"></span><span style="flex:1;min-width:0;font-size:9px;color:var(--bright);letter-spacing:.5px">'+_he(b.n)+'</span>'+btn+'</div>';
+    }).join('');
+  }
   box.innerHTML=html||'<div style="font-size:9px;color:var(--muted)">Katalog boş.</div>';
 }
 // SAĞ: kafe rafı (karton koliler)
@@ -5550,6 +5568,7 @@ function buyItem(id){
   if (item.cat!=='boost' && item.cat!=='streak' && item.cat!=='sink' && (S.inventory||[]).includes(id)) {
     if (item.cat === 'theme')    return equipTheme(id);
     if (item.cat === 'cosmetic') return equipCosmetic(id);
+    if (item.cat === 'bg'){ notify('Zaten sahipsin — Character > avatar menüsünden tak'); return; }
     return;
   }
   // streak shield uses dynamic pricing + stock cap
@@ -5619,6 +5638,7 @@ function buyItem(id){
     // auto-equip new theme/cosmetic
     if (item.cat === 'theme')    equipTheme(id);
     if (item.cat === 'cosmetic') equipCosmetic(id);
+    if (item.cat === 'bg'){ notify('🖼 '+item.name+' — Character > avatar menüsünden tak'); try{ renderAvatarPopRows(); }catch(e){} }
   }
   save(); renderShop(); renderXP(); renderBoostBanner();
 }
@@ -6279,6 +6299,37 @@ function _avShade(hex,f){
 // Gri (R≈G≈B) pikseller renk seçiciyle boyanır, renkli pikseller sabit kalır.
 // Taban yüklenemezse otomatik olarak pixel avatara düşer.
 // ════════════════════════════════════════
+// ── AVATAR ÇERÇEVE FONLARI — 6'sı GYM (MP), 4'ü Market (XP) ──
+const AV_BGS=[
+  {id:'bg_sonvadi',  n:'Son Vadi',        src:'sprites/avatar/bg/bg_sonvadi.jpg',  mp:30000},
+  {id:'bg_kuyruklu', n:'Kuyruklu Yıldız', src:'sprites/avatar/bg/bg_kuyruklu.jpg', mp:25000},
+  {id:'bg_kizil',    n:'Kızıl Orman',     src:'sprites/avatar/bg/bg_kizil.jpg',    mp:18000},
+  {id:'bg_gece',     n:'Yıldızlı Gece',   src:'sprites/avatar/bg/bg_gece.jpg',     mp:14000},
+  {id:'bg_veranda',  n:'Gece Verandası',  src:'sprites/avatar/bg/bg_veranda.jpg',  mp:12000},
+  {id:'bg_cayir',    n:'Dağ Çayırı',      src:'sprites/avatar/bg/bg_cayir.jpg',    mp:9000},
+  {id:'bg_gunbatimi',n:'Gün Batımı',      src:'sprites/avatar/bg/bg_gunbatimi.jpg', xp:6000},
+  {id:'bg_bliss',    n:'Bliss (XP)',      src:'sprites/avatar/bg/bg_bliss.jpg',     xp:5000},
+  {id:'bg_koridor',  n:'Çiçekli Koridor', src:'sprites/avatar/bg/bg_koridor.jpg',   xp:4500},
+  {id:'bg_backrooms',n:'Backrooms',       src:'sprites/avatar/bg/bg_backrooms.jpg', xp:3500},
+];
+function _bgOwned(b){ if(!b) return false; return b.mp ? (((S.gym||{}).ownedItems)||[]).includes(b.id) : ((S.inventory||[]).includes(b.id)); }
+function _bgById(id){ return AV_BGS.find(x=>x.id===id); }
+// FON döngüsü: Boş + sahip olunanlar
+function avBgCycle(dir){
+  const av=_char().avatar;
+  const owned=AV_BGS.filter(_bgOwned).map(b=>b.id);
+  const list=[''].concat(owned);
+  let i=list.indexOf(av.bg||''); if(i<0) i=0;
+  i=((i+dir)%list.length+list.length)%list.length;
+  av.bg=list[i]||null;
+  save(); renderAvatar(); renderAvatarPopRows();
+}
+function _applyFrameBg(){
+  const ph=g('char-photo'); if(!ph) return;
+  const b=_bgById((_char().avatar||{}).bg);
+  if(b && _bgOwned(b)){ ph.style.backgroundImage='url("'+b.src+'")'; ph.style.backgroundSize='cover'; ph.style.backgroundPosition='center'; }
+  else ph.style.backgroundImage='';
+}
 const AV_PORTRAIT={
   base:'sprites/avatar/taban.png',
   slots:{
@@ -6370,6 +6421,7 @@ function _renderAvatarPortrait(){
   });
 }
 function renderAvatar(){
+  try{ _applyFrameBg(); }catch(e){}
   const st=_avPortraitState();
   if(st.failed){ _renderAvatarPixel(); return; }
   if(!st.loaded){ return; }   // yüklenince onload yeniden çizer (o ana dek çerçeve boş)
@@ -6445,7 +6497,13 @@ function renderAvatarPopRows(){
       '</div>';
     }).join('');
     html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><button type="button" class="avbtn" style="width:26px;background:'+(av.colors.skin||'#f0c8a0')+'" onclick="_ocpAv(event,\'skin\',this)" title="Renk seç"></button></div>';
-    html+='<div style="font-size:7px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:6px">El çizimi portre modu — yeni katman çizdikçe eklenecek.</div>';
+    const _bgCur=_bgById(av.bg), _bgOwnN=AV_BGS.filter(_bgOwned).length, _bgLockN=AV_BGS.length-_bgOwnN;
+    html+='<div class="avrow"><span class="avlbl">FON</span>'+
+      '<button class="avbtn" onclick="avBgCycle(-1)">◀</button>'+
+      '<span class="avval">'+((_bgCur&&_bgOwned(_bgCur))?_he(_bgCur.n):'Boş')+(_bgLockN?' <span style="opacity:.5">🔒'+_bgLockN+'</span>':'')+'</span>'+
+      '<button class="avbtn" onclick="avBgCycle(1)">▶</button>'+
+    '</div>';
+    html+='<div style="font-size:7px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:6px">El çizimi portre modu — fonlar MP\'s Clothing & Market\'ten açılır.</div>';
     box.innerHTML=html;
     return;
   }
@@ -7118,6 +7176,8 @@ function renderShop(){
       btnHtml = equipped
         ? '<button class="shop-btn equipped" onclick="equipCosmetic(null)">✓ AKTİF — KALDIR</button>'
         : '<button class="shop-btn primary" onclick="equipCosmetic(\''+item.id+'\')">TAK</button>';
+    } else if (owned && item.cat==='bg') {
+      btnHtml = '<button class="shop-btn equipped" disabled>✓ SAHİPSİN — avatar menüsünden tak</button>';
     } else if (stockFull) {
       btnHtml = '<button class="shop-btn locked" disabled>STOK DOLU</button>';
     } else if (item.id === 'sink_contract') {
@@ -7160,6 +7220,8 @@ function renderShop(){
   })();
 
   themesEl.innerHTML = defaultThemeCard + SHOP_ITEMS.filter(i=>i.cat==='theme').map(renderItem).join('');
+  const bgsEl=g('shop-bgs');
+  if(bgsEl) bgsEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='bg').map(renderItem).join('');
   boostsEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='boost').map(renderItem).join('') ||
     '<div style="font-size:9px;color:var(--dim);padding:8px 0">Boost yok.</div>';
   cosEl.innerHTML = SHOP_ITEMS.filter(i=>i.cat==='cosmetic').map(renderItem).join('');
@@ -9628,7 +9690,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.34.0 başlatıldı.');
+addLog('OVERCLOCK v7.35.0 başlatıldı.');
 </script>
 </body>
 </html>
