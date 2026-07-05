@@ -487,7 +487,8 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 @media (max-width:900px){.charx-grid{grid-template-columns:1fr;max-width:420px;margin:0 auto}}
 .charx-avwrap{position:relative;display:flex;justify-content:center}
 .charx-grid .char-photo{width:100%;max-width:240px;height:auto;aspect-ratio:1/1}
-#avatar-cv{width:88%;height:auto;aspect-ratio:44/56;image-rendering:pixelated;image-rendering:crisp-edges}
+#avatar-cv{width:72%;height:auto;aspect-ratio:44/56;image-rendering:pixelated;image-rendering:crisp-edges}
+#avatar-cv.portrait{width:96%;aspect-ratio:1/1;image-rendering:auto;border-radius:8px}
 .charx-avhint{position:absolute;right:8px;bottom:8px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.6);border:1px solid var(--bd2);color:var(--bright);font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #avatar-pop{display:none;position:absolute;left:calc(100% + 10px);top:0;width:240px;background:var(--deep);border:1px solid var(--bd2);border-radius:10px;padding:12px;z-index:600;box-shadow:0 6px 22px rgba(0,0,0,.6)}
 @media (max-width:900px){#avatar-pop{left:50%;transform:translateX(-50%);top:calc(100% + 8px);width:min(280px,92vw)}}
@@ -1872,7 +1873,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.30.4</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.31.0</div>
     </div>
   </div>
 </div>
@@ -5927,7 +5928,7 @@ const AV_HAIR=[
   {n:'Mohawk', d:(P,C)=>{const H=_avH(C); P.R(18,0,8,12,C); for(let k=0;k<4;k++) P.set(19+k*2,-0+ (k%2),C); P.R(19,2,2,9,H.L); P.TRI(17,-3,5,4,C); P.TRI(22,-3,5,4,C); }},
   {n:'Kıvırcık', d:(P,C)=>{const H=_avH(C); P.ELL(11,10,5.5,5,C); P.ELL(17,6,5.5,5,C); P.ELL(24,5,6,5,C); P.ELL(31,7,5.5,5,C); P.ELL(36,12,4.5,4.5,C); P.ELL(8,15,4,4,C); P.ELL(36,16,3.5,3.5,C); P.set(16,4,H.L); P.set(17,5,H.L); P.set(25,3,H.L); P.set(26,4,H.L); P.set(10,9,H.L); P.set(31,6,H.L); }},
   {n:'At Kuyruğu', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(7,4,30,10,4,C); P.R(8,5,28,2,H.L); for(let x=9;x<=31;x+=5){ P.TRI(x,12,4,3,C); } P.ELL(38,10,3,3,C); P.RR(37,12,4,17,2,C); P.R(38,13,1,13,H.L); P.R(37,27,4,2,H.D); }},
-  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(8,3,28,9,4,C); P.R(9,4,26,1,H.L); P.R(9,10,26,2,H.D); }},
+  {n:'Kısa Tıraş', d:(P,C)=>{const H=_avH(C); P.R(9,2,26,3,C); P.RR(8,3,28,9,4,C); P.R(9,4,26,1,H.L); P.R(9,10,26,2,H.D); }},  {n:'Boş', d:()=>{}},
 ];
 const AV_ARMOR=[
   {n:'Tişört', d:(P,C)=>{const H=_avH(C); P.RR(5,29,5,9,2,C); P.RR(34,29,5,9,2,C); P.RR(11,29,22,14,3,C); P.R(12,30,20,2,H.L); P.R(19,29,6,1,H.D); P.R(11,41,22,2,H.D); }},
@@ -5936,7 +5937,7 @@ const AV_ARMOR=[
   {n:'Cübbe', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,17,2,C); P.RR(34,29,6,17,2,C); P.RR(10,29,24,23,4,C); P.R(10,39,24,2,H.D); P.R(11,49,22,1,H.L); }},
   {n:'Kapüşonlu', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,15,2,C); P.RR(34,29,6,15,2,C); P.RR(11,29,22,15,3,C); P.RR(15,36,14,7,2,H.L); P.R(15,36,14,1,H.D); P.R(19,30,1,4,H.L); P.R(24,30,1,4,H.L); }, o:(P,C,SK)=>{const H=_avH(C); P.RR(4,0,36,31,11,C); P.RR(8,3,28,24,8,SK); P.R(8,25,28,3,_avShade(SK,-0.14)); _avFace(P,SK); P.R(5,26,4,4,H.D); P.R(35,26,4,4,H.D); }},
   {n:'Ceket', d:(P,C)=>{const H=_avH(C); P.RR(4,29,6,15,2,C); P.RR(34,29,6,15,2,C); P.RR(11,29,22,15,3,C); P.R(21,29,2,15,H.L); P.TRI(14,29,5,4,H.D); P.TRI(25,29,5,4,H.D); P.R(11,42,22,2,H.D); }},
-  {n:'Atlet', d:(P,C)=>{const H=_avH(C); P.RR(14,30,16,13,2,C); P.R(16,28,3,3,C); P.R(25,28,3,3,C); P.R(14,41,16,2,H.D); }},
+  {n:'Atlet', d:(P,C)=>{const H=_avH(C); P.RR(14,30,16,13,2,C); P.R(16,28,3,3,C); P.R(25,28,3,3,C); P.R(14,41,16,2,H.D); }},  {n:'Boş', d:()=>{}},
 ];
 const AV_PANTS=[
   {n:'Şort', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,3,C); P.R(23,46,6,3,C); P.R(15,48,6,1,H.D); P.R(23,48,6,1,H.D); }},
@@ -5945,7 +5946,7 @@ const AV_PANTS=[
   {n:'Şalvar', d:(P,C)=>{const H=_avH(C); P.RR(12,42,20,8,3,C); P.R(14,49,7,2,H.D); P.R(23,49,7,2,H.D); }},
   {n:'Dar', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,4,2,C); P.R(15,45,6,7,C); P.R(23,45,6,7,C); P.R(15,45,1,7,H.D); P.R(20,45,1,7,H.D); P.R(23,45,1,7,H.D); P.R(28,45,1,7,H.D); }},
   {n:'Yırtık', d:(P,C,SK)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); P.R(16,48,3,1,SK); P.R(25,50,3,1,SK); }},
-  {n:'Dizlikli Kot', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); P.RR(15,47,6,3,1,H.L); P.RR(23,47,6,3,1,H.L); }},
+  {n:'Dizlikli Kot', d:(P,C)=>{const H=_avH(C); P.RR(13,42,18,5,2,C); P.R(15,46,6,6,C); P.R(23,46,6,6,C); P.RR(15,47,6,3,1,H.L); P.RR(23,47,6,3,1,H.L); }},  {n:'Boş', d:()=>{}},
 ];
 const AV_SHOES=[
   {n:'Bot', d:(P,C)=>{const H=_avH(C); P.RR(11,50,11,5,2,C); P.RR(22,50,11,5,2,C); P.R(11,54,11,1,H.D); P.R(22,54,11,1,H.D); P.R(12,50,4,1,H.L); P.R(28,50,4,1,H.L); }},
@@ -5963,7 +5964,7 @@ const AV_WEAPON=[
   {n:'Yay', d:(P,C)=>{const H=_avH(C); for(let t=0;t<=26;t++){ const yy=10+t*(34/26); const bow=Math.sin(Math.PI*t/26); P.set(Math.round(38+bow*5),Math.round(yy),C); } P.R(38,10,1,35,H.L); P.RR(41,25,3,6,1,'#4a3626'); }},
   {n:'Hançer', d:(P,C)=>{const H=_avH(C); P.TRI(38,24,4,4,H.L); P.R(38,28,1,10,H.L); P.R(39,28,2,10,C); P.RR(36,38,8,2,1,H.D); P.R(39,40,2,6,'#4a3626'); }},
   {n:'Çekiç', d:(P,C)=>{const H=_avH(C); P.R(39,18,3,28,'#4a3626'); P.RR(33,10,11,9,2,C); P.R(33,10,3,9,H.L); P.R(42,10,2,9,H.D); }},
-  {n:'Kitap', d:(P,C)=>{const H=_avH(C); P.RR(33,32,11,9,1,C); P.R(33,32,2,9,H.D); P.R(36,34,7,1,H.L); P.R(36,36,7,1,H.L); P.R(36,38,7,1,H.L); }},
+  {n:'Kitap', d:(P,C)=>{const H=_avH(C); P.RR(33,32,11,9,1,C); P.R(33,32,2,9,H.D); P.R(36,34,7,1,H.L); P.R(36,36,7,1,H.L); P.R(36,38,7,1,H.L); }},  {n:'Boş', d:()=>{}},
 ];
 // GYM kıyafetleri — Nutrition Center'dan alınınca açılır (req = gym item id)
 AV_ARMOR.push(
@@ -6257,9 +6258,90 @@ function _avShade(hex,f){
     return '#'+((1<<24)+(r<<16)+(gg<<8)+b).toString(16).slice(1);
   }catch(e){ return hex; }
 }
-// ── PIXEL AVATAR RENDERER v2 — tampon çiz → otomatik kontur + üst-ışık → canvas ──
-function renderAvatar(){
+// ════════════════════════════════════════
+// PORTRE AVATAR MODU (v7.31) — kullanıcının el çizimi 512×512 katmanları
+// Gri (R≈G≈B) pikseller renk seçiciyle boyanır, renkli pikseller sabit kalır.
+// Taban yüklenemezse otomatik olarak pixel avatara düşer.
+// ════════════════════════════════════════
+const AV_PORTRAIT={
+  base:'sprites/avatar/taban.png',
+  slots:{
+    armor:[ {n:'Plaka Zırh (el çizimi)', src:'sprites/avatar/ust_1.png'}, {n:'Boş'} ],
+  }
+};
+const _avImgCache={};
+function _avImg(src){
+  let e=_avImgCache[src];
+  if(!e){
+    const img=new Image();
+    e=_avImgCache[src]={img,loaded:false,failed:false};
+    img.onload=()=>{ e.loaded=true; try{ renderAvatar(); renderAvatarPopRows(); }catch(_e){} };
+    img.onerror=()=>{ e.failed=true; try{ renderAvatar(); }catch(_e){} };
+    img.src=src;
+  }
+  return e;
+}
+const _avTintCache={};
+function _avTintCanvas(src,color){
+  const key=src+'|'+(color||'');
+  if(_avTintCache[key]) return _avTintCache[key];
+  const e=_avImgCache[src]; if(!e||!e.loaded) return null;
+  const cv=document.createElement('canvas');
+  cv.width=e.img.naturalWidth||512; cv.height=e.img.naturalHeight||512;
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(e.img,0,0);
+  if(color){
+    try{
+      const id=ctx.getImageData(0,0,cv.width,cv.height), d=id.data;
+      const n=parseInt(color.slice(1),16), tr=(n>>16)&255, tg=(n>>8)&255, tb=n&255;
+      for(let i=0;i<d.length;i+=4){
+        if(!d[i+3]) continue;
+        const r=d[i], g2=d[i+1], b=d[i+2];
+        if(Math.max(Math.abs(r-g2),Math.abs(g2-b),Math.abs(r-b))<=10){
+          const f=(r+g2+b)/765;
+          if(f>0.85){ const t=(f-0.85)/0.15*0.55; d[i]=tr+(255-tr)*t; d[i+1]=tg+(255-tg)*t; d[i+2]=tb+(255-tb)*t; }
+          else { const k=f/0.78; d[i]=Math.min(255,tr*k); d[i+1]=Math.min(255,tg*k); d[i+2]=Math.min(255,tb*k); }
+        }
+      }
+      ctx.putImageData(id,0,0);
+    }catch(err){ /* okuma engellenirse boyamasız kullan */ }
+  }
+  _avTintCache[key]=cv;
+  return cv;
+}
+function _avPortraitState(){ return _avImg(AV_PORTRAIT.base); }
+function _avPortraitOn(){ const st=_avPortraitState(); return st.loaded && !st.failed; }
+const _AV_SLOT_TR={hair:'SAÇ',armor:'ÜST',weapon:'SİLAH',pants:'ALT',shoes:'AYAKKABI'};
+function _renderAvatarPortrait(){
   const cv=g('avatar-cv'); if(!cv) return;
+  cv.classList.add('portrait');
+  if(cv.width!==512){ cv.width=512; cv.height=512; }
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,512,512);
+  const av=_char().avatar, col=av.colors;
+  const base=_avTintCanvas(AV_PORTRAIT.base, col.skin);
+  if(base) ctx.drawImage(base,0,0);
+  ['pants','shoes','armor','hair','weapon'].forEach(slot=>{
+    const list=AV_PORTRAIT.slots[slot]; if(!list||!list.length) return;
+    const idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+    const ent=list[idx]; if(!ent||!ent.src) return;   // 'Boş' → çizme
+    const st=_avImg(ent.src); if(!st.loaded||st.failed) return;
+    const layer=_avTintCanvas(ent.src, col[slot]);
+    if(layer) ctx.drawImage(layer,0,0);
+  });
+}
+function renderAvatar(){
+  const st=_avPortraitState();
+  if(st.failed){ _renderAvatarPixel(); return; }
+  if(!st.loaded){ return; }   // yüklenince onload yeniden çizer (o ana dek çerçeve boş)
+  _renderAvatarPortrait();
+}
+
+// ── PIXEL AVATAR RENDERER v2 — tampon çiz → otomatik kontur + üst-ışık → canvas ──
+function _renderAvatarPixel(){
+  const cv=g('avatar-cv'); if(!cv) return;
+  cv.classList.remove('portrait');
+  if(cv.width!==AVPX.W){ cv.width=AVPX.W; cv.height=AVPX.H; }
   const W=AVPX.W, H=AVPX.H;
   const c=_char(), av=c.avatar, col=av.colors;
   const buf=Array.from({length:H},()=>new Array(W).fill(null));
@@ -6308,6 +6390,24 @@ document.addEventListener('click', function(e){
 function renderAvatarPopRows(){
   const box=g('avatar-pop-rows'); if(!box) return;
   const av=_char().avatar;
+  if(_avPortraitOn()){
+    // PORTRE MODU: sadece çizimi olan slotlar + TEN
+    let html=Object.keys(AV_PORTRAIT.slots).map(slot=>{
+      const list=AV_PORTRAIT.slots[slot];
+      const idx=Math.max(0,Math.min(list.length-1, av[slot]|0));
+      return '<div class="avrow">'+
+        '<span class="avlbl">'+(_AV_SLOT_TR[slot]||slot.toUpperCase())+'</span>'+
+        '<button class="avbtn" onclick="avCycle(\''+slot+'\',-1)">◀</button>'+
+        '<span class="avval">'+(idx+1)+'/'+list.length+' '+_he(list[idx].n)+'</span>'+
+        '<button class="avbtn" onclick="avCycle(\''+slot+'\',1)">▶</button>'+
+        '<input type="color" value="'+(av.colors[slot]||'#8a94a6')+'" oninput="avColor(\''+slot+'\',this.value)">'+
+      '</div>';
+    }).join('');
+    html+='<div class="avrow"><span class="avlbl">TEN</span><span class="avval" style="text-align:left;color:var(--muted)">cilt rengi</span><input type="color" value="'+(av.colors.skin||'#f0c8a0')+'" oninput="avColor(\'skin\',this.value)"></div>';
+    html+='<div style="font-size:7px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:6px">El çizimi portre modu — yeni katman çizdikçe eklenecek.</div>';
+    box.innerHTML=html;
+    return;
+  }
   let html=AV_SLOTS.map(s=>{
     let idx=av[s.key]|0; let item=s.arr[Math.max(0,Math.min(s.arr.length-1,idx))];
     if(!_avOwned(item)){ idx=0; item=s.arr[0]; }
@@ -6325,6 +6425,13 @@ function renderAvatarPopRows(){
 }
 function avCycle(slot,dir){
   const av=_char().avatar;
+  if(_avPortraitOn()){
+    const list=AV_PORTRAIT.slots[slot]; if(!list||!list.length) return;
+    const n=list.length;
+    av[slot]=(((av[slot]|0)+dir)%n+n)%n;
+    save(); renderAvatar(); renderAvatarPopRows();
+    return;
+  }
   const def=AV_SLOTS.find(s=>s.key===slot); if(!def) return;
   const n=def.arr.length;
   let idx=av[slot]|0, guard=0;
@@ -6335,6 +6442,8 @@ function avCycle(slot,dir){
 function avColor(slot,val){
   const av=_char().avatar;
   av.colors[slot]=val;
+  // portre tint önbelleğini bu slot için tazele
+  try{ Object.keys(_avTintCache).forEach(k=>{ delete _avTintCache[k]; }); }catch(e){}
   save(); renderAvatar();
 }
 
@@ -9476,7 +9585,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.30.4 başlatıldı.');
+addLog('OVERCLOCK v7.31.0 başlatıldı.');
 </script>
 </body>
 </html>
