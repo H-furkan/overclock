@@ -1891,7 +1891,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.37.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.37.1</div>
     </div>
   </div>
 </div>
@@ -3630,32 +3630,61 @@ function renderHqCalTasks(){
   const evs=(S.calEvents||[]).filter(e=>_evOccursOn(e,t)).sort((a,b)=>(a.startMin||0)-(b.startMin||0));
   if(!evs.length){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
+  const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes();
   const doneN=evs.filter(e=>_evDoneOn(e,t)).length;
+  // ŞİMDİ: aralığı içinde olduğumuz ilk tamamlanmamış olay; SIRADA: ondan sonraki ilk gelecek olay
+  let curId=null, nextId=null;
+  evs.forEach(ev=>{
+    if(_evDoneOn(ev,t)) return;
+    const st=ev.startMin||0, en=ev.endMin||st+60;
+    if(curId===null && nowMin>=st && nowMin<en) curId=ev.id;
+    else if(nextId===null && st>nowMin) nextId=ev.id;
+  });
   const chip=(txt,col)=>'<span style="display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:'+col+';border:1px solid '+col+'44;background:'+col+'14;border-radius:10px;padding:2px 7px;white-space:nowrap">'+txt+'</span>';
-  const rows=evs.map(ev=>{
+  const pct=Math.round(doneN/evs.length*100);
+  const rows=evs.map((ev,i)=>{
     const done=_evDoneOn(ev,t);
     const ico=CAL_TYPE_ICON[ev.type]||'📌';
-    const time=_minToTime(ev.startMin||0)+(ev.endMin?('–'+_minToTime(ev.endMin)):'');
+    const col=_evBd(ev);
+    const st=ev.startMin||0, en=ev.endMin||0;
+    const time=_minToTime(st), time2=en?_minToTime(en):'';
+    const isCur=(ev.id===curId), isNext=(ev.id===nextId);
+    const past=!done && (en||st+60)<=nowMin;
     const badges=[];
+    if(isCur) badges.push(chip('▶ ŞİMDİ',col));
+    else if(isNext) badges.push(chip('⏭ SIRADA','#66ccff'));
+    if(past) badges.push(chip('⏰ geçti','#ff5a5a'));
     if(ev.repeat&&ev.repeat!=='none') badges.push(chip('↻ '+_repeatLbl(ev),'#a2a2a2'));
     if(ev.xp>0) badges.push(chip('⭐ +'+ev.xp+' XP','#ffff66'));
     if(ev.type==='soru'&&ev.questions>0) badges.push(chip('❓ '+ev.questions+' soru','#8fff8f'));
     if(ev.remindAt) badges.push(chip('🔔 '+(ev.remindAt.slice(0,10)===t ? ev.remindAt.slice(11) : ev.remindAt.replace('T',' ')),'#66ccff'));
     const badgeRow=badges.length?('<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'+badges.join('')+'</div>'):'';
-    const desc=ev.desc?('<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:3px;white-space:pre-wrap">'+_he(ev.desc)+'</div>'):'';
-    return '<div style="display:flex;gap:10px;align-items:stretch;padding:9px 10px;border:1px solid var(--bd);border-left:3px solid '+_evBd(ev)+';background:var(--mid);border-radius:8px;margin-bottom:6px'+(done?';opacity:.45':'')+'">'+
-      '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:44px">'+
-        '<span style="font-size:15px;line-height:1">'+ico+'</span>'+
-        '<span style="font-family:Orbitron,monospace;font-size:8px;font-weight:700;color:var(--bright);letter-spacing:.5px;white-space:nowrap">'+time+'</span>'+
+    const desc=(ev.desc&&!done)?('<div style="font-size:8px;color:var(--muted);letter-spacing:.5px;line-height:1.6;margin-top:3px;white-space:pre-wrap">'+_he(ev.desc)+'</div>'):'';
+    const rail=
+      '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:14px">'+
+        '<div style="width:1px;flex:0 0 4px;background:'+(i===0?'transparent':'rgba(255,255,255,.1)')+'"></div>'+
+        '<div style="width:'+(isCur?'11px':'9px')+';height:'+(isCur?'11px':'9px')+';border-radius:50%;flex-shrink:0;background:'+(done?'var(--green)':(past?'#552a2a':'var(--deep)'))+';border:2px solid '+(done?'var(--green)':col)+';'+(isCur?'box-shadow:0 0 8px '+col:'')+'"></div>'+
+        '<div style="width:1px;flex:1;background:'+(i===evs.length-1?'transparent':'rgba(255,255,255,.1)')+'"></div>'+
+      '</div>';
+    return '<div style="display:flex;gap:9px;align-items:stretch">'+rail+
+      '<div style="flex:1;min-width:0;display:flex;gap:10px;align-items:stretch;padding:8px 10px;border:1px solid '+(isCur?col+'66':'var(--bd)')+';border-left:3px solid '+col+';background:'+(isCur?col+'0d':'var(--mid)')+';border-radius:8px;margin:2px 0'+(done?';opacity:.4':'')+(isCur?';box-shadow:0 0 12px '+col+'22':'')+'">'+
+        '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;min-width:42px">'+
+          '<span style="font-size:14px;line-height:1">'+ico+'</span>'+
+          '<span style="font-family:Orbitron,monospace;font-size:8px;font-weight:700;color:var(--bright);letter-spacing:.5px;white-space:nowrap">'+time+'</span>'+
+          (time2?('<span style="font-family:Orbitron,monospace;font-size:7px;color:var(--muted);letter-spacing:.5px">'+time2+'</span>'):'')+
+        '</div>'+
+        '<div style="flex:1;min-width:0;border-left:1px dashed rgba(255,255,255,.08);padding-left:10px">'+
+          '<div style="font-size:11px;color:var(--white);letter-spacing:.5px;font-weight:600'+(done?';text-decoration:line-through':'')+'">'+(done?'✓ ':'')+_he(ev.title||(ev.type==='blok'?'Meşgul':'(başlıksız)'))+'</div>'+
+          desc+badgeRow+
+        '</div>'+
+        '<button onclick="hqCalToggle(\''+ev.id+'\')" title="'+(done?'Geri al':'Tamamla')+'" style="flex-shrink:0;align-self:center;background:'+(done?'rgba(143,255,143,.12)':'none')+';border:1.5px solid '+(done?'var(--green)':'var(--bd2)')+';color:'+(done?'var(--green)':'var(--bright)')+';border-radius:50%;font-size:13px;width:32px;height:32px;cursor:pointer">✓</button>'+
       '</div>'+
-      '<div style="flex:1;min-width:0;border-left:1px dashed rgba(255,255,255,.08);padding-left:10px">'+
-        '<div style="font-size:11px;color:var(--white);letter-spacing:.5px;font-weight:600'+(done?';text-decoration:line-through':'')+'">'+(done?'✓ ':'')+_he(ev.title||(ev.type==='blok'?'Meşgul':'(başlıksız)'))+'</div>'+
-        desc+badgeRow+
-      '</div>'+
-      '<button onclick="hqCalToggle(\''+ev.id+'\')" title="'+(done?'Geri al':'Tamamla')+'" style="flex-shrink:0;align-self:center;background:'+(done?'rgba(143,255,143,.12)':'none')+';border:1.5px solid '+(done?'var(--green)':'var(--bd2)')+';color:'+(done?'var(--green)':'var(--bright)')+';border-radius:50%;font-size:13px;width:32px;height:32px;cursor:pointer">✓</button>'+
     '</div>';
   }).join('');
-  box.innerHTML='<div class="fbet" style="margin-bottom:8px"><div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">📅 Bugünün Programı</div><span style="font-size:8px;color:var(--muted);letter-spacing:1px">'+doneN+'/'+evs.length+' tamam</span></div>'+rows;
+  box.innerHTML=
+    '<div class="fbet" style="margin-bottom:4px"><div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">📅 Bugünün Programı</div><span style="font-size:8px;color:var(--muted);letter-spacing:1px">'+doneN+'/'+evs.length+' tamam</span></div>'+
+    '<div style="height:3px;background:var(--mid);border-radius:2px;margin-bottom:10px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--green),#8fff8f);border-radius:2px;transition:width .4s"></div></div>'+
+    rows;
 }
 
 // ════════════════════════════════════════
@@ -9045,6 +9074,7 @@ function drawNumericChart(h,cid){
 // ════════════════════════════════════════
 function renderAll(){
   renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown(); try{ renderSrsBadge(); }catch(e){}
+  try{ renderHqCalTasks(); }catch(e){}   // v7.37.1 fix: açılışta Bugünün Programı boş kalıyordu
   try{ renderSessionType(); renderIdealDuration(); renderCoeffEditor(); renderBank(); }catch(e){}
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
   renderHabits(); renderStats(); renderShop(); renderBoostBanner();
@@ -9908,7 +9938,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.37.0 başlatıldı.');
+addLog('OVERCLOCK v7.37.1 başlatıldı.');
 </script>
 </body>
 </html>
