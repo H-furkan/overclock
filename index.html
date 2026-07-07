@@ -141,7 +141,17 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
 /* content */
 #content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.page{display:none}.page.visible{display:block}
+.page{display:none}.page.visible{display:block;animation:ocPageIn .22s ease-out}
+/* ── GLOBAL ANİMASYONLAR (v7.38): popup fade+pop, buton bası, sekme geçişi ── */
+@keyframes ocPageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes ocFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes ocPopIn{from{opacity:0;transform:scale(.94) translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ocRowOut{to{opacity:0;transform:translateX(26px);max-height:0;margin:0;padding-top:0;padding-bottom:0}}
+#q-modal,#weekly-modal,#contract-modal,#case-reveal,#bg-modal,#subj-modal,#book-pop,#inv-modal,#cal-pop{animation:ocFadeIn .16s ease-out}
+#q-modal>div,#weekly-modal>div,#contract-modal>div,#bg-modal>div,#subj-modal>div,#book-pop>div,#inv-modal>div,#cal-pop>div{animation:ocPopIn .2s cubic-bezier(.2,.9,.3,1.15)}
+#mini-prompt,#badge-pop,#ocp-pop,#avatar-pop{animation:ocPopIn .18s cubic-bezier(.2,.9,.3,1.15)}
+button,.btn,.navitem,.gym-mchip,.avbtn,.hq-today-row,.cafe-box,.book-spine,.sk-node{transition:transform .09s ease}
+button:active,.btn:active,.navitem:active,.gym-mchip:active,.avbtn:active,.hq-today-row:active,.cafe-box:active,.book-spine:active,.sk-node:active{transform:scale(.955)}
 
 /* blocks */
 .block{background:var(--panel);border-bottom:1px solid var(--bd);padding:14px 16px}
@@ -1891,7 +1901,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.37.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.38.0</div>
     </div>
   </div>
 </div>
@@ -3616,6 +3626,17 @@ function _calAwardXp(ev){
 }
 // HQ'da bugünün takvim olayını tamamla
 function hqCalToggle(id){
+  // animasyon: satır sağa süzülüp listede yeni yerine otursun
+  const row=g('hqrow-'+id);
+  if(row && !row._anim){
+    row._anim=true;
+    row.style.animation='ocRowOut .24s ease-in forwards';
+    setTimeout(()=>{ _hqCalToggleDo(id); }, 235);
+    return;
+  }
+  _hqCalToggleDo(id);
+}
+function _hqCalToggleDo(id){
   const ev=(S.calEvents||[]).find(x=>x.id===id); if(!ev) return;
   const _x=_evToggleDone(ev, today());
   if(_x!=null) notify('✓ Tamamlandı +'+_x+' XP');
@@ -3627,7 +3648,11 @@ const CAL_TYPE_ICON={ std:'📌', soru:'📝', konu:'📖', blok:'▨', deneme:'
 function renderHqCalTasks(){
   const box=g('hq-cal-tasks'); if(!box) return;
   const t=today();
-  const evs=(S.calEvents||[]).filter(e=>_evOccursOn(e,t)).sort((a,b)=>(a.startMin||0)-(b.startMin||0));
+  const evs=(S.calEvents||[]).filter(e=>_evOccursOn(e,t)).sort((a,b)=>{
+    const da=_evDoneOn(a,t)?1:0, db=_evDoneOn(b,t)?1:0;
+    if(da!==db) return da-db;                       // tamamlananlar EN ALTA
+    return (a.startMin||0)-(b.startMin||0);
+  });
   if(!evs.length){ box.style.display='none'; box.innerHTML=''; return; }
   box.style.display='block';
   const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes();
@@ -3642,8 +3667,11 @@ function renderHqCalTasks(){
   });
   const chip=(txt,col)=>'<span style="display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:'+col+';border:1px solid '+col+'44;background:'+col+'14;border-radius:10px;padding:2px 7px;white-space:nowrap">'+txt+'</span>';
   const pct=Math.round(doneN/evs.length*100);
+  let _sepDone=false;
   const rows=evs.map((ev,i)=>{
     const done=_evDoneOn(ev,t);
+    let sep='';
+    if(done && !_sepDone){ _sepDone=true; sep='<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px"><div style="flex:1;height:1px;background:rgba(143,255,143,.15)"></div><span style="font-size:7px;letter-spacing:2px;color:var(--muted)">✓ TAMAMLANANLAR</span><div style="flex:1;height:1px;background:rgba(143,255,143,.15)"></div></div>'; }
     const ico=CAL_TYPE_ICON[ev.type]||'📌';
     const col=_evBd(ev);
     const st=ev.startMin||0, en=ev.endMin||0;
@@ -3666,7 +3694,7 @@ function renderHqCalTasks(){
         '<div style="width:'+(isCur?'11px':'9px')+';height:'+(isCur?'11px':'9px')+';border-radius:50%;flex-shrink:0;background:'+(done?'var(--green)':(past?'#552a2a':'var(--deep)'))+';border:2px solid '+(done?'var(--green)':col)+';'+(isCur?'box-shadow:0 0 8px '+col:'')+'"></div>'+
         '<div style="width:1px;flex:1;background:'+(i===evs.length-1?'transparent':'rgba(255,255,255,.1)')+'"></div>'+
       '</div>';
-    return '<div style="display:flex;gap:9px;align-items:stretch">'+rail+
+    return sep+'<div id="hqrow-'+ev.id+'" style="display:flex;gap:9px;align-items:stretch;overflow:hidden">'+rail+
       '<div style="flex:1;min-width:0;display:flex;gap:10px;align-items:stretch;padding:8px 10px;border:1px solid '+(isCur?col+'66':'var(--bd)')+';border-left:3px solid '+col+';background:'+(isCur?col+'0d':'var(--mid)')+';border-radius:8px;margin:2px 0'+(done?';opacity:.4':'')+(isCur?';box-shadow:0 0 12px '+col+'22':'')+'">'+
         '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;min-width:42px">'+
           '<span style="font-size:14px;line-height:1">'+ico+'</span>'+
@@ -9938,7 +9966,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.37.1 başlatıldı.');
+addLog('OVERCLOCK v7.38.0 başlatıldı.');
 </script>
 </body>
 </html>
