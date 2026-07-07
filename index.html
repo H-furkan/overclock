@@ -526,6 +526,16 @@ body.ign-run #content, body.ign-run #sidebar{transition:opacity 1.5s ease-out, f
 /* ── GYM ── */
 .gym-top{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
 .notes-grid{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start}
+.notes-grid.zen{grid-template-columns:1fr}
+.notes-grid.zen #notes-side{display:none}
+.note-tool{min-height:26px;padding:2px 9px;font-size:9px;letter-spacing:.5px;background:var(--mid);border:1px solid var(--bd);border-radius:6px;color:var(--bright);cursor:pointer;font-family:'Share Tech Mono',monospace}
+.note-tool:hover{border-color:#bb88ff66;color:var(--white)}
+.note-tsep{width:1px;background:var(--bd);margin:2px 2px}
+#note-body{caret-color:#bb88ff}
+#note-preview blockquote{border-left:3px solid #bb88ff;margin:6px 0;padding:4px 12px;color:var(--muted);font-style:italic;background:#bb88ff0a;border-radius:0 6px 6px 0}
+#note-preview hr{border:none;border-top:1px solid var(--bd2);margin:10px 0}
+#note-preview .task{list-style:none;margin-left:-16px}
+#note-preview .task.done{color:var(--muted);text-decoration:line-through}
 @media (max-width:760px){.notes-grid{grid-template-columns:1fr}}
 .note-item{padding:8px 10px;border:1px solid var(--bd);background:var(--mid);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
 .note-item:hover{border-color:var(--bd2)}
@@ -1053,7 +1063,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="notes-grid">
       <!-- SOL: liste -->
-      <div>
+      <div id="notes-side">
         <input class="inp fw mb8" id="notes-search" placeholder="🔍 ara... (başlık, içerik, #etiket)" oninput="renderNotesList()">
         <button class="btn primary fw mb8" onclick="noteNew()">＋ YENİ NOT</button>
         <div id="notes-list" style="max-height:60vh;overflow-y:auto"></div>
@@ -1063,9 +1073,27 @@ body.pixel-font #timer-unit{font-size:8px}
         <div id="note-empty" style="font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.8;padding:20px 6px">Soldan bir not seç ya da yeni not oluştur.<br>💡 <b style="color:var(--bright)">[[Not Adı]]</b> yazarak notları birbirine bağla — Obsidian gibi. Bağlantılar önizlemede tıklanabilir, olmayan not tıklayınca oluşur.</div>
         <div id="note-editor" style="display:none">
           <input class="inp fw mb8" id="note-title" placeholder="Not başlığı" oninput="noteInput()" style="font-size:13px;font-weight:700">
-          <div class="brow mb8">
+          <div class="brow mb8" style="gap:5px">
             <button class="btn" style="flex:1" id="note-mode-btn" onclick="notePreviewToggle()">👁 ÖNİZLE</button>
+            <button class="btn" id="note-zen-btn" onclick="noteZenToggle()" title="Odak modu — liste gizlenir">⛶</button>
             <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="noteDelete(event)">🗑</button>
+          </div>
+          <div id="note-toolbar" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+            <button class="note-tool" onclick="noteTool('h1')">H1</button>
+            <button class="note-tool" onclick="noteTool('h2')">H2</button>
+            <button class="note-tool" onclick="noteTool('h3')">H3</button>
+            <span class="note-tsep"></span>
+            <button class="note-tool" style="font-weight:900" onclick="noteTool('bold')">B</button>
+            <button class="note-tool" style="font-style:italic" onclick="noteTool('italic')">I</button>
+            <button class="note-tool" onclick="noteTool('code')">&lt;/&gt;</button>
+            <span class="note-tsep"></span>
+            <button class="note-tool" onclick="noteTool('list')">•—</button>
+            <button class="note-tool" onclick="noteTool('task')">☐</button>
+            <button class="note-tool" onclick="noteTool('quote')">❝</button>
+            <button class="note-tool" onclick="noteTool('hr')">—</button>
+            <span class="note-tsep"></span>
+            <button class="note-tool" style="color:#bb88ff" onclick="noteTool('link')">[[ ]]</button>
+            <button class="note-tool" style="color:#66ccff" onclick="noteTool('tag')">#</button>
           </div>
           <textarea class="inp fw" id="note-body" rows="14" placeholder="# Başlık&#10;**kalın** *italik* `kod`&#10;- liste&#10;[[Başka Not]] bağlantısı, #etiket" oninput="noteInput()" style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.7;resize:vertical"></textarea>
           <div id="note-preview" style="display:none;border:1px solid var(--bd);background:var(--mid);border-radius:8px;padding:14px;font-size:11px;line-height:1.8;min-height:200px;overflow-wrap:break-word"></div>
@@ -1077,13 +1105,13 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- NOT GRAFI -->
-<div id="note-graph" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:14px">
-  <div style="width:100%;max-width:560px;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:14px">
+<div id="note-graph" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:12px">
+  <div style="width:100%;max-width:880px;background:#16161e;border:1px solid var(--bd2);border-radius:12px;padding:12px">
     <div class="fbet mb8">
-      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">🕸 Not Grafı <span style="font-size:8px;color:var(--muted)">düğüme tıkla → notu aç</span></div>
-      <button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="g('note-graph').style.display='none'">✕</button>
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">🕸 Not Grafı <span style="font-size:8px;color:var(--muted)">sürükle · üzerine gel · tıkla → aç</span></div>
+      <button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="noteGraphClose()">✕</button>
     </div>
-    <canvas id="note-graph-cv" width="520" height="400" style="width:100%;border:1px solid var(--bd);border-radius:8px;background:#0c0f14;cursor:pointer"></canvas>
+    <canvas id="note-graph-cv" style="width:100%;border:1px solid var(--bd);border-radius:8px;background:#101018;cursor:grab;touch-action:none;display:block"></canvas>
   </div>
 </div>
 
@@ -1961,7 +1989,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.39.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.40.0</div>
     </div>
   </div>
 </div>
@@ -3825,7 +3853,7 @@ function noteDelete(ev){
   });
 }
 function notePreviewToggle(){ _notePreview=!_notePreview; renderNoteEditor(); }
-// mini-markdown: escape ÖNCE, sonra dönüşümler
+// mini-markdown: escape ÖNCE, sonra dönüşümler (Obsidian uyumlu alt küme)
 function _mdRender(txt){
   let h=_he(String(txt||''));
   h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>');
@@ -3836,18 +3864,71 @@ function _mdRender(txt){
     return '<span class="wikilink'+(ex?'':' dead')+'" onclick="noteOpenByTitle(\''+t.trim().replace(/'/g,'&#39;')+'\')">'+t.trim()+(ex?'':' ＋')+'</span>';
   });
   h=h.replace(/(^|\s)#([a-zA-ZğüşöçıİĞÜŞÖÇ0-9_-]{2,24})/g,'$1<span class="note-tag">#$2</span>');
-  const lines=h.split('\n'); const out=[]; let inUl=false;
+  const lines=h.split('\n'); const out=[]; let inUl=false, inBq=false;
+  const closeAll=()=>{ if(inUl){ out.push('</ul>'); inUl=false; } if(inBq){ out.push('</blockquote>'); inBq=false; } };
   lines.forEach(ln=>{
-    if(/^- /.test(ln)){ if(!inUl){ out.push('<ul>'); inUl=true; } out.push('<li>'+ln.slice(2)+'</li>'); return; }
+    if(/^- \[[ xX]\] /.test(ln)){ if(inBq){out.push('</blockquote>');inBq=false;} if(!inUl){ out.push('<ul>'); inUl=true; }
+      const done=/^- \[[xX]\]/.test(ln);
+      out.push('<li class="task'+(done?' done':'')+'">'+(done?'☑':'☐')+' '+ln.slice(6)+'</li>'); return; }
+    if(/^- /.test(ln)){ if(inBq){out.push('</blockquote>');inBq=false;} if(!inUl){ out.push('<ul>'); inUl=true; } out.push('<li>'+ln.slice(2)+'</li>'); return; }
     if(inUl){ out.push('</ul>'); inUl=false; }
+    if(/^&gt; ?/.test(ln)){ if(!inBq){ out.push('<blockquote>'); inBq=true; } out.push('<div>'+ln.replace(/^&gt; ?/,'')+'</div>'); return; }
+    if(inBq){ out.push('</blockquote>'); inBq=false; }
+    if(/^---+\s*$/.test(ln)){ out.push('<hr>'); return; }
     if(/^### /.test(ln)) out.push('<h3>'+ln.slice(4)+'</h3>');
     else if(/^## /.test(ln)) out.push('<h2>'+ln.slice(3)+'</h2>');
     else if(/^# /.test(ln)) out.push('<h1>'+ln.slice(2)+'</h1>');
     else if(ln.trim()==='') out.push('<div style="height:7px"></div>');
     else out.push('<div>'+ln+'</div>');
   });
-  if(inUl) out.push('</ul>');
+  closeAll();
   return out.join('');
+}
+// ── ✏ ARAÇ ÇUBUĞU: seçimi sar / satır başına ekle (Obsidian tarzı) ──
+function noteTool(act){
+  const ta=g('note-body'); if(!ta || ta.style.display==='none') return;
+  const v=ta.value, s0=ta.selectionStart, s1=ta.selectionEnd, sel=v.slice(s0,s1);
+  const wrap=(pre,post,ph)=>{
+    const mid=sel||ph;
+    ta.value=v.slice(0,s0)+pre+mid+post+v.slice(s1);
+    ta.focus(); ta.setSelectionRange(s0+pre.length, s0+pre.length+mid.length);
+  };
+  const linePrefix=(pfx)=>{
+    const ls=v.lastIndexOf('\n', s0-1)+1;
+    const cur=v.slice(ls, s0), already=v.slice(ls, ls+pfx.length)===pfx;
+    ta.value=already ? v.slice(0,ls)+v.slice(ls+pfx.length) : v.slice(0,ls)+pfx+v.slice(ls);
+    const d=already?-pfx.length:pfx.length;
+    ta.focus(); ta.setSelectionRange(s0+d, s1+d);
+  };
+  if(act==='h1') linePrefix('# ');
+  else if(act==='h2') linePrefix('## ');
+  else if(act==='h3') linePrefix('### ');
+  else if(act==='bold') wrap('**','**','kalın');
+  else if(act==='italic') wrap('*','*','italik');
+  else if(act==='code') wrap('`','`','kod');
+  else if(act==='list') linePrefix('- ');
+  else if(act==='task') linePrefix('- [ ] ');
+  else if(act==='quote') linePrefix('> ');
+  else if(act==='hr'){ ta.value=v.slice(0,s0)+'\n---\n'+v.slice(s1); ta.focus(); ta.setSelectionRange(s0+5,s0+5); }
+  else if(act==='link') wrap('[[',']]','Not Adı');
+  else if(act==='tag') wrap('#','','etiket');
+  noteInput();
+}
+// Ctrl+B / Ctrl+I / Ctrl+K kısayolları
+function _noteWireKeys(){
+  const ta=g('note-body'); if(!ta || ta._keys) return; ta._keys=true;
+  ta.addEventListener('keydown',(e)=>{
+    if(!(e.ctrlKey||e.metaKey)) return;
+    const k=e.key.toLowerCase();
+    if(k==='b'){ e.preventDefault(); noteTool('bold'); }
+    else if(k==='i'){ e.preventDefault(); noteTool('italic'); }
+    else if(k==='k'){ e.preventDefault(); noteTool('link'); }
+  });
+}
+function noteZenToggle(){
+  const gr=document.querySelector('.notes-grid'); if(!gr) return;
+  gr.classList.toggle('zen');
+  const b=g('note-zen-btn'); if(b) b.style.color=gr.classList.contains('zen')?'#bb88ff':'';
 }
 function renderNotesList(){
   const box=g('notes-list'); if(!box) return;
@@ -3870,6 +3951,7 @@ function renderNoteEditor(){
   ed.style.display='block'; em.style.display='none';
   const tt=g('note-title'); if(tt && tt.value!==n.title) tt.value=n.title||'';
   const bb=g('note-body'), pv=g('note-preview'), mb=g('note-mode-btn');
+  try{ _noteWireKeys(); }catch(e){}
   if(bb && bb.value!==(n.body||'') && document.activeElement!==bb) bb.value=n.body||'';
   if(_notePreview){
     if(bb) bb.style.display='none';
@@ -3892,63 +3974,122 @@ function renderNoteEditor(){
   }
 }
 function renderNotes(){ renderNotesList(); renderNoteEditor(); }
-// ── 🕸 GRAF: basit kuvvet yerleşimi ──
-let _ngNodes=null;
+// ── 🕸 GRAF v2: CANLI fizik — yüzen düğümler, sürükleme, hover vurgusu (Obsidian tarzı) ──
+let _ng={ nodes:[], edges:[], neigh:[], raf:null, drag:-1, hover:-1, moved:false, W:0, H:0 };
+function _ngColor(n,deg){
+  if(!deg) return '#565666';                                     // yetim not — gri
+  const m=String(n.body||'').match(/(^|\s)#([a-zA-ZğüşöçıİĞÜŞÖÇ0-9_-]{2,24})/);
+  if(m){ let hsh=0; const t=m[2].toLowerCase(); for(let i=0;i<t.length;i++) hsh=(hsh*31+t.charCodeAt(i))>>>0;
+    return 'hsl('+(hsh%360)+',52%,64%)'; }                       // etiketli → etiket rengine göre küme
+  return '#a78bfa';                                              // bağlantılı → Obsidian moru
+}
 function noteGraphOpen(){
   const ns=_notes();
   if(!ns.length){ notify('Henüz not yok'); return; }
-  g('note-graph').style.display='flex';
-  const cv=g('note-graph-cv'), ctx=cv.getContext('2d');
-  const W=cv.width, H=cv.height;
+  const modal=g('note-graph'); modal.style.display='flex';
+  const cv=g('note-graph-cv');
+  const wrap=cv.parentElement;
+  const W=Math.max(320, wrap.clientWidth-26), H=Math.min(Math.round(window.innerHeight*0.62), 560);
+  cv.width=W; cv.height=H; _ng.W=W; _ng.H=H;
   const idxByTitle={}; ns.forEach((n,i)=>{ const k=(n.title||'').trim().toLowerCase(); if(k) idxByTitle[k]=i; });
-  const edges=[];
-  ns.forEach((n,i)=>_noteLinks(n).forEach(t=>{ const j=idxByTitle[t.toLowerCase()]; if(j!=null && j!==i) edges.push([i,j]); }));
-  // yerleşim: çember başlangıç + kuvvet iterasyonu
+  const edges=[]; const eset=new Set();
+  ns.forEach((n,i)=>_noteLinks(n).forEach(t=>{ const j=idxByTitle[t.toLowerCase()];
+    if(j!=null && j!==i){ const key=Math.min(i,j)+'-'+Math.max(i,j); if(!eset.has(key)){ eset.add(key); edges.push([i,j]); } } }));
   const N=ns.length;
-  const nodes=ns.map((n,i)=>({ x:W/2+Math.cos(i/N*6.283)*(H*0.33), y:H/2+Math.sin(i/N*6.283)*(H*0.33), vx:0, vy:0, deg:0 }));
-  edges.forEach(([a,b])=>{ nodes[a].deg++; nodes[b].deg++; });
-  for(let it=0; it<140; it++){
-    for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
-      let dx=nodes[j].x-nodes[i].x, dy=nodes[j].y-nodes[i].y;
-      let d2=dx*dx+dy*dy||1; const f=1600/d2;
-      const d=Math.sqrt(d2); dx/=d; dy/=d;
-      nodes[i].vx-=dx*f; nodes[i].vy-=dy*f; nodes[j].vx+=dx*f; nodes[j].vy+=dy*f;
-    }
-    edges.forEach(([a,b])=>{
-      let dx=nodes[b].x-nodes[a].x, dy=nodes[b].y-nodes[a].y;
-      const d=Math.sqrt(dx*dx+dy*dy)||1; const f=(d-70)*0.02; dx/=d; dy/=d;
-      nodes[a].vx+=dx*f; nodes[a].vy+=dy*f; nodes[b].vx-=dx*f; nodes[b].vy-=dy*f;
-    });
-    nodes.forEach(nd=>{
-      nd.vx+=(W/2-nd.x)*0.002; nd.vy+=(H/2-nd.y)*0.002;
-      nd.x+=Math.max(-6,Math.min(6,nd.vx)); nd.y+=Math.max(-6,Math.min(6,nd.vy));
-      nd.vx*=0.82; nd.vy*=0.82;
-      nd.x=Math.max(16,Math.min(W-16,nd.x)); nd.y=Math.max(14,Math.min(H-14,nd.y));
-    });
+  const deg=new Array(N).fill(0); edges.forEach(([x,y])=>{ deg[x]++; deg[y]++; });
+  const neigh=ns.map(()=>new Set()); edges.forEach(([x,y])=>{ neigh[x].add(y); neigh[y].add(x); });
+  _ng.nodes=ns.map((n,i)=>({
+    x:W/2+Math.cos(i/N*6.283)*(H*0.3)+(i%7-3)*5, y:H/2+Math.sin(i/N*6.283)*(H*0.3)+(i%5-2)*5,
+    vx:0, vy:0, deg:deg[i], r:4.5+Math.min(7,Math.sqrt(deg[i])*2.6), c:_ngColor(n,deg[i]), id:n.id,
+    lbl:(n.title||'(başlıksız)').slice(0,16)
+  }));
+  _ng.edges=edges; _ng.neigh=neigh; _ng.hover=-1; _ng.drag=-1;
+  _ngWire(cv);
+  if(_ng.raf) cancelAnimationFrame(_ng.raf);
+  const step2=()=>{ _ngPhysics(); _ngDraw(cv); _ng.raf=requestAnimationFrame(step2); };
+  step2();
+}
+function noteGraphClose(){ g('note-graph').style.display='none'; if(_ng.raf){ cancelAnimationFrame(_ng.raf); _ng.raf=null; } }
+function _ngPhysics(){
+  const nd=_ng.nodes, W=_ng.W, H=_ng.H;
+  const N=nd.length;
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+    let dx=nd[j].x-nd[i].x, dy=nd[j].y-nd[i].y;
+    let d2=dx*dx+dy*dy; if(d2<1) d2=1;
+    const f=Math.min(2.4, 2400/d2);
+    const d=Math.sqrt(d2); dx/=d; dy/=d;
+    nd[i].vx-=dx*f; nd[i].vy-=dy*f; nd[j].vx+=dx*f; nd[j].vy+=dy*f;
   }
-  _ngNodes=nodes;
-  ctx.clearRect(0,0,W,H);
-  ctx.strokeStyle='rgba(187,136,255,.28)'; ctx.lineWidth=1;
-  edges.forEach(([a,b])=>{ ctx.beginPath(); ctx.moveTo(nodes[a].x,nodes[a].y); ctx.lineTo(nodes[b].x,nodes[b].y); ctx.stroke(); });
-  nodes.forEach((nd,i)=>{
-    const r=4+Math.min(5,nd.deg);
-    ctx.beginPath(); ctx.arc(nd.x,nd.y,r,0,6.283);
-    ctx.fillStyle=(ns[i].id===_noteCur)?'#ffd24a':'#bb88ff'; ctx.fill();
-    ctx.strokeStyle='#0c0f14'; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.font='8px "Share Tech Mono",monospace'; ctx.textAlign='center';
-    ctx.fillText((ns[i].title||'(?)').slice(0,14), nd.x, nd.y+r+9);
+  _ng.edges.forEach(([a2,b2])=>{
+    let dx=nd[b2].x-nd[a2].x, dy=nd[b2].y-nd[a2].y;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    const f=(d-84)*0.016; dx/=d; dy/=d;
+    nd[a2].vx+=dx*f; nd[a2].vy+=dy*f; nd[b2].vx-=dx*f; nd[b2].vy-=dy*f;
   });
-  if(!cv._wired){ cv._wired=true;
-    cv.addEventListener('click',(e)=>{
-      const rect=cv.getBoundingClientRect();
-      const x=(e.clientX-rect.left)*(cv.width/rect.width), y=(e.clientY-rect.top)*(cv.height/rect.height);
-      const ns2=_notes(); if(!_ngNodes) return;
-      for(let i=0;i<_ngNodes.length && i<ns2.length;i++){
-        const nd=_ngNodes[i], dx=x-nd.x, dy=y-nd.y;
-        if(dx*dx+dy*dy<=144){ g('note-graph').style.display='none'; noteSelect(ns2[i].id); return; }
-      }
-    });
-  }
+  nd.forEach((p,i)=>{
+    if(i===_ng.drag){ p.vx=0; p.vy=0; return; }   // sürüklenen düğüm parmağa kilitli
+    p.vx+=(W/2-p.x)*0.0022; p.vy+=(H/2-p.y)*0.0022;
+    p.vx*=0.86; p.vy*=0.86;
+    p.x+=Math.max(-4.5,Math.min(4.5,p.vx)); p.y+=Math.max(-4.5,Math.min(4.5,p.vy));
+    p.x=Math.max(14,Math.min(W-14,p.x)); p.y=Math.max(12,Math.min(H-12,p.y));
+  });
+}
+function _ngDraw(cv){
+  const ctx=cv.getContext('2d'), nd=_ng.nodes, W=_ng.W, H=_ng.H;
+  ctx.clearRect(0,0,W,H);
+  const hv=_ng.hover, hset=(hv>=0)?_ng.neigh[hv]:null;
+  // kenarlar
+  _ng.edges.forEach(([a2,b2])=>{
+    const hot=(hv>=0)&&(a2===hv||b2===hv);
+    ctx.strokeStyle=hot?'rgba(187,136,255,.75)':((hv>=0)?'rgba(150,150,180,.06)':'rgba(167,139,250,.18)');
+    ctx.lineWidth=hot?1.6:1;
+    ctx.beginPath(); ctx.moveTo(nd[a2].x,nd[a2].y); ctx.lineTo(nd[b2].x,nd[b2].y); ctx.stroke();
+  });
+  // düğümler
+  nd.forEach((p,i)=>{
+    const dim=(hv>=0)&&(i!==hv)&&!(hset&&hset.has(i));
+    ctx.globalAlpha=dim?0.14:1;
+    ctx.shadowColor=p.c; ctx.shadowBlur=(i===hv)?16:7;
+    ctx.beginPath(); ctx.arc(p.x,p.y,(i===hv)?p.r+1.5:p.r,0,6.283);
+    ctx.fillStyle=p.c; ctx.fill();
+    ctx.shadowBlur=0;
+    // etiket
+    if(!dim){
+      ctx.fillStyle=(i===hv)?'rgba(255,255,255,.95)':'rgba(255,255,255,.44)';
+      ctx.font=((i===hv)?'700 ':'')+'9px "Share Tech Mono",monospace'; ctx.textAlign='center';
+      ctx.fillText(p.lbl, p.x, p.y+p.r+11);
+    }
+    ctx.globalAlpha=1;
+  });
+}
+function _ngPt(cv,e){
+  const r=cv.getBoundingClientRect();
+  const pt=e.touches?e.touches[0]:e;
+  return { x:(pt.clientX-r.left)*(cv.width/r.width), y:(pt.clientY-r.top)*(cv.height/r.height) };
+}
+function _ngHit(x,y){
+  const nd=_ng.nodes;
+  for(let i=nd.length-1;i>=0;i--){ const dx=x-nd[i].x, dy=y-nd[i].y; if(dx*dx+dy*dy<=(nd[i].r+7)*(nd[i].r+7)) return i; }
+  return -1;
+}
+function _ngWire(cv){
+  if(cv._wired) return; cv._wired=true;
+  const down=(e)=>{ const p=_ngPt(cv,e); const i=_ngHit(p.x,p.y);
+    _ng.drag=i; _ng.moved=false;
+    if(i>=0){ cv.style.cursor='grabbing'; if(e.cancelable) e.preventDefault(); } };
+  const move=(e)=>{ const p=_ngPt(cv,e);
+    if(_ng.drag>=0){ const nd=_ng.nodes[_ng.drag]; nd.x=Math.max(14,Math.min(_ng.W-14,p.x)); nd.y=Math.max(12,Math.min(_ng.H-12,p.y)); _ng.moved=true; if(e.cancelable) e.preventDefault(); }
+    else { _ng.hover=_ngHit(p.x,p.y); cv.style.cursor=(_ng.hover>=0)?'pointer':'grab'; } };
+  const up=()=>{
+    if(_ng.drag>=0 && !_ng.moved){ const id=_ng.nodes[_ng.drag].id; noteGraphClose(); noteSelect(id); }
+    _ng.drag=-1; cv.style.cursor='grab'; };
+  cv.addEventListener('mousedown',down);
+  cv.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false});
+  cv.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('touchend',up);
+  cv.addEventListener('mouseleave',()=>{ if(_ng.drag<0) _ng.hover=-1; });
 }
 const BOOK_COLORS=['#8b3a3a','#3a5a8b','#3a7a4a','#7a5a2a','#5a3a7a','#2a6a6a','#8b6a2a','#6a2a4a','#3a3a5a','#7a3a2a'];
 let _bookPopId=null, _readBookId=null, _readIv=null, _readElapsed=0, _readRunning=false;
@@ -10226,7 +10367,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.39.1 başlatıldı.');
+addLog('OVERCLOCK v7.40.0 başlatıldı.');
 </script>
 </body>
 </html>
