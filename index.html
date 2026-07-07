@@ -525,6 +525,22 @@ body.ign-run #content, body.ign-run #sidebar{transition:opacity 1.5s ease-out, f
 .charx-eqchip{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:2px 8px;margin:2px 3px 2px 0;white-space:nowrap}
 /* ── GYM ── */
 .gym-top{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
+.notes-grid{display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start}
+@media (max-width:760px){.notes-grid{grid-template-columns:1fr}}
+.note-item{padding:8px 10px;border:1px solid var(--bd);background:var(--mid);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.note-item:hover{border-color:var(--bd2)}
+.note-item.on{border-color:#bb88ff;background:#bb88ff0d}
+.wikilink{color:#bb88ff;border-bottom:1px dashed #bb88ff66;cursor:pointer}
+.wikilink.dead{color:#7a6a9a;border-bottom-style:dotted}
+.note-tag{color:#66ccff;background:#66ccff14;border-radius:8px;padding:0 5px;font-size:10px}
+#note-preview h1{font-size:16px;margin:4px 0 8px;color:var(--white)}
+#note-preview h2{font-size:13px;margin:10px 0 6px;color:var(--bright)}
+#note-preview h3{font-size:11px;margin:8px 0 4px;color:var(--bright);letter-spacing:1px}
+#note-preview code{background:#00000055;border:1px solid var(--bd);border-radius:4px;padding:1px 5px;font-size:10px}
+#note-preview ul{margin:4px 0 8px 18px}
+#note-preview li{margin:2px 0}
+#gym-anatomy .gmus{cursor:pointer}
+#gym-anatomy .gmus:hover{stroke:#ff9e64;stroke-width:.8}
 .gym-bottom{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start}
 @media (max-width:860px){.gym-top,.gym-bottom{grid-template-columns:1fr}}
 .gbody{fill:#1d232c;stroke:#3a434f;stroke-width:1}
@@ -869,6 +885,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem" onclick="goTab(this,'calendar')">📅 TAKVİM</button>
   <button class="navitem" onclick="goTab(this,'habits')">🔄 ALIŞKANLIK</button>
   <button class="navitem" onclick="goTab(this,'reading')">📚 OKUMA SALONU</button>
+  <button class="navitem" onclick="goTab(this,'notes')">📓 NOTLAR</button>
   <button class="navitem" onclick="goTab(this,'gym')">🏋 GYM</button>
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
@@ -1028,6 +1045,48 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- ══════════ PAGE: OKUMA SALONU ══════════ -->
+<div id="page-notes" class="page">
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">📓 Notlar <span id="notes-count" style="font-size:8px;color:var(--muted)"></span></div>
+      <button class="btn" style="min-height:24px;padding:2px 10px;font-size:8px" onclick="noteGraphOpen()">🕸 GRAF</button>
+    </div>
+    <div class="notes-grid">
+      <!-- SOL: liste -->
+      <div>
+        <input class="inp fw mb8" id="notes-search" placeholder="🔍 ara... (başlık, içerik, #etiket)" oninput="renderNotesList()">
+        <button class="btn primary fw mb8" onclick="noteNew()">＋ YENİ NOT</button>
+        <div id="notes-list" style="max-height:60vh;overflow-y:auto"></div>
+      </div>
+      <!-- SAĞ: editör -->
+      <div id="note-editor-wrap" style="min-width:0">
+        <div id="note-empty" style="font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.8;padding:20px 6px">Soldan bir not seç ya da yeni not oluştur.<br>💡 <b style="color:var(--bright)">[[Not Adı]]</b> yazarak notları birbirine bağla — Obsidian gibi. Bağlantılar önizlemede tıklanabilir, olmayan not tıklayınca oluşur.</div>
+        <div id="note-editor" style="display:none">
+          <input class="inp fw mb8" id="note-title" placeholder="Not başlığı" oninput="noteInput()" style="font-size:13px;font-weight:700">
+          <div class="brow mb8">
+            <button class="btn" style="flex:1" id="note-mode-btn" onclick="notePreviewToggle()">👁 ÖNİZLE</button>
+            <button class="btn" style="border-color:var(--red);color:var(--red)" onclick="noteDelete(event)">🗑</button>
+          </div>
+          <textarea class="inp fw" id="note-body" rows="14" placeholder="# Başlık&#10;**kalın** *italik* `kod`&#10;- liste&#10;[[Başka Not]] bağlantısı, #etiket" oninput="noteInput()" style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.7;resize:vertical"></textarea>
+          <div id="note-preview" style="display:none;border:1px solid var(--bd);background:var(--mid);border-radius:8px;padding:14px;font-size:11px;line-height:1.8;min-height:200px;overflow-wrap:break-word"></div>
+          <div id="note-backlinks" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOT GRAFI -->
+<div id="note-graph" style="display:none;position:fixed;inset:0;z-index:9994;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:14px">
+  <div style="width:100%;max-width:560px;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:14px">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">🕸 Not Grafı <span style="font-size:8px;color:var(--muted)">düğüme tıkla → notu aç</span></div>
+      <button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="g('note-graph').style.display='none'">✕</button>
+    </div>
+    <canvas id="note-graph-cv" width="520" height="400" style="width:100%;border:1px solid var(--bd);border-radius:8px;background:#0c0f14;cursor:pointer"></canvas>
+  </div>
+</div>
+
 <div id="page-reading" class="page">
   <div class="block">
     <div class="fbet mb8">
@@ -1061,7 +1120,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="brow">
       <button class="btn primary" style="flex:1" id="read-start-btn" onclick="readTimerToggle()">▶ BAŞLAT</button>
-      <button class="btn" id="read-reset-btn" onclick="readTimerReset()">↺ SIFIRLA</button>
+      <button class="btn" id="read-stop-btn" onclick="readTimerStop()">⏹ BİTİR</button>
     </div>
     <div id="read-speed-note" style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-top:10px;line-height:1.7;text-align:center"></div>
   </div>
@@ -1164,6 +1223,7 @@ body.pixel-font #timer-unit{font-size:8px}
           <div class="ilabel" style="margin-bottom:4px">ÇALIŞTIRDIĞI KASLAR</div>
           <div id="gx-muscles" style="margin-bottom:10px"></div>
           <button class="btn primary fw" onclick="gymAddExercise()">＋ EKLE</button>
+          <button class="btn fw" style="margin-top:6px;border-color:#ff9e64;color:#ff9e64" onclick="gymChallengeBuy(event)">🎫 MEYDAN OKUMA — 150 MP (7 günde 5 egzersiz → 300 MP)</button>
         </div>
         <div id="gym-today-wrap" style="margin-top:12px">
           <div class="blabel" style="font-size:9px">🔥 Bugünün Antrenmanı</div>
@@ -1901,7 +1961,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.38.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.39.0</div>
     </div>
   </div>
 </div>
@@ -2205,6 +2265,7 @@ function defState() {
     readLog:[],                   // okuma seansları: [{date,bookId,mins,pages,ppm}]
     readGoal:0,                   // günlük sayfa hedefi (0 = kapalı) — grafikte sarı kesikli baraj
     savedColors:[],               // renk seçici favorileri (hex listesi, senkronlu)
+    notes:[],                     // 📓 NOTLAR (Obsidian-lite): {id,title,body,created,updated}
     netGoal:{TYT:0,AYT:0},        // net trend grafiği hedef barajı (🎯)
     gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[], depot:{}, exLib:[], buffs:{}, _roomGone:true },   // GYM — izole MP ekonomisi
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
@@ -2501,6 +2562,7 @@ function goTab(btn, name) {
   if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
   if (name === 'calendar') setTimeout(()=>{ try{ renderCalendar(); }catch(e){} }, 20);
   if (name === 'reading') setTimeout(()=>{ try{ renderReading(); }catch(e){} }, 20);
+  if (name === 'notes') setTimeout(()=>{ try{ renderNotes(); }catch(e){} }, 20);
   if (name === 'gym') setTimeout(()=>{ try{ renderGym(); }catch(e){} }, 20);
   if (name === 'planner') setTimeout(()=>{ try{ renderPlanner(); renderMoodInputs(); }catch(e){} }, 20);
   if (name === 'character') setTimeout(()=>{ try{ renderCharacter(); }catch(e){} }, 20);
@@ -3718,6 +3780,176 @@ function renderHqCalTasks(){
 // ════════════════════════════════════════
 // OKUMA SALONU (kitaplık + okuma sayacı)
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// 📓 NOTLAR — Obsidian-lite: [[wikilink]], backlink, #etiket, graf
+// ════════════════════════════════════════
+let _noteCur=null, _notePreview=false, _noteSaveT=null;
+function _notes(){ S.notes=S.notes||[]; return S.notes; }
+function _noteById(id){ return _notes().find(n=>n.id===id); }
+function _noteByTitle(t){ const k=String(t||'').trim().toLowerCase(); return _notes().find(n=>(n.title||'').trim().toLowerCase()===k); }
+function _noteLinks(n){ const out=[]; String(n.body||'').replace(/\[\[([^\[\]]{1,80})\]\]/g,(mm,t)=>{ out.push(t.trim()); return mm; }); return out; }
+function noteNew(){
+  const ns=_notes();
+  if(ns.length>=300){ notify('Not limiti (300) doldu'); return; }
+  const n={ id:String(Date.now()), title:'', body:'', created:today(), updated:Date.now() };
+  ns.unshift(n); _noteCur=n.id; _notePreview=false;
+  save(); renderNotes();
+  setTimeout(()=>{ try{ g('note-title').focus(); }catch(e){} },60);
+}
+function noteSelect(id){ _noteCur=id; _notePreview=false; renderNotes(); }
+function noteOpenByTitle(t){
+  let n=_noteByTitle(t);
+  if(!n){
+    if(_notes().length>=300){ notify('Not limiti dolu'); return; }
+    n={ id:String(Date.now()), title:String(t).trim(), body:'', created:today(), updated:Date.now() };
+    _notes().unshift(n); notify('📓 Yeni not oluşturuldu: '+n.title);
+  }
+  _noteCur=n.id; _notePreview=false;
+  save(); renderNotes();
+}
+function noteInput(){
+  const n=_noteById(_noteCur); if(!n) return;
+  const tt=g('note-title'), bb=g('note-body');
+  if(tt) n.title=tt.value.slice(0,120);
+  if(bb){ if(bb.value.length>20000){ bb.value=bb.value.slice(0,20000); notify('Not 20.000 karakterle sınırlı'); } n.body=bb.value; }
+  n.updated=Date.now();
+  clearTimeout(_noteSaveT);
+  _noteSaveT=setTimeout(()=>{ save(); renderNotesList(); }, 600);
+}
+function noteDelete(ev){
+  armBtn(ev,'notedel',()=>{
+    const i=_notes().findIndex(n=>n.id===_noteCur);
+    if(i>=0){ addLog('Not silindi: '+(_notes()[i].title||'(başlıksız)')); _notes().splice(i,1); }
+    _noteCur=null;
+    save(); renderNotes();
+  });
+}
+function notePreviewToggle(){ _notePreview=!_notePreview; renderNoteEditor(); }
+// mini-markdown: escape ÖNCE, sonra dönüşümler
+function _mdRender(txt){
+  let h=_he(String(txt||''));
+  h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+  h=h.replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>');
+  h=h.replace(/\*([^*\n]+)\*/g,'<i>$1</i>');
+  h=h.replace(/\[\[([^\[\]]{1,80})\]\]/g,(mm,t)=>{
+    const ex=!!_noteByTitle(t);
+    return '<span class="wikilink'+(ex?'':' dead')+'" onclick="noteOpenByTitle(\''+t.trim().replace(/'/g,'&#39;')+'\')">'+t.trim()+(ex?'':' ＋')+'</span>';
+  });
+  h=h.replace(/(^|\s)#([a-zA-ZğüşöçıİĞÜŞÖÇ0-9_-]{2,24})/g,'$1<span class="note-tag">#$2</span>');
+  const lines=h.split('\n'); const out=[]; let inUl=false;
+  lines.forEach(ln=>{
+    if(/^- /.test(ln)){ if(!inUl){ out.push('<ul>'); inUl=true; } out.push('<li>'+ln.slice(2)+'</li>'); return; }
+    if(inUl){ out.push('</ul>'); inUl=false; }
+    if(/^### /.test(ln)) out.push('<h3>'+ln.slice(4)+'</h3>');
+    else if(/^## /.test(ln)) out.push('<h2>'+ln.slice(3)+'</h2>');
+    else if(/^# /.test(ln)) out.push('<h1>'+ln.slice(2)+'</h1>');
+    else if(ln.trim()==='') out.push('<div style="height:7px"></div>');
+    else out.push('<div>'+ln+'</div>');
+  });
+  if(inUl) out.push('</ul>');
+  return out.join('');
+}
+function renderNotesList(){
+  const box=g('notes-list'); if(!box) return;
+  const q=(g('notes-search')?g('notes-search').value:'').trim().toLowerCase();
+  let ns=[..._notes()].sort((a,b)=>(b.updated||0)-(a.updated||0));
+  if(q) ns=ns.filter(n=>((n.title||'')+' '+(n.body||'')).toLowerCase().includes(q));
+  const cnt=g('notes-count'); if(cnt) cnt.textContent='('+_notes().length+')';
+  box.innerHTML=ns.length? ns.map(n=>{
+    const snippet=(n.body||'').replace(/\n/g,' ').slice(0,46);
+    return '<div class="note-item'+(n.id===_noteCur?' on':'')+'" onclick="noteSelect(\''+n.id+'\')">'+
+      '<div style="font-size:10px;color:var(--white);font-weight:600;letter-spacing:.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(_he(n.title)||'<span style="color:var(--muted)">(başlıksız)</span>')+'</div>'+
+      (snippet?('<div style="font-size:8px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_he(snippet)+'</div>'):'')+
+    '</div>';
+  }).join('') : '<div style="font-size:9px;color:var(--muted);letter-spacing:1px;padding:6px 2px">'+(q?'Eşleşme yok.':'Henüz not yok.')+'</div>';
+}
+function renderNoteEditor(){
+  const n=_noteById(_noteCur);
+  const ed=g('note-editor'), em=g('note-empty'); if(!ed) return;
+  if(!n){ ed.style.display='none'; em.style.display='block'; return; }
+  ed.style.display='block'; em.style.display='none';
+  const tt=g('note-title'); if(tt && tt.value!==n.title) tt.value=n.title||'';
+  const bb=g('note-body'), pv=g('note-preview'), mb=g('note-mode-btn');
+  if(bb && bb.value!==(n.body||'') && document.activeElement!==bb) bb.value=n.body||'';
+  if(_notePreview){
+    if(bb) bb.style.display='none';
+    if(pv){ pv.style.display='block'; pv.innerHTML=_mdRender(n.body)||'<span style="color:var(--muted);font-size:9px">Boş not.</span>'; }
+    if(mb) mb.textContent='✏ DÜZENLE';
+  } else {
+    if(bb) bb.style.display='block';
+    if(pv) pv.style.display='none';
+    if(mb) mb.textContent='👁 ÖNİZLE';
+  }
+  // backlinks
+  const bl=g('note-backlinks');
+  if(bl){
+    const myT=(n.title||'').trim().toLowerCase();
+    const backs=myT? _notes().filter(o=>o.id!==n.id && _noteLinks(o).some(t=>t.toLowerCase()===myT)) : [];
+    bl.innerHTML=backs.length
+      ? '<div style="font-size:7px;color:var(--muted);letter-spacing:2px;margin-bottom:4px">🔗 BURAYA BAĞLANANLAR ('+backs.length+')</div>'+
+        backs.map(o=>'<span class="wikilink" style="margin-right:10px;font-size:10px" onclick="noteSelect(\''+o.id+'\')">'+(_he(o.title)||'(başlıksız)')+'</span>').join('')
+      : '';
+  }
+}
+function renderNotes(){ renderNotesList(); renderNoteEditor(); }
+// ── 🕸 GRAF: basit kuvvet yerleşimi ──
+let _ngNodes=null;
+function noteGraphOpen(){
+  const ns=_notes();
+  if(!ns.length){ notify('Henüz not yok'); return; }
+  g('note-graph').style.display='flex';
+  const cv=g('note-graph-cv'), ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const idxByTitle={}; ns.forEach((n,i)=>{ const k=(n.title||'').trim().toLowerCase(); if(k) idxByTitle[k]=i; });
+  const edges=[];
+  ns.forEach((n,i)=>_noteLinks(n).forEach(t=>{ const j=idxByTitle[t.toLowerCase()]; if(j!=null && j!==i) edges.push([i,j]); }));
+  // yerleşim: çember başlangıç + kuvvet iterasyonu
+  const N=ns.length;
+  const nodes=ns.map((n,i)=>({ x:W/2+Math.cos(i/N*6.283)*(H*0.33), y:H/2+Math.sin(i/N*6.283)*(H*0.33), vx:0, vy:0, deg:0 }));
+  edges.forEach(([a,b])=>{ nodes[a].deg++; nodes[b].deg++; });
+  for(let it=0; it<140; it++){
+    for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+      let dx=nodes[j].x-nodes[i].x, dy=nodes[j].y-nodes[i].y;
+      let d2=dx*dx+dy*dy||1; const f=1600/d2;
+      const d=Math.sqrt(d2); dx/=d; dy/=d;
+      nodes[i].vx-=dx*f; nodes[i].vy-=dy*f; nodes[j].vx+=dx*f; nodes[j].vy+=dy*f;
+    }
+    edges.forEach(([a,b])=>{
+      let dx=nodes[b].x-nodes[a].x, dy=nodes[b].y-nodes[a].y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1; const f=(d-70)*0.02; dx/=d; dy/=d;
+      nodes[a].vx+=dx*f; nodes[a].vy+=dy*f; nodes[b].vx-=dx*f; nodes[b].vy-=dy*f;
+    });
+    nodes.forEach(nd=>{
+      nd.vx+=(W/2-nd.x)*0.002; nd.vy+=(H/2-nd.y)*0.002;
+      nd.x+=Math.max(-6,Math.min(6,nd.vx)); nd.y+=Math.max(-6,Math.min(6,nd.vy));
+      nd.vx*=0.82; nd.vy*=0.82;
+      nd.x=Math.max(16,Math.min(W-16,nd.x)); nd.y=Math.max(14,Math.min(H-14,nd.y));
+    });
+  }
+  _ngNodes=nodes;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(187,136,255,.28)'; ctx.lineWidth=1;
+  edges.forEach(([a,b])=>{ ctx.beginPath(); ctx.moveTo(nodes[a].x,nodes[a].y); ctx.lineTo(nodes[b].x,nodes[b].y); ctx.stroke(); });
+  nodes.forEach((nd,i)=>{
+    const r=4+Math.min(5,nd.deg);
+    ctx.beginPath(); ctx.arc(nd.x,nd.y,r,0,6.283);
+    ctx.fillStyle=(ns[i].id===_noteCur)?'#ffd24a':'#bb88ff'; ctx.fill();
+    ctx.strokeStyle='#0c0f14'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.font='8px "Share Tech Mono",monospace'; ctx.textAlign='center';
+    ctx.fillText((ns[i].title||'(?)').slice(0,14), nd.x, nd.y+r+9);
+  });
+  if(!cv._wired){ cv._wired=true;
+    cv.addEventListener('click',(e)=>{
+      const rect=cv.getBoundingClientRect();
+      const x=(e.clientX-rect.left)*(cv.width/rect.width), y=(e.clientY-rect.top)*(cv.height/rect.height);
+      const ns2=_notes(); if(!_ngNodes) return;
+      for(let i=0;i<_ngNodes.length && i<ns2.length;i++){
+        const nd=_ngNodes[i], dx=x-nd.x, dy=y-nd.y;
+        if(dx*dx+dy*dy<=144){ g('note-graph').style.display='none'; noteSelect(ns2[i].id); return; }
+      }
+    });
+  }
+}
 const BOOK_COLORS=['#8b3a3a','#3a5a8b','#3a7a4a','#7a5a2a','#5a3a7a','#2a6a6a','#8b6a2a','#6a2a4a','#3a3a5a','#7a3a2a'];
 let _bookPopId=null, _readBookId=null, _readIv=null, _readElapsed=0, _readRunning=false;
 function _bookById(id){ return (S.books||[]).find(b=>b.id===id); }
@@ -3880,12 +4112,19 @@ function updateReadBookLabel(){
   lbl.textContent=b?('📖 '+b.title.toUpperCase()):'KİTAP SEÇİLMEDİ';
 }
 function readTimerToggle(){
-  if(_readRunning){ readTimerStop(); return; }
+  // ▶ BAŞLAT → ⏸ DURAKLAT → ▶ DEVAM (bitirmek ayrı: ⏹ BİTİR)
+  if(_readRunning){
+    clearInterval(_readIv); _readIv=null; _readRunning=false;
+    const b=g('read-start-btn'); if(b) b.textContent='▶ DEVAM';
+    const n=g('read-speed-note'); if(n) n.textContent='⏸ Duraklatıldı — süre korunuyor ('+_fmtClock(_readElapsed)+')';
+    return;
+  }
   const books=S.books||[];
   if(!books.length){ notify('Önce kitap ekle'); return; }
   if(!_readBookId){ notify('Önce yukarıdan bir kitap seç'); return; }
   _readRunning=true;
-  const startBtn=g('read-start-btn'); if(startBtn) startBtn.textContent='⏸ DURDUR & BİTİR';
+  const startBtn=g('read-start-btn'); if(startBtn) startBtn.textContent='⏸ DURAKLAT';
+  const n2=g('read-speed-note'); if(n2 && n2.textContent.indexOf('⏸')===0) n2.textContent='';
   const t0=Date.now()-_readElapsed*1000;
   _readIv=setInterval(()=>{ _readElapsed=Math.floor((Date.now()-t0)/1000); const c=g('read-clock'); if(c) c.textContent=_fmtClock(_readElapsed); }, 500);
 }
@@ -4077,16 +4316,36 @@ function renderGym(){
 function renderGymMuscleChips(){
   const box=g('gx-muscles'); if(!box) return;
   box.innerHTML=GYM_MUSCLES.map(m=>'<span class="gym-mchip'+(_gxMs.has(m.k)?' on':'')+'" onclick="gymToggleMs(\''+m.k+'\')">'+m.lbl+'</span>').join('');
-  // 📚 kayıtlı egzersiz önerileri: seçili kaslarla kesişenler (hiç seçim yoksa son 6)
-  const sug=g('gx-suggest');
-  if(sug){
-    const lib=(_gym().exLib||[]);
-    const list=_gxMs.size ? lib.filter(x=>(x.muscles||[]).some(k=>_gxMs.has(k))) : lib.slice(-6);
-    sug.innerHTML=list.length
-      ? '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin:4px 0 2px">📚 KAYITLI EGZERSİZLER — dokun, formu doldursun</div>'+
-        list.slice(0,12).map((x,i)=>'<span class="gym-mchip" style="border-color:#ff9e6455;color:#ffb98a" onclick="gymPickLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\')">'+_he(x.name)+' <span style="opacity:.6">'+x.mp+'MP</span></span>').join('')
-      : '';
+}
+// 🫀 ANATOMİ TIKLAMA — kasa dokun, o kasın kayıtlı egzersizleri yanında açılsın
+function _wireAnatomyClicks(){
+  const svg=g('gym-anatomy'); if(!svg || svg._exWired) return; svg._exWired=true;
+  svg.addEventListener('click',(e)=>{
+    const mus=e.target.closest('.gmus'); if(!mus) return;
+    gymMusclePop(e, mus.getAttribute('data-m'));
+  });
+}
+function gymMusclePop(e, key){
+  const m=GYM_MUSCLES.find(x=>x.k===key);
+  let p=g('gym-ex-pop');
+  if(!p){
+    p=document.createElement('div'); p.id='gym-ex-pop';
+    p.style.cssText='display:none;position:fixed;z-index:9996;background:var(--deep);border:1px solid var(--bd2);border-radius:9px;padding:10px;box-shadow:0 8px 22px rgba(0,0,0,.6);width:200px;animation:ocPopIn .18s cubic-bezier(.2,.9,.3,1.15)';
+    document.body.appendChild(p);
+    p.addEventListener('click',ev2=>ev2.stopPropagation());
+    document.addEventListener('click',(ev2)=>{ if(p.style.display==='block' && !p.contains(ev2.target)) p.style.display='none'; }, true);
   }
+  const lib=(_gym().exLib||[]).filter(x=>(x.muscles||[]).includes(key));
+  p.innerHTML='<div style="font-size:8px;letter-spacing:2px;color:#ff9e64;margin-bottom:6px">🫀 '+_he(m?m.lbl:key).toUpperCase()+'</div>'+
+    (lib.length
+      ? '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:5px">Dokun → form dolsun</div>'+lib.slice(0,10).map(x=>
+          '<button class="btn fw" style="min-height:28px;text-align:left;font-size:9px;padding:5px 8px;margin-bottom:4px" onclick="gymPickLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\');g(\'gym-ex-pop\').style.display=\'none\'">'+_he(x.name)+' <span style="opacity:.55">'+x.mp+' MP</span></button>').join('')
+      : '<div style="font-size:9px;color:var(--muted);letter-spacing:.5px;line-height:1.6">Bu kas için kayıtlı egzersiz yok — sağdan ekleyince buraya düşer.</div>');
+  p.style.display='block';
+  const w=200, h=p.offsetHeight||120;
+  let left=e.clientX+12; if(left+w>window.innerWidth-6) left=e.clientX-w-12; if(left<6) left=6;
+  let top=e.clientY-16; if(top+h>window.innerHeight-6) top=window.innerHeight-h-6; if(top<6) top=6;
+  p.style.left=left+'px'; p.style.top=top+'px';
 }
 function gymPickLib(name){
   const lib=(_gym().exLib||[]);
@@ -4172,6 +4431,7 @@ function gymRenderAnatomy(){
   document.querySelectorAll('#gym-anatomy .gmus').forEach(el=>{
     el.classList.toggle('on', set.has(el.getAttribute('data-m')));
   });
+  try{ _wireAnatomyClicks(); }catch(e){}
   const note=g('gym-anatomy-note');
   if(note){
     if(!set.size) note.textContent='Bugün planlı egzersiz yok';
@@ -9966,7 +10226,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.38.0 başlatıldı.');
+addLog('OVERCLOCK v7.39.0 başlatıldı.');
 </script>
 </body>
 </html>
