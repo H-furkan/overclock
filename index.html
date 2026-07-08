@@ -1904,7 +1904,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.43.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.43.2</div>
     </div>
   </div>
 </div>
@@ -2800,8 +2800,10 @@ function renderSessionType(){
 }
 function toggleTimer(){
   if(timerRunning){
-    clearInterval(timerIv); timerRunning=false; timerEndAt=null; S._runSess=null;
-    S._runSess=null; save();
+    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
+    // 🛟 duraklatılmış anlık görüntü: uygulama kapansa da kalan süre korunur
+    S._runSess={ mode:(isBreak?'break':'focus'), paused:true, remainSecs:timerSecs, focusMin:(_sessFocusMin||S.focusMin), type:_sessType, subject:_sessSubject, startHour:_sessStartHour };
+    save();
     g('btn-start').textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
     cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
@@ -2871,7 +2873,7 @@ function tickTimer(){
   }
   if(timerSecs<=0){
     S._runSess=null;
-    clearInterval(timerIv); timerRunning=false; timerEndAt=null; S._runSess=null;
+    clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     // clear the page fallback timer only — do NOT cancel the SW notification
     // here, otherwise it would dismiss the very "session bitti" alert we want
@@ -10020,58 +10022,42 @@ function _purgePoisonedSyncCache(){
 // ════════════════════════════════════════
 loadState();
 timerSecs=S.focusMin*60;
-// ── 🛟 KAZA KORUMASI: uygulama seans çalışırken kapatıldıysa kurtar ──
+// ── 🛟 KAZA KORUMASI: seans çalışırken kapatıldıysa DURAKLATILMIŞ olarak kurtar ──
+// Kapalıyken geçen süre ÇALIŞMA SAYILMAZ (kaza = otomatik pause). START kullanıcıda.
 function _recoverRunningSession(){
-  const rs=S._runSess; if(!rs || !rs.endAt) return;
-  const now=Date.now();
-  // kapalıyken geçen odak saniyelerini istatistiklere telafi et
-  if(rs.mode==='focus' && rs.lastTick){
-    const until=Math.min(rs.endAt, now);
-    const missed=Math.floor((until-rs.lastTick)/1000);
-    if(missed>0){
-      S.todayFocusSecs=(S.todayFocusSecs||0)+missed;
-      S.cumFocusSecs=(S.cumFocusSecs||0)+missed;
-      const subj=rs.subject||'Genel'; const t=today();
-      if(!S.subjectLog) S.subjectLog={};
-      if(!S.subjectLog[t]) S.subjectLog[t]={};
-      S.subjectLog[t][subj]=(S.subjectLog[t][subj]||0)+missed;
-    }
-  }
-  if(now < rs.endAt){
-    // ▶ DEVAM: kaldığı yerden
-    isBreak=(rs.mode==='break');
-    _sessType=rs.type||'soru'; _sessFocusMin=rs.focusMin||S.focusMin; _sessSubject=rs.subject||''; _sessStartHour=(rs.startHour!=null?rs.startHour:new Date().getHours());
-    timerSecs=Math.max(1, Math.round((rs.endAt-now)/1000));
-    timerEndAt=rs.endAt; timerRunning=true;
-    rs.lastTick=now;
-    clearInterval(timerIv); timerIv=setInterval(tickTimer,1000);
-    const b=g('btn-start'); if(b) b.textContent='⏸ PAUSE';
-    setStatus(isBreak?'break':'active');
-    if(!isBreak) stopLeak();
-    try{ scheduleTimerNotification(); showOngoingTimerNotif(); }catch(e){}
-    const mm=Math.floor(timerSecs/60), ss=timerSecs%60;
-    notify('🛟 SEANS KURTARILDI — kaldığı yerden devam ('+mm+':'+String(ss).padStart(2,'0')+')');
-    addLog('Kaza koruması: '+(isBreak?'mola':'seans')+' kaldığı yerden devam etti.');
-    save();
-  } else {
-    // ✅ kapalıyken bitmiş → tamamlanmış say
+  const rs=S._runSess; if(!rs) return;
+  let remaining;
+  if(rs.paused){ remaining=Math.max(0, Math.round(rs.remainSecs||0)); }
+  else if(rs.endAt && rs.lastTick){ remaining=Math.max(0, Math.round((rs.endAt-rs.lastTick)/1000)); }  // kapanma anında donmuş kalan
+  else return;
+  if(remaining<=0){
+    // kapanmadan hemen önce zaten bitmişti → tamamlanmış say (soru girişi dahil)
     S._runSess=null;
     if(rs.mode==='focus'){
       const mins=rs.focusMin||S.focusMin;
       const sxp=calcSessionXP(mins);
       S.sessions=(S.sessions||0)+1; S.streak=(S.streak||0)+1;
-      addXP(sxp,'Session tamamlandı ('+mins+'dk — kapalıyken bitti, kurtarıldı)');
+      addXP(sxp,'Session tamamlandı ('+mins+'dk — kapanış anında bitmişti)');
       if((rs.type||'soru')==='soru'){ try{ _promptSessionQuestions(mins, rs.subject||''); }catch(e){} }
-      isBreak=false; timerSecs=S.focusMin*60;
-      try{ setStatus('standby'); }catch(e){}
-      notify('🛟 Kapalıyken biten seans işlendi: +'+sxp+' XP — soru sayısını girebilirsin');
-      addLog('Kaza koruması: kapalıyken biten seans tamamlandı sayıldı (+'+sxp+' XP).');
-    } else {
-      isBreak=false; timerSecs=S.focusMin*60;
-      addLog('Kaza koruması: mola kapalıyken bitti.');
+      notify('🛟 Biten seans işlendi: +'+sxp+' XP');
+      addLog('Kaza koruması: kapanış anında biten seans tamamlandı sayıldı (+'+sxp+' XP).');
     }
-    save();
+    isBreak=false; timerSecs=S.focusMin*60;
+    save(); return;
   }
+  // ⏸ duraklatılmış kurtarma: kalan süre ekranda, START kullanıcıda
+  isBreak=(rs.mode==='break');
+  _sessType=rs.type||'soru'; _sessFocusMin=rs.focusMin||S.focusMin; _sessSubject=rs.subject||''; _sessStartHour=(rs.startHour!=null?rs.startHour:new Date().getHours());
+  timerSecs=remaining;
+  timerRunning=false; timerEndAt=null;
+  S._runSess={ mode:rs.mode, paused:true, remainSecs:remaining, focusMin:_sessFocusMin, type:_sessType, subject:_sessSubject, startHour:_sessStartHour };
+  try{ setStatus('standby'); }catch(e){}
+  if(!rs.paused){
+    const mm=Math.floor(remaining/60), ss=remaining%60;
+    notify('🛟 SEANS KURTARILDI — '+mm+':'+String(ss).padStart(2,'0')+' kaldı, ▶ START ile devam et');
+    addLog('Kaza koruması: '+(isBreak?'mola':'seans')+' duraklatılmış olarak kurtarıldı ('+mm+' dk kaldı).');
+  }
+  save();
 }
 try{ _recoverRunningSession(); }catch(e){ try{ logErr('Seans kurtarma hatası: '+e.message); }catch(_){} }
 applyTheme();
@@ -10124,7 +10110,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.43.1 başlatıldı.');
+addLog('OVERCLOCK v7.43.2 başlatıldı.');
 </script>
 </body>
 </html>
