@@ -1904,7 +1904,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.41.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.42.0</div>
     </div>
   </div>
 </div>
@@ -3032,8 +3032,8 @@ function finishTimerEarly(ev){
   clearInterval(timerIv); timerRunning=false; timerEndAt=null;
   cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
   g('btn-start').textContent='▶ START';
-  // partial reward (proportional, slightly lower than full-session rate)
-  const sxp = Math.max(5, Math.round(elapsedMin * 1.7));
+  // erken bitiş ödülü: geçen dakika üzerinden TAM oran (kesinti yok)
+  const sxp = calcSessionXP(elapsedMin);   // v7.42: erken bitirme cezası kaldırıldı — tam seansla aynı dk-başı oran
   // cumFocusSecs per-tick birikti — burada tekrar ekleme yok (çift sayım önlendi)
   renderCumulative();
   S.lastFocusEnd = Date.now();
@@ -3085,15 +3085,70 @@ function qModalSubmit(){
   const breakMin = Math.round((_pendingBreakSecs/60)*10)/10;   // bu seansa kadar birikmiş mola (verimlilik için)
   _pendingBreakSecs = 0;
   S.prodSessions = S.prodSessions||[];
-  S.prodSessions.push({ date: today(), subject: subj, durationMin: _qCtx.durationMin, questions: n, points: pts, breakMin: breakMin });
+  const _sid='q'+Date.now();
+  S.prodSessions.push({ sid:_sid, date: today(), subject: subj, durationMin: _qCtx.durationMin, questions: n, points: pts, breakMin: breakMin });
   if(S.prodSessions.length>300) S.prodSessions = S.prodSessions.slice(-300);
   bankEarn(n, 'soru', n+' soru çözüldü ('+subj+')');   // her soru 1 kuruş → soru bankası
   _checkQBadges();
   S._pendingQ=null; _qCtx=null; save();
   try{ renderQuestionStats(); renderIdealDuration(); renderBank(); }catch(e){}
   notify('✓ '+n+' soru kaydedildi (+'+pts+' puan · +'+n+' kr)');
-  addLog('Seans sonu: '+n+' soru ('+subj+', '+pts+' puan)');
+  addLog('Seans sonu: '+n+' soru ('+subj+', '+pts+' puan) ⟦qedit:'+_sid+'⟧');
 }
+// ✎ Seans soru kaydını düzenle (log'dan): ders + adet → istatistik, banka, ideal süre senkron güncellenir
+function qEditOpen(ev, sid){
+  if(ev) ev.stopPropagation();
+  const rec=(S.prodSessions||[]).find(r=>r.sid===sid);
+  if(!rec){ notify('Kayıt bulunamadı (eski kayıtlar düzenlenemez)'); return; }
+  let p=g('qedit-pop');
+  if(!p){
+    p=document.createElement('div'); p.id='qedit-pop';
+    p.style.cssText='display:none;position:fixed;z-index:9996;background:var(--deep);border:1px solid var(--bd2);border-radius:9px;padding:12px;box-shadow:0 8px 22px rgba(0,0,0,.6);width:230px;animation:ocPopIn .18s cubic-bezier(.2,.9,.3,1.15)';
+    document.body.appendChild(p);
+    p.addEventListener('click',e2=>e2.stopPropagation());
+    document.addEventListener('click',(e2)=>{ if(p.style.display==='block' && !p.contains(e2.target)) p.style.display='none'; }, true);
+  }
+  const subjects=[]; SUBJECT_OPTIONS.forEach(([grp,items])=>items.forEach(([sh,fv])=>subjects.push(fv)));
+  if(!subjects.includes('Genel')) subjects.push('Genel');
+  p.innerHTML='<div style="font-size:8px;letter-spacing:2px;color:var(--bright);margin-bottom:8px">✎ SORU KAYDI DÜZENLE</div>'+
+    '<div class="ilabel" style="margin-bottom:3px">DERS</div>'+
+    '<select class="inp fw mb8" id="qedit-subj">'+subjects.map(x=>'<option value="'+_he(x)+'"'+(x===rec.subject?' selected':'')+'>'+_he(x)+'</option>').join('')+'</select>'+
+    '<div class="ilabel" style="margin-bottom:3px">SORU SAYISI</div>'+
+    '<input class="inp fw mb8" id="qedit-n" type="number" min="1" max="500" value="'+rec.questions+'">'+
+    '<button class="btn primary fw" onclick="qEditSave(\''+sid+'\')">KAYDET</button>';
+  p.style.display='block';
+  const r2=(ev&&ev.target)?ev.target.getBoundingClientRect():{right:100,top:100,left:100};
+  const w=230, h=p.offsetHeight||210;
+  let left=r2.right+10; if(left+w>window.innerWidth-6) left=r2.left-w-10; if(left<6) left=6;
+  let top=r2.top-10; if(top+h>window.innerHeight-6) top=window.innerHeight-h-6; if(top<6) top=6;
+  p.style.left=left+'px'; p.style.top=top+'px';
+}
+function qEditSave(sid){
+  const rec=(S.prodSessions||[]).find(r=>r.sid===sid); if(!rec) return;
+  const newSubj=(g('qedit-subj')||{}).value||rec.subject;
+  const newN=Math.max(1, Math.min(500, parseInt((g('qedit-n')||{}).value)||rec.questions));
+  const oldSubj=rec.subject, oldN=rec.questions;
+  if(newSubj===oldSubj && newN===oldN){ g('qedit-pop').style.display='none'; return; }
+  // 1) soru istatistiği
+  S.questionLog=S.questionLog||{};
+  S.questionLog[oldSubj]=Math.max(0,(S.questionLog[oldSubj]||0)-oldN);
+  if(S.questionLog[oldSubj]===0) delete S.questionLog[oldSubj];
+  S.questionLog[newSubj]=(S.questionLog[newSubj]||0)+newN;
+  // 2) kayıt (puan yeniden hesaplanır → ideal süre otomatik doğrulanır)
+  rec.subject=newSubj; rec.questions=newN;
+  rec.points=Math.round(newN*_coeff(newSubj));
+  // 3) banka: fark kadar düzeltme (monoton sayaçlara uygun)
+  const dk=newN-oldN;
+  if(dk>0) bankEarn(dk,'soru','Kayıt düzeltme: +'+dk+' soru ('+newSubj+')');
+  else if(dk<0){ S.bankSpentKurus=(S.bankSpentKurus||0)+(-dk); _bankLogAdd('duzeltme','Kayıt düzeltme: '+dk+' soru ('+newSubj+')',dk); }
+  // 4) log satırını güncelle (marker korunur → tekrar düzenlenebilir)
+  const le=(S.logEntries||[]).find(e=>e.msg && e.msg.includes('⟦qedit:'+sid+'⟧'));
+  if(le) le.msg='Seans sonu: '+newN+' soru ('+newSubj+', '+rec.points+' puan) · düzenlendi ⟦qedit:'+sid+'⟧';
+  g('qedit-pop').style.display='none';
+  save();
+  try{ renderQuestionStats(); renderIdealDuration(); renderBank(); renderLog(); }catch(e){}
+  notify('✎ Kayıt güncellendi: '+newN+' soru · '+newSubj);
+  }
 function qModalSkip(){ const m=g('q-modal'); if(m) m.style.display='none'; _qCtx=null; S._pendingQ=null; save(); }
 function _checkPendingQ(){ if(S._pendingQ && !document.hidden && !_qCtx){ _showQModal(S._pendingQ); } }
 
@@ -5225,7 +5280,12 @@ function renderLog(){
   if(!S.logEntries.length){sl.innerHTML='';se.style.display='block';}
   else{
     se.style.display='none';
-    sl.innerHTML=S.logEntries.map(e=>'<div class="log-entry"><span class="log-time">['+e.t+']</span><span class="log-msg'+(e.kind==='err'?' err':'')+'">'+e.msg+'</span></div>').join('');
+    sl.innerHTML=S.logEntries.map(e=>{
+      let msg=e.msg, edit='';
+      const qm=/⟦qedit:([^⟧]+)⟧/.exec(msg);
+      if(qm){ msg=msg.replace(qm[0],'').trim(); edit='<button class="btn" style="min-height:20px;padding:1px 7px;font-size:8px;margin-left:8px;flex-shrink:0" onclick="qEditOpen(event,\''+qm[1]+'\')">✎ düzenle</button>'; }
+      return '<div class="log-entry"><span class="log-time">['+e.t+']</span><span class="log-msg'+(e.kind==='err'?' err':'')+'">'+msg+'</span>'+edit+'</div>';
+    }).join('');
   }
 }
 
@@ -9997,7 +10057,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.41.0 başlatıldı.');
+addLog('OVERCLOCK v7.42.0 başlatıldı.');
 </script>
 </body>
 </html>
