@@ -1902,6 +1902,10 @@ body.pixel-font #timer-unit{font-size:8px}
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📲 Tarayıcı Bildirimi</span>
         <span id="notif-val" class="bio-val off">KAPALI</span>
       </div>
+      <div class="bio-item" onclick="requestExactAlarm()" style="cursor:pointer" title="Android 'Alarmlar ve hatırlatıcılar' izni — kapalıysa ekran kapalıyken zil gecikir/gelmez">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">⏰ Tam Saatli Alarm</span>
+        <span id="exact-val" class="bio-val off">?</span>
+      </div>
       <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:4px;line-height:1.6">Bildirim izni <b style="color:var(--bright)">açık olmalı</b>: sayaç bitince uygulama arkaplandayken / ekran kapalıyken bile sistem bildirimi + titreşim gelir.<br><b style="color:var(--bright)">Bildirim sessizse:</b> Android Ayarları → Uygulamalar → (tarayıcı: Samsung Internet / Chrome) → Bildirimler → kanalı (Sites/Genel) aç ve <b>Ses</b>'i etkinleştir. Web tarafında bildirim sesini OS yönetir; APK'da bu sorun yok (yüksek-öncelikli kendi kanalımız var).</div>
     </div>
     <div class="ssec">
@@ -1911,7 +1915,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.44.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.45.0</div>
     </div>
   </div>
 </div>
@@ -2838,7 +2842,7 @@ function toggleTimer(){
     addLog(isBreak?'Mola başladı.':'Focus başladı — '+S.focusMin+'dk.');
     // arrange a background alert that fires even if the app is closed / screen off
     setTimeout(scheduleTimerNotification, 300);
-    startKeepAlive(); _acquireWakeLock(); _dimArm();
+    startKeepAlive(); _acquireWakeLock(); _dimArm(); try{ _warnIfInexact(); }catch(e){}
     cancelBossNotification(); // working again → no boss heads-up needed
   }
 }
@@ -2945,7 +2949,7 @@ function tickTimer(){
     }
     save();
   }
-  renderTimer();
+  if(!document.hidden && !_dimOn) renderTimer();   // 🌙 pil: görünmezken çizim yok
 }
 
 // ── BACKGROUND CATCH-UP ──
@@ -5508,6 +5512,38 @@ function ensureNotifChannel(){
     });
   } catch(e){}
 }
+// ── ⏰ TAM SAATLİ ALARM (Android 13/14 "Alarms & reminders" özel izni) ──
+// Verilmemişse alarmlar kesin-olmayan moda düşer: ekran ~30 dk kapalı kalıp Doze'a
+// girince bitiş bildirimi ertelenir → "zil gelmiyor". Kontrol + tek dokunuş ayar.
+async function refreshExactAlarmVal(){
+  const el=g('exact-val'); if(!el) return;
+  const LN=_capNotif();
+  if(!LN || !LN.checkExactNotificationSetting){ el.textContent='—'; el.className='bio-val off'; return; }
+  try{
+    const st=await LN.checkExactNotificationSetting();
+    const ok=(st && (st.exact_alarm==='granted'));
+    el.textContent=ok?'AÇIK':'KAPALI';
+    el.className='bio-val '+(ok?'on':'off');
+  }catch(e){ el.textContent='?'; }
+}
+async function requestExactAlarm(){
+  const LN=_capNotif();
+  if(!LN || !LN.changeExactNotificationSetting){ notify('Bu cihazda gerekmiyor'); return; }
+  try{ await LN.changeExactNotificationSetting(); }catch(e){}
+  setTimeout(refreshExactAlarmVal, 800);
+}
+let _exactWarned=false;
+async function _warnIfInexact(){
+  const LN=_capNotif(); if(!LN || !LN.checkExactNotificationSetting || _exactWarned) return;
+  try{
+    const st=await LN.checkExactNotificationSetting();
+    if(st && st.exact_alarm && st.exact_alarm!=='granted'){
+      _exactWarned=true;
+      notify('⏰ "Alarmlar ve hatırlatıcılar" izni KAPALI — ekran kapalıyken zil gecikebilir. Ayarlar > SİSTEM > Tam Saatli Alarm');
+      addLog('Uyarı: tam saatli alarm izni kapalı (zil Doze\'da gecikebilir).','err');
+    }
+  }catch(e){}
+}
 function _nativeSchedule(id, at, title, body){
   const LN=_capNotif(); if(!LN) return;
   ensureNotifChannel();
@@ -5591,7 +5627,7 @@ function _startOngoingRefresh(){
     if (!timerRunning || !timerEndAt){ return; }
     if (!document.hidden) return;   // sadece arkaplandayken bildirimi güncelle
     _pushOngoingWeb();   // SADECE web; native'de kronometre kendi sayar (loop kurulmaz)
-  }, 1000);
+  }, 5000);   // 🌙 pil: 1sn→5sn
 }
 function _stopOngoingRefresh(){ if(_ongoingIv){ clearInterval(_ongoingIv); _ongoingIv=null; } }
 function cancelOngoingTimerNotif(){
@@ -5808,6 +5844,7 @@ function _dimHide(ev){
   const v=g('dim-veil');
   if(v){ v.classList.remove('on'); setTimeout(()=>{ if(!_dimOn) v.style.display='none'; },1000); }
   document.body.classList.remove('anim-paused');
+  try{ renderTimer(); }catch(e){}
   _dimArm();
 }
 function _dimCancel(){ clearTimeout(_dimT); _dimT=null; if(_dimOn) _dimHide(); }
@@ -9760,6 +9797,7 @@ function refreshNotifSwitch(){
   else if (Notification.permission === 'denied') { v.textContent='REDDEDİLDİ'; v.className='bio-val off'; }
   else { v.textContent='KAPALI'; v.className='bio-val off'; }
   const s=g('sound-val'); if(s){ const on = S.soundEnabled!==false; s.textContent = on?'AÇIK':'KAPALI'; s.className = 'bio-val '+(on?'on':'off'); }
+  try{ refreshExactAlarmVal(); }catch(e){}
 }
 
 // ════════════════════════════════════════
@@ -9955,7 +9993,9 @@ function _cloudPush(){
 window._syncPush = function(){
   if(!_sync.ready || !_sync.uid || _sync.applying) return;
   clearTimeout(_sync.pushT);
-  _sync.pushT = setTimeout(_cloudPush, 1500);
+  // 🌙 pil: seans çalışırken radyoyu daha az uyandır (30 sn'de bir toplu yaz);
+  // seans dışında eski hızlı senkron (1.5 sn)
+  _sync.pushT = setTimeout(_cloudPush, (typeof timerRunning!=='undefined' && timerRunning) ? 30000 : 1500);
 };
 
 function _onSignedIn(user){
@@ -10143,7 +10183,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.44.0 başlatıldı.');
+addLog('OVERCLOCK v7.45.0 başlatıldı.');
 </script>
 </body>
 </html>
