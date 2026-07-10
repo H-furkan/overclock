@@ -22,7 +22,7 @@ const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standa
 ]};
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=VT323&family=Rajdhani:wght@700&family=Bungee&display=swap" rel="stylesheet">
 <!-- Cross-device sync (optional — inert until firebase-config.js is filled) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -607,6 +607,9 @@ body.anim-paused *{animation-play-state:paused!important}
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit.
    130px dairenin içine sığması için font küçük + tam ortalı. */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:clamp(20px,6vw,34px);letter-spacing:0;line-height:1.2;white-space:nowrap}
+body.font-vt #fs-num,body.font-vt #timer-num{font-family:'VT323',monospace;letter-spacing:2px}
+body.font-raj #fs-num,body.font-raj #timer-num{font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px}
+body.font-bungee #fs-num,body.font-bungee #timer-num{font-family:'Bungee',cursive;letter-spacing:1px}
 body.pixel-font #timer-unit{font-size:8px}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
 .char-stat-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);letter-spacing:1px}
@@ -1915,7 +1918,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.45.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.46.0</div>
     </div>
   </div>
 </div>
@@ -1981,13 +1984,22 @@ const XPGOAL_BASE = 1200;
 const CIRC = 2 * Math.PI * 65;
 
 // Difficulty Tiers — XPGOAL scales with totalXp (persistent rank)
-const TIERS = [
-  {min:0,     goal:1200, name:'TIER I',   sub:'STD GOAL',     cls:''},
-  {min:2500,  goal:1300, name:'TIER II',  sub:'ELEVATED',     cls:'t2'},
-  {min:7000,  goal:1400, name:'TIER III', sub:'HARDWIRED',    cls:'t3'},
-  {min:15000, goal:1500, name:'TIER IV',  sub:'OVERCLOCKED',  cls:'t4'},
-  {min:30000, goal:1600, name:'TIER V',   sub:'TITAN PROTO',  cls:'t5'},
-];
+// v7.46: 20 kademe (I → XX) — eşikler geometrik büyür (her tier ~%55 daha uzak)
+const _ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+const _TIER_SUBS=['STD GOAL','ELEVATED','HARDWIRED','OVERCLOCKED','TITAN PROTO','IRONCLAD','RELENTLESS','APEX DRIVE','NEUROBLADE','SINGULARITY','WARLORD','ETERNAL GRIND','VOIDWALKER','DEMIGOD','MYTHIC CORE','TRANSCENDENT','OMEGA MIND','CELESTIAL','GODSPEED','FINAL FORM'];
+const TIERS=(()=>{
+  const arr=[];
+  for(let i=1;i<=20;i++){
+    arr.push({
+      min: i===1?0:Math.round(2500*Math.pow(1.55,i-2)),
+      goal: 1200+Math.min(800,(i-1)*50),
+      name: 'TIER '+_ROMAN[i-1],
+      sub: _TIER_SUBS[i-1],
+      cls: i<=1?'':(i<=3?'t2':(i<=6?'t3':(i<=10?'t4':'t5')))
+    });
+  }
+  return arr;
+})();
 function getTier(){ let r=TIERS[0]; TIERS.forEach(t=>{if((S.totalXp||0)>=t.min)r=t;}); return r; }
 function getDailyGoal(){ return getTier().goal; }
 
@@ -3109,7 +3121,7 @@ function qModalSubmit(){
   const n = parseInt((g('q-modal-count')||{}).value);
   const m=g('q-modal'); if(m) m.style.display='none';
   if(!_qCtx || !n || n<1){ _qCtx=null; S._pendingQ=null; save(); return; }   // boş/0 → kaydetme
-  const subj=_qCtx.subject||S.activeSubject||'Genel';
+  const subj=_canonSubj(_qCtx.subject||S.activeSubject||'Genel');
   S.questionLog=S.questionLog||{};
   S.questionLog[subj]=(S.questionLog[subj]||0)+n;   // otomatik soru istatistiğine yaz
   const pts = Math.round(n * _coeff(subj));
@@ -6554,7 +6566,13 @@ function addCharStat(key){
 
 // Karakter kozmetikleri (pixel font vs.) body sınıfı olarak set edilir.
 function applyCharCosmetics(){
-  try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
+  try {
+    const tf=(S.cases&&S.cases.timerFont)||((S.cases&&S.cases.pixelFont)?'pixel':'');
+    document.body.classList.toggle('pixel-font', tf==='pixel');
+    document.body.classList.toggle('font-vt', tf==='vt');
+    document.body.classList.toggle('font-raj', tf==='raj');
+    document.body.classList.toggle('font-bungee', tf==='bungee');
+  } catch(e){}
 }
 
 function renderCharacter(){
@@ -6567,7 +6585,13 @@ function renderCharacter(){
     ph.classList.toggle('glow', cs.avatarBorder === 'glow');
     ph.classList.toggle('acc-glasses', Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   }
-  try { document.body.classList.toggle('pixel-font', !!(S.cases && S.cases.pixelFont)); } catch(e){}
+  try {
+    const tf=(S.cases&&S.cases.timerFont)||((S.cases&&S.cases.pixelFont)?'pixel':'');
+    document.body.classList.toggle('pixel-font', tf==='pixel');
+    document.body.classList.toggle('font-vt', tf==='vt');
+    document.body.classList.toggle('font-raj', tf==='raj');
+    document.body.classList.toggle('font-bungee', tf==='bungee');
+  } catch(e){}
   // isim
   const ni=g('char-name'); if (ni && ni.value !== (c.name||'')) ni.value = c.name||'';
   // seviye + unvan + bar
@@ -6934,7 +6958,11 @@ function renderCosmeticToggles(){
     items.push('<button class="btn fw" style="min-height:32px;font-size:9px;padding:4px 10px;'+(isOn?'border-color:var(--green);color:var(--green)':'border-color:var(--bd);color:var(--muted)')+'" onclick="toggleCosmetic(\''+key+'\')">'+
       (isOn?'✓ ':'⚪ ')+label+'</button>');
   }
-  if (hasPixel)   row('pixelFont',  '📟 Pixel Font',                       !!cs.pixelFont);
+  const _tf=cs.timerFont||(cs.pixelFont?'pixel':'');
+  if (hasPixel)   row('pixelFont',  '📟 Pixel Font',                       _tf==='pixel');
+  if (u.fontVt)   row('fontVt',     '🖥 Terminal Font',                    _tf==='vt');
+  if (u.fontRaj)  row('fontRaj',    '🪖 Military Font',                    _tf==='raj');
+  if (u.fontBungee) row('fontBungee','🎪 Neon Font',                       _tf==='bungee');
   if (hasBorder)  row('glowBorder', '🔥 Fire Çerçeve',                     cs.avatarBorder === 'glow');
   if (hasGlasses) row('glasses',    '❄ Frost Çerçeve',                    Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
   if (!items.length){
@@ -6947,9 +6975,13 @@ function renderCosmeticToggles(){
 function toggleCosmetic(key){
   const cs = _cs();
   cs.unlocked = cs.unlocked || {};
-  if (key === 'pixelFont'){
-    cs.pixelFont = !cs.pixelFont;
-    cs.unlocked.pixelFont = true; // confirm unlocked
+  const _fontKeys={ pixelFont:'pixel', fontVt:'vt', fontRaj:'raj', fontBungee:'bungee' };
+  if (_fontKeys[key]){
+    const want=_fontKeys[key];
+    const cur=cs.timerFont||(cs.pixelFont?'pixel':'');
+    cs.timerFont = (cur===want) ? '' : want;    // aynı fonta tekrar bas → varsayılana dön
+    cs.pixelFont = (cs.timerFont==='pixel');
+    cs.unlocked[key]=true;
   } else if (key === 'glowBorder'){
     if (cs.avatarBorder === 'glow'){ cs.avatarBorder = null; }
     else { cs.avatarBorder = 'glow'; }
@@ -7022,6 +7054,9 @@ function _ownedUnique(id){
     case 's_title_pozitivist': return (c.profileTitles||[]).includes('Pozitivist');
     case 's_title_norolog': return (c.profileTitles||[]).includes('Nörolog');
     case 's_pixelfont': return !!c.pixelFont;
+    case 's_font_vt': return !!(c.unlocked&&c.unlocked.fontVt);
+    case 's_font_raj': return !!(c.unlocked&&c.unlocked.fontRaj);
+    case 'g_font_bungee': return !!(c.unlocked&&c.unlocked.fontBungee);
     case 'g_accessory': return (c.avatarAccessory||[]).includes('glasses');
     case 'g_border': return c.avatarBorder==='glow';
     case 'g_permmul': return (c.xpMultiplier||1) >= 1.2;
@@ -7083,11 +7118,14 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_break15',   weight:1.5,  tier:'rare',      icon:'⏸', name:'+15dk Mola',            desc:'Bir sonraki mola +15dk uzar (tek seferlik)', fx:()=>{ _cs().breakBonus = (_cs().breakBonus||0) + 15*60; notify('⏸ Sonraki mola +15dk'); } },
   { id:'s_cerrah',    weight:0.8,  tier:'epic',      icon:'🩺', name:'"Cerrah" Unvanı',       desc:'Profil unvanına eklenir'                , fx:()=>{ if(!_cs().profileTitles.includes('Cerrah')) _cs().profileTitles.push('Cerrah'); notify('🩺 Unvan: Cerrah'); } },
   { id:'s_reroll',    weight:0.5,  tier:'epic',      icon:'🎲', name:'Reroll Token',          desc:'Bir kasa daha aç'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa (reroll)'); } },
+  { id:'s_font_vt',   weight:3,    tier:'rare',      icon:'🖥', name:'Terminal Font',          desc:'Sayaç sayıları retro terminal (VT323). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontVt=true; c.timerFont='vt'; notify('🖥 Terminal font aktif'); } },
+  { id:'s_font_raj',  weight:3,    tier:'rare',      icon:'🪖', name:'Military Font',          desc:'Sayaç sayıları keskin askeri stil (Rajdhani). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontRaj=true; c.timerFont='raj'; notify('🪖 Military font aktif'); } },
   { id:'s_xp1000',    weight:0.15, tier:'legendary', icon:'💎', name:'Anlık 1000 XP',         desc:'Hemen +1000 XP'                         , fx:()=>{ addXP(1000,'Kasa: 1000 XP'); } },
   { id:'s_gold_up',   weight:0.05, tier:'legendary', icon:'✨', name:'Gold Kasa Yükseltmesi', desc:'+1 Gold Kasa'                           , fx:()=>{ _cs().gold++; notify('✨ +1 Gold Kasa'); } },
 ];
 
 const CASE_ITEMS_GOLD = [
+  { id:'g_font_bungee',weight:4,   tier:'epic',      icon:'🎪', name:'Neon Font',             desc:'Sayaç sayıları kalın neon stil (Bungee). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontBungee=true; c.timerFont='bungee'; notify('🎪 Neon font aktif'); } },
   { id:'g_3session',  weight:50,   tier:'common',    icon:'🚀', name:'3 Session Buff',        desc:'Sonraki 3 session +%20 XP'              , fx:()=>{ _cs().sessionBuffRemaining=3; notify('🚀 Sonraki 3 session +%20 XP'); } },
   { id:'g_premiumbk', weight:25,   tier:'common',    icon:'☕', name:'30dk Premium Break',    desc:'Mevcut session XP cezasız biter + 30dk mola', fx:()=>{ _cs().premiumBreakReady=true; notify('☕ Premium Break hazır — sayaç ekranından kullan'); } },
   { id:'g_nodisrupt', weight:10,   tier:'uncommon',  icon:'🛑', name:'2sa No-Distraction Challenge', desc:'Uygulamadan ÇIKARSAN fail; başarılı = 6x ödül', fx:()=>{ _cs().challengePending=true; notify('🛑 Challenge davetiyesi — sayaç ekranından başlat'); } },
@@ -9392,6 +9430,16 @@ function getSubjectTotals(n){
   return totals;
 }
 
+// Takvimdeki tamamlanmış SORU ÇÖZÜMÜ + KONU ÇALIŞMASI olayları (tekrarlılarda gün başına 1)
+function _calStudyDoneTotal(){
+  let n=0;
+  (S.calEvents||[]).forEach(ev=>{
+    if(ev.type!=='soru' && ev.type!=='konu') return;
+    if(ev.repeat && ev.repeat!=='none') n+=(ev.doneDates||[]).length;
+    else if(ev.done) n++;
+  });
+  return n;
+}
 function renderStats(){
   // stat cards
   const sStreak=g('stat-streak'); if(sStreak) sStreak.textContent=S.dayStreak||0;
@@ -9401,7 +9449,7 @@ function renderStats(){
   const sGoal=g('stat-goal'); if(sGoal) sGoal.textContent=tier.goal;
   const sTotXp=g('stat-total-xp'); if(sTotXp) sTotXp.textContent=S.totalXp||0;
   const sTotF=g('stat-total-focus'); if(sTotF) sTotF.textContent=fmtHM(S.cumFocusSecs||0);
-  const sTotT=g('stat-total-tasks'); if(sTotT) sTotT.textContent=S.tasksDoneTotal||0;
+  const sTotT=g('stat-total-tasks'); if(sTotT) sTotT.textContent=_calStudyDoneTotal();
   const sTotB=g('stat-total-bosses'); if(sTotB) sTotB.textContent=(S.bossLog||[]).length;
   try{ renderQuestionSubjects(); renderQuestionStats(); }catch(e){}   // soru istatistiği İstatistik'e taşındı
   // all charts
@@ -9463,7 +9511,7 @@ function _wireFocusTip(){
     const px=(ev.touches&&ev.touches[0]?ev.touches[0].clientX:ev.clientX);
     const cx=px-r.left;
     const hit=_focusHit.find(h=> cx>=h.x && cx<h.x+h.w);
-    if(!hit || (hit.cur<=0 && hit.prev<=0)){ tip.style.display='none'; return; }
+    if(!hit || (hit.cur<=0 && hit.prev<=0 && _dayQuestions(hit.date)<=0 && _dayBreakSecs(hit.date)<=0)){ tip.style.display='none'; return; }
     tip.innerHTML=_dayDetailHtml(hit.date)+'<div style="color:var(--muted);margin-top:3px">önceki hafta: '+_fmtHM2(hit.prev)+'</div>';
     tip.style.display='block';
     const ww=wrap.getBoundingClientRect();
@@ -9813,6 +9861,8 @@ setInterval(()=>{
     reminderTick();
     renderBoostBanner();
     refreshNotifSwitch();
+    // 📅 ŞİMDİ/SIRADA rozetleri saat ilerledikçe güncellensin
+    if(!document.hidden && !_dimOn && g('page-cockpit') && g('page-cockpit').classList.contains('visible')) renderHqCalTasks();
   } catch(e){ console.warn(e); }
 }, 30000);  // every 30s for normal background
 
@@ -10107,6 +10157,28 @@ function _recoverRunningSession(){
   if(rs.paused){ remaining=Math.max(0, Math.round(rs.remainSecs||0)); }
   else if(rs.endAt && rs.lastTick){ remaining=Math.max(0, Math.round((rs.endAt-rs.lastTick)/1000)); }  // kapanma anında donmuş kalan
   else return;
+  // ☕ MOLA istisnası: dinlenme uygulama kapaliyken de akar — duvar-saatiyle devam/bitir
+  if(rs.mode==='break' && !rs.paused && rs.endAt && rs.lastTick){
+    const until=Math.min(rs.endAt, now);
+    const missedB=Math.floor((until-rs.lastTick)/1000);
+    if(missedB>0){ S.todayBreakSecs=(S.todayBreakSecs||0)+missedB; S.cumBreakSecs=(S.cumBreakSecs||0)+missedB; _pendingBreakSecs+=missedB; }
+    if(now < rs.endAt){
+      isBreak=true; timerSecs=Math.max(1, Math.round((rs.endAt-now)/1000));
+      timerEndAt=rs.endAt; timerRunning=true;
+      rs.lastTick=now;
+      clearInterval(timerIv); timerIv=setInterval(tickTimer,1000);
+      const b=g('btn-start'); if(b) b.textContent='⏸ PAUSE';
+      try{ setStatus('break'); }catch(e){}
+      notify('☕ Mola kaldığı yerden sürüyor');
+    } else {
+      S._runSess=null;
+      isBreak=false; timerSecs=S.focusMin*60;
+      try{ setStatus('standby'); }catch(e){}
+      notify('🔔 MOLA BİTTİ // YENİ OTURUM BAŞLAT');
+      addLog('Mola kapalıyken tamamlandı (süre işlendi).');
+    }
+    save(); return;
+  }
   if(remaining<=0){
     // kapanmadan hemen önce zaten bitmişti → tamamlanmış say (soru girişi dahil)
     S._runSess=null;
@@ -10137,6 +10209,15 @@ function _recoverRunningSession(){
   save();
 }
 try{ _recoverRunningSession(); }catch(e){ try{ logErr('Seans kurtarma hatası: '+e.message); }catch(_){} }
+// 🎁 tek seferlik hediye: yarınki tatil için rest-day jetonu (2026-07-10)
+try{
+  if(!S._giftRest0710){
+    S._giftRest0710=true;
+    const cap=2+Math.floor((charStat('kapasite')||0)/10);
+    if((S.restDayTokens||0)<cap){ S.restDayTokens=(S.restDayTokens||0)+1; notify('🎁 +1 REST-DAY JETONU hediye — iyi tatiller!'); addLog('Hediye: +1 rest-day jetonu (tatil).'); }
+    save();
+  }
+}catch(e){}
 applyTheme();
 applyBackground('cockpit');
 try { applyCharCosmetics(); } catch(e){}
@@ -10153,7 +10234,7 @@ try { scheduleHabitReminders(); } catch(e){}
 try { scheduleCalendarReminders(); } catch(e){}
 // ── v7.36: ders-adı onarımı (kısa 'AYT Kim' değerleri tam ada çevrilir, puanlar yeniden hesaplanır) ──
 try{
-  if(!S._subjFix736){
+  if(true){   // v7.46: her açılışta normalize (kısa adlar sync ile geri sızabiliyor — idempotent)
     S.activeSubject=_canonSubj(S.activeSubject);
     (S.prodSessions||[]).forEach(p=>{ p.subject=_canonSubj(p.subject); p.points=Math.round((p.questions||0)*_coeff(p.subject)); });
     ['questionLog','subjectLog'].forEach(fld=>{
@@ -10187,7 +10268,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.45.1 başlatıldı.');
+addLog('OVERCLOCK v7.46.0 başlatıldı.');
 </script>
 </body>
 </html>
