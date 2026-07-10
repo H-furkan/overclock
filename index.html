@@ -1936,7 +1936,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.5</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.6</div>
     </div>
   </div>
 </div>
@@ -9998,6 +9998,7 @@ setInterval(()=>{
     refreshNotifSwitch();
     _ensureZeroPlan(); _checkZeroErrors();
     _calRemindTick();
+    try{ if(typeof _tokenClamp==='function') _tokenClamp(); }catch(e){}
     if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
     // 📅 ŞİMDİ/SIRADA rozetleri saat ilerledikçe güncellensin
     if(!document.hidden && !_dimOn && g('page-cockpit') && g('page-cockpit').classList.contains('visible')) renderHqCalTasks();
@@ -10153,6 +10154,7 @@ function _applyRemote(data){
     _sync.lastRemoteTs = ts;
     timerSecs = (isBreak?S.breakMin:S.focusMin)*60;
     applyTheme(); renderAll();
+    try{ if(typeof _tokenClamp==='function') _tokenClamp(); }catch(e){}
     addLog('☁ Veri senkronlandı (kümülatif korundu).');
     // local daha ileriydiyse birleşmiş (daha yüksek) hali geri yaz
     if (grew){ _sync.applying=false; _cloudPush(); return; }
@@ -10347,16 +10349,19 @@ function _recoverRunningSession(){
   save();
 }
 try{ _recoverRunningSession(); }catch(e){ try{ logErr('Seans kurtarma hatası: '+e.message); }catch(_){} }
-// ↩ v7.47.5 jeton düzeltmesi: bayrak senkron yarışına yenildi (bayat 2 geri döndü) —
-// bu yüzden TARİHLİ KURAL: 12 Tem 2026'ya kadar HER açılışta stok 1'e sabitlenir.
-try{
-  if(today()<='2026-07-12' && (S.restDayTokens||0)>1){
-    S.restDayTokens=1;
-    notify('↩ Jeton düzeltmesi: stok 1\'e sabitlendi');
-    addLog('Jeton düzeltmesi: çift-hediye kalıntısı temizlendi (stok=1).');
-    save();
-  }
-}catch(e){}
+// ↩ v7.47.6 jeton düzeltmesi: kural artık FONKSİYON — açılışta + senkron uygulandıktan sonra
+// + 30 sn'de bir çalışır (bulut bayat '2' getirse bile anında ezilir). 12 Tem'de emekli olur.
+function _tokenClamp(){
+  try{
+    if(today()<='2026-07-12' && (S.restDayTokens||0)>1){
+      S.restDayTokens=1;
+      notify('↩ Jeton düzeltmesi: stok 1\'e sabitlendi');
+      addLog('Jeton düzeltmesi: çift-hediye kalıntısı temizlendi (stok=1).');
+      save(); try{ renderRestDayUI(); }catch(e){}
+    }
+  }catch(e){}
+}
+_tokenClamp();
 // 🎁 tek seferlik hediye: yarınki tatil için rest-day jetonu (2026-07-10)
 try{
   if(!S._giftRest0710){
@@ -10416,7 +10421,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.47.5 başlatıldı.');
+addLog('OVERCLOCK v7.47.6 başlatıldı.');
 </script>
 </body>
 </html>
