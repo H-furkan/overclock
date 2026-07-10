@@ -342,6 +342,12 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 /* ── AÇILIŞ "KONTAK" ANİMASYONU: yazılar loş yanar, yavaşça aydınlanır ── */
 body.pre-ign #content, body.pre-ign #sidebar{opacity:.03;filter:brightness(.3)}
 body.ign-run #content, body.ign-run #sidebar{transition:opacity 1.5s ease-out, filter 1.9s ease-out;opacity:1;filter:brightness(1)}
+/* ── 🌙 PİL: seans karartma perdesi (ekran açık kalır, pikseller siyaha düşer) ── */
+#dim-veil{display:none;position:fixed;inset:0;z-index:10550;background:#000;opacity:0;transition:opacity 1s ease;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+#dim-veil.on{opacity:1}
+#dim-clock{font-family:'Orbitron',monospace;font-size:13vw;font-weight:900;color:#2e3138;letter-spacing:4px}
+#dim-hint{font-size:9px;color:#22242a;letter-spacing:3px;margin-top:14px}
+body.anim-paused *{animation-play-state:paused!important}
 #notif{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);border:1px solid var(--bd2);padding:12px 22px;font-size:10px;letter-spacing:3px;color:var(--white);z-index:10600;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none}
 #notif.show{opacity:1}
 #xp-popup{position:fixed;top:80px;right:16px;z-index:9600;font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--white);text-shadow:0 0 15px rgba(255,255,255,.6);pointer-events:none;opacity:0;letter-spacing:2px}
@@ -674,6 +680,7 @@ body.pixel-font #timer-unit{font-size:8px}
 <body>
 <div id="app-bg"></div>
 <div id="xp-popup"></div>
+<div id="dim-veil" onclick="_dimHide(event)"><div id="dim-clock">00:00</div><div id="dim-hint">DOKUN → UYAN</div></div>
 <div id="notif"></div>
 
 <!-- FULLSCREEN TIMER OVERLAY -->
@@ -1904,7 +1911,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.43.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.44.0</div>
     </div>
   </div>
 </div>
@@ -2625,7 +2632,7 @@ function closeNav(){
 // ════════════════════════════════════════
 setInterval(()=>{
   const d=new Date();
-  g('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  if(!document.hidden && !_dimOn) g('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
   // midnight rollover detection — runs the daily reset if the calendar day flipped
   try { if (S && S.lastDate && S.lastDate !== today()) applyDailyRollover(); } catch(e){}
 },1000);
@@ -2806,7 +2813,7 @@ function toggleTimer(){
     save();
     g('btn-start').textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
-    cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
+    cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel(); _dimCancel();
     // Deep Work buff: pause yapılırsa iptal olur
     if (S.cases && S.cases.deepWorkActive){ S.cases.deepWorkActive=false; notify('🧘 Deep Work iptal — pause yapıldı'); }
   } else {
@@ -2831,7 +2838,7 @@ function toggleTimer(){
     addLog(isBreak?'Mola başladı.':'Focus başladı — '+S.focusMin+'dk.');
     // arrange a background alert that fires even if the app is closed / screen off
     setTimeout(scheduleTimerNotification, 300);
-    startKeepAlive(); _acquireWakeLock();
+    startKeepAlive(); _acquireWakeLock(); _dimArm();
     cancelBossNotification(); // working again → no boss heads-up needed
   }
 }
@@ -2860,6 +2867,7 @@ function tickTimer(){
       S.subjectLog[t][subj] = (S.subjectLog[t][subj]||0) + elapsed;
     }
   }
+  if(_dimOn) _dimSetClock();
   // 🛟 kaza koruması: anlık görüntüyü canlı tut (30 tikte bir diske)
   if(timerRunning && S._runSess){
     S._runSess.lastTick=Date.now(); S._runSess.endAt=timerEndAt; S._runSess.mode=(isBreak?'break':'focus');
@@ -2878,7 +2886,7 @@ function tickTimer(){
     // clear the page fallback timer only — do NOT cancel the SW notification
     // here, otherwise it would dismiss the very "session bitti" alert we want
     clearTimeout(_endTO); _endTO = null;
-    stopKeepAlive(); _releaseWakeLock();
+    stopKeepAlive(); _releaseWakeLock(); _dimCancel();
     try { if (navigator.vibrate) navigator.vibrate([500,200,500,200,700]); } catch(e){}
     if(!isBreak){
       // cumFocusSecs artık per-tick birikiyor (yukarıda) — burada tekrar EKLEME (çift sayım olurdu)
@@ -2943,7 +2951,9 @@ function tickTimer(){
 // ── BACKGROUND CATCH-UP ──
 // When app returns to foreground, sync timer to wall-clock and complete if expired
 document.addEventListener('visibilitychange', function(){
+  document.body.classList.toggle('anim-paused', document.hidden || _dimOn);   // 🌙 pil: gizliyken animasyonlar durur
   if(document.hidden){
+    _dimCancel();
     try{ save(); }catch(e){}   // 🛟 kaza koruması: arka plana düşerken son durumu yaz
     // going to background: make sure the OS-level alerts are armed
     if (timerRunning && timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); }
@@ -3011,7 +3021,7 @@ function resetTimer(){
   clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0; timerEndAt=null;
   S._runSess=null;
   stopLeak();
-  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
+  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel();
   timerSecs=S.focusMin*60;
   g('btn-start').textContent='▶ START';
   setStatus('standby'); renderTimer(); save(); addLog('Timer sıfırlandı.');
@@ -3027,7 +3037,7 @@ function finishTimerEarly(ev){
   if (isBreak){
     armBtn(ev,'finish',()=>{
       clearInterval(timerIv); timerRunning=false; timerEndAt=null; S._runSess=null;
-      cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
+      cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel(); _dimCancel();
       isBreak=false; timerSecs=S.focusMin*60;
       g('btn-start').textContent='▶ START';
       setStatus('standby'); renderTimer(); save();
@@ -3045,7 +3055,7 @@ function finishTimerEarly(ev){
     const elapsedMin = Math.max(0, Math.round(elapsedSec/60));
     if (elapsedMin < 1){ notify('Henüz 1 dk geçmedi — XP yok'); return; }
   clearInterval(timerIv); timerRunning=false; timerEndAt=null; S._runSess=null;
-  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock();
+  cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel();
   g('btn-start').textContent='▶ START';
   // erken bitiş ödülü: geçen dakika üzerinden TAM oran (kesinti yok)
   const sxp = calcSessionXP(elapsedMin);   // v7.42: erken bitirme cezası kaldırıldı — tam seansla aynı dk-başı oran
@@ -5773,19 +5783,41 @@ function scheduleHabitReminders(){
 // in the background on browsers without Notification Triggers. Best-effort.
 let _kaSrc = null;
 function startKeepAlive(){
-  try{
-    const ctx = getAudioCtx(); if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
-    stopKeepAlive();
-    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-    const src = ctx.createBufferSource();
-    src.buffer = buf; src.loop = true;
-    const g0 = ctx.createGain(); g0.gain.value = 0.0001;
-    src.connect(g0); g0.connect(ctx.destination);
-    src.start(0);
-    _kaSrc = src;
-  }catch(e){}
+  // v7.44 PİL: sessiz ses döngüsü KALDIRILDI — ses donanımını ve CPU'yu sürekli uyanık
+  // tutuyordu (ısınma). Zamanlama zaten wall-clock + native kronometre + kaza korumasıyla güvende.
 }
+// ── 🌙 SEANS KARARTMASI: 30 sn etkileşim olmazsa siyah perde (wake lock sürer, OLED dinlenir) ──
+let _dimT=null, _dimOn=false;
+function _dimArm(){
+  clearTimeout(_dimT); _dimT=null;
+  if(!timerRunning || document.hidden) return;
+  _dimT=setTimeout(_dimShow, 30000);
+}
+function _dimShow(){
+  if(!timerRunning || document.hidden) return;
+  const v=g('dim-veil'); if(!v) return;
+  _dimSetClock();
+  v.style.display='flex';
+  requestAnimationFrame(()=>v.classList.add('on'));
+  _dimOn=true;
+  document.body.classList.add('anim-paused');   // perde altındaki animasyonlar da dursun
+}
+function _dimHide(ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }
+  _dimOn=false;
+  const v=g('dim-veil');
+  if(v){ v.classList.remove('on'); setTimeout(()=>{ if(!_dimOn) v.style.display='none'; },1000); }
+  document.body.classList.remove('anim-paused');
+  _dimArm();
+}
+function _dimCancel(){ clearTimeout(_dimT); _dimT=null; if(_dimOn) _dimHide(); }
+function _dimSetClock(){
+  const c=g('dim-clock'); if(!c) return;
+  const m=Math.floor(timerSecs/60), sc=timerSecs%60;
+  c.textContent=String(m).padStart(2,'0')+':'+String(sc).padStart(2,'0');
+}
+// kullanıcı etkileşimi sayaç boyunca karartma zamanlayıcısını sıfırlar
+['pointerdown','keydown','touchstart'].forEach(evn=>document.addEventListener(evn,()=>{ if(timerRunning && !_dimOn) _dimArm(); },{passive:true}));
 function stopKeepAlive(){
   try{ if (_kaSrc){ _kaSrc.stop(); _kaSrc.disconnect(); _kaSrc=null; } }catch(e){}
 }
@@ -9744,6 +9776,7 @@ setInterval(()=>{
 
 // finer-grain boost-banner countdown updater
 setInterval(()=>{
+  if(document.hidden || _dimOn) return;   // 🌙 pil
   try { renderBoostBanner(); } catch(e){}
 }, 1000);
 
@@ -10110,7 +10143,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.43.2 başlatıldı.');
+addLog('OVERCLOCK v7.44.0 başlatıldı.');
 </script>
 </body>
 </html>
