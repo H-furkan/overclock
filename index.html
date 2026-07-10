@@ -1936,7 +1936,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.6</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.48.0</div>
     </div>
   </div>
 </div>
@@ -2425,6 +2425,13 @@ function applyDailyRollover(saved){
       if((saved.todayFocusSecs||0)<=0 && !_protectedDay && !_cold && (_cst.ivme||0)>0){ _cst.ivme--; addLog('⚡ İvme eridi (dün hiç çalışılmadı): -1'); }
       if(_cold && (saved.todayFocusSecs||0)<=0) addLog('🚿 Soğuk Duş — İvme korundu.');
       const _hBroke=(saved.habits||[]).some(h=> (h.streak||0)>0 && h.lastCompleted && h.lastCompleted!==saved.lastDate );
+      // ✕ "yapmadım" işaretli günler: streak açıkça sıfırlanır
+      (S.habits||[]).forEach(h=>{
+        if(h.log && h.log[saved.lastDate]===-1 && (h.streak||0)>0){
+          h.streak=0;
+          addLog('Alışkanlık zinciri kırıldı (✕ yapılmadı): '+h.name);
+        }
+      });
       if(_hBroke && (_cst.istikrar||0)>0){ _cst.istikrar--; addLog('🔄 İstikrar eridi (alışkanlık zinciri kırıldı): -1'); }
     }
   }catch(e){}
@@ -9051,7 +9058,7 @@ function completeHabit(id){
   if(h.streak>(h.bestStreak||0)) h.bestStreak=h.streak;
   h.lastCompleted=t;
   if(!h.log) h.log={};
-  h.log[t]=1;
+  h.log[t]=1;   // ✕ işareti varsa da ✓ üzerine yazar (fikir değişikliği)
   // STAT: İstikrar — alışkanlık XP'si +10×puan (toplam tavan 500)
   const _habXp = Math.min(300, (h.xpReward||30) + charStat('istikrar')*3);
   addXP(_habXp, 'Alışkanlık: '+h.name);
@@ -9061,6 +9068,26 @@ function completeHabit(id){
   addLog('Alışkanlık: '+h.name+' [streak: '+h.streak+']');
 }
 
+// ✕ YAPMADIM — iki aşamalı (misclick koruması); tekrar basılırsa geri alınır.
+// Gün sonunda -1 işaretli kalan alışkanlığın streak'i sıfırlanır (rollover'da).
+function failHabit(ev, id){
+  const t=today();
+  const h=(S.habits||[]).find(x=>x.id===id); if(!h) return;
+  if(h.lastCompleted===t){ notify('Bugün ✓ işaretli — önce bir şey yapmana gerek yok'); return; }
+  h.log=h.log||{};
+  if(h.log[t]===-1){
+    delete h.log[t];
+    save(); renderHabits();
+    notify('↩ "Yapmadım" işareti geri alındı');
+    return;
+  }
+  armBtn(ev,'habfail'+id,()=>{
+    h.log[t]=-1;
+    save(); renderHabits();
+    notify('✕ "'+h.name+'" bugün yapılmadı olarak işaretlendi — gün sonunda streak sıfırlanır (yanlışsa tekrar bas)');
+    addLog('Alışkanlık yapılmadı işareti: '+h.name);
+  });
+}
 function submitNumericHabit(id){
   const inp=g('habit-num-inp-'+id); if(!inp)return;
   const val=parseFloat(inp.value);
@@ -9069,6 +9096,14 @@ function submitNumericHabit(id){
   const h=(S.habits||[]).find(h=>h.id===id); if(!h)return;
   if(!h.log) h.log={};
   h.log[t]=val;
+  // v7.48: HEDEF KONTROLÜ — hedefi tutturmayan giriş kaydedilir ama streak/XP VERMEZ
+  const _hit = h.lowerBetter ? (h.target==null || val<=h.target) : (h.target==null || val>=h.target);
+  if(!_hit){
+    save(); renderHabits();
+    notify('📊 Kaydedildi: '+val+' / '+h.target+' — hedef tutmadı, streak işlenmedi');
+    addLog('Alışkanlık girişi (hedef altı): '+h.name+' '+val+'/'+h.target);
+    return;
+  }
   const _yest=yest();
   if(h.lastCompleted!==t){
     if(h.lastCompleted===_yest) h.streak++;
@@ -9177,7 +9212,10 @@ function renderHabits(){
           :'<div class="habit-num-row"><input id="habit-num-inp-'+h.id+'" type="number" min="0" placeholder="değer gir..." style="flex:1;font-family:\'Share Tech Mono\',monospace;font-size:11px;padding:6px 10px;background:var(--mid);border:1px solid var(--bd);color:var(--bright);outline:none;min-height:32px;text-align:center;letter-spacing:1px"><button class="habit-num-btn" onclick="submitNumericHabit('+h.id+')">✓ KAYDET</button><button class="habit-num-btn" style="border-color:var(--red);color:var(--red)" onclick="deleteHabit('+h.id+')">✕</button></div>')
         :'<div class="habit-btns">'+
           (!done
-            ?'<button class="habit-act ok" onclick="completeHabit('+h.id+')">✓ TAMAMLA (+'+h.xpReward+' XP)</button>'
+            ?(todayVal===-1
+              ?'<button class="habit-act" style="color:var(--red);border-color:var(--red)" onclick="failHabit(event,'+h.id+')">✕ YAPILMADI — geri almak için bas</button>'
+              :'<button class="habit-act ok" onclick="completeHabit('+h.id+')">✓ TAMAMLA (+'+h.xpReward+' XP)</button>'+
+               '<button class="habit-act" style="color:var(--muted)" onclick="failHabit(event,'+h.id+')">✕ YAPMADIM</button>')
             :'<span class="habit-act" style="color:var(--green);cursor:default">✓ BUGÜN TAMAMLANDI</span>')+
           '<button class="habit-act del" onclick="deleteHabit('+h.id+')">✕ SİL</button>'+
         '</div>');
@@ -10421,7 +10459,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.47.6 başlatıldı.');
+addLog('OVERCLOCK v7.48.0 başlatıldı.');
 </script>
 </body>
 </html>
