@@ -1936,7 +1936,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.3</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.4</div>
     </div>
   </div>
 </div>
@@ -2019,6 +2019,33 @@ const TIERS=(()=>{
   return arr;
 })();
 function getTier(){ let r=TIERS[0]; TIERS.forEach(t=>{if((S.totalXp||0)>=t.min)r=t;}); return r; }
+// TIER rozetine dokununca kademe bilgisi (mobilde hover yok)
+function tierPop(e){
+  if(e) e.stopPropagation();
+  const t=getTier(); const idx=TIERS.indexOf(t); const nx=TIERS[idx+1]||null;
+  const xp=S.totalXp||0;
+  let p=g('tier-pop');
+  if(!p){
+    p=document.createElement('div'); p.id='tier-pop';
+    p.style.cssText='display:none;position:fixed;z-index:9996;background:var(--deep);border:1px solid var(--bd2);border-radius:9px;padding:12px 14px;box-shadow:0 8px 22px rgba(0,0,0,.6);width:210px;animation:ocPopIn .18s cubic-bezier(.2,.9,.3,1.15)';
+    document.body.appendChild(p);
+    p.addEventListener('click',ev=>ev.stopPropagation());
+    document.addEventListener('click',(ev)=>{ if(p.style.display==='block' && !p.contains(ev.target)) p.style.display='none'; }, true);
+  }
+  const pct=nx?Math.min(100,Math.round((xp-t.min)/(nx.min-t.min)*100)):100;
+  p.innerHTML='<div style="font-family:Orbitron,monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">'+t.name+'</div>'+
+    '<div style="font-size:8px;color:var(--yellow);letter-spacing:3px;margin:3px 0 8px">'+t.sub+'</div>'+
+    '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.8">Toplam XP: <b style="color:var(--bright)">'+xp.toLocaleString('tr-TR')+'</b><br>Günlük hedef: <b style="color:var(--bright)">'+t.goal+' XP</b></div>'+
+    (nx?('<div style="height:4px;background:var(--mid);border-radius:2px;margin:8px 0 4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--yellow)"></div></div>'+
+      '<div style="font-size:8px;color:var(--muted);letter-spacing:.5px">Sıradaki: <b style="color:var(--white)">'+nx.name+'</b> · '+(nx.min-xp).toLocaleString('tr-TR')+' XP kaldı</div>')
+      :'<div style="font-size:9px;color:var(--yellow);margin-top:6px">🏆 FINAL FORM — zirvedesin</div>');
+  p.style.display='block';
+  const r=(e&&e.target)?e.target.getBoundingClientRect():{left:80,bottom:80,right:80,top:80};
+  const w=210, h=p.offsetHeight||150;
+  let left=r.left; if(left+w>window.innerWidth-6) left=window.innerWidth-w-6; if(left<6) left=6;
+  let top=r.bottom+8; if(top+h>window.innerHeight-6) top=r.top-h-8; if(top<6) top=6;
+  p.style.left=left+'px'; p.style.top=top+'px';
+}
 function getDailyGoal(){ return getTier().goal; }
 
 // Session XP scales with focus duration (minute-based, not flat).
@@ -2767,6 +2794,8 @@ function renderXP() {
     tb.textContent = tier.name;   // 'TIER IX' — 'TIX' gibi okunmaz kısaltma yerine tam ad
     tb.title = tier.sub;
     tb.className = tier.cls;
+    tb.style.cursor='pointer';
+    tb.onclick=(e)=>tierPop(e);
   }
   // ── Dynamic xp tick labels ──
   const ticks = g('xp-ticks');
@@ -10318,6 +10347,14 @@ function _recoverRunningSession(){
   save();
 }
 try{ _recoverRunningSession(); }catch(e){ try{ logErr('Seans kurtarma hatası: '+e.message); }catch(_){} }
+// ↩ v7.47.4: kullanıcı istedi — fazla jetonun biri geri alındı
+try{
+  if(!S._takeRest0710b){
+    S._takeRest0710b=true;
+    if((S.restDayTokens||0)>1){ S.restDayTokens--; notify('↩ 1 rest-day jetonu geri alındı (kalan: '+S.restDayTokens+')'); addLog('Jeton düzeltmesi: -1 rest-day (kullanıcı isteği).'); }
+    save();
+  }
+}catch(e){}
 // 🎁 tek seferlik hediye: yarınki tatil için rest-day jetonu (2026-07-10)
 try{
   if(!S._giftRest0710){
@@ -10377,7 +10414,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.47.3 başlatıldı.');
+addLog('OVERCLOCK v7.47.4 başlatıldı.');
 </script>
 </body>
 </html>
