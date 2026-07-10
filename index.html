@@ -1936,7 +1936,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.4</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.5</div>
     </div>
   </div>
 </div>
@@ -10347,11 +10347,13 @@ function _recoverRunningSession(){
   save();
 }
 try{ _recoverRunningSession(); }catch(e){ try{ logErr('Seans kurtarma hatası: '+e.message); }catch(_){} }
-// ↩ v7.47.4: kullanıcı istedi — fazla jetonun biri geri alındı
+// ↩ v7.47.5 jeton düzeltmesi: bayrak senkron yarışına yenildi (bayat 2 geri döndü) —
+// bu yüzden TARİHLİ KURAL: 12 Tem 2026'ya kadar HER açılışta stok 1'e sabitlenir.
 try{
-  if(!S._takeRest0710b){
-    S._takeRest0710b=true;
-    if((S.restDayTokens||0)>1){ S.restDayTokens--; notify('↩ 1 rest-day jetonu geri alındı (kalan: '+S.restDayTokens+')'); addLog('Jeton düzeltmesi: -1 rest-day (kullanıcı isteği).'); }
+  if(today()<='2026-07-12' && (S.restDayTokens||0)>1){
+    S.restDayTokens=1;
+    notify('↩ Jeton düzeltmesi: stok 1\'e sabitlendi');
+    addLog('Jeton düzeltmesi: çift-hediye kalıntısı temizlendi (stok=1).');
     save();
   }
 }catch(e){}
@@ -10414,7 +10416,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.47.4 başlatıldı.');
+addLog('OVERCLOCK v7.47.5 başlatıldı.');
 </script>
 </body>
 </html>
