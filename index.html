@@ -343,6 +343,19 @@ body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace
 body.pre-ign #content, body.pre-ign #sidebar{opacity:.03;filter:brightness(.3)}
 body.ign-run #content, body.ign-run #sidebar{transition:opacity 1.5s ease-out, filter 1.9s ease-out;opacity:1;filter:brightness(1)}
 /* ── 🌙 PİL: seans karartma perdesi (ekran açık kalır, pikseller siyaha düşer) ── */
+/* ── 🏆 BAŞARIM TOAST'I (Minecraft tarzı, sağ üstten süzülür) ── */
+/* ── 🚨 TAM EKRAN UYARI (önemli hatırlatıcılar) ── */
+#big-alert{display:none;position:fixed;inset:0;z-index:10700;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;animation:ocFadeIn .2s ease-out}
+#big-alert .ba-ico{font-size:64px;line-height:1;margin-bottom:18px;filter:drop-shadow(0 0 18px rgba(102,204,255,.5))}
+#big-alert .ba-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--white);letter-spacing:3px;margin-bottom:10px}
+#big-alert .ba-body{font-size:12px;color:var(--bright);letter-spacing:1px;line-height:1.8;max-width:420px;margin-bottom:26px;white-space:pre-wrap}
+#achv-wrap{position:fixed;top:14px;right:14px;z-index:10650;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.achv-toast{display:flex;gap:11px;align-items:center;min-width:230px;max-width:300px;background:linear-gradient(135deg,#2a2320,#17141a);border:2px solid #ffd24a;border-radius:10px;padding:10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.6),0 0 18px rgba(255,210,74,.25);transform:translateX(120%);transition:transform .45s cubic-bezier(.2,.9,.3,1.1)}
+.achv-toast.in{transform:translateX(0)}
+.achv-ico{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,210,74,.6))}
+.achv-t1{font-size:8px;letter-spacing:2px;color:#ffd24a;font-weight:700}
+.achv-t2{font-size:11px;color:#fff;letter-spacing:.5px;font-weight:700;margin-top:2px}
+.achv-t3{font-size:8px;color:#a2a2a2;letter-spacing:.5px;margin-top:1px}
 #dim-veil{display:none;position:fixed;inset:0;z-index:10550;background:#000;opacity:0;transition:opacity 1s ease;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
 #dim-veil.on{opacity:1}
 #dim-clock{font-family:'Orbitron',monospace;font-size:13vw;font-weight:900;color:#2e3138;letter-spacing:4px}
@@ -683,6 +696,7 @@ body.pixel-font #timer-unit{font-size:8px}
 <body>
 <div id="app-bg"></div>
 <div id="xp-popup"></div>
+<div id="big-alert"><div class="ba-ico" id="ba-ico">🔔</div><div class="ba-title" id="ba-title"></div><div class="ba-body" id="ba-body"></div><button class="btn primary" style="min-width:170px" onclick="g('big-alert').style.display='none'">✓ TAMAM</button></div>
 <div id="dim-veil" onclick="_dimHide(event)"><div id="dim-clock">00:00</div><div id="dim-hint">DOKUN → UYAN</div></div>
 <div id="notif"></div>
 
@@ -912,7 +926,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <!-- XP BAR -->
   <div class="block">
     <div class="fbet mb8">
-      <span style="font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase">■ Daily XP <span id="tier-badge">T1</span></span>
+      <span style="font-size:8px;letter-spacing:4px;color:var(--muted);text-transform:uppercase">■ Daily XP <span id="tier-badge">T1</span> <button id="hq-water" onclick="addWater()" title="Su iç (+1 bardak) — 8/8 = HYDRA rozeti" style="background:rgba(102,204,255,.08);border:1px solid #66ccff44;color:#66ccff;border-radius:10px;font-size:8px;letter-spacing:1px;padding:2px 8px;cursor:pointer;vertical-align:middle">💧 0/8</button></span>
       <span><span id="xp-num">0</span><span style="font-size:10px;color:var(--muted)"> / <span id="xp-goal">1200</span> XP</span></span>
     </div>
     <div id="xp-bar-wrap"><div id="xp-bar"></div></div>
@@ -1918,7 +1932,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.46.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.47.0</div>
     </div>
   </div>
 </div>
@@ -2020,15 +2034,15 @@ const LEVELS = [
 ];
 
 const BADGES = [
-  {id:'korn',       icon:'🎸', name:'KORN SLAYER',    desc:'4h gürültü bloğu',      type:'daily',     trig:'manual'},
-  {id:'maestro',    icon:'🎹', name:'SILENT MAESTRO', desc:'12h sessizlikte çalış', type:'daily',     trig:'manual'},
+  {id:'korn',       icon:'🎸', name:'KORN SLAYER',    desc:'Günde 300+ soru çöz',   type:'daily',     trig:'auto'},
+  {id:'maestro',    icon:'🎹', name:'SILENT MAESTRO', desc:'Günde 6+ saat odak',    type:'daily',     trig:'auto'},
   {id:'titan_b',    icon:'💀', name:'TITAN PROTOCOL', desc:'1200 XP tamamla',       type:'daily',     trig:'auto'},
   {id:'streak',     icon:'⚡', name:'CHAIN STRIKE',   desc:'3 session üst üste',    type:'daily',     trig:'auto'},
   {id:'iron',       icon:'🔩', name:'IRON WILL',      desc:'5 session tamamla',     type:'daily',     trig:'auto'},
-  {id:'ghost',      icon:'👻', name:'GHOST MODE',     desc:'2h kesintisiz',         type:'daily',     trig:'manual'},
-  {id:'error0',     icon:'🎯', name:'ZERO ERRORS',    desc:'0 hata ile günü bitir', type:'daily',     trig:'manual'},
+  {id:'ghost',      icon:'👻', name:'GHOST MODE',     desc:'120dk+ tek seans bitir',type:'daily',     trig:'auto'},
+  {id:'error0',     icon:'🎯', name:'ZERO ERRORS',    desc:'Sabah planını eksiksiz bitir (GYM + takvim + kitap hedefi)', type:'daily', trig:'auto'},
   {id:'dawn',       icon:'🌅', name:'DAWN PROTOCOL',  desc:'06:00\'dan önce başla', type:'daily',     trig:'auto'},
-  {id:'taskmaster', icon:'✅', name:'TASK MASTER',    desc:'5 task tamamla',        type:'daily',     trig:'auto'},
+  {id:'taskmaster', icon:'✅', name:'TASK MASTER',    desc:'Takvimde 5 çalışma tamamla', type:'daily', trig:'auto'},
   {id:'overdrive',  icon:'🔥', name:'OVERDRIVE',      desc:'1 günde 3+ session',    type:'daily',     trig:'auto'},
   {id:'hydra',      icon:'💧', name:'HYDRA',          desc:'Günde 8 bardak su iç',  type:'daily',     trig:'auto'},
   {id:'bookworm_d', icon:'📖', name:'KİTAP KURDU',    desc:'Günde 20+ sayfa oku',   type:'daily',     trig:'auto'},
@@ -2946,6 +2960,8 @@ function tickTimer(){
       if(S.streak>=3) earnBadge('streak');
       if(S.sessions>=5) earnBadge('iron');
       if(S.sessions>=3) earnBadge('overdrive');
+      if(S.focusMin>=120) earnBadge('ghost');
+      if((S.todayFocusSecs||0)>=6*3600) earnBadge('maestro');
       isBreak=true; timerSecs=S.breakMin*60;
       // +15dk break kasa drop'u: tek seferlik uzatma
       if (S.cases && (S.cases.breakBonus||0) > 0){ timerSecs += S.cases.breakBonus; S.cases.breakBonus=0; notify('⏸ Mola +'+Math.round((S.cases.breakBonus||0)/60)+'dk uzadı (kasa)'); }
@@ -3093,6 +3109,8 @@ function finishTimerEarly(ev){
   addXP(_sxp2, 'Session erken bitti ('+elapsedMin+'dk)');
   notify('⏹ ERKEN BİTİŞ // +'+sxp+' XP ('+elapsedMin+' dk)');
   addLog('Session erken bitti — '+elapsedMin+' dk, +'+sxp+' XP');
+  if(elapsedMin>=120) earnBadge('ghost');
+  if((S.todayFocusSecs||0)>=6*3600) earnBadge('maestro');
   if(_sessType==='soru'){ try{ _promptSessionQuestions(elapsedMin, _sessSubject); }catch(e){} }
   // back to standby with a fresh focus countdown
   isBreak=false; timerSecs=S.focusMin*60;
@@ -3133,6 +3151,7 @@ function qModalSubmit(){
   if(S.prodSessions.length>300) S.prodSessions = S.prodSessions.slice(-300);
   bankEarn(n, 'soru', n+' soru çözüldü ('+subj+')');   // her soru 1 kuruş → soru bankası
   _checkQBadges();
+  if(_dayQuestions(today())>=300) earnBadge('korn');
   S._pendingQ=null; _qCtx=null; save();
   try{ renderQuestionStats(); renderIdealDuration(); renderBank(); }catch(e){}
   notify('✓ '+n+' soru kaydedildi (+'+pts+' puan · +'+n+' kr)');
@@ -3189,6 +3208,7 @@ function qEditSave(sid){
   if(le) le.msg='Seans sonu: '+newN+' soru ('+newSubj+', '+rec.points+' puan) · düzenlendi ⟦qedit:'+sid+'⟧';
   g('qedit-pop').style.display='none';
   save();
+  try{ if(_dayQuestions(today())>=300) earnBadge('korn'); }catch(e){}
   try{ renderQuestionStats(); renderIdealDuration(); renderBank(); renderLog(); }catch(e){}
   notify('✎ Kayıt güncellendi: '+newN+' soru · '+newSubj);
   }
@@ -3698,6 +3718,7 @@ function calToggleDone(){
   if(_x!=null) notify('✓ Tamamlandı +'+_x+' XP');
   save(); calPopClose(); renderCalendar(); scheduleCalendarReminders(); try{ renderHqCalTasks(); }catch(e){}
   try{ _calDenemeBridge(ev, _calEditDate||ev.date); }catch(e){}
+  try{ _checkCalBadges(); }catch(e){}
 }
 // 📊 Deneme olayı tamamlanınca Net Takip'e köprü (düzeni bozmaz — sadece yönlendirir)
 function _calDenemeBridge(ev, ds){
@@ -3743,6 +3764,7 @@ function _hqCalToggleDo(id){
   if(_x!=null) notify('✓ Tamamlandı +'+_x+' XP');
   save(); renderHqCalTasks(); try{ if(g('page-calendar')&&g('page-calendar').classList.contains('visible')) renderCalendar(); }catch(e){}
   try{ _calDenemeBridge(ev, today()); }catch(e){}
+  try{ _checkCalBadges(); }catch(e){}
 }
 // HQ'da bugünün takvim olayları: sayacın altında, zaman sırasına göre, açıklama + XP/soru/bildirim rozetleri, tamamla butonlu
 const CAL_TYPE_ICON={ std:'📌', soru:'📝', konu:'📖', blok:'▨', deneme:'📊' };
@@ -4255,7 +4277,7 @@ function gymCompleteEx(id){
   if(b.kreatin===t){ mp=Math.round(mp*1.25); fx.push('💪1.25×'); }
   gm.mpEarned=(gm.mpEarned||0)+mp;
   _gymChallengeTick(true);
-  save(); gymCheckMilestones();
+  save(); gymCheckMilestones(); try{ _checkZeroErrors(); }catch(e){}
   renderGym(); notify('💪 '+ex.name+' → +'+mp+' MP'+(fx.length?(' ('+fx.join(' ')+')'):''));
   addLog('GYM: '+ex.name+' tamamlandı (+'+mp+' MP'+(fx.length?(' '+fx.join(' ')):'')+')');
 }
@@ -4410,8 +4432,8 @@ function renderGymHonors(){
 function renderGymShop(){ renderMpClothing(); renderCafe(); renderDepot(); renderGymHonors(); }
 function gymCheckMilestones(){
   const gm=_gym(); let changed=false;
-  GYM_TITLES.forEach(t=>{ if(!gm.titles.includes(t.id) && t.test(gm)){ gm.titles.push(t.id); changed=true; notify('🎖 GYM UNVANI: '+t.name+'!'); addLog('GYM unvanı: '+t.name); } });
-  GYM_BADGES.forEach(b=>{ if(!gm.badges.includes(b.id) && b.test(gm)){ gm.badges.push(b.id); changed=true; notify('📛 GYM ROZETİ: '+b.name+'!'); addLog('GYM rozeti: '+b.name); } });
+  GYM_TITLES.forEach(t=>{ if(!gm.titles.includes(t.id) && t.test(gm)){ gm.titles.push(t.id); changed=true; _achvToast('🎖','GYM unvanı', t.name); addLog('GYM unvanı: '+t.name); } });
+  GYM_BADGES.forEach(b=>{ if(!gm.badges.includes(b.id) && b.test(gm)){ gm.badges.push(b.id); changed=true; _achvToast('📛','GYM rozeti', b.name); addLog('GYM rozeti: '+b.name); } });
   if(changed){ save(); try{ if(g('page-character')&&g('page-character').classList.contains('visible')) renderCharacter(); }catch(e){} }
 }
 
@@ -4761,6 +4783,7 @@ function resetWater(){
 }
 
 function updateWaterUI(){
+  const hw=g('hq-water'); if(hw){ hw.textContent='💧 '+(S.waterCount||0)+'/8'; hw.style.opacity=(S.waterCount>=8)?'1':'0.85'; if(S.waterCount>=8){ hw.style.borderColor='#66ccff'; hw.style.background='rgba(102,204,255,.18)'; } }
   const wv=g('water-val'); if(!wv) return;   // hidrasyon UI kaldırıldı
   wv.textContent=S.waterCount+' / 8';
   g('water-bar').style.width=(S.waterCount/8*100)+'%';
@@ -4884,7 +4907,7 @@ function completeTask(id){
   }
   addLog('Hatırlatıcı bitti: '+tk.title);
   g('tasks-done-today').textContent=S.tasksDoneToday;
-  if(S.tasksDoneToday>=5) earnBadge('taskmaster');
+  // taskmaster artık takvim çalışmalarına bağlı (_checkCalBadges)
   if(S.tasksDoneTotal>=20) earnBadge('tasklegend');
 }
 
@@ -5011,11 +5034,33 @@ function closeErrModal(){ g('error-modal').classList.remove('show'); }
 // ════════════════════════════════════════
 // BADGES
 // ════════════════════════════════════════
+// 🏆 Başarım toast'ı — sağ üstten süzülür, 4.5 sn kalır, kuyruklanır
+function _achvToast(icon, sub, title){
+  let w=g('achv-wrap');
+  if(!w){ w=document.createElement('div'); w.id='achv-wrap'; document.body.appendChild(w); }
+  const t=document.createElement('div');
+  t.className='achv-toast';
+  t.innerHTML='<span class="achv-ico">'+icon+'</span><span style="min-width:0"><div class="achv-t1">🏆 BAŞARIM KAZANILDI!</div><div class="achv-t2">'+_he(title)+'</div>'+(sub?('<div class="achv-t3">'+_he(sub)+'</div>'):'')+'</span>';
+  w.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('in')));
+  try{ playBell('reminder'); }catch(e){}
+  setTimeout(()=>{ t.classList.remove('in'); setTimeout(()=>t.remove(), 500); }, 4500);
+  while(w.children.length>3) w.firstChild.remove();
+}
+// 🚨 Tam ekran uyarı — önemli hatırlatıcılar için (dokunula kapanır)
+function bigAlert(icon, title, body){
+  const m=g('big-alert'); if(!m){ notify(title+' — '+body); return; }
+  g('ba-ico').textContent=icon||'🔔';
+  g('ba-title').textContent=title||'';
+  g('ba-body').textContent=body||'';
+  m.style.display='flex';
+  try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+}
 function earnBadge(id){
   if(S.earnedBadges.includes(id))return;
   S.earnedBadges.push(id); save();
   const def=BADGES.find(b=>b.id===id);
-  if(def) notify('✦ BADGE: '+def.name);
+  if(def) _achvToast(def.icon, def.desc, def.name);
   addLog('Rozet: '+(def?def.name:id));
   addXP(50,'Rozet bonusu');
   renderBadges();
@@ -5885,8 +5930,8 @@ function fireReminder(task){
   save();
   // play sound
   playBell('reminder');
-  // in-app notify
-  notify('🔔 HATIRLATICI: '+task.title);
+  // in-app: TAM EKRAN uyarı
+  bigAlert('🔔','HATIRLATICI', task.title+(task.reminderTime?('\n⏰ '+task.reminderTime):''));
   addLog('Hatırlatıcı: '+task.title+' ['+task.reminderTime+']');
   // browser notification if permitted
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -9334,7 +9379,7 @@ function renderAll(){
   if (S._streakSaved) {
     S._streakSaved = false;
     setTimeout(()=>{
-      notify('❄️ STREAK KORUYUCU KULLANILDI // ZİNCİR KORUNDU ('+(S.dayStreak||0)+' GÜN)');
+      bigAlert('❄️','STREAK KORUNDU','Streak koruyucu otomatik kullanıldı — zincirin '+(S.dayStreak||0)+' günde devam ediyor.\nKalan koruyucu: '+(S.streakProtectors||0));
       addLog('Streak koruyucu harcandı — zincir korundu. Kalan: '+(S.streakProtectors||0));
       save();
     }, 600);
@@ -9430,6 +9475,59 @@ function getSubjectTotals(n){
   return totals;
 }
 
+// ── 🎯 ZERO ERRORS: sabah plan anlık görüntüsü — gün içi silme hile sayılır ──
+function _ensureZeroPlan(){
+  const t=today();
+  if(S._zeroPlan && S._zeroPlan.date===t) return;
+  const gymIds=(((S.gym||{}).exercises)||[]).filter(e=>!e.done && e.date<=t).map(e=>e.id);
+  const calIds=(S.calEvents||[]).filter(ev=>ev.type!=='blok' && _evOccursOn(ev,t) && !_evDoneOn(ev,t)).map(ev=>ev.id);
+  S._zeroPlan={ date:t, gymIds, calIds, readGoal:(S.readGoal||0) };
+  save();
+}
+function _checkZeroErrors(){
+  try{
+    _ensureZeroPlan();
+    const p=S._zeroPlan; const t=today();
+    const hasPlan=(p.gymIds.length||p.calIds.length||p.readGoal>0);
+    if(!hasPlan) return;
+    const gymOK=p.gymIds.every(id=>{ const e=(((S.gym||{}).exercises)||[]).find(x=>x.id===id); return e && e.done; });
+    const calOK=p.calIds.every(id=>{ const ev=(S.calEvents||[]).find(x=>x.id===id); return ev && _evDoneOn(ev,t); });
+    const pages=(S.readLog||[]).filter(r=>r.date===t).reduce((a,r)=>a+(r.pages||0),0);
+    const readOK=(p.readGoal>0)?(pages>=p.readGoal):true;
+    if(gymOK && calOK && readOK) earnBadge('error0');
+  }catch(e){}
+}
+// ── ✅ TASK MASTER: takvimde bugün tamamlanan çalışma (soru+konu) sayısı ──
+function _calStudyDoneToday(){
+  const t=today(); let n=0;
+  (S.calEvents||[]).forEach(ev=>{
+    if(ev.type!=='soru' && ev.type!=='konu') return;
+    if(_evOccursOn(ev,t) && _evDoneOn(ev,t)) n++;
+  });
+  return n;
+}
+// 📅 Takvim hatırlatıcısı — uygulama AÇIKKEN tam ekran uyarı (sistem bildirimi ayrıca gelir)
+function _calRemindTick(){
+  try{
+    const t=today(); const now=Date.now();
+    S._calRemFired=S._calRemFired||{};
+    if(!S._calRemFired[t]) S._calRemFired={ [t]: (S._calRemFired[t]||[]) };
+    const fired=S._calRemFired[t];
+    (S.calEvents||[]).forEach(ev=>{
+      if(!ev.remindAt || fired.includes(ev.id)) return;
+      const at=new Date(ev.remindAt.replace('T',' ').replace(/-/g,'/')).getTime();
+      if(!(at>0)) return;
+      if(now>=at && now-at<120000 && !_evDoneOn(ev,t)){
+        fired.push(ev.id); save();
+        bigAlert(CAL_TYPE_ICON[ev.type]||'📅','TAKVİM HATIRLATICI', (ev.title||'(başlıksız)')+'\n🕐 '+_minToTime(ev.startMin||0)+(ev.desc?('\n'+ev.desc):''));
+      }
+    });
+  }catch(e){}
+}
+function _checkCalBadges(){
+  if(_calStudyDoneToday()>=5) earnBadge('taskmaster');
+  _checkZeroErrors();
+}
 // Takvimdeki tamamlanmış SORU ÇÖZÜMÜ + KONU ÇALIŞMASI olayları (tekrarlılarda gün başına 1)
 function _calStudyDoneTotal(){
   let n=0;
@@ -9861,6 +9959,9 @@ setInterval(()=>{
     reminderTick();
     renderBoostBanner();
     refreshNotifSwitch();
+    _ensureZeroPlan(); _checkZeroErrors();
+    _calRemindTick();
+    if((S.todayFocusSecs||0)>=6*3600) earnBadge('maestro');
     // 📅 ŞİMDİ/SIRADA rozetleri saat ilerledikçe güncellensin
     if(!document.hidden && !_dimOn && g('page-cockpit') && g('page-cockpit').classList.contains('visible')) renderHqCalTasks();
   } catch(e){ console.warn(e); }
@@ -10268,7 +10369,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.46.0 başlatıldı.');
+addLog('OVERCLOCK v7.47.0 başlatıldı.');
 </script>
 </body>
 </html>
