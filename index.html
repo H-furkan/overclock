@@ -544,6 +544,17 @@ body.anim-paused *{animation-play-state:paused!important}
 .charx-eqchip{display:inline-flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.5px;color:var(--bright);border:1px solid var(--bd2);background:var(--mid);border-radius:10px;padding:2px 8px;margin:2px 3px 2px 0;white-space:nowrap}
 /* ── GYM ── */
 .gym-top{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
+.cm-sec{border:1px solid var(--bd);border-radius:9px;background:var(--mid);margin-bottom:8px;overflow:hidden}
+.cm-head{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer}
+.cm-head:hover{background:rgba(255,255,255,.03)}
+.cm-bar{flex:1;height:5px;background:var(--deep);border-radius:3px;overflow:hidden}
+.cm-bar>div{height:100%;background:linear-gradient(90deg,var(--yellow),var(--green));border-radius:3px}
+.cm-chips{display:none;flex-wrap:wrap;gap:5px;padding:4px 12px 12px}
+.cm-sec.open .cm-chips{display:flex}
+.cm-chip{font-size:9px;letter-spacing:.5px;padding:4px 9px;border-radius:12px;border:1px solid var(--bd);background:var(--deep);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.cm-chip.st1{border-color:#8a7a2a;color:var(--yellow);background:#ffff6608}
+.cm-chip.st2{border-color:var(--green);color:var(--green);background:#8fff8f0d}
+.cm-chip .cm-x{color:var(--red);font-weight:700;margin-left:2px}
 #gym-anatomy .gmus{cursor:pointer}
 #gym-anatomy .gmus:hover{stroke:#ff9e64;stroke-width:.8}
 .gym-bottom{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;align-items:start}
@@ -899,6 +910,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
+  <button class="navitem" onclick="goTab(this,'currmap')">🗺 MÜFREDAT</button>
   <button class="navitem" onclick="goTab(this,'srs')">🧠 ARALIKLI TEKRAR</button>
   <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
   <button class="navitem" onclick="goTab(this,'character')">🧬 CHARACTER</button>
@@ -916,6 +928,7 @@ body.pixel-font #timer-unit{font-size:8px}
 
   <!-- YKS GERİ SAYIM -->
   <div id="yks-countdown">⏳ YKS'ye <b id="yks-days">—</b> gün</div>
+  <div id="yks-proj" style="text-align:center;font-size:8px;letter-spacing:1px;color:var(--muted);padding:0 8px 8px;line-height:1.8;display:none"></div>
 
   <!-- BUGÜN — dağınık uyarıları tek kutuda toplar; SADECE yapılacak iş varsa görünür -->
   <div id="hq-today" class="block" style="display:none;margin-bottom:10px">
@@ -1058,6 +1071,23 @@ body.pixel-font #timer-unit{font-size:8px}
 </div>
 
 <!-- ══════════ PAGE: OKUMA SALONU ══════════ -->
+<div id="page-currmap" class="page">
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">🗺 Müfredat Haritası</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="cm-total" style="font-size:9px;color:var(--bright);letter-spacing:1px;font-family:Orbitron,monospace"></span>
+        <button class="btn" style="min-height:24px;padding:2px 10px;font-size:8px" id="cm-edit-btn" onclick="cmEditToggle()">✎ DÜZENLE</button>
+      </div>
+    </div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+      Konuya dokun: <span style="color:var(--muted)">⚪ görmedim</span> → <span style="color:var(--yellow)">🟡 gördüm</span> → <span style="color:var(--green)">🟢 sağlam</span>.
+      <span style="color:var(--red)">🔻</span> = Deneme Ağacı'nda düzeltilmemiş yanlışın var.
+    </div>
+    <div id="cm-list"></div>
+  </div>
+</div>
+
 <div id="page-reading" class="page">
   <div class="block">
     <div class="fbet mb8">
@@ -1519,6 +1549,13 @@ body.pixel-font #timer-unit{font-size:8px}
     <div id="subject-legend" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
   </div>
 
+  <!-- SAAT VERİMİ ISI HARİTASI -->
+  <div class="block">
+    <div class="blabel">■ Saat Verimi <span style="font-size:8px;color:var(--muted)">(hangi saatte kaç soru — veri v7.49'dan itibaren birikir)</span></div>
+    <canvas id="hour-heat" style="width:100%;height:120px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div id="hour-heat-note" style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:6px"></div>
+  </div>
+
   <!-- AYLIK TREND -->
   <div class="block">
     <div class="blabel">■ Aylık Focus Trendi (30 Gün)</div>
@@ -1936,7 +1973,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.48.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.49.0</div>
     </div>
   </div>
 </div>
@@ -2277,6 +2314,7 @@ function defState() {
     readGoal:0,                   // günlük sayfa hedefi (0 = kapalı) — grafikte sarı kesikli baraj
     savedColors:[],               // renk seçici favorileri (hex listesi, senkronlu)
     netGoal:{TYT:0,AYT:0},        // net trend grafiği hedef barajı (🎯)
+    currMap:null,                 // 🗺 müfredat haritası {ders:[{n,st}]} — ilk açılışta tohumdan kurulur
     gym:{ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[], depot:{}, exLib:[], buffs:{}, _roomGone:true },   // GYM — izole MP ekonomisi
     // ── VERİMLİLİK / İDEAL SÜRE (soru-bazlı) ──
     sessionType:'soru',           // son seçilen seans tipi: 'soru' | 'konu'
@@ -2550,6 +2588,28 @@ function renderYksCountdown(){
   const el=g('yks-days'); if(!el) return;
   const d=daysUntil(YKS_DATE);
   el.textContent = (d==null ? '—' : (d<0 ? 'geçti' : (d===0 ? 'BUGÜN' : d)));
+  // 📈 PROJEKSİYON: son 14 günün temposu × kalan gün + net trend eğimi
+  try{
+    const pj=g('yks-proj'); if(!pj || d==null || d<=0) return;
+    const days=[]; for(let i=1;i<=14;i++){ const dt=new Date(); dt.setDate(dt.getDate()-i); days.push(_dstr(dt)); }
+    const qAvg=days.reduce((a,ds)=>a+_dayQuestions(ds),0)/14;
+    const fAvg=days.reduce((a,ds)=>a+_dayFocusSecs2(ds),0)/14/3600;
+    let html='';
+    if(qAvg>0.5 || fAvg>0.1){
+      html+='Bu tempoyla sınava kadar: <b style="color:var(--bright)">~'+Math.round(qAvg*d).toLocaleString('tr-TR')+' soru</b> · <b style="color:var(--bright)">~'+Math.round(fAvg*d).toLocaleString('tr-TR')+' saat odak</b>';
+    }
+    // net eğimi (TYT, son 8 deneme, basit lineer)
+    const ex=(S.exams||[]).filter(e=>e.type==='TYT'&&e.total!=null).slice(-8);
+    if(ex.length>=4){
+      const n=ex.length; let sx=0,sy=0,sxy=0,sxx=0;
+      ex.forEach((e,i)=>{ sx+=i; sy+=e.total; sxy+=i*e.total; sxx+=i*i; });
+      const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+      const perDay=slope/7;   // haftada ~1 deneme varsayımı
+      const proj=ex[n-1].total + Math.max(-0.5,Math.min(0.5,perDay))*d;
+      if(isFinite(proj)) html+=(html?'<br>':'')+'Net eğimin sürerse haziran bandı: <b style="color:var(--yellow)">~'+Math.max(0,Math.min(120,proj)).toFixed(0)+' net</b> <span style="opacity:.6">(kaba tahmin)</span>';
+    }
+    pj.innerHTML=html; pj.style.display=html?'block':'none';
+  }catch(e){}
 }
 function getLevel(xp){ let r=LEVELS[0]; LEVELS.forEach(l=>{if(xp>=l.min)r=l;}); return r; }
 function g(id){ return document.getElementById(id); }
@@ -2568,6 +2628,7 @@ function goTab(btn, name) {
   g('content').scrollTop=0;
   // STATS tab: canvas needs a real size before drawing — defer
   if (name === 'stats') setTimeout(()=>{ try{ renderStats(); }catch(e){} }, 40);
+  if (name === 'currmap') setTimeout(()=>{ try{ renderCurrMap(); }catch(e){} }, 20);
   // HABITS tab: charts need layout
   if (name === 'habits') setTimeout(()=>{ try{ renderHabitCharts(); drawCalendar(_calHabitId); }catch(e){} }, 40);
   // SHOP tab
@@ -3189,7 +3250,7 @@ function qModalSubmit(){
   _pendingBreakSecs = 0;
   S.prodSessions = S.prodSessions||[];
   const _sid='q'+Date.now();
-  S.prodSessions.push({ sid:_sid, date: today(), subject: subj, durationMin: _qCtx.durationMin, questions: n, points: pts, breakMin: breakMin });
+  S.prodSessions.push({ sid:_sid, date: today(), subject: subj, durationMin: _qCtx.durationMin, questions: n, points: pts, breakMin: breakMin, hr:(typeof _sessStartHour==='number'?_sessStartHour:new Date().getHours()) });
   if(S.prodSessions.length>300) S.prodSessions = S.prodSessions.slice(-300);
   bankEarn(n, 'soru', n+' soru çözüldü ('+subj+')');   // her soru 1 kuruş → soru bankası
   _checkQBadges();
@@ -8026,6 +8087,55 @@ function drawNetChart(){
   _wireChartTap('net-chart', ()=>_netHit, e=>_examDetailHtml(e));
 }
 
+// ── 📋 DENEME KARNESİ: ders bazlı son vs ortalama, kayıp analizi, D/Y sinyali ──
+function examKarne(id){
+  const e=(S.exams||[]).find(x=>x.id===id); if(!e) return;
+  const defs=EXAM_DEFS[e.type]||[];
+  const prev=(S.exams||[]).filter(x=>x.type===e.type && x.id!==id && x.date<=e.date).sort((a,b)=>a.date<b.date?1:-1).slice(0,5);
+  const rows=defs.map(sd=>{
+    const cur=(e.nets&&e.nets[sd.key])!=null?e.nets[sd.key]:null;
+    if(cur==null) return '';
+    const hist=prev.map(p=>(p.nets&&p.nets[sd.key])!=null?p.nets[sd.key]:null).filter(v=>v!=null);
+    const avg=hist.length?hist.reduce((a,b)=>a+b,0)/hist.length:null;
+    const d=avg!=null?cur-avg:null;
+    const arrow=d==null?'<span style="color:var(--muted)">yeni</span>':(d>=0.5?'<span style="color:var(--green)">▲ +'+d.toFixed(1)+'</span>':(d<=-0.5?'<span style="color:var(--red)">▼ '+d.toFixed(1)+'</span>':'<span style="color:var(--muted)">≈</span>'));
+    const kayip=sd.max!=null?(sd.max-cur):null;
+    let dy='';
+    if(e.dy && e.dy[sd.key]){
+      const w=e.dy[sd.key].y||0, c2=e.dy[sd.key].d||0, bos=sd.max!=null?Math.max(0,sd.max-c2-w):0;
+      if(w>=3 && w>bos) dy=' <span style="color:#ff9e64" title="yanlış>boş">⚠ dikkat</span>';
+      else if(bos>=4 && bos>w) dy=' <span style="color:#66ccff" title="boş>yanlış">📖 eksik</span>';
+    }
+    return '<tr><td style="padding:5px 4px;color:var(--bright)">'+sd.label+'</td>'+
+      '<td style="text-align:center;font-family:Orbitron,monospace;color:var(--white)">'+cur.toFixed(1)+'</td>'+
+      '<td style="text-align:center;color:var(--muted)">'+(avg!=null?avg.toFixed(1):'—')+'</td>'+
+      '<td style="text-align:center">'+arrow+dy+'</td>'+
+      '<td style="text-align:center;color:'+((kayip!=null&&kayip>=5)?'var(--red)':'var(--muted)')+'">'+(kayip!=null?('-'+kayip.toFixed(1)):'')+'</td></tr>';
+  }).join('');
+  // en çok kaybettiren ders
+  let worst=null;
+  defs.forEach(sd=>{ const cur=(e.nets&&e.nets[sd.key])!=null?e.nets[sd.key]:null; if(cur==null||sd.max==null) return;
+    const k=sd.max-cur; if(!worst||k>worst.k) worst={lbl:sd.label,k}; });
+  const goal=((S.netGoal||{})[e.type])||0;
+  let p=g('karne-pop');
+  if(!p){
+    p=document.createElement('div'); p.id='karne-pop';
+    p.style.cssText='display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:14px;animation:ocFadeIn .16s ease-out';
+    document.body.appendChild(p);
+    p.addEventListener('click',(ev2)=>{ if(ev2.target===p) p.style.display='none'; });
+  }
+  p.innerHTML='<div style="width:100%;max-width:420px;max-height:88vh;overflow-y:auto;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:16px;animation:ocPopIn .2s cubic-bezier(.2,.9,.3,1.15)">'+
+    '<div class="fbet mb8"><div style="font-family:Orbitron,monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">📋 '+e.type+' KARNE — '+e.total.toFixed(2)+' NET</div>'+
+    '<button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="g(\'karne-pop\').style.display=\'none\'">✕</button></div>'+
+    '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">'+fmtDate(e.date)+(e.name?' // '+_he(e.name):'')+' · karşılaştırma: önceki '+prev.length+' deneme ort.</div>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:9px;letter-spacing:.5px">'+
+    '<tr style="color:var(--muted);font-size:7px;letter-spacing:1px;text-transform:uppercase"><td style="padding:4px">Ders</td><td style="text-align:center">Bu</td><td style="text-align:center">Ort.</td><td style="text-align:center">Trend</td><td style="text-align:center">Kayıp</td></tr>'+rows+'</table>'+
+    (worst?('<div style="margin-top:12px;padding:9px 12px;border:1px solid #ff9e6444;background:#ff9e640d;border-radius:8px;font-size:9px;color:#ffb98a;letter-spacing:.5px">🎯 En çok net kaybettiren: <b>'+worst.lbl+'</b> (-'+worst.k.toFixed(1)+') — Deneme Ağacı\'na yanlış konularını eklemeyi unutma</div>'):'')+
+    (goal>0?('<div style="margin-top:8px;font-size:9px;color:var(--muted);letter-spacing:.5px">Hedef '+goal+' net → kalan: <b style="color:'+(e.total>=goal?'var(--green)':'var(--yellow)')+'">'+(e.total>=goal?'HEDEF AŞILDI 🎉':(goal-e.total).toFixed(1)+' net')+'</b></div>'):'')+
+    '<div style="margin-top:6px;font-size:7px;color:var(--dim);letter-spacing:.5px">⚠ dikkat = yanlış sayısı boştan fazla (dikkat hatası sinyali) · 📖 eksik = boş sayısı yüksek (konu eksiği sinyali)</div>'+
+  '</div>';
+  p.style.display='flex';
+}
 function renderExamHistory(){
   const el=g('exam-history-list'), emp=g('exam-history-empty');
   if(!el) return;
@@ -8037,7 +8147,9 @@ function renderExamHistory(){
     return '<div style="background:var(--mid);border:1px solid var(--bd);border-left:3px solid var(--bright);padding:10px 12px;margin-bottom:8px">'+
       '<div class="fbet" style="margin-bottom:4px">'+
         '<span style="font-family:\'Orbitron\',monospace;font-size:12px;font-weight:900;color:var(--white)">'+e.type+' — '+e.total.toFixed(2)+' NET</span>'+
-        '<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px" onclick="deleteExam('+e.id+')">SİL</button>'+
+        '<span style="display:flex;gap:6px">'+
+        '<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px;border-color:var(--yellow);color:var(--yellow)" onclick="examKarne('+e.id+')">📋 KARNE</button>'+
+        '<button class="btn" style="min-height:24px;padding:2px 8px;font-size:8px" onclick="deleteExam('+e.id+')">SİL</button></span>'+
       '</div>'+
       '<div style="font-size:8px;color:var(--gray);letter-spacing:1px;margin-bottom:3px">'+fmtDate(e.date)+(e.name?' // '+e.name:'')+'</div>'+
       '<div style="font-size:8px;color:var(--muted);letter-spacing:1px">'+breakdown+'</div>'+
@@ -9550,6 +9662,99 @@ function getSubjectTotals(n){
   return totals;
 }
 
+// ════════════════════════════════════════
+// 🗺 MÜFREDAT HARİTASI — tohum liste + durum döngüsü + yanlış-konu damgası
+// ════════════════════════════════════════
+const CURR_SEED={
+'TYT Türkçe':['Sözcükte Anlam','Söz Yorumu','Deyim ve Atasözü','Cümlede Anlam','Paragraf','Paragrafta Anlatım Teknikleri','Paragrafta Düşünceyi Geliştirme','Paragrafta Yapı','Ses Bilgisi','Yazım Kuralları','Noktalama İşaretleri','Sözcükte Yapı','İsimler','Zamirler','Sıfatlar','Zarflar','Edat-Bağlaç-Ünlem','Fiiller','Fiilde Çatı','Fiilimsi','Cümlenin Ögeleri','Cümle Türleri','Anlatım Bozukluğu'],
+'TYT Matematik':['Temel Kavramlar','Sayı Basamakları','Bölme-Bölünebilme','EBOB-EKOK','Rasyonel Sayılar','Basit Eşitsizlikler','Mutlak Değer','Üslü Sayılar','Köklü Sayılar','Çarpanlara Ayırma','Oran-Orantı','Denklem Çözme','Problemler: Sayı-Kesir','Problemler: Yaş','Problemler: İşçi-Havuz','Problemler: Hareket','Problemler: Yüzde-Kâr/Zarar','Problemler: Karışım','Problemler: Grafik-Tablo','Kümeler','Fonksiyonlar','Polinomlar','2. Dereceden Denklemler','Permütasyon-Kombinasyon','Binom','Olasılık','Veri-İstatistik'],
+'TYT Geometri':['Doğruda Açılar','Üçgende Açılar','Özel Üçgenler','Açıortay-Kenarortay','Üçgende Benzerlik','Üçgende Alan','Açı-Kenar Bağıntıları','Çokgenler','Dörtgenler','Yamuk','Paralelkenar','Eşkenar Dörtgen-Deltoid','Dikdörtgen-Kare','Çember ve Daire','Katı Cisimler','Analitik: Nokta-Doğru'],
+'TYT Fizik':['Fizik Bilimine Giriş','Madde ve Özellikleri','Basınç','Kaldırma Kuvveti','Isı-Sıcaklık','Genleşme','Hareket','Kuvvet ve Hareket (Newton)','İş-Güç-Enerji','Elektrostatik','Elektrik Devreleri','Mıknatıs-Manyetizma','Dalgalar','Optik: Aydınlanma-Gölge','Optik: Yansıma-Ayna','Optik: Kırılma-Mercek'],
+'TYT Kimya':['Kimya Bilimi','Atom ve Periyodik Sistem','Kimyasal Türler Arası Etkileşim','Maddenin Hâlleri','Doğa ve Kimya','Kimyanın Temel Kanunları','Mol Kavramı','Kimyasal Tepkimeler','Karışımlar','Asit-Baz-Tuz','Kimya Her Yerde'],
+'TYT Biyoloji':['Canlıların Ortak Özellikleri','Canlıların Temel Bileşenleri','Hücre ve Organeller','Madde Geçişleri','Canlıların Sınıflandırılması','Mitoz-Mayoz','Üreme','Kalıtım','Ekosistem Ekolojisi','Güncel Çevre Sorunları'],
+'TYT Tarih':['Tarih Bilimi','İlk Uygarlıklar','İlk Türk Devletleri','İslam Tarihi','Türk-İslam Devletleri','Anadolu Beylikleri','Osmanlı: Kuruluş-Yükselme','Osmanlı: Kültür-Medeniyet','Osmanlı: Duraklama-Gerileme','19-20. yy Osmanlı','Kurtuluş Savaşı: Hazırlık','Kurtuluş Savaşı: Cepheler','Atatürk İlke ve İnkılapları','Atatürk Dönemi Politika','Çağdaş Türk ve Dünya Tarihi'],
+'TYT Coğrafya':['Doğa ve İnsan','Dünyanın Şekli ve Hareketleri','Harita Bilgisi','İklim Bilgisi','Yer Şekilleri','Su-Toprak-Bitki','Nüfus ve Yerleşme','Ekonomik Faaliyetler','Bölgeler ve Ülkeler','Doğal Afetler'],
+'TYT Felsefe':['Felsefeye Giriş','Bilgi Felsefesi','Varlık Felsefesi','Ahlak Felsefesi','Sanat-Din-Siyaset Felsefesi','İlkçağ Felsefesi','MS 2-15. yy Felsefesi','15-19. yy Felsefesi','20. yy Felsefesi'],
+'TYT Din':['Bilgi ve İnanç','İslam ve İbadet','Ahlak ve Değerler','Hz. Muhammed','Vahiy ve Akıl','İslam Düşüncesinde Yorumlar','Din-Kültür-Medeniyet','Güncel Dini Meseleler'],
+'AYT Matematik':['Fonksiyonlar (İleri)','Polinomlar (İleri)','2. Derece Denklem-Fonksiyon','Parabol','Eşitsizlikler','Trigonometri: Birim Çember','Trigonometri: Denklem-Formül','Logaritma','Diziler','Limit ve Süreklilik','Türev','Türev Uygulamaları','İntegral','İntegral Uygulamaları','Analitik: Çember','Katı Cisimler (İleri)','Olasılık (İleri)'],
+'AYT Fizik':['Vektörler','Bağıl Hareket','Newton Yasaları (İleri)','Atışlar','İş-Enerji (İleri)','İtme-Momentum','Tork ve Denge','Basit Makineler','Elektrik Alan-Potansiyel','Kondansatör','Manyetik Alan-Kuvvet','İndüksiyon-Alternatif Akım','Çembersel Hareket','Kütle Çekim-Kepler','Basit Harmonik Hareket','Dalga Mekaniği','Atom Fiziği','Radyoaktivite','Özel Görelilik','Modern Fizik Uygulamaları'],
+'AYT Kimya':['Modern Atom Teorisi','Gazlar','Sıvı Çözeltiler-Çözünürlük','Tepkimelerde Enerji','Tepkime Hızı','Kimyasal Denge','Asit-Baz Dengesi','Çözünürlük Dengesi','Elektrokimya','Karbon Kimyasına Giriş','Hidrokarbonlar','Fonksiyonel Gruplar','Enerji Kaynakları'],
+'AYT Biyoloji':['Sinir Sistemi','Endokrin Sistem','Duyu Organları','Destek-Hareket Sistemi','Sindirim Sistemi','Dolaşım-Bağışıklık','Solunum Sistemi','Boşaltım Sistemi','Üreme ve Gelişim','Komünite-Popülasyon Ekolojisi','Nükleik Asitler','Protein Sentezi','Canlılık ve Enerji (ATP)','Fotosentez-Kemosentez','Hücresel Solunum','Bitki Biyolojisi','Canlılar ve Çevre'],
+};
+let _cmEdit=false;
+function _cm(){
+  if(!S.currMap){
+    S.currMap={};
+    Object.keys(CURR_SEED).forEach(d=>{ S.currMap[d]=CURR_SEED[d].map(n=>({n, st:0})); });
+    save();
+  }
+  return S.currMap;
+}
+function _cmFlag(topicName){
+  // Deneme Ağacı'nda düzeltilmemiş, adı benzeşen yanlış var mı?
+  const tn=topicName.toLowerCase();
+  return Object.values(S.wrongTopics||{}).some(w=>{
+    if(w.fixed) return false;
+    const wn=(w.name||'').toLowerCase();
+    return wn && (tn.includes(wn)||wn.includes(tn));
+  });
+}
+function cmCycle(d,i){
+  const m=_cm(); const it=(m[d]||[])[i]; if(!it) return;
+  it.st=((it.st||0)+1)%3;
+  save(); renderCurrMap(d);
+}
+function cmDel(ev,d,i){
+  if(ev) ev.stopPropagation();
+  const m=_cm(); if(!m[d]) return;
+  m[d].splice(i,1);
+  save(); renderCurrMap(d);
+}
+function cmAdd(ev,d){
+  const inp=g('cm-add-'+d.replace(/[^a-zA-Z]/g,'')); 
+  const name=(inp&&inp.value||'').trim(); if(!name){ notify('Konu adı gir'); return; }
+  const m=_cm(); m[d]=m[d]||[];
+  m[d].push({n:name.slice(0,60), st:0});
+  if(inp) inp.value='';
+  save(); renderCurrMap(d);
+}
+function cmEditToggle(){ _cmEdit=!_cmEdit; const b=g('cm-edit-btn'); if(b){ b.style.color=_cmEdit?'var(--red)':''; b.style.borderColor=_cmEdit?'var(--red)':''; } renderCurrMap(); }
+const _cmOpen={};
+function renderCurrMap(keepOpen){
+  const box=g('cm-list'); if(!box) return;
+  const m=_cm();
+  if(keepOpen) _cmOpen[keepOpen]=true;
+  let tot=0, sc=0;
+  let html='';
+  Object.keys(m).forEach(d=>{
+    const items=m[d]||[];
+    const pts=items.reduce((a,it)=>a+(it.st===2?1:(it.st===1?0.5:0)),0);
+    tot+=items.length; sc+=pts;
+    const pct=items.length?Math.round(pts/items.length*100):0;
+    const idSafe=d.replace(/[^a-zA-Z]/g,'');
+    html+='<div class="cm-sec'+(_cmOpen[d]?' open':'')+'" id="cmsec-'+idSafe+'">'+
+      '<div class="cm-head" onclick="cmToggleSec(\''+d.replace(/'/g,"\\'")+'\')">'+
+        '<span style="font-size:10px;color:var(--white);letter-spacing:1px;font-weight:600;min-width:110px">'+d+'</span>'+
+        '<div class="cm-bar"><div style="width:'+pct+'%"></div></div>'+
+        '<span style="font-size:9px;color:'+(pct>=80?'var(--green)':(pct>=40?'var(--yellow)':'var(--muted)'))+';font-family:Orbitron,monospace;min-width:34px;text-align:right">%'+pct+'</span>'+
+      '</div>'+
+      '<div class="cm-chips">'+
+        items.map((it,i)=>{
+          const flag=_cmFlag(it.n);
+          return '<span class="cm-chip st'+(it.st||0)+'" onclick="cmCycle(\''+d.replace(/'/g,"\\'")+'\','+i+')">'+
+            (it.st===2?'🟢':(it.st===1?'🟡':'⚪'))+' '+_he(it.n)+(flag?' <span style="color:var(--red)">🔻</span>':'')+
+            (_cmEdit?('<span class="cm-x" onclick="cmDel(event,\''+d.replace(/'/g,"\\'")+'\','+i+')">✕</span>'):'')+
+          '</span>';
+        }).join('')+
+        (_cmEdit?('<span style="display:inline-flex;gap:4px;width:100%;margin-top:6px"><input class="inp" id="cm-add-'+idSafe+'" placeholder="yeni konu..." style="flex:1;min-height:28px;font-size:9px;padding:4px 8px" onclick="event.stopPropagation()"><button class="btn" style="min-height:28px;padding:2px 10px;font-size:9px" onclick="cmAdd(event,\''+d.replace(/'/g,"\\'")+'\')">＋</button></span>'):'')+
+      '</div>'+
+    '</div>';
+  });
+  box.innerHTML=html;
+  const ct=g('cm-total'); if(ct) ct.textContent='KAPSAMA %'+(tot?Math.round(sc/tot*100):0);
+}
+function cmToggleSec(d){ _cmOpen[d]=!_cmOpen[d]; renderCurrMap(); }
+
 // ── 🎯 ZERO ERRORS: sabah plan anlık görüntüsü — gün içi silme hile sayılır ──
 function _ensureZeroPlan(){
   const t=today();
@@ -9604,6 +9809,38 @@ function _checkCalBadges(){
   _checkZeroErrors();
 }
 // Takvimdeki tamamlanmış SORU ÇÖZÜMÜ + KONU ÇALIŞMASI olayları (tekrarlılarda gün başına 1)
+// ── 🕐 SAAT VERİMİ: prodSessions.hr alanından (v7.49+) saat-bazlı soru dağılımı ──
+function drawHourHeat(){
+  const cv=g('hour-heat'); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||600, H=cv.clientHeight||120;
+  cv.width=W*dpr; cv.height=H*dpr;
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const recs=(S.prodSessions||[]).filter(p=>typeof p.hr==='number');
+  const note=g('hour-heat-note');
+  const byHr=new Array(24).fill(0);
+  recs.forEach(p=>{ byHr[Math.max(0,Math.min(23,p.hr))]+=(p.questions||0); });
+  const max=Math.max(...byHr,1);
+  const padL=8,padB=16,padT=8; const cw=(W-padL*2)/24;
+  const cs=getComputedStyle(document.documentElement);
+  const colB=cs.getPropertyValue('--bright').trim()||'#8fd8ff';
+  for(let h=0;h<24;h++){
+    const v=byHr[h]; const bh=(v/max)*(H-padT-padB);
+    const x=padL+h*cw;
+    if(v>0){
+      const a=0.25+0.75*(v/max);
+      ctx.globalAlpha=a; ctx.fillStyle=colB;
+      ctx.fillRect(x+1,H-padB-bh,cw-2,bh);
+      ctx.globalAlpha=1;
+      if(v===max){ ctx.fillStyle='#ffd24a'; ctx.font="8px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.fillText(v,x+cw/2,H-padB-bh-3); }
+    }
+    if(h%3===0){ ctx.fillStyle='rgba(255,255,255,.35)'; ctx.font="7px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.fillText(String(h).padStart(2,'0'),x+cw/2,H-6); }
+  }
+  if(note){
+    if(!recs.length) note.textContent='Henüz saatli kayıt yok — bugünden itibaren her soru girişi saatiyle kaydediliyor.';
+    else { const best=byHr.indexOf(Math.max(...byHr)); note.textContent=recs.length+' kayıt · en verimli saatin: '+String(best).padStart(2,'0')+':00 civarı'; }
+  }
+}
 function _calStudyDoneTotal(){
   let n=0;
   (S.calEvents||[]).forEach(ev=>{
@@ -9618,6 +9855,7 @@ function renderStats(){
   const sStreak=g('stat-streak'); if(sStreak) sStreak.textContent=S.dayStreak||0;
   const sBest=g('stat-best-streak'); if(sBest) sBest.textContent=S.bestStreak||0;
   const tier=getTier(), tierIdx=TIERS.indexOf(tier);
+  try{ drawHourHeat(); }catch(e){}
   const sTier=g('stat-tier'); if(sTier) sTier.textContent=tier.name.replace('TIER ','');   // v7.47.1: 20 kademeyle uyumlu (eski 5'lik sabit dizi I'e düşüyordu)
   const sGoal=g('stat-goal'); if(sGoal) sGoal.textContent=tier.goal;
   const sTotXp=g('stat-total-xp'); if(sTotXp) sTotXp.textContent=S.totalXp||0;
@@ -10466,7 +10704,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.48.1 başlatıldı.');
+addLog('OVERCLOCK v7.49.0 başlatıldı.');
 </script>
 </body>
 </html>
