@@ -1973,7 +1973,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.49.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.49.2</div>
     </div>
   </div>
 </div>
@@ -2598,21 +2598,7 @@ function renderYksCountdown(){
     if(qAvg>0.5 || fAvg>0.1){
       html+='Bu tempoyla sınava kadar: <b style="color:var(--bright)">~'+Math.round(qAvg*d).toLocaleString('tr-TR')+' soru</b> · <b style="color:var(--bright)">~'+Math.round(fAvg*d).toLocaleString('tr-TR')+' saat odak</b>';
     }
-    // net eğimi (TYT, son 8 deneme) — v7.49.1: 11 aylık masal yerine 4 HAFTALIK ufuk,
-    // aşağı eğimde korkutucu sayı değil nazik dürtme (moral koruması)
-    const ex=(S.exams||[]).filter(e=>e.type==='TYT'&&e.total!=null).slice(-8);
-    if(ex.length>=4){
-      const n=ex.length; let sx=0,sy=0,sxy=0,sxx=0;
-      ex.forEach((e,i)=>{ sx+=i; sy+=e.total; sxy+=i*e.total; sxx+=i*i; });
-      const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx);   // deneme başına net değişimi
-      const delta4w=Math.max(-8,Math.min(8, slope*4));   // ~haftada 1 deneme → 4 deneme ufku
-      const last=ex[n-1].total;
-      let line='';
-      if(slope>0.3) line='Eğim yukarı 📈 — bu gidişle ~1 ay sonra: <b style="color:var(--yellow)">~'+Math.min(120,last+delta4w).toFixed(0)+' net bandı</b>';
-      else if(slope<-0.3) line='Son denemeler hafif düşüşte — panik yok: <b style="color:var(--bright)">Deneme Ağacı\'ndaki 🔻 konulara yüklen</b>';
-      else line='Net eğimin stabil ⚖ — sıçratmak için en çok kaybettiren derse odak (📋 Karne)';
-      html+=(html?'<br>':'')+line;
-    }
+    // (v7.49.2) net tahmini KALDIRILDI — 8 gürültülü noktadan gelecek okumak fal; emek matematiği yeter.
     pj.innerHTML=html; pj.style.display=html?'block':'none';
   }catch(e){}
 }
@@ -10709,7 +10695,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.49.1 başlatıldı.');
+addLog('OVERCLOCK v7.49.2 başlatıldı.');
 </script>
 </body>
 </html>
