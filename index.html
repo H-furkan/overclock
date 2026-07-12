@@ -954,7 +954,7 @@ body.pixel-font #timer-unit{font-size:8px}
         </div>
         <div style="text-align:center">
           <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">SORU (BUGÜN)</div>
-          <div id="q-today" style="font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--bright)">0</div>
+          <div id="q-today" onclick="qTodayDebug(event)" style="font-family:'Orbitron',monospace;font-size:17px;font-weight:700;color:var(--bright);cursor:pointer" title="Dokun: teşhis">0</div>
         </div>
         <div style="text-align:center">
           <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">FOCUS (BUGÜN)</div>
@@ -1973,7 +1973,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.51.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.51.2</div>
     </div>
   </div>
 </div>
@@ -3280,6 +3280,33 @@ function qModalSubmit(){
   addLog('Seans sonu: '+n+' soru ('+subj+', '+pts+' puan) ⟦qedit:'+_sid+'⟧');
 }
 // ✎ Seans soru kaydını düzenle (log'dan): ders + adet → istatistik, banka, ideal süre senkron güncellenir
+// 🔬 SORU(BUGÜN) teşhis popup'ı — sayaç ile kayıtlar arasında uyuşmazlık avı
+function qTodayDebug(ev){
+  if(ev) ev.stopPropagation();
+  const t=today();
+  const ps=S.prodSessions||[];
+  const todays=ps.filter(p=>p.date===t);
+  const last5=ps.slice(-5).map(p=>(p.date||'?')+' · '+(p.subject||'?')+' · '+(p.questions||0)+' soru'+(p.sid?'':' (sid yok)')).reverse();
+  let p2=g('qtd-pop');
+  if(!p2){
+    p2=document.createElement('div'); p2.id='qtd-pop';
+    p2.style.cssText='display:none;position:fixed;z-index:9996;background:var(--deep);border:1px solid var(--bd2);border-radius:9px;padding:12px 14px;box-shadow:0 8px 22px rgba(0,0,0,.6);width:250px;animation:ocPopIn .18s cubic-bezier(.2,.9,.3,1.15);font-size:9px;line-height:1.8;letter-spacing:.5px;color:var(--bright)';
+    document.body.appendChild(p2);
+    p2.addEventListener('click',e2=>e2.stopPropagation());
+    document.addEventListener('click',(e2)=>{ if(p2.style.display==='block' && !p2.contains(e2.target)) p2.style.display='none'; }, true);
+  }
+  p2.innerHTML='<div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">🔬 SORU SAYACI TEŞHİSİ</div>'+
+    'today(): <b style="color:var(--white)">'+t+'</b><br>'+
+    'toplam kayıt: <b>'+ps.length+'</b> · bugünlü: <b style="color:'+(todays.length?'var(--green)':'var(--red)')+'">'+todays.length+'</b> ('+todays.reduce((a,p)=>a+(p.questions||0),0)+' soru)<br>'+
+    '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:6px">SON 5 KAYIT (yeni→eski)</div>'+
+    (last5.length?last5.map(x=>'<div style="font-size:8px;color:var(--bright)">'+_he(x)+'</div>').join(''):'<div style="color:var(--red)">HİÇ KAYIT YOK</div>');
+  p2.style.display='block';
+  const r=(ev&&ev.target)?ev.target.getBoundingClientRect():{left:100,bottom:100,top:100};
+  const w=250,h=p2.offsetHeight||160;
+  let left=r.left-60; if(left+w>window.innerWidth-6) left=window.innerWidth-w-6; if(left<6) left=6;
+  let top=r.bottom+8; if(top+h>window.innerHeight-6) top=r.top-h-8; if(top<6) top=6;
+  p2.style.left=left+'px'; p2.style.top=top+'px';
+}
 function qEditOpen(ev, sid){
   if(ev) ev.stopPropagation();
   const rec=(S.prodSessions||[]).find(r=>r.sid===sid);
@@ -10772,7 +10799,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.51.1 başlatıldı.');
+addLog('OVERCLOCK v7.51.2 başlatıldı.');
 </script>
 </body>
 </html>
