@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-visual">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -172,9 +172,9 @@ button:active,.btn:active,.navitem:active,.gym-mchip:active,.avbtn:active,.hq-to
 #timer-svg{transform:rotate(-90deg);display:block;width:100%;height:auto;overflow:visible}
 #timer-ring-bg{fill:none;stroke:var(--dim);stroke-width:3}
 #timer-ring{fill:none;stroke:var(--bright);stroke-width:3;stroke-dasharray:408;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 4px rgba(255,255,255,.5))}
-#timer-num{font-family:'Orbitron',monospace;font-size:clamp(30px,9vw,52px);font-weight:900;color:var(--white);letter-spacing:2px;text-shadow:0 0 10px rgba(255,255,255,.35)}
+#timer-num{font-family:'Orbitron',monospace;font-size:clamp(26px,9vmin,52px);font-weight:900;color:var(--white);letter-spacing:2px;text-shadow:0 0 10px rgba(255,255,255,.35)}
 #timer-unit{font-size:10px;color:var(--muted);letter-spacing:3px;margin-top:3px}
-#timer-wrap{position:relative;flex-shrink:0;width:min(62vw,260px);max-width:90%}
+#timer-wrap{position:relative;flex-shrink:0;width:min(62vmin,260px);max-width:90%}
 #timer-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
 /* HQ üst: level yerine streak */
 #hq-streak{display:flex;align-items:center;gap:8px}
@@ -188,7 +188,7 @@ button:active,.btn:active,.navitem:active,.gym-mchip:active,.avbtn:active,.hq-to
   #hq-timer-row{flex-direction:row-reverse;align-items:center;gap:18px}
   #hq-timer-side{width:50%}
   #hq-ctrl-side{width:50%}
-  #timer-wrap{width:min(34vh,300px)}
+  #timer-wrap{width:min(34vmin,300px)}
 }
 /* ── FULLSCREEN TIMER OVERLAY ── */
 #mini-timer{position:fixed;z-index:9960;display:none;align-items:center;justify-content:center;background:var(--deep);border:1.5px solid var(--bright);border-radius:22px;padding:8px 15px;box-shadow:0 4px 16px rgba(0,0,0,.55);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:none}
@@ -206,8 +206,14 @@ button:active,.btn:active,.navitem:active,.gym-mchip:active,.avbtn:active,.hq-to
 #fs-ring-bg{fill:none;stroke:var(--dim);stroke-width:4}
 #fs-ring{fill:none;stroke:var(--bright);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 8px rgba(255,255,255,.5))}
 #fs-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-#fs-num{font-family:'Orbitron',monospace;font-size:min(20vw,86px);font-weight:900;color:var(--white);letter-spacing:3px;line-height:1;text-shadow:0 0 22px rgba(255,255,255,.4)}
-body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:min(14vw,60px);letter-spacing:0}
+#fs-num{font-family:'Orbitron',monospace;font-size:min(20vmin,86px);font-weight:900;color:var(--white);letter-spacing:3px;line-height:1;text-shadow:0 0 22px rgba(255,255,255,.4)}
+body.pixel-font #fs-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:min(14vmin,60px);letter-spacing:0}
+/* yatay telefon: tam ekran sayaç kompakt — taşma yok */
+@media (orientation:landscape) and (max-height:520px){
+  #fs-timer{gap:10px}
+  #fs-num{font-size:min(24vmin,72px)}
+  body.pixel-font #fs-num{font-size:min(17vmin,52px)}
+}
 #fs-unit{font-size:13px;color:var(--muted);letter-spacing:6px;margin-top:10px}
 #fs-mode{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
 #fs-subject{font-size:12px;color:var(--bright);letter-spacing:2px;text-transform:uppercase;min-height:14px}
@@ -630,7 +636,7 @@ body.anim-paused *{animation-play-state:paused!important}
 }
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit.
    130px dairenin içine sığması için font küçük + tam ortalı. */
-body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:clamp(20px,6vw,34px);letter-spacing:0;line-height:1.2;white-space:nowrap}
+body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:clamp(16px,6vmin,34px);letter-spacing:0;line-height:1.2;white-space:nowrap}
 body.font-vt #fs-num,body.font-vt #timer-num{font-family:'VT323',monospace;letter-spacing:2px}
 body.font-raj #fs-num,body.font-raj #timer-num{font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px}
 body.font-bungee #fs-num,body.font-bungee #timer-num{font-family:'Bungee',cursive;letter-spacing:1px}
@@ -1973,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.51.5</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.51.6</div>
     </div>
   </div>
 </div>
@@ -10814,7 +10820,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.51.5 başlatıldı.');
+addLog('OVERCLOCK v7.51.6 başlatıldı.');
 </script>
 </body>
 </html>
