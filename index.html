@@ -1973,7 +1973,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.50.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.51.0</div>
     </div>
   </div>
 </div>
@@ -3203,6 +3203,14 @@ function finishTimerEarly(ev){
   addXP(_sxp2, 'Session erken bitti ('+elapsedMin+'dk)');
   notify('⏹ ERKEN BİTİŞ // +'+sxp+' XP ('+elapsedMin+' dk)');
   addLog('Session erken bitti — '+elapsedMin+' dk, +'+sxp+' XP');
+  // v7.51: ≥15 dk süren erken bitiş TAM SEANS sayılır (session+zincir); altı sayılmaz (rozet farm koruması)
+  if(elapsedMin>=15){
+    S.sessions++; S.streak++;
+    if(S.streak>=3) earnBadge('streak');
+    if(S.sessions>=5) earnBadge('iron');
+    if(S.sessions>=3) earnBadge('overdrive');
+    try{ g('session-count').textContent=S.sessions; }catch(e){}
+  }
   if(elapsedMin>=120) earnBadge('ghost');
   if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
   if(_sessType==='soru'){ try{ _promptSessionQuestions(elapsedMin, _sessSubject); }catch(e){} }
@@ -10732,7 +10740,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.50.1 başlatıldı.');
+addLog('OVERCLOCK v7.51.0 başlatıldı.');
 </script>
 </body>
 </html>
