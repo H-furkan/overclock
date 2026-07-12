@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.52.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.52.1</div>
     </div>
   </div>
 </div>
@@ -3078,6 +3078,7 @@ function tickTimer(){
       if(S.sessions>=3) earnBadge('overdrive');
       if(S.focusMin>=120) earnBadge('ghost');
       if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
+    if(_dayQuestions(today())>=300) earnBadge('korn');   // ⚔️ 300 SPARTALI — kaybolsa da kendini geri kazanır
       isBreak=true; timerSecs=S.breakMin*60;
       // +15dk break kasa drop'u: tek seferlik uzatma
       if (S.cases && (S.cases.breakBonus||0) > 0){ timerSecs += S.cases.breakBonus; S.cases.breakBonus=0; notify('⏸ Mola +'+Math.round((S.cases.breakBonus||0)/60)+'dk uzadı (kasa)'); }
@@ -10506,6 +10507,38 @@ function _mergeIncoming(incoming){
     [].concat(incoming.exams||[], S.exams||[]).forEach(e=>{ if(e&&e.id!=null && !merged.examTombs.includes(e.id)) em[e.id]=e; });
     merged.exams=Object.values(em).sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:((a.id||0)-(b.id||0)));
   }catch(e){}
+  // 🏆 ROZETLER (v7.52.1): bayat cihaz rozet silemez —
+  // aynı gündeyse BİRLİK; farklı gündeyse yeni günün listesi (günlük rozetler meşru sıfırlanır)
+  try{
+    if(incoming.lastDate===S.lastDate)
+      merged.earnedBadges=[...new Set([].concat(S.earnedBadges||[], incoming.earnedBadges||[]))];
+    else
+      merged.earnedBadges=((incoming.lastDate||'')>(S.lastDate||'')) ? (incoming.earnedBadges||[]) : (S.earnedBadges||[]);
+  }catch(e){}
+  // 🎒 Envanter + kasa kalıcıları: birlik / bayrak-OR (tek yönlü kazanımlar kaybolmaz)
+  try{ merged.inventory=[...new Set([].concat(S.inventory||[], incoming.inventory||[]))]; }catch(e){}
+  try{
+    if(merged.cases){
+      const lc=S.cases||{}, ic=incoming.cases||{};
+      merged.cases.profileTitles=[...new Set([].concat(lc.profileTitles||[], ic.profileTitles||[]))];
+      merged.cases.unlocked=Object.assign({}, ic.unlocked||{}, lc.unlocked||{});
+      ['fragGold','fragStd','protShards'].forEach(k=>{ merged.cases[k]=Math.max(Number(lc[k])||0, Number(ic[k])||0); });
+    }
+  }catch(e){}
+  // 🏋 GYM kalıcıları: unvan/rozet/sahiplik birliği + monoton sayaç max
+  try{
+    if(merged.gym){
+      const lg=S.gym||{}, ig=incoming.gym||{};
+      merged.gym.titles=[...new Set([].concat(lg.titles||[], ig.titles||[]))];
+      merged.gym.badges=[...new Set([].concat(lg.badges||[], ig.badges||[]))];
+      merged.gym.ownedItems=[...new Set([].concat(lg.ownedItems||[], ig.ownedItems||[]))];
+      ['mpEarned','mpSpent','chWins'].forEach(k=>{ merged.gym[k]=Math.max(Number(lg[k])||0, Number(ig[k])||0); });
+    }
+  }catch(e){}
+  // 🧬 Karakter: XP'si yüksek olan taraf bütün olarak kazanır (seviye/stat geri gidemez)
+  try{
+    if((Number((S.character||{}).charXp)||0) > (Number((incoming.character||{}).charXp)||0)) merged.character=S.character;
+  }catch(e){}
   // Soru istatistiği: ders başına max (kayıp yönünde asla gitmez)
   try{
     const ql={};
@@ -10836,7 +10869,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.52.0 başlatıldı.');
+addLog('OVERCLOCK v7.52.1 başlatıldı.');
 </script>
 </body>
 </html>
