@@ -3211,6 +3211,14 @@ function finishTimerEarly(ev){
     if(S.sessions>=3) earnBadge('overdrive');
     try{ g('session-count').textContent=S.sessions; }catch(e){}
   }
+  // v7.51: ≥30 dk süren erken bitiş TAM SEANS sayılır (session+zincir); altı sayılmaz (rozet farm koruması)
+  if(elapsedMin>=30){
+    S.sessions++; S.streak++;
+    if(S.streak>=3) earnBadge('streak');
+    if(S.sessions>=5) earnBadge('iron');
+    if(S.sessions>=3) earnBadge('overdrive');
+    try{ g('session-count').textContent=S.sessions; }catch(e){}
+  }
   if(elapsedMin>=120) earnBadge('ghost');
   if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
   if(_sessType==='soru'){ try{ _promptSessionQuestions(elapsedMin, _sessSubject); }catch(e){} }
