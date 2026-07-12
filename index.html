@@ -1973,7 +1973,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.50.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.50.1</div>
     </div>
   </div>
 </div>
@@ -10386,6 +10386,8 @@ function _mergeIncoming(incoming){
   merged.streakProtBought = Math.max(_lb, _ib);
   merged.streakProtUsed   = Math.max(Number(S.streakProtUsed)||0, Number(incoming.streakProtUsed)||0);
   merged.streakProtectors = Math.max(0, merged.streakProtBought - merged.streakProtUsed);
+  // 🛟 kurtarma anlık görüntüsü: bu cihazdaki taze snapshot, buluttaki bayatına ezdirilmez
+  merged._runSess = S._runSess || incoming._runSess || null;
   merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
   merged.restDayLastGrant = Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0);
   // ── 📝 KAYIT DİZİLERİ (v7.50): bayat cihaz diziyi EZEMEZ — birlik (union) merge ──
@@ -10454,7 +10456,14 @@ function _applyRemote(data){
     delete S._streakSaved;
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     _sync.lastRemoteTs = ts;
-    timerSecs = (isBreak?S.breakMin:S.focusMin)*60;
+    // v7.50.1: senkron sayaç süresine KÖRLEMESİNE dokunamaz —
+    // çalışan sayaç aynen kalır; duraklatılmış kurtarma varsa kalan süre korunur.
+    if(timerRunning){ /* sayaç akıyor — süreye dokunma */ }
+    else if(S._runSess && S._runSess.paused && (S._runSess.remainSecs||0)>0){
+      isBreak=(S._runSess.mode==='break');
+      timerSecs=Math.max(1, Math.round(S._runSess.remainSecs));
+    }
+    else timerSecs = (isBreak?S.breakMin:S.focusMin)*60;
     applyTheme(); renderAll();
     try{ if(typeof _tokenClamp==='function') _tokenClamp(); }catch(e){}
     addLog('☁ Veri senkronlandı (kümülatif korundu).');
@@ -10723,7 +10732,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.50.0 başlatıldı.');
+addLog('OVERCLOCK v7.50.1 başlatıldı.');
 </script>
 </body>
 </html>
