@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.1</div>
     </div>
   </div>
 </div>
@@ -3329,8 +3329,10 @@ function qModalSubmit(){
 function qTodayDebug(ev){
   if(ev) ev.stopPropagation();
   const t=today();
-  const ps=S.prodSessions||[];
-  const todays=ps.filter(p=>p.date===t);
+  let ps=S.prodSessions||[];
+  const _type=Array.isArray(ps)?'dizi':typeof ps;
+  if(!Array.isArray(ps)) ps=Object.values(ps||{});
+  const todays=ps.filter(p=>p&&p.date===t);
   const last5=ps.slice(-5).map(p=>(p.date||'?')+' · '+(p.subject||'?')+' · '+(p.questions||0)+' soru'+(p.sid?'':' (sid yok)')).reverse();
   let p2=g('qtd-pop');
   if(!p2){
@@ -3344,7 +3346,7 @@ function qTodayDebug(ev){
   p2.innerHTML='<div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">🔬 SORU SAYACI TEŞHİSİ</div>'+
     'today(): <b style="color:var(--white)">'+t+'</b><br>'+
     'AÇILIŞTA ('+(bd.at||'?')+'): kayıt <b>'+(bd.ps!=null?bd.ps:'?')+'</b> · bugünlü <b style="color:'+(bd.psToday?'var(--green)':'var(--red)')+'">'+(bd.psToday!=null?bd.psToday:'?')+'</b> ('+(bd.qToday||0)+' soru)<br>'+
-    'toplam kayıt: <b>'+ps.length+'</b> · bugünlü: <b style="color:'+(todays.length?'var(--green)':'var(--red)')+'">'+todays.length+'</b> ('+todays.reduce((a,p)=>a+(p.questions||0),0)+' soru)<br>'+
+    'tip: <b>'+_type+'</b> · toplam kayıt: <b>'+ps.length+'</b> · bugünlü: <b style="color:'+(todays.length?'var(--green)':'var(--red)')+'">'+todays.length+'</b> ('+todays.reduce((a,p)=>a+(p.questions||0),0)+' soru)<br>'+
     '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-top:6px">SON 5 KAYIT (yeni→eski)</div>'+
     (last5.length?last5.map(x=>'<div style="font-size:8px;color:var(--bright)">'+_he(x)+'</div>').join(''):'<div style="color:var(--red)">HİÇ KAYIT YOK</div>');
   p2.style.display='block';
@@ -10654,6 +10656,7 @@ function _applyRemote(data){
               || ((data.lastDate===S.lastDate) && (Number(S.todayFocusSecs)||0) > (Number(data.todayFocusSecs)||0))
               || ((data.lastDate===S.lastDate) && (Number(S.xp)||0) > (Number(data.xp)||0));
     S = _mergeIncoming(data);
+    try{ _fixArrays(); }catch(e){}
     delete S._streakSaved;
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     _sync.lastRemoteTs = ts;
@@ -10801,6 +10804,20 @@ function _purgePoisonedSyncCache(){
 // BOOT
 // ════════════════════════════════════════
 loadState();
+// 🛡 v7.54.1: DİZİ ZIRHI — prodSessions/exams bir kaza sonucu obje/bozuk tipe dönüşürse
+// Object.values ile diziye geri kurulur (kayıtlar kaybolmaz, filter patlamaz)
+function _fixArrays(){
+  try{
+    ['prodSessions','exams','calEvents','books','srItems','tasks','habits'].forEach(k=>{
+      const v=S[k];
+      if(v && !Array.isArray(v) && typeof v==='object'){
+        S[k]=Object.values(v).filter(x=>x&&typeof x==='object');
+        try{ logErr('Veri onarımı: '+k+' dizi değildi, '+S[k].length+' kayıt geri kuruldu.'); }catch(e){}
+      }
+    });
+  }catch(e){}
+}
+_fixArrays();
 // 🔬 açılış anı fotoğrafı — sayaç teşhisi için (diskten ne yüklendi?)
 try{
   const _t0=today();
@@ -10945,7 +10962,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.54.0 başlatıldı.');
+addLog('OVERCLOCK v7.54.1 başlatıldı.');
 </script>
 </body>
 </html>
