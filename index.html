@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.2</div>
     </div>
   </div>
 </div>
@@ -6335,20 +6335,25 @@ function openBgModal(){
   // populate target select with all tab names
   const sel=g('bg-target');
   if (sel && !sel.options.length){
+    // v7.54.2: liste güncel nav ile birebir (ölü planner/tasks çıktı; takvim/okuma/gym/banka/srs/müfredat girdi)
     const tabs = [
       ['global','📌 Tüm sekmeler'],
-      ['cockpit','HQ'],
-      ['tasks','Hatırlatıcılar'],
-      ['planner','Daily Planner'],
-      ['habits','Alışkanlık'],
-      ['exam','Net Takip'],
-      ['tree','Deneme Ağacı'],
-      ['stats','İstatistik'],
-      ['character','Character'],
-      ['shop','Market'],
-      ['log','Log'],
-      ['achievements','Rozetler'],
-      ['settings','Sistem'],
+      ['cockpit','⬛ HQ'],
+      ['calendar','📅 Takvim'],
+      ['habits','🔄 Alışkanlık'],
+      ['reading','📚 Okuma Salonu'],
+      ['gym','🏋 GYM'],
+      ['exam','📝 Net Takip'],
+      ['bank','🏦 Soru Bankası'],
+      ['tree','🌳 Deneme Ağacı'],
+      ['currmap','🗺 Müfredat'],
+      ['srs','🧠 Aralıklı Tekrar'],
+      ['stats','📊 İstatistik'],
+      ['character','🧬 Character'],
+      ['shop','📦 Market'],
+      ['log','🗒 Log'],
+      ['achievements','✦ Rozetler'],
+      ['settings','⚙ Sistem'],
     ];
     sel.innerHTML = tabs.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('');
     sel.value = _currentTab || 'global';
@@ -10962,7 +10967,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.54.1 başlatıldı.');
+addLog('OVERCLOCK v7.54.2 başlatıldı.');
 </script>
 </body>
 </html>
