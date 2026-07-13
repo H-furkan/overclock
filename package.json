@@ -1,6 +1,6 @@
 {
   "name": "overclock-apk",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "private": true,
   "description": "OVERCLOCK // TR-1 — Capacitor native shell (loads the GitHub Pages PWA, adds reliable native notifications)",
   "scripts": {

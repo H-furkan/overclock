@@ -89,8 +89,43 @@ jobs:
           grep -qF "OVERCLOCK_CHRONO_PATCH" "$LNF" || { echo "CHRONO PATCH FAILED — anchor matched but inject missing"; exit 1; }
           echo "── chronometer patch applied & verified ──"
 
+      # Bildirim sesi 0 olsa bile seans alarmi CALSIN: 'oc_system_alarm' isaretli kanal
+      # sistem varsayilan ALARM sesi + USAGE_ALARM (alarm ses kanali) ile olusturulur.
+      # Boylece OVERCLOCK alarmi calar saat gibi davranir, diger bildirimler sessiz kalir.
+      - name: Patch notification channel for ALARM audio stream
+        run: |
+          set -eux
+          NCM=node_modules/@capacitor/local-notifications/android/src/main/java/com/capacitorjs/plugins/localnotifications/NotificationChannelManager.java
+          test -f "$NCM"
+          ANCHOR='String sound = channel.getString(CHANNEL_SOUND, null);'
+          grep -qF "$ANCHOR" "$NCM"
+          printf '%s\n' \
+            '            // OVERCLOCK_ALARM_PATCH: sentinel routes this channel to the system ALARM stream' \
+            '            if ("oc_system_alarm".equals(sound)) {' \
+            '                AudioAttributes _ocAttrs = new AudioAttributes.Builder()' \
+            '                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)' \
+            '                    .setUsage(AudioAttributes.USAGE_ALARM)' \
+            '                    .build();' \
+            '                notificationChannel.setSound(android.provider.Settings.System.DEFAULT_ALARM_ALERT_URI, _ocAttrs);' \
+            '                sound = null;' \
+            '            }' > /tmp/alarmpatch.txt
+          awk 'BEGIN{while((getline l < "/tmp/alarmpatch.txt")>0) ins=ins l ORS}
+               {print}
+               index($0,"String sound = channel.getString(CHANNEL_SOUND, null);") && !done {printf "%s",ins; done=1}' \
+               "$NCM" > /tmp/NCM.java && mv /tmp/NCM.java "$NCM"
+          grep -qF "OVERCLOCK_ALARM_PATCH" "$NCM" || { echo "ALARM PATCH FAILED"; exit 1; }
+          echo "── alarm channel patch applied & verified ──"
+
       - name: Add Android platform
         run: npx cap add android
+
+      # JS tarafinin yamali APK'yi tanimasi icin surum el sikismasi (App.getInfo().version)
+      - name: Stamp android versionName (patch handshake)
+        run: |
+          set -eux
+          GR=android/app/build.gradle
+          sed -i 's/versionName "1.0"/versionName "7.2.0"/' "$GR"
+          grep -q '7.2.0' "$GR"
 
       # Büyük gövde sayacı için özel bildirim düzeni (Chronometer view). Plugin patch'i
       # bunu runtime'da getIdentifier ile bulur; bulamazsa köşedeki küçük kronometreye düşer.
