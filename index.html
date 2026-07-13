@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.53.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.53.3</div>
     </div>
   </div>
 </div>
@@ -2224,16 +2224,28 @@ function getAudioCtx(){
 }
 // 🔉 v7.53.1: zil bittikten sonra ses hattını BIRAK — WebAudio açık kaldıkça Android
 // audio focus tutuyor ve arkadaki müziği kısık bırakıyordu. 4 sn sessizlikte askıya al.
-let _audioSuspT=null;
+let _audioSuspT=null, _audioBusyUntil=0;
+// planlanmış ses bitmeden askıya ALMA (rulet ~7sn'lik tık dizisi kuruyor; ortasında
+// suspend edilirse kalan tıklar sonraki resume'da topluca patlıyordu — çifte kasa sesi vakası)
+function _audioMarkBusy(sec){
+  try{ const c=getAudioCtx(); if(c) _audioBusyUntil=Math.max(_audioBusyUntil, c.currentTime+sec); }catch(e){}
+  _audioIdleSuspend();
+}
 function _audioIdleSuspend(){
   clearTimeout(_audioSuspT);
-  _audioSuspT=setTimeout(()=>{ try{ if(_audioCtx && _audioCtx.state==='running') _audioCtx.suspend(); }catch(e){} }, 4000);
+  _audioSuspT=setTimeout(()=>{
+    try{
+      const c=_audioCtx; if(!c || c.state!=='running') return;
+      if(c.currentTime < _audioBusyUntil + 0.4){ _audioIdleSuspend(); return; }   // hâlâ çalıyor → ertele
+      c.suspend();
+    }catch(e){}
+  }, 4000);
 }
 function playBell(kind){
   // kind: 'focus_end' | 'break_end' | 'reminder' | 'aggro'
   if (S.soundEnabled === false) return;
   const ctx = getAudioCtx(); if (!ctx) return;
-  _audioIdleSuspend();
+  _audioMarkBusy(2.5);
   try {
     if (ctx.state === 'suspended') ctx.resume();
     const now = ctx.currentTime;
@@ -7522,7 +7534,7 @@ function showCaseRoulette(allItems, winner, type, onComplete){
 
 // Roulette spin sesi — yavaşlayan tick'ler
 function playRouletteTick(){
-  _audioIdleSuspend();
+  _audioMarkBusy(9);
   if (S.soundEnabled === false) return;
   const ctx = getAudioCtx(); if (!ctx) return;
   try { if (ctx.state==='suspended') ctx.resume(); } catch(e){}
@@ -10899,7 +10911,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.53.2 başlatıldı.');
+addLog('OVERCLOCK v7.53.3 başlatıldı.');
 </script>
 </body>
 </html>
