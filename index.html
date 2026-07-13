@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.52.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.53.0</div>
     </div>
   </div>
 </div>
@@ -2984,6 +2984,13 @@ function toggleTimer(){
     // arrange a background alert that fires even if the app is closed / screen off
     setTimeout(scheduleTimerNotification, 300);
     startKeepAlive(); _acquireWakeLock(); _dimArm(); try{ _warnIfInexact(); }catch(e){}
+    // 🔋 tek seferlik: OEM pil katiline karşı rehber (Doze'da alarm yutulması)
+    try{
+      if(_isNative() && !S._batteryHintShown){
+        S._batteryHintShown=true; save();
+        bigAlert('🔋','ALARM GÜVENCESİ','Ekran kapalıyken zilin GARANTİ çalması için:\n\n1) Ayarlar → Uygulamalar → OVERCLOCK → Pil → "KISITLAMASIZ" seç\n2) (Xiaomi/Huawei ise) Otomatik başlatmaya izin ver\n\nBu, Android\'in derin uykuda alarmı yutmasını engeller. Tek seferlik bir ayar.');
+      }
+    }catch(e){}
     cancelBossNotification(); // working again → no boss heads-up needed
   }
 }
@@ -5772,7 +5779,14 @@ function _nativeSchedule(id, at, title, body){
   const LN=_capNotif(); if(!LN) return;
   ensureNotifChannel();
   try{
-    LN.cancel({ notifications:[{id}] }).catch(()=>{});
+    LN.cancel({ notifications:[{id},{id:id+7000}] }).catch(()=>{});
+    // 🔔 YEDEK ALARM (v7.53): Doze ana alarmı yutar/geciktirirse 90sn sonra ikincisi patlar.
+    // Seans normal biterse ikisi de iptal edilir (cancelTimerNotification).
+    LN.schedule({ notifications:[{
+      id:id+7000, title:'⏰ '+title, body:body+' (yedek alarm)',
+      schedule:{ at:new Date(at+90000), allowWhileIdle:true },
+      smallIcon:'ic_stat_icon', channelId:_NCH_TIMER, autoCancel:false,
+    }]}).catch(()=>{});
     LN.schedule({ notifications:[{
       id, title, body,
       schedule:{ at:new Date(at), allowWhileIdle:true },
@@ -5787,7 +5801,7 @@ function _nativeSchedule(id, at, title, body){
 }
 function _nativeCancel(id){
   const LN=_capNotif(); if(!LN) return;
-  try{ LN.cancel({ notifications:[{id}] }); }catch(e){}
+  try{ LN.cancel({ notifications:[{id},{id:id+7000}] }); }catch(e){}
 }
 
 // ── DEVAM EDEN SAYAÇ BİLDİRİMİ (ongoing) ──
@@ -10344,7 +10358,7 @@ function refreshNotifSwitch(){
   else if (Notification.permission === 'denied') { v.textContent='REDDEDİLDİ'; v.className='bio-val off'; }
   else { v.textContent='KAPALI'; v.className='bio-val off'; }
   const s=g('sound-val'); if(s){ const on = S.soundEnabled!==false; s.textContent = on?'AÇIK':'KAPALI'; s.className = 'bio-val '+(on?'on':'off'); }
-  try{ refreshExactAlarmVal(); }catch(e){}
+  try{ refreshExactAlarmVal(); setTimeout(refreshExactAlarmVal, 3500); }catch(e){}
 }
 
 // ════════════════════════════════════════
@@ -10874,7 +10888,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.52.2 başlatıldı.');
+addLog('OVERCLOCK v7.53.0 başlatıldı.');
 </script>
 </body>
 </html>
