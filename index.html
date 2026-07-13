@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.53.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.53.2</div>
     </div>
   </div>
 </div>
@@ -5707,7 +5707,7 @@ const _NID_TIMER = 1001, _NID_BOSS = 1002;
 // without a sound by older Capacitor builds) get a fresh HIGH-importance one.
 // A channel's sound/importance is FROZEN once created, so changing the ID is
 // the only way to reset it on existing installs.
-const _NCH_TIMER = 'overclock-timer-v4';
+const _NCH_TIMER = 'overclock-timer-v5';   // v7.53.2: v4 kanalı sound:'default' yüzünden sessiz oluşmuş olabilir → taze kanal
 const _NCH_ONGOING = 'overclock-ongoing-v1';   // düşük öncelik, sessiz — devam eden sayaç
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
 function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
@@ -5726,16 +5726,18 @@ function ensureNotifChannel(){
   _capChannelReady = true;
   try {
     // Bitiş/alarm kanalı — yüksek öncelik, sesli (heads-up + zil)
+    // DİKKAT: 'sound' alanı res/raw dosya adı bekler — 'default' diye dosya olmadığından
+    // kanal SESSİZ oluşuyordu. Alanı hiç vermeyince Android varsayılan bildirim sesini çalar.
     LN.createChannel({
       id: _NCH_TIMER,
       name: 'OVERCLOCK Sayaç',
       description: 'Session ve mola bitişi alarmları',
-      importance: 5,          // IMPORTANCE_HIGH → heads-up + lock-screen
+      importance: 5,          // IMPORTANCE_HIGH → heads-up + lock-screen + varsayılan ses
       visibility: 1,          // PUBLIC
       vibration: true,
-      sound: 'default',
       lights: true,
     });
+    try{ LN.deleteChannel({ id:'overclock-timer-v4' }); }catch(e){}   // sessiz eski kanalı temizle
     // DEVAM EDEN sayaç kanalı — DÜŞÜK öncelik, SESSİZ, titreşimsiz.
     // Spotify/Focus To-Do tarzı: bildirim yukarıdan FIRLAMAZ, ses çıkarmaz,
     // sadece bildirim çekmecesinde sabit durur ve yerinde güncellenir.
@@ -10897,7 +10899,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.53.1 başlatıldı.');
+addLog('OVERCLOCK v7.53.2 başlatıldı.');
 </script>
 </body>
 </html>
