@@ -1966,6 +1966,10 @@ body.pixel-font #timer-unit{font-size:8px}
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📲 Tarayıcı Bildirimi</span>
         <span id="notif-val" class="bio-val off">KAPALI</span>
       </div>
+      <div class="bio-item">
+        <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">📟 Çalışma Modu</span>
+        <span id="runmode-val" class="bio-val off">?</span>
+      </div>
       <div class="bio-item" onclick="requestExactAlarm()" style="cursor:pointer" title="Android 'Alarmlar ve hatırlatıcılar' izni — kapalıysa ekran kapalıyken zil gecikir/gelmez">
         <span style="font-size:9px;color:var(--gray);letter-spacing:2px;text-transform:uppercase">⏰ Tam Saatli Alarm</span>
         <span id="exact-val" class="bio-val off">?</span>
@@ -1979,7 +1983,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.6</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.7</div>
     </div>
   </div>
 </div>
@@ -10435,6 +10439,8 @@ function refreshNotifSwitch(){
   else if (Notification.permission === 'denied') { v.textContent='REDDEDİLDİ'; v.className='bio-val off'; }
   else { v.textContent='KAPALI'; v.className='bio-val off'; }
   const s=g('sound-val'); if(s){ const on = S.soundEnabled!==false; s.textContent = on?'AÇIK':'KAPALI'; s.className = 'bio-val '+(on?'on':'off'); }
+  // 📟 mod göstergesi: alarm makinesi yalnız APK'de yaşar — web'de açıksan buradan anlaşılır
+  const rm=g('runmode-val'); if(rm){ const nat=_isNative(); rm.textContent=nat?'NATIVE APK ✅':'WEB/TARAYICI ⚠'; rm.className='bio-val '+(nat?'on':'off'); rm.title=nat?'':'Alarm sesi ve tam saatli alarm yalnız kurulu APK uygulamasında çalışır!'; }
   try{ refreshExactAlarmVal(); setTimeout(refreshExactAlarmVal, 3500); }catch(e){}
 }
 
@@ -10982,7 +10988,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.54.6 başlatıldı.');
+addLog('OVERCLOCK v7.54.7 başlatıldı.');
 </script>
 </body>
 </html>
