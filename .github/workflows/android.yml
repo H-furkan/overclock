@@ -193,6 +193,26 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      # SABIT IMZA: debug keystore repoda tutulur (ilk calismada uretilip commit edilir).
+      # Böylece her derleme AYNI imzayla cikar ve APK eskisinin UZERINE kurulabilir
+      # (farkli imza = Android sessizce reddediyordu, kullanici eski surumde kaliyordu).
+      - name: Ensure persistent debug keystore
+        run: |
+          set -eux
+          if [ ! -f signing/debug.keystore ]; then
+            mkdir -p signing
+            keytool -genkeypair -v -keystore signing/debug.keystore -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=OVERCLOCK Debug,O=Overclock,C=TR"
+            git config user.email "furkanhoroz125@gmail.com"
+            git config user.name "H-furkan"
+            git add signing/debug.keystore
+            git commit -m "ci: kalici debug keystore (sabit APK imzasi)"
+            git push
+          fi
+          mkdir -p ~/.android
+          cp signing/debug.keystore ~/.android/debug.keystore
+
       - name: Build debug APK
         working-directory: android
         run: |
