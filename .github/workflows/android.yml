@@ -124,8 +124,8 @@ jobs:
         run: |
           set -eux
           GR=android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "7.2.1"/' "$GR"
-          grep -q '7.2.1' "$GR"
+          sed -i 's/versionName "1.0"/versionName "7.2.2"/' "$GR"
+          grep -q '7.2.2' "$GR"
 
       # PLAN C: gercek calar-saat alarmi + imza zili — bildirim sisteminden BAGIMSIZ.
       # OcAlarm (setAlarmClock) + OcAlarmReceiver (MediaPlayer, USAGE_ALARM) + res/raw/oc_bell.wav

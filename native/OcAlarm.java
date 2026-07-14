@@ -38,6 +38,16 @@ public class OcAlarm extends Plugin {
     }
 
     @PluginMethod
+    public void ring(PluginCall call) {
+        // Sayaç fiilen sıfıra indi — zili ŞİMDİ çal (ön-kurulum yok, gaipten zil yok)
+        try {
+            Context c = getContext();
+            c.sendBroadcast(new Intent(c, OcAlarmReceiver.class));
+        } catch (Exception e) {}
+        call.resolve();
+    }
+
+    @PluginMethod
     public void cancel(PluginCall call) {
         try {
             Context c = getContext();
