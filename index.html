@@ -1983,7 +1983,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.8</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.9</div>
     </div>
   </div>
 </div>
@@ -5762,7 +5762,18 @@ async function _upgradeAlarmChannel(){
 }
 const _NCH_ONGOING = 'overclock-ongoing-v1';   // düşük öncelik, sessiz — devam eden sayaç
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
-function _isNative(){ try{ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }catch(e){ return false; } }
+// v7.54.9: isNativePlatform() bazı köprülerde yanlış 'false' dönüyordu (APK 7.2.0'da bile!)
+// → çok kaynaklı kontrol: herhangi biri native derse native.
+function _isNative(){
+  try{
+    const C=window.Capacitor; if(!C) return false;
+    if(typeof C.isNativePlatform==='function' && C.isNativePlatform()) return true;
+    if(typeof C.getPlatform==='function' && C.getPlatform()!=='web') return true;
+    if(typeof C.isPluginAvailable==='function' && C.isPluginAvailable('LocalNotifications')) return true;
+    if(C.Plugins && C.Plugins.LocalNotifications && C.Plugins.App) return true;   // köprü eklentileri enjekte etmiş
+    return false;
+  }catch(e){ return false; }
+}
 let _capPermAsked = false, _capChannelReady = false;
 function ensureNativeNotifPerm(){
   const LN=_capNotif(); if(!LN) return;
@@ -10436,7 +10447,12 @@ function refreshNotifSwitch(){
   // 📟 mod göstergesi EN BAŞTA — aşağıdaki erken return'ler onu atlamasın (v7.54.8 fix)
   try{
     const rm=g('runmode-val');
-    if(rm){ const nat=_isNative(); rm.textContent=nat?'NATIVE APK ✅':'WEB/TARAYICI ⚠'; rm.className='bio-val '+(nat?'on':'off'); }
+    if(rm){
+      const nat=_isNative();
+      let det=''; try{ det=window.Capacitor?(Capacitor.getPlatform?Capacitor.getPlatform():'cap'):'cap yok'; }catch(e){ det='?'; }
+      rm.textContent=nat?'NATIVE APK ✅':('WEB ⚠ ('+det+')');
+      rm.className='bio-val '+(nat?'on':'off');
+    }
   }catch(e){}
   const v=g('notif-val'); if(!v) return;
   if (!('Notification' in window)) { v.textContent='YOK'; v.className='bio-val off'; return; }
@@ -10991,7 +11007,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.54.8 başlatıldı.');
+addLog('OVERCLOCK v7.54.9 başlatıldı.');
 </script>
 </body>
 </html>
