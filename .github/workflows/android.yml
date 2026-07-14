@@ -124,8 +124,27 @@ jobs:
         run: |
           set -eux
           GR=android/app/build.gradle
-          sed -i 's/versionName "1.0"/versionName "7.2.0"/' "$GR"
-          grep -q '7.2.0' "$GR"
+          sed -i 's/versionName "1.0"/versionName "7.2.1"/' "$GR"
+          grep -q '7.2.1' "$GR"
+
+      # PLAN C: gercek calar-saat alarmi + imza zili — bildirim sisteminden BAGIMSIZ.
+      # OcAlarm (setAlarmClock) + OcAlarmReceiver (MediaPlayer, USAGE_ALARM) + res/raw/oc_bell.wav
+      - name: Inject OcAlarm plugin (alarm-clock class bell)
+        run: |
+          set -eux
+          PKG=com.hfurkan.overclock
+          JDIR=android/app/src/main/java/com/hfurkan/overclock
+          test -d "$JDIR"
+          cp native/OcAlarm.java native/OcAlarmReceiver.java "$JDIR/"
+          mkdir -p android/app/src/main/res/raw
+          cp native/oc_bell.wav android/app/src/main/res/raw/oc_bell.wav
+          MA="$JDIR/MainActivity.java"
+          grep -q "registerPlugin(OcAlarm" "$MA" || sed -i 's/public class MainActivity extends BridgeActivity {/public class MainActivity extends BridgeActivity {\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(OcAlarm.class);\n        super.onCreate(savedInstanceState);\n    }/' "$MA"
+          grep -q "registerPlugin(OcAlarm" "$MA" || { echo "MainActivity patch FAILED"; exit 1; }
+          MF=android/app/src/main/AndroidManifest.xml
+          grep -q "OcAlarmReceiver" "$MF" || sed -i 's|</application>|    <receiver android:name=".OcAlarmReceiver" android:exported="false"/>\n    </application>|' "$MF"
+          grep -q "OcAlarmReceiver" "$MF" || { echo "Manifest receiver FAILED"; exit 1; }
+          echo "── OcAlarm injected ──"
 
       # Büyük gövde sayacı için özel bildirim düzeni (Chronometer view). Plugin patch'i
       # bunu runtime'da getIdentifier ile bulur; bulamazsa köşedeki küçük kronometreye düşer.
