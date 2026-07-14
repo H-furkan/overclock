@@ -1979,7 +1979,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.5</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.54.6</div>
     </div>
   </div>
 </div>
@@ -5745,13 +5745,16 @@ async function _upgradeAlarmChannel(){
   try{
     const App=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;
     const info=App?await App.getInfo():null;
-    if(info && String(info.version||'').indexOf('7.2')===0){
+    const ver=info?String(info.version||'?'):'? (App eklentisi yok)';
+    if(ver.indexOf('7.2')===0){
       _NCH_TIMER='overclock-timer-v6';
       _capChannelReady=false;   // v6 kanalı ensureNotifChannel'da kurulsun
       try{ const LN=_capNotif(); if(LN){ LN.deleteChannel({id:'overclock-timer-v5'}).catch(()=>{}); } }catch(e){}
-      addLog('⏰ Alarm, ALARM ses kanalına taşındı — bildirim sesi kapalıyken de çalar.');
+      addLog('⏰ APK '+ver+' — alarm ALARM ses kanalında (v6).');
+    } else {
+      addLog('⚠ APK '+ver+' — ESKİ ikili, alarm bildirim kanalında. Yeni APK kur: github releases','err');
     }
-  }catch(e){}
+  }catch(e){ try{ addLog('⚠ Alarm kanalı el sıkışma hatası: '+(e&&e.message||e),'err'); }catch(_){}}
 }
 const _NCH_ONGOING = 'overclock-ongoing-v1';   // düşük öncelik, sessiz — devam eden sayaç
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
@@ -5808,7 +5811,10 @@ async function refreshExactAlarmVal(){
   try{
     const st=await LN.checkExactNotificationSetting();
     const ok=(st && (st.exact_alarm==='granted'));
-    el.textContent=ok?'AÇIK':'KAPALI';
+    // APK sürüm rozeti: 7.2.x = alarm-kanalı yamalı ikili; 1.0 = ESKİ APK (yamasız)
+    let ver='?';
+    try{ const App=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App; const info=App?await App.getInfo():null; if(info) ver=info.version||'?'; }catch(e2){}
+    el.textContent=(ok?'AÇIK':'KAPALI')+' · APK '+ver+(String(ver).indexOf('7.2')===0?' ✅':' ⚠ ESKİ');
     el.className='bio-val '+(ok?'on':'off');
   }catch(e){ el.textContent='?'; }
 }
@@ -10976,7 +10982,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.54.5 başlatıldı.');
+addLog('OVERCLOCK v7.54.6 başlatıldı.');
 </script>
 </body>
 </html>
