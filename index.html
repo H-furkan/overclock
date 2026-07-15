@@ -1983,7 +1983,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.57.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.58.0</div>
     </div>
   </div>
 </div>
@@ -3924,6 +3924,7 @@ function calDelete(){
   const _id=_calEditId;
   _calDelReset();
   S.calEvents=(S.calEvents||[]).filter(x=>x.id!==_id);
+  S.calTombs=(S.calTombs||[]); S.calTombs.push(String(_id)); if(S.calTombs.length>300) S.calTombs=S.calTombs.slice(-300);
   try{ if(_isNative()) _nativeCancel(_calNotifId(_id)); else swPost({type:'cancel',tag:'occal-'+_id}); }catch(e){}
   save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
   notify('🗑 Silindi');
@@ -4208,6 +4209,7 @@ function saveBookRead(){
 function saveBookSummary(){ const b=_bookById(_bookPopId); if(!b) return; b.summary=g('bk-summary').value||''; save(); notify('💾 Özet kaydedildi'); }
 function deleteBook(ev){
   armBtn(ev,'delbook',()=>{
+  S.bookTombs=(S.bookTombs||[]); S.bookTombs.push(String(_bookPopId)); if(S.bookTombs.length>200) S.bookTombs=S.bookTombs.slice(-200);
   S.books=(S.books||[]).filter(b=>b.id!==_bookPopId);
   if(_readBookId===_bookPopId) _readBookId=null;
   closeBookPop(); save(); renderReading();
@@ -5129,6 +5131,7 @@ function completeTask(id){
 
 function deleteTask(id){
   cancelReminderNotification(id);
+  S.taskTombs=(S.taskTombs||[]); S.taskTombs.push(String(id)); if(S.taskTombs.length>200) S.taskTombs=S.taskTombs.slice(-200);
   S.tasks=S.tasks.filter(t=>t.id!==id); save(); renderTasks(); addLog('Hatırlatıcı silindi.');
 }
 
@@ -8620,6 +8623,7 @@ function markTopicFixed(key){
 function deleteTopic(ev,key){
   armBtn(ev,'deltopic',()=>{
   delete (S.wrongTopics||{})[key];
+  S.wrongTombs=(S.wrongTombs||[]); S.wrongTombs.push(String(key)); if(S.wrongTombs.length>300) S.wrongTombs=S.wrongTombs.slice(-300);
   save(); renderTree();
   });
 }
@@ -8756,6 +8760,7 @@ function srRate(id, q){
 }
 function srDelete(ev,id){
   armBtn(ev,'srdel',()=>{
+  S.srTombs=(S.srTombs||[]); S.srTombs.push(String(id)); if(S.srTombs.length>200) S.srTombs=S.srTombs.slice(-200);
   S.srItems=(S.srItems||[]).filter(x=>x.id!==id);
   save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
   });
@@ -9490,6 +9495,7 @@ function checkHabitBadges(h){
 
 function deleteHabit(id){
   try{ const nid=_habitNotifId(id); if(_isNative()) _nativeCancel(nid); else swPost({type:'cancel',tag:'ochabit-'+id}); }catch(e){}
+  S.habitTombs=(S.habitTombs||[]); S.habitTombs.push(String(id)); if(S.habitTombs.length>200) S.habitTombs=S.habitTombs.slice(-200);
   S.habits=(S.habits||[]).filter(h=>h.id!==id);
   if(_calHabitId===id) _calHabitId=null;
   save(); renderHabits();
@@ -10609,6 +10615,19 @@ window.addEventListener('storage',(e)=>{
     }
   }catch(_){}
 });
+// ── v7.58 SYNC ZIRHI: kullanıcı-düzenlenebilir koleksiyonlar UNION birleşir ──
+// (id/anahtar birliği + mezar taşları) → bayat bulut yankısı bir daha HİÇBİR eklemeyi silemez.
+function _unionArr(local, incoming, tombs, idOf, better){
+  const t=new Set((tombs||[]).map(String));
+  const map=new Map();
+  const add=(x)=>{ if(!x) return; const id=idOf(x); if(id==null) return; if(t.has(String(id))) return;
+    const ex=map.get(id);
+    if(!ex){ map.set(id,x); return; }
+    map.set(id, (better ? (better(x,ex)?x:ex) : x)); };
+  (incoming||[]).forEach(add);   // önce gelen (bulut)
+  (local||[]).forEach(add);      // sonra yerel → 'better' yoksa yerel eşitlikte kazanır
+  return [...map.values()];
+}
 function _mergeIncoming(incoming){
   const merged = Object.assign(defState(), incoming);
   _CUM_GLOBAL.forEach(k=>{ merged[k] = Math.max(Number(S[k])||0, Number(incoming[k])||0); });
@@ -10698,6 +10717,81 @@ function _mergeIncoming(incoming){
     Object.entries(incoming.questionLog||{}).forEach(([k,v])=>{ ql[k]=Math.max(ql[k]||0, Number(v)||0); });
     Object.entries(S.questionLog||{}).forEach(([k,v])=>{ ql[k]=Math.max(ql[k]||0, Number(v)||0); });
     merged.questionLog=ql;
+  }catch(e){}
+  // ── 📅 TAKVİM olayları: UNION + mezar taşı (ekleme yankıda silinmez) ──
+  try{
+    merged.calTombs=[...new Set([].concat(S.calTombs||[], incoming.calTombs||[]).map(String))].slice(-300);
+    merged.calEvents=_unionArr(S.calEvents, incoming.calEvents, merged.calTombs, x=>x&&x.id,
+      (a,b)=>{ const pa=(a.doneDates?a.doneDates.length:0)+(a.done?1:0)+((a.xpDates?a.xpDates.length:0)); const pb=(b.doneDates?b.doneDates.length:0)+(b.done?1:0)+((b.xpDates?b.xpDates.length:0)); return pa>=pb; });
+  }catch(e){}
+  // ── 🔄 ALIŞKANLIK: UNION + mezar taşı; ilerlemesi çok olan kazanır ──
+  try{
+    merged.habitTombs=[...new Set([].concat(S.habitTombs||[], incoming.habitTombs||[]).map(String))].slice(-200);
+    merged.habits=_unionArr(S.habits, incoming.habits, merged.habitTombs, x=>x&&x.id,
+      (a,b)=>{ const la=a.log?Object.keys(a.log).length:0, lb=b.log?Object.keys(b.log).length:0; if(la!==lb) return la>lb; return (a.streak||0)>=(b.streak||0); });
+  }catch(e){}
+  // ── 📚 KİTAP: UNION + mezar taşı; okunan sayfası fazla olan kazanır ──
+  try{
+    merged.bookTombs=[...new Set([].concat(S.bookTombs||[], incoming.bookTombs||[]).map(String))].slice(-200);
+    merged.books=_unionArr(S.books, incoming.books, merged.bookTombs, x=>x&&x.id,
+      (a,b)=>(a.read||0)>=(b.read||0));
+  }catch(e){}
+  // ── 📖 OKUMA GÜNLÜĞÜ: içerik anahtarıyla birleş (id yok) ──
+  try{
+    const rl={};
+    [].concat(incoming.readLog||[], S.readLog||[]).forEach(r=>{ if(!r||!r.date) return; const k=r.date+'|'+(r.bookId||'')+'|'+(r.pages||0)+'|'+(r.mins||0); rl[k]=r; });
+    merged.readLog=Object.values(rl).sort((a,b)=>a.date<b.date?1:-1).slice(0,400);
+  }catch(e){}
+  // ── 🧠 ARALIKLI TEKRAR: UNION + mezar taşı; tekrarı ilerlemiş olan kazanır ──
+  try{
+    merged.srTombs=[...new Set([].concat(S.srTombs||[], incoming.srTombs||[]).map(String))].slice(-200);
+    merged.srItems=_unionArr(S.srItems, incoming.srItems, merged.srTombs, x=>x&&x.id,
+      (a,b)=>{ const la=a.last||'', lb=b.last||''; if(la!==lb) return la>lb; return (a.reps||0)>=(b.reps||0); });
+  }catch(e){}
+  // ── ✅ HATIRLATICILAR (tasks): UNION + mezar taşı; tamamlanmış olan kazanır ──
+  try{
+    merged.taskTombs=[...new Set([].concat(S.taskTombs||[], incoming.taskTombs||[]).map(String))].slice(-200);
+    merged.tasks=_unionArr(S.tasks, incoming.tasks, merged.taskTombs, x=>x&&x.id,
+      (a,b)=>(a.done?1:0)>=(b.done?1:0));
+  }catch(e){}
+  // ── 🌳 DENEME AĞACI (wrongTopics, obje): tüm konular birleşir; ilerlemiş olan kazanır ──
+  try{
+    merged.wrongTombs=[...new Set([].concat(S.wrongTombs||[], incoming.wrongTombs||[]).map(String))].slice(-300);
+    const tset=new Set(merged.wrongTombs);
+    const wt=Object.assign({}, incoming.wrongTopics||{});
+    Object.entries(S.wrongTopics||{}).forEach(([k,v])=>{
+      const ex=wt[k];
+      if(!ex){ wt[k]=v; return; }
+      const sv=(v.solved||0)+(v.fixed?9999:0), sex=(ex.solved||0)+(ex.fixed?9999:0);
+      wt[k]= (sv>=sex)? v : ex;
+      if(v.fixed||ex.fixed) wt[k]=Object.assign({}, wt[k], {fixed:true});
+    });
+    tset.forEach(k=>{ delete wt[k]; });
+    merged.wrongTopics=wt;
+  }catch(e){}
+  // ── 🗺 MÜFREDAT (currMap, obje→ders dizileri): konular birleşir, durum(st) max ──
+  try{
+    if(incoming.currMap || S.currMap){
+      const cm=Object.assign({}, incoming.currMap||{});
+      Object.entries(S.currMap||{}).forEach(([ders,arr])=>{
+        const inc=cm[ders];
+        if(!inc){ cm[ders]=arr; return; }
+        const byName={}; (inc||[]).forEach(it=>{ if(it&&it.n) byName[it.n]={n:it.n, st:it.st||0}; });
+        (arr||[]).forEach(it=>{ if(!it||!it.n) return; const e=byName[it.n]; byName[it.n]={n:it.n, st:Math.max(e?e.st:0, it.st||0)}; });
+        cm[ders]=Object.values(byName);
+      });
+      merged.currMap=cm;
+    }
+  }catch(e){}
+  // ── 🔖 KAYITLI RENKLER + GYM egzersizleri (union, mezarsız) ──
+  try{ merged.savedColors=[...new Set([].concat(S.savedColors||[], incoming.savedColors||[]))].slice(0,24); }catch(e){}
+  try{
+    if(merged.gym){
+      const lg=S.gym||{}, ig=incoming.gym||{};
+      merged.gym.exercises=_unionArr(lg.exercises, ig.exercises, [], x=>x&&x.id, (a,b)=>(a.done?1:0)>=(b.done?1:0));
+      merged.gym.exLib=_unionArr(lg.exLib, ig.exLib, [], x=>x&&x.name, (a,b)=>true);
+      merged.gym.depot=Object.assign({}, ig.depot||{}, lg.depot||{});
+    }
   }catch(e){}
   // dayMarks: iki cihazın işaretlerini birleştir (active > rest > frozen önceliğiyle)
   try{
@@ -11048,7 +11142,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.57.0 başlatıldı.');
+addLog('OVERCLOCK v7.58.0 başlatıldı.');
 </script>
 </body>
 </html>
