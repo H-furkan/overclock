@@ -104,6 +104,11 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
 /* status bar */
 #statusbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--bd);background:var(--deep);font-size:10px;letter-spacing:2px;z-index:200}
+#topbar-inv{position:relative;background:none;border:none;font-size:16px;cursor:pointer;padding:0 2px;line-height:1;margin-left:auto;margin-right:10px;transition:transform .1s}
+#topbar-inv:active{transform:scale(.9)}
+#topbar-inv.has-items{animation:pg 2.2s ease-in-out infinite}
+#topbar-inv-badge{position:absolute;top:-6px;right:-7px;min-width:14px;height:14px;padding:0 3px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:700;line-height:14px;text-align:center;display:none;font-family:'Share Tech Mono',monospace}
+#topbar-inv-badge.on{display:block}
 #statuslabel{font-family:'Orbitron',monospace;font-weight:900;font-size:11px;letter-spacing:3px;padding:3px 10px;border:1px solid var(--bd2);color:var(--gray)}
 #statuslabel.active{color:var(--green);border-color:var(--green);text-shadow:0 0 10px var(--green);background:rgba(143,255,143,.05);animation:pg 2s ease-in-out infinite}
 #statuslabel.brk{color:var(--yellow);border-color:var(--yellow);text-shadow:0 0 10px var(--yellow);background:rgba(255,255,102,.05);animation:py 2s ease-in-out infinite}
@@ -903,6 +908,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button id="nav-burger" onclick="toggleNav()" aria-label="Menü">☰</button>
   <span style="color:var(--muted);font-size:9px">OVERCLOCK // TR-1</span>
   <div id="statuslabel">● STANDBY</div>
+  <button id="topbar-inv" onclick="openInventory()" title="Envanter" aria-label="Envanter">🎒<span id="topbar-inv-badge"></span></button>
   <span id="clock" style="color:var(--gray);font-size:11px;letter-spacing:2px">00:00:00</span>
 </div>
 
@@ -1759,6 +1765,9 @@ body.pixel-font #timer-unit{font-size:8px}
     <div style="font-size:8px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">XP biriktirmek için değil, çalışmaya yönlendirmek için. Konu Sigortası ve Hedef Sözleşmesi tekrar alınabilir.</div>
     <div style="font-size:9px;color:var(--bright);letter-spacing:1px;margin-bottom:10px">🛡️ Konu Sigortası stok: <b id="ins-stock" style="color:var(--white)">0</b> &nbsp; · &nbsp; 📜 Sözleşme: <span id="contract-state" style="color:var(--bright)">pasif</span></div>
     <div class="shop-grid" id="shop-sink"></div>
+
+    <div class="blabel" style="margin-top:16px">⚙ Modüller <span style="font-size:8px;color:var(--muted)">(her sekmeye dokunan güçlendirmeler)</span></div>
+    <div class="shop-grid" id="shop-util"></div>
   </div>
 
   <div class="block">
@@ -1988,7 +1997,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.59.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.60.0</div>
     </div>
   </div>
 </div>
@@ -2177,6 +2186,13 @@ const SHOP_ITEMS = [
   {id:'sink_topic_insurance', cat:'sink', icon:'🛡️', name:'KONU SİGORTASI', desc:'Bir yanlış-konu etiketinin SEVİYE ATLAMASINI engeller. Etiketlendiğinde otomatik harcanır.', cost:800},
   {id:'sink_contract',        cat:'sink', icon:'📜', name:'HEDEF SÖZLEŞMESİ', desc:'Ücretsiz. İMZALA, dakika hedefini gir. Tutarsan çalışılan sürenin 1.5× XP ödülü; tutmazsan eksik kalan dk kadar XP düşer.', cost:0},
   {id:'sink_boss_summon',     cat:'sink', icon:'⚔', name:'BOSS DAVETİ',       desc:'En çok yanlış yaptığın konudan ekstra bir boss çağırır. Yenince kasa parçası düşer.', cost:200},
+  // ── ⚙ MODÜLLER (v7.60) — her sekmeye dokunan tek-kullanımlık güçlendirmeler ──
+  {id:'u_statcrystal', cat:'util', icon:'⬢', name:'STAT KRİSTALİ',   desc:'Karaktere anında +1 stat puanı (Character\'da dağıt).',        cost:1400, fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı — Character sekmesinde dağıt'); try{renderCharacter();}catch(e){} } },
+  {id:'u_readserum',   cat:'util', icon:'📖', name:'HIZ OKUMA SERUMU', desc:'Sonraki okuma seansında sayfa XP\'si 2 kat (Okuma Salonu).',   cost:500,  fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); try{renderReading();}catch(e){} } },
+  {id:'u_prodday',     cat:'util', icon:'📅', name:'VERİMLİ GÜN',      desc:'Sonraki 3 takvim görevi 2× XP (Takvim).',                     cost:700,  fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
+  {id:'u_srshield',    cat:'util', icon:'🧠', name:'TEKRAR KALKANI',   desc:'Sonraki başarısız tekrar zinciri sıfırlamaz (Aralıklı Tekrar).', cost:600, fx:()=>{ S.srShield=(S.srShield||0)+1; notify('🧠 Tekrar kalkanı hazır ('+S.srShield+')'); try{renderSrs();}catch(e){} } },
+  {id:'u_piggybank',   cat:'util', icon:'💰', name:'KUMBARA',          desc:'Anında +2500 kuruş Soru Bankası bakiyene eklenir.',           cost:1200, fx:()=>{ bankEarn(2500,'market','Market: Kumbara'); notify('💰 +2500 kr Soru Bankası'); try{renderBank();}catch(e){} } },
+  {id:'u_fragpack',    cat:'util', icon:'🎴', name:'PARÇA TAKASI',     desc:'+3 standart kasa parçası (3 = 1 kasa).',                      cost:900,  fx:()=>{ const c=_cs(); c.fragStd=(c.fragStd||0)+3; try{_synthFragments();}catch(e){} notify('🎴 +3 standart kasa parçası'); } },
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Karakter özetinde 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Karakter özetinde ⚡', cost:550},
@@ -4277,13 +4293,14 @@ function readTimerStop(){
   miniPrompt({target:startBtn},{ top:true, title:'📖 <b>'+_he(b.title)+'</b><br><span style="color:var(--muted)">bu seansta kaç sayfa okudun? ('+_fmtClock(elapsed)+')</span>', placeholder:'sayfa', onOk:(v)=>{
     const pages=Math.max(0,Math.floor(v||0));
     if(pages>0){
+      let _rmul=1; if((S.readBuff||0)>0){ _rmul=2; S.readBuff--; }
       b.read=Math.min(b.pages,(b.read||0)+pages);
-      addXP(pages,'Okuma seansı: '+b.title);
+      addXP(pages*_rmul,'Okuma seansı: '+b.title+(_rmul>1?' (2×)':''));
       const ppm=pages/Math.max(0.1,mins);
       S.readLog=S.readLog||[]; S.readLog.unshift({date:today(), bookId:b.id, mins:Math.round(mins*10)/10, pages, ppm:Math.round(ppm*100)/100});
       if(S.readLog.length>100) S.readLog=S.readLog.slice(0,100);
       _checkReadBadge();
-      if(note) note.innerHTML='📖 <b>'+pages+' sayfa</b> / '+_fmtClock(elapsed)+' → hız: <b style="color:var(--white)">'+ppm.toFixed(2)+' sayfa/dk</b>  ·  +'+pages+' XP';
+      if(note) note.innerHTML='📖 <b>'+pages+' sayfa</b> / '+_fmtClock(elapsed)+' → hız: <b style="color:var(--white)">'+ppm.toFixed(2)+' sayfa/dk</b>  ·  +'+(pages*_rmul)+' XP'+(_rmul>1?' <span style="color:var(--yellow)">2×</span>':'');
       notify('📖 '+ppm.toFixed(2)+' sayfa/dk — +'+pages+' XP');
     } else { if(note) note.textContent='Sayfa girilmedi, seans kaydedilmedi.'; }
     save(); renderReading();
@@ -6337,6 +6354,14 @@ function buyItem(id){
     save(); renderShop(); renderXP(); renderStreak();
     return;
   }
+  if (item.cat === 'util') {
+    try{ item.fx(); }catch(e){}
+    playBell('reminder');
+    addLog('Market modülü: '+item.name+' (-'+effectiveCost+' XP)');
+    save(); renderShop(); renderXP();
+    try{ renderInvIcon(); }catch(e){}
+    return;
+  }
   if (item.cat === 'sink') {
     if (item.id === 'sink_topic_insurance') {
       S.topicInsurances = (S.topicInsurances||0) + 1;
@@ -7504,11 +7529,18 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_reroll',    weight:0.5,  tier:'epic',      icon:'🎲', name:'Reroll Token',          desc:'Bir kasa daha aç'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa (reroll)'); } },
   { id:'s_font_vt',   weight:3,    tier:'rare',      icon:'🖥', name:'Terminal Font',          desc:'Sayaç sayıları retro terminal (VT323). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontVt=true; c.timerFont='vt'; notify('🖥 Terminal font aktif'); } },
   { id:'s_font_raj',  weight:3,    tier:'rare',      icon:'🪖', name:'Military Font',          desc:'Sayaç sayıları keskin askeri stil (Rajdhani). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontRaj=true; c.timerFont='raj'; notify('🪖 Military font aktif'); } },
+  { id:'s_readserum', weight:12,   tier:'common',    icon:'📖', name:'Hız Okuma Serumu',      desc:'Sonraki okuma seansında sayfa XP\'si 2 kat', fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); } },
+  { id:'s_srshield',  weight:9,    tier:'uncommon',  icon:'🧠', name:'Tekrar Kalkanı',        desc:'Sonraki başarısız aralıklı tekrar zinciri sıfırlamaz', fx:()=>{ S.srShield=(S.srShield||0)+1; notify('🧠 Tekrar kalkanı hazır'); } },
+  { id:'s_prodday',   weight:7,    tier:'uncommon',  icon:'📅', name:'Verimli Gün',           desc:'Sonraki 3 takvim görevi 2× XP', fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
+  { id:'s_kurus',     weight:6,    tier:'uncommon',  icon:'💰', name:'Bozuk Para',            desc:'+1500 kuruş Soru Bankası', fx:()=>{ bankEarn(1500,'kasa','Kasa: Bozuk Para'); notify('💰 +1500 kr Soru Bankası'); } },
+  { id:'s_statcrystal',weight:0.8, tier:'epic',      icon:'⬢', name:'Stat Kristali',         desc:'Karaktere +1 stat puanı', fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı'); } },
   { id:'s_xp1000',    weight:0.15, tier:'legendary', icon:'💎', name:'Anlık 1000 XP',         desc:'Hemen +1000 XP'                         , fx:()=>{ addXP(1000,'Kasa: 1000 XP'); } },
   { id:'s_gold_up',   weight:0.05, tier:'legendary', icon:'✨', name:'Gold Kasa Yükseltmesi', desc:'+1 Gold Kasa'                           , fx:()=>{ _cs().gold++; notify('✨ +1 Gold Kasa'); } },
 ];
 
 const CASE_ITEMS_GOLD = [
+  { id:'g_kurus',     weight:12,   tier:'common',    icon:'💵', name:'Deste',                 desc:'+5000 kuruş Soru Bankası', fx:()=>{ bankEarn(5000,'kasa','Gold Kasa: Deste'); notify('💵 +5000 kr Soru Bankası'); } },
+  { id:'g_statx2',    weight:3,    tier:'epic',      icon:'⬢', name:'Çift Stat Kristali',    desc:'Karaktere +2 stat puanı', fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+2; notify('⬢⬢ +2 stat puanı'); } },
   { id:'g_font_bungee',weight:4,   tier:'epic',      icon:'🎪', name:'Neon Font',             desc:'Sayaç sayıları kalın neon stil (Bungee). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontBungee=true; c.timerFont='bungee'; notify('🎪 Neon font aktif'); } },
   { id:'g_3session',  weight:50,   tier:'common',    icon:'🚀', name:'3 Session Buff',        desc:'Sonraki 3 session +%20 XP'              , fx:()=>{ _cs().sessionBuffRemaining=3; notify('🚀 Sonraki 3 session +%20 XP'); } },
   { id:'g_premiumbk', weight:25,   tier:'common',    icon:'☕', name:'30dk Premium Break',    desc:'Mevcut session XP cezasız biter + 30dk mola', fx:()=>{ _cs().premiumBreakReady=true; notify('☕ Premium Break hazır — sayaç ekranından kullan'); } },
@@ -7728,6 +7760,7 @@ function addToInventory(id){
   c.inv[id]=(c.inv[id]||0)+1;
   const it=_findCaseItem(id);
   notify('🎒 Envantere eklendi: '+(it?it.name:id));
+  try{ renderInvIcon(); }catch(e){}
 }
 // Market sayfasındaki özet (buton rozeti + parça/kırık/unvan satırı)
 function renderFragSummary(){
@@ -7744,7 +7777,17 @@ function renderFragSummary(){
     sum.innerHTML=parts.join(' &nbsp;·&nbsp; ');
   }
 }
-function openInventory(){ renderInventory(); const m=g('inv-modal'); if(m) m.style.display='flex'; }
+// 🎒 üst-bar envanter ikonu rozeti — bekleyen eşya + parça sayısı
+function renderInvIcon(){
+  try{
+    const c=_cs(); const inv=c.inv||{};
+    const invN=Object.keys(inv).reduce((a,id)=>a+(inv[id]>0?inv[id]:0),0);
+    const badge=g('topbar-inv-badge'), btn=g('topbar-inv');
+    if(badge){ if(invN>0){ badge.textContent=invN>99?'99':invN; badge.classList.add('on'); } else badge.classList.remove('on'); }
+    if(btn) btn.classList.toggle('has-items', invN>0);
+  }catch(e){}
+}
+function openInventory(){ renderInventory(); renderInvIcon(); const m=g('inv-modal'); if(m) m.style.display='flex'; }
 function closeInventory(){ const m=g('inv-modal'); if(m) m.style.display='none'; }
 function renderInventory(){
   renderFragSummary();
@@ -7951,6 +7994,7 @@ function renderShop(){
   const cosEl    = g('shop-cosmetics');
   const streakEl = g('shop-streak');
   const sinkEl   = g('shop-sink');
+  const utilEl   = g('shop-util'); if(utilEl) utilEl.innerHTML=SHOP_ITEMS.filter(i=>i.cat==='util').map(renderItem).join('');
   const stockEl  = g('streak-stock'); if (stockEl) stockEl.textContent = S.streakProtectors||0;
   const costEl   = g('streak-cost');  if (costEl)  costEl.textContent  = getStreakShieldCost();
   const insEl    = g('ins-stock');    if (insEl)   insEl.textContent   = S.topicInsurances||0;
@@ -8786,7 +8830,8 @@ function srAdd(){
 function srRate(id, q){
   const it=(S.srItems||[]).find(x=>x.id===id); if(!it) return;
   if(q<3){
-    it.reps=0; it.interval=1; it.lapses=(it.lapses||0)+1;
+    if((S.srShield||0)>0){ S.srShield--; notify('🧠 Tekrar kalkanı kullanıldı — zincir korundu'); }
+    else { it.reps=0; it.interval=1; it.lapses=(it.lapses||0)+1; }
   } else {
     if((it.reps||0)===0) it.interval=1;
     else if(it.reps===1) it.interval=6;
@@ -9815,6 +9860,7 @@ function drawNumericChart(h,cid){
 // ════════════════════════════════════════
 function renderAll(){
   renderXP(); renderStreak(); renderBoss(); updateWaterUI(); renderYksCountdown(); try{ renderSrsBadge(); }catch(e){}
+  try{ renderInvIcon(); }catch(e){}
   try{ renderHqCalTasks(); }catch(e){}   // v7.37.1 fix: açılışta Bugünün Programı boş kalıyordu
   try{ renderSessionType(); renderIdealDuration(); renderCoeffEditor(); renderBank(); }catch(e){}
   renderTimer(); renderLog(); renderBadges(); renderTasks(); renderCumulative();
@@ -11184,7 +11230,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.59.0 başlatıldı.');
+addLog('OVERCLOCK v7.60.0 başlatıldı.');
 </script>
 </body>
 </html>
