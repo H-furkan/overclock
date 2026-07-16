@@ -2003,7 +2003,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.61.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.62.0</div>
     </div>
   </div>
 </div>
@@ -3128,7 +3128,8 @@ function tickTimer(){
       playBell('focus_end');
       // ── BOSS aggro reset: just worked ──
       S.lastFocusEnd = Date.now();
-      let sxp = calcSessionXP(S.focusMin);
+      const _fmin=_sessFocusMin||S.focusMin;   // v7.62: sync ortasi S.focusMin ezmesine karsi snapshot (48 XP bug)
+      let sxp = calcSessionXP(_fmin);
       const _cs2 = (typeof _cs==='function')?_cs():null;
       if (_cs2 && (_cs2.sessionBuffRemaining||0) > 0){ sxp = Math.round(sxp*1.2); _cs2.sessionBuffRemaining--; }
       if (_cs2 && _cs2.sprintActive && S.focusMin <= 30){ sxp = Math.round(sxp*1.5); _cs2.sprintActive=false; }
@@ -3142,7 +3143,7 @@ function tickTimer(){
       }
       // STAT: Disiplin (v7.37 denge) — 04:00-07:00 başlangıcı + ≥25 dk seans → +%1×puan XP (tavan %20; dakika farm edilemez)
       const _dsc = charStat('disiplin');
-      if(_dsc>0 && _sessStartHour>=4 && _sessStartHour<7 && (S.focusMin||0)>=25){
+      if(_dsc>0 && _sessStartHour>=4 && _sessStartHour<7 && (_fmin||0)>=25){
         const _db=Math.round(sxp*0.01*Math.min(20,_dsc));
         if(_db>0){ sxp += _db; notify('🌅 ERKEN KUŞ +%'+Math.min(20,_dsc)+' ('+_db+' XP)'); }
       }
@@ -3154,18 +3155,18 @@ function tickTimer(){
       if(S.gymEnergyBuff){ sxp = Math.round(sxp*1.2); S.gymEnergyBuff=false; notify('🧃 ENERGY DRINK — session XP ×1.2'); }
       if((S.cumFocusSecs||0)>=50*3600) earnBadge('focus50h');
       if((S.cumFocusSecs||0)>=200*3600) earnBadge('focus200h');
-      addXP(sxp,'Session tamamlandı ('+S.focusMin+'dk)');
+      addXP(sxp,'Session tamamlandı ('+_fmin+'dk)');
       notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
       if(_sessType==='soru'){ try{ _promptSessionQuestions(_sessFocusMin||S.focusMin, _sessSubject); }catch(e){} }
       if(S.streak>=3) earnBadge('streak');
       if(S.sessions>=5) earnBadge('iron');
       if(S.sessions>=3) earnBadge('overdrive');
-      if(S.focusMin>=120) earnBadge('ghost');
+      if(_fmin>=120) earnBadge('ghost');
       if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
     if(_dayQuestions(today())>=300) earnBadge('korn');   // ⚔️ 300 SPARTALI — kaybolsa da kendini geri kazanır
       isBreak=true; timerSecs=S.breakMin*60;
       // +15dk break kasa drop'u: tek seferlik uzatma
-      if (S.cases && (S.cases.breakBonus||0) > 0){ timerSecs += S.cases.breakBonus; S.cases.breakBonus=0; notify('⏸ Mola +'+Math.round((S.cases.breakBonus||0)/60)+'dk uzadı (kasa)'); }
+      if (S.cases && (S.cases.breakBonus||0) > 0){ const _bb=S.cases.breakBonus; timerSecs += _bb; S.cases.breakBonus=0; notify('⏸ Mola +'+Math.round(_bb/60)+'dk uzadı (kasa)'); addLog('Mola +'+Math.round(_bb/60)+'dk (kasa)'); }
       setStatus('break');
     } else {
       // cumBreakSecs/todayBreakSecs per-tick birikti — burada tekrar EKLEME yok (çift sayım önlendi)
@@ -7908,15 +7909,12 @@ document.addEventListener('visibilitychange', function(){
   if(!document.hidden) return;
   const c=(typeof _cs==='function')?_cs():null;
   if(c && c.challenge && c.challenge.active && c.challenge.type==='nodistraction'){
+    // v7.62: sayaç ÖLMEZ — yalnız 6x bonus düşer, seans NORMAL XP ile devam eder (2 saatlik
+    // seansı bir bakışla/bildirimle sıfırlamak yerine ceza sadece bonus kaybı)
     c.challenge=null;
-    try{ clearInterval(timerIv); }catch(e){}
-    timerRunning=false; timerEndAt=null;
-    try{ cancelTimerNotification(); stopKeepAlive(); }catch(e){}
-    isBreak=false; timerSecs=S.focusMin*60;
-    try{ setStatus('standby'); renderTimer(); }catch(e){}
-    save();
-    notify('💥 NO-DISTRACTION BAŞARISIZ — uygulamadan çıktın');
-    addLog('No-Distraction başarısız (uygulamadan çıkıldı).');
+    try{ save(); }catch(e){}
+    notify('💥 NO-DISTRACTION 6x DÜŞTÜ — seans normal XP ile sürüyor');
+    addLog('No-Distraction 6x kaybedildi (arka plan); seans devam ediyor.');
   }
 });
 
@@ -10905,6 +10903,18 @@ function _mergeIncoming(incoming){
   if (merged.character && !merged.character.photo && S.character && S.character.photo){
     merged.character.photo = S.character.photo;
   }
+  // ── v7.62 SYNC-KİLİDİ: boost bitişi geri gitmez (en geç biten kazanır) ──
+  try{ merged.boostUntil = Math.max(Number(S.boostUntil)||0, Number(incoming.boostUntil)||0) || null; }catch(e){}
+  // Sayaç ÇALIŞIRKEN seans-kritik alanlar bayat sync'e ezdirilmez (48 XP + kaybolan buff/challenge)
+  try{
+    if(typeof timerRunning!=='undefined' && timerRunning){
+      merged.focusMin=S.focusMin; merged.breakMin=S.breakMin;
+      merged.boostUntil=S.boostUntil;
+      if(merged.cases && S.cases){
+        ['sessionBuffRemaining','sprintActive','deepWorkActive','taskBuffRemaining','breakBonus','challenge'].forEach(k=>{ merged.cases[k]=S.cases[k]; });
+      }
+    }
+  }catch(e){}
   return merged;
 }
 
@@ -11231,7 +11241,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.61.2 başlatıldı.');
+addLog('OVERCLOCK v7.62.0 başlatıldı.');
 </script>
 </body>
 </html>
