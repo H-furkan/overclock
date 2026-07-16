@@ -1997,7 +1997,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.60.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.60.1</div>
     </div>
   </div>
 </div>
@@ -2190,8 +2190,6 @@ const SHOP_ITEMS = [
   {id:'u_statcrystal', cat:'util', icon:'⬢', name:'STAT KRİSTALİ',   desc:'Karaktere anında +1 stat puanı (Character\'da dağıt).',        cost:1400, fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı — Character sekmesinde dağıt'); try{renderCharacter();}catch(e){} } },
   {id:'u_readserum',   cat:'util', icon:'📖', name:'HIZ OKUMA SERUMU', desc:'Sonraki okuma seansında sayfa XP\'si 2 kat (Okuma Salonu).',   cost:500,  fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); try{renderReading();}catch(e){} } },
   {id:'u_prodday',     cat:'util', icon:'📅', name:'VERİMLİ GÜN',      desc:'Sonraki 3 takvim görevi 2× XP (Takvim).',                     cost:700,  fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
-  {id:'u_srshield',    cat:'util', icon:'🧠', name:'TEKRAR KALKANI',   desc:'Sonraki başarısız tekrar zinciri sıfırlamaz (Aralıklı Tekrar).', cost:600, fx:()=>{ S.srShield=(S.srShield||0)+1; notify('🧠 Tekrar kalkanı hazır ('+S.srShield+')'); try{renderSrs();}catch(e){} } },
-  {id:'u_piggybank',   cat:'util', icon:'💰', name:'KUMBARA',          desc:'Anında +2500 kuruş Soru Bankası bakiyene eklenir.',           cost:1200, fx:()=>{ bankEarn(2500,'market','Market: Kumbara'); notify('💰 +2500 kr Soru Bankası'); try{renderBank();}catch(e){} } },
   {id:'u_fragpack',    cat:'util', icon:'🎴', name:'PARÇA TAKASI',     desc:'+3 standart kasa parçası (3 = 1 kasa).',                      cost:900,  fx:()=>{ const c=_cs(); c.fragStd=(c.fragStd||0)+3; try{_synthFragments();}catch(e){} notify('🎴 +3 standart kasa parçası'); } },
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Karakter özetinde 💀', cost:700},
@@ -7530,16 +7528,15 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_font_vt',   weight:3,    tier:'rare',      icon:'🖥', name:'Terminal Font',          desc:'Sayaç sayıları retro terminal (VT323). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontVt=true; c.timerFont='vt'; notify('🖥 Terminal font aktif'); } },
   { id:'s_font_raj',  weight:3,    tier:'rare',      icon:'🪖', name:'Military Font',          desc:'Sayaç sayıları keskin askeri stil (Rajdhani). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontRaj=true; c.timerFont='raj'; notify('🪖 Military font aktif'); } },
   { id:'s_readserum', weight:12,   tier:'common',    icon:'📖', name:'Hız Okuma Serumu',      desc:'Sonraki okuma seansında sayfa XP\'si 2 kat', fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); } },
-  { id:'s_srshield',  weight:9,    tier:'uncommon',  icon:'🧠', name:'Tekrar Kalkanı',        desc:'Sonraki başarısız aralıklı tekrar zinciri sıfırlamaz', fx:()=>{ S.srShield=(S.srShield||0)+1; notify('🧠 Tekrar kalkanı hazır'); } },
   { id:'s_prodday',   weight:7,    tier:'uncommon',  icon:'📅', name:'Verimli Gün',           desc:'Sonraki 3 takvim görevi 2× XP', fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
-  { id:'s_kurus',     weight:6,    tier:'uncommon',  icon:'💰', name:'Bozuk Para',            desc:'+1500 kuruş Soru Bankası', fx:()=>{ bankEarn(1500,'kasa','Kasa: Bozuk Para'); notify('💰 +1500 kr Soru Bankası'); } },
+  { id:'s_kurus',     weight:6,    tier:'common',    icon:'🪙', name:'Bozuk Para',            desc:'+100 kuruş Soru Bankası', fx:()=>{ bankEarn(100,'kasa','Kasa: Bozuk Para'); notify('🪙 +100 kr Soru Bankası'); } },
   { id:'s_statcrystal',weight:0.8, tier:'epic',      icon:'⬢', name:'Stat Kristali',         desc:'Karaktere +1 stat puanı', fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı'); } },
   { id:'s_xp1000',    weight:0.15, tier:'legendary', icon:'💎', name:'Anlık 1000 XP',         desc:'Hemen +1000 XP'                         , fx:()=>{ addXP(1000,'Kasa: 1000 XP'); } },
   { id:'s_gold_up',   weight:0.05, tier:'legendary', icon:'✨', name:'Gold Kasa Yükseltmesi', desc:'+1 Gold Kasa'                           , fx:()=>{ _cs().gold++; notify('✨ +1 Gold Kasa'); } },
 ];
 
 const CASE_ITEMS_GOLD = [
-  { id:'g_kurus',     weight:12,   tier:'common',    icon:'💵', name:'Deste',                 desc:'+5000 kuruş Soru Bankası', fx:()=>{ bankEarn(5000,'kasa','Gold Kasa: Deste'); notify('💵 +5000 kr Soru Bankası'); } },
+  { id:'g_kurus',     weight:12,   tier:'common',    icon:'💵', name:'Deste',                 desc:'+1000 kuruş Soru Bankası', fx:()=>{ bankEarn(1000,'kasa','Gold Kasa: Deste'); notify('💵 +1000 kr Soru Bankası'); } },
   { id:'g_statx2',    weight:3,    tier:'epic',      icon:'⬢', name:'Çift Stat Kristali',    desc:'Karaktere +2 stat puanı', fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+2; notify('⬢⬢ +2 stat puanı'); } },
   { id:'g_font_bungee',weight:4,   tier:'epic',      icon:'🎪', name:'Neon Font',             desc:'Sayaç sayıları kalın neon stil (Bungee). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontBungee=true; c.timerFont='bungee'; notify('🎪 Neon font aktif'); } },
   { id:'g_3session',  weight:50,   tier:'common',    icon:'🚀', name:'3 Session Buff',        desc:'Sonraki 3 session +%20 XP'              , fx:()=>{ _cs().sessionBuffRemaining=3; notify('🚀 Sonraki 3 session +%20 XP'); } },
@@ -11230,7 +11227,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.60.0 başlatıldı.');
+addLog('OVERCLOCK v7.60.1 başlatıldı.');
 </script>
 </body>
 </html>
