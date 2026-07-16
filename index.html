@@ -22,7 +22,7 @@ const _manifest={name:"OVERCLOCK // TR-1",short_name:"OVERCLOCK",display:"standa
 ]};
 document.addEventListener('DOMContentLoaded',()=>{const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));document.head.appendChild(l);});
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=VT323&family=Rajdhani:wght@700&family=Bungee&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=VT323&family=Audiowide&family=Bungee&display=swap" rel="stylesheet">
 <!-- Cross-device sync (optional — inert until firebase-config.js is filled) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -652,9 +652,12 @@ body.anim-paused *{animation-play-state:paused!important}
 /* Pixel font (standard case rare ödülü) — sayaç sayıları retro 8-bit.
    130px dairenin içine sığması için font küçük + tam ortalı. */
 body.pixel-font #timer-num{font-family:'Press Start 2P','Share Tech Mono',monospace;font-size:clamp(16px,6vmin,34px);letter-spacing:0;line-height:1.2;white-space:nowrap}
-body.font-vt #fs-num,body.font-vt #timer-num{font-family:'VT323',monospace;letter-spacing:2px}
-body.font-raj #fs-num,body.font-raj #timer-num{font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px}
-body.font-bungee #fs-num,body.font-bungee #timer-num{font-family:'Bungee',cursive;letter-spacing:1px}
+body.font-vt #timer-num{font-family:'VT323',monospace;letter-spacing:1px;font-size:clamp(40px,13.5vmin,76px)}
+body.font-vt #fs-num{font-family:'VT323',monospace;letter-spacing:1px;font-size:min(29vmin,122px)}
+body.font-raj #timer-num{font-family:'Audiowide',cursive;letter-spacing:1px;font-size:clamp(23px,8vmin,47px)}
+body.font-raj #fs-num{font-family:'Audiowide',cursive;letter-spacing:1px;font-size:min(18vmin,78px)}
+body.font-bungee #timer-num{font-family:'Bungee',cursive;letter-spacing:0;font-size:clamp(20px,7vmin,41px)}
+body.font-bungee #fs-num{font-family:'Bungee',cursive;letter-spacing:0;font-size:min(16vmin,68px)}
 body.pixel-font #timer-unit{font-size:8px}
 .char-right{display:flex;flex-direction:column;gap:7px;min-width:0}
 .char-stat-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--bright);letter-spacing:1px}
@@ -2000,7 +2003,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.61.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.61.2</div>
     </div>
   </div>
 </div>
@@ -2193,7 +2196,6 @@ const SHOP_ITEMS = [
   {id:'u_statcrystal', cat:'util', icon:'⬢', name:'STAT KRİSTALİ',   desc:'Karaktere anında +1 stat puanı (Character\'da dağıt).',        cost:1400, fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı — Character sekmesinde dağıt'); try{renderCharacter();}catch(e){} } },
   {id:'u_readserum',   cat:'util', icon:'📖', name:'HIZ OKUMA SERUMU', desc:'Sonraki okuma seansında sayfa XP\'si 2 kat (Okuma Salonu).',   cost:500,  fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); try{renderReading();}catch(e){} } },
   {id:'u_prodday',     cat:'util', icon:'📅', name:'VERİMLİ GÜN',      desc:'Sonraki 3 takvim görevi 2× XP (Takvim).',                     cost:700,  fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
-  {id:'u_fragpack',    cat:'util', icon:'🎴', name:'PARÇA TAKASI',     desc:'+3 standart kasa parçası (3 = 1 kasa).',                      cost:900,  fx:()=>{ const c=_cs(); c.fragStd=(c.fragStd||0)+3; try{_synthFragments();}catch(e){} notify('🎴 +3 standart kasa parçası'); } },
   // COSMETICS (permanent badge decoration)
   {id:'cos_skull',   cat:'cosmetic', icon:'💀', name:'KAFATASI',     desc:'Karakter özetinde 💀', cost:700},
   {id:'cos_lightning',cat:'cosmetic',icon:'⚡', name:'YIĞIN',        desc:'Karakter özetinde ⚡', cost:550},
@@ -7370,7 +7372,7 @@ function renderCosmeticToggles(){
   const _tf=cs.timerFont||(cs.pixelFont?'pixel':'');
   if (hasPixel)   row('pixelFont',  '📟 Pixel Font',                       _tf==='pixel');
   if (u.fontVt)   row('fontVt',     '🖥 Terminal Font',                    _tf==='vt');
-  if (u.fontRaj)  row('fontRaj',    '🪖 Military Font',                    _tf==='raj');
+  if (u.fontRaj)  row('fontRaj',    '🛸 Retro Uzay Font',                  _tf==='raj');
   if (u.fontBungee) row('fontBungee','🎪 Neon Font',                       _tf==='bungee');
   if (hasBorder)  row('glowBorder', '🔥 Fire Çerçeve',                     cs.avatarBorder === 'glow');
   if (hasGlasses) row('glasses',    '❄ Frost Çerçeve',                    Array.isArray(cs.avatarAccessory) && cs.avatarAccessory.includes('glasses'));
@@ -7528,7 +7530,7 @@ const CASE_ITEMS_STANDARD = [
   { id:'s_cerrah',    weight:0.8,  tier:'epic',      icon:'🩺', name:'"Cerrah" Unvanı',       desc:'Profil unvanına eklenir'                , fx:()=>{ if(!_cs().profileTitles.includes('Cerrah')) _cs().profileTitles.push('Cerrah'); notify('🩺 Unvan: Cerrah'); } },
   { id:'s_reroll',    weight:0.5,  tier:'epic',      icon:'🎲', name:'Reroll Token',          desc:'Bir kasa daha aç'                       , fx:()=>{ _cs().standard++; notify('🎲 +1 Standard Kasa (reroll)'); } },
   { id:'s_font_vt',   weight:3,    tier:'rare',      icon:'🖥', name:'Terminal Font',          desc:'Sayaç sayıları retro terminal (VT323). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontVt=true; c.timerFont='vt'; notify('🖥 Terminal font aktif'); } },
-  { id:'s_font_raj',  weight:3,    tier:'rare',      icon:'🪖', name:'Military Font',          desc:'Sayaç sayıları keskin askeri stil (Rajdhani). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontRaj=true; c.timerFont='raj'; notify('🪖 Military font aktif'); } },
+  { id:'s_font_raj',  weight:3,    tier:'rare',      icon:'🛸', name:'Retro Uzay Font',       desc:'Sayaç sayıları yuvarlak retro-sci-fi (Audiowide). Character sayfasından aç/kapat.', fx:()=>{ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked.fontRaj=true; c.timerFont='raj'; notify('🛸 Retro Uzay font aktif'); } },
   { id:'s_readserum', weight:12,   tier:'common',    icon:'📖', name:'Hız Okuma Serumu',      desc:'Sonraki okuma seansında sayfa XP\'si 2 kat', fx:()=>{ S.readBuff=(S.readBuff||0)+1; notify('📖 Sonraki okuma seansı 2× sayfa XP'); } },
   { id:'s_prodday',   weight:7,    tier:'uncommon',  icon:'📅', name:'Verimli Gün',           desc:'Sonraki 3 takvim görevi 2× XP', fx:()=>{ const cs=_cs(); cs.taskBuffRemaining=(cs.taskBuffRemaining||0)+3; notify('📅 Sonraki 3 takvim görevi 2× XP'); } },
   { id:'s_kurus',     weight:6,    tier:'common',    icon:'🪙', name:'Bozuk Para',            desc:'+100 kuruş Soru Bankası', fx:()=>{ bankEarn(100,'kasa','Kasa: Bozuk Para'); notify('🪙 +100 kr Soru Bankası'); } },
@@ -11229,7 +11231,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.61.1 başlatıldı.');
+addLog('OVERCLOCK v7.61.2 başlatıldı.');
 </script>
 </body>
 </html>
