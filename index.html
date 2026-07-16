@@ -2014,7 +2014,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.63.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.64.0</div>
     </div>
   </div>
 </div>
@@ -3021,7 +3021,7 @@ function syncTimerInputs(){
   const lbl=g('timer-cfg-lbl'); if(lbl) lbl.textContent=S.focusMin+'dk/'+S.breakMin+'dk';
 }
 
-let _sessType='soru', _sessFocusMin=0, _sessSubject='', _sessStartHour=-1;
+let _sessType='soru', _sessFocusMin=0, _sessSubject='', _sessStartHour=-1, _sessPlannedMin=0;
 function setSessionType(t){ S.sessionType = (t==='konu')?'konu':'soru'; save(); renderSessionType(); }
 function renderSessionType(){
   const t=S.sessionType||'soru';
@@ -3052,7 +3052,7 @@ function toggleTimer(){
       try { requestNotifPermission(); } catch(e){}
     }
     timerRunning=true;
-    if(!isBreak){ _sessType = S.sessionType||'soru'; _sessFocusMin = S.focusMin; _sessSubject = S.activeSubject||''; _sessStartHour = new Date().getHours(); try{ _maybeSuggestDuration(); }catch(e){} }  // verimlilik için seans anlık görüntüsü
+    if(!isBreak){ _sessType = S.sessionType||'soru'; _sessFocusMin = S.focusMin; if(!_sessPlannedMin) _sessPlannedMin = Math.max(1, Math.round(timerSecs/60)); _sessSubject = S.activeSubject||''; _sessStartHour = new Date().getHours(); try{ _maybeSuggestDuration(); }catch(e){} }  // v7.64: planlanan süre = sayacın GERÇEK saydığı süre (focusMin sync-revert'inden bağımsız)
     timerEndAt = Date.now() + timerSecs * 1000; // wall-clock end time
     // 🛟 KAZA KORUMASI: çalışan seansın anlık görüntüsü diske — uygulama kapansa da kurtarılır
     S._runSess={ mode:(isBreak?'break':'focus'), endAt:timerEndAt, focusMin:(_sessFocusMin||S.focusMin), type:_sessType, subject:_sessSubject, startHour:_sessStartHour, lastTick:Date.now() };
@@ -3139,7 +3139,7 @@ function tickTimer(){
       playBell('focus_end');
       // ── BOSS aggro reset: just worked ──
       S.lastFocusEnd = Date.now();
-      const _fmin=_sessFocusMin||S.focusMin;   // v7.62: sync ortasi S.focusMin ezmesine karsi snapshot (48 XP bug)
+      const _fmin=_sessPlannedMin||_sessFocusMin||S.focusMin;   // v7.64: sayacın GERÇEK süresi (48 XP kökü: no-distraction 120dk sayıyor ama S.focusMin=24 kalıyordu)
       let sxp = calcSessionXP(_fmin);
       const _cs2 = (typeof _cs==='function')?_cs():null;
       if (_cs2 && (_cs2.sessionBuffRemaining||0) > 0){ sxp = Math.round(sxp*1.2); _cs2.sessionBuffRemaining--; }
@@ -3166,8 +3166,9 @@ function tickTimer(){
       if(S.gymEnergyBuff){ sxp = Math.round(sxp*1.2); S.gymEnergyBuff=false; notify('🧃 ENERGY DRINK — session XP ×1.2'); }
       if((S.cumFocusSecs||0)>=50*3600) earnBadge('focus50h');
       if((S.cumFocusSecs||0)>=200*3600) earnBadge('focus200h');
-      try{ const _nd=(_cs2&&_cs2.challenge&&_cs2.challenge.active&&_cs2.challenge.type==='nodistraction'); addLog('⚙ XP kırılımı: fmin='+_fmin+' · S.focusMin='+S.focusMin+' · base='+calcSessionXP(_fmin)+' · nodist='+(!!_nd)+' · final='+sxp); }catch(e){}
+      try{ const _nd=(_cs2&&_cs2.challenge&&_cs2.challenge.active&&_cs2.challenge.type==='nodistraction'); addLog('⚙ XP: planned='+_sessPlannedMin+' snap='+_sessFocusMin+' S.focusMin='+S.focusMin+' base='+calcSessionXP(_fmin)+' nodist='+(!!_nd)+' final='+sxp); }catch(e){}
       addXP(sxp,'Session tamamlandı ('+_fmin+'dk)');
+      _sessPlannedMin=0;
       notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
       if(_sessType==='soru'){ try{ _promptSessionQuestions(_sessFocusMin||S.focusMin, _sessSubject); }catch(e){} }
       if(S.streak>=3) earnBadge('streak');
@@ -3267,7 +3268,7 @@ function stopLeak(){
 
 function resetTimer(){
   clearInterval(timerIv); timerRunning=false; isBreak=false; S.streak=0; timerEndAt=null;
-  S._runSess=null;
+  S._runSess=null; _sessPlannedMin=0;
   stopLeak();
   cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel();
   timerSecs=S.focusMin*60;
@@ -3306,6 +3307,7 @@ function finishTimerEarly(ev){
   cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel();
   g('btn-start').textContent='▶ START';
   // erken bitiş ödülü: geçen dakika üzerinden TAM oran (kesinti yok)
+  _sessPlannedMin=0;
   const sxp = calcSessionXP(elapsedMin);   // v7.42: erken bitirme cezası kaldırıldı — tam seansla aynı dk-başı oran
   // cumFocusSecs per-tick birikti — burada tekrar ekleme yok (çift sayım önlendi)
   renderCumulative();
@@ -7908,7 +7910,7 @@ function startNoDistraction(){
   if(timerRunning){ notify('Önce mevcut sayacı durdur'); return false; }
   const c=_cs();
   S.focusMin=120; if(g('inp-focus')) g('inp-focus').value=120;
-  isBreak=false; timerSecs=120*60;
+  isBreak=false; timerSecs=120*60; _sessPlannedMin=120;
   c.challenge={ active:true, type:'nodistraction', start:Date.now(), durMin:120 };
   syncTimerInputs(); renderTimer();
   notify('🛑 2 SAAT NO-DISTRACTION BAŞLADI — uygulamadan çıkma! Başarırsan 6x XP');
@@ -11221,7 +11223,7 @@ function _recoverRunningSession(){
   }
   // ⏸ duraklatılmış kurtarma: kalan süre ekranda, START kullanıcıda
   isBreak=(rs.mode==='break');
-  _sessType=rs.type||'soru'; _sessFocusMin=rs.focusMin||S.focusMin; _sessSubject=rs.subject||''; _sessStartHour=(rs.startHour!=null?rs.startHour:new Date().getHours());
+  _sessType=rs.type||'soru'; _sessFocusMin=rs.focusMin||S.focusMin; _sessPlannedMin=rs.focusMin||S.focusMin; _sessSubject=rs.subject||''; _sessStartHour=(rs.startHour!=null?rs.startHour:new Date().getHours());
   timerSecs=remaining;
   timerRunning=false; timerEndAt=null;
   S._runSess={ mode:rs.mode, paused:true, remainSecs:remaining, focusMin:_sessFocusMin, type:_sessType, subject:_sessSubject, startHour:_sessStartHour };
@@ -11319,7 +11321,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.63.0 başlatıldı.');
+addLog('OVERCLOCK v7.64.0 başlatıldı.');
 </script>
 </body>
 </html>
