@@ -104,7 +104,12 @@ input,button,select,textarea{font-family:'Share Tech Mono',monospace;border-radi
 
 /* status bar */
 #statusbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--bd);background:var(--deep);font-size:10px;letter-spacing:2px;z-index:200}
-#topbar-inv{position:relative;background:none;border:none;font-size:16px;cursor:pointer;padding:0 2px;line-height:1;margin-left:auto;margin-right:10px;transition:transform .1s}
+#topbar-inv{position:relative;background:none;border:none;font-size:15px;cursor:pointer;padding:0 2px;line-height:1;transition:transform .1s}
+.sb-grp{display:flex;align-items:center;gap:8px;min-width:0}
+.sb-brand{color:var(--muted);font-size:9px;white-space:nowrap}
+#sb-yks{font-size:9px;letter-spacing:2px;color:var(--muted);white-space:nowrap}
+#sb-yks b{color:var(--bright);font-family:'Orbitron',monospace;font-size:11px}
+@media (max-width:520px){ .sb-brand{display:none} }
 #topbar-inv:active{transform:scale(.9)}
 #topbar-inv.has-items{}
 #topbar-inv-badge{position:absolute;top:-6px;right:-7px;min-width:14px;height:14px;padding:0 3px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;font-weight:700;line-height:14px;text-align:center;display:none;font-family:'Share Tech Mono',monospace}
@@ -905,11 +910,9 @@ body.pixel-font #timer-unit{font-size:8px}
 
 <!-- STATUS BAR -->
 <div id="statusbar">
-  <button id="nav-burger" onclick="toggleNav()" aria-label="Menü">☰</button>
-  <span style="color:var(--muted);font-size:9px">OVERCLOCK // TR-1</span>
-  <div id="statuslabel">● STANDBY</div>
-  <button id="topbar-inv" onclick="openInventory()" title="Envanter" aria-label="Envanter">🎒<span id="topbar-inv-badge"></span></button>
-  <span id="clock" style="color:var(--gray);font-size:11px;letter-spacing:2px">00:00:00</span>
+  <div class="sb-grp"><button id="nav-burger" onclick="toggleNav()" aria-label="Menü">☰</button><span class="sb-brand">OVERCLOCK // TR-1</span></div>
+  <div class="sb-grp" id="sb-yks" title="YKS'ye kalan gün">⏳ YKS <b id="yks-days">—</b> G</div>
+  <div class="sb-grp"><div id="statuslabel">● STANDBY</div><button id="topbar-inv" onclick="openInventory()" title="Envanter" aria-label="Envanter">🎒<span id="topbar-inv-badge"></span></button><span id="clock" style="color:var(--gray);font-size:11px;letter-spacing:2px">00:00:00</span></div>
 </div>
 
 <!-- SIDEBAR NAV (collapsible) -->
@@ -943,10 +946,6 @@ body.pixel-font #timer-unit{font-size:8px}
 <!-- ══════════ PAGE: HQ ══════════ -->
 <div id="page-cockpit" class="page visible">
 
-  <!-- YKS GERİ SAYIM -->
-  <div id="yks-countdown">⏳ YKS'ye <b id="yks-days">—</b> gün</div>
-  <div id="yks-proj" style="text-align:center;font-size:8px;letter-spacing:1px;color:var(--muted);padding:0 8px 8px;line-height:1.8;display:none"></div>
-
   <!-- BUGÜN — dağınık uyarıları tek kutuda toplar; SADECE yapılacak iş varsa görünür -->
   <div id="hq-today" class="block" style="display:none;margin-bottom:10px">
     <div class="blabel" style="margin-bottom:8px">■ Bugün</div>
@@ -963,7 +962,11 @@ body.pixel-font #timer-unit{font-size:8px}
     <div class="xp-ticks" id="xp-ticks"><span>0</span><span>300</span><span>600</span><span>900</span><span>1200</span></div>
     <div class="fctr g12 mt12">
       <div id="hq-streak"><span id="hq-streak-fire">🔥</span><div><div id="streak-num">0</div><div id="streak-lbl">GÜN STREAK</div></div></div>
-      <div style="flex:1"></div>
+      <div id="hq-tempo" onclick="goTab(null,'stats')" title="Son 7 günün gerçek tempon — detay için İstatistik" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0 6px;min-width:0">
+        <div style="font-size:7px;letter-spacing:2px;color:var(--muted)">📊 TEMPO · SON 7G</div>
+        <div id="hq-tempo-main" style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--bright);white-space:nowrap;margin-top:2px">—</div>
+        <div id="hq-tempo-sub" style="font-size:7px;color:var(--muted);letter-spacing:.5px;white-space:nowrap;margin-top:1px"></div>
+      </div>
       <div style="display:flex;gap:10px">
         <div style="text-align:center">
           <div style="font-size:8px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">SESSION</div>
@@ -1997,7 +2000,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.60.2</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.61.0</div>
     </div>
   </div>
 </div>
@@ -2657,21 +2660,20 @@ function daysUntil(str){ if(!str)return null; const a=new Date();a.setHours(0,0,
 // YKS geri sayım — hedef sınav tarihi
 const YKS_DATE = '2027-06-19';
 function renderYksCountdown(){
-  const el=g('yks-days'); if(!el) return;
+  const el=g('yks-days');
   const d=daysUntil(YKS_DATE);
-  el.textContent = (d==null ? '—' : (d<0 ? 'geçti' : (d===0 ? 'BUGÜN' : d)));
-  // 📈 PROJEKSİYON: son 14 günün temposu × kalan gün + net trend eğimi
+  if(el) el.textContent = (d==null ? '—' : (d<0 ? '-' : (d===0 ? 'BUGÜN' : d)));
+  // 📊 TEMPO ÖLÇER — son 7 günün GERÇEK temposu (bugün hariç; erken düşük haftalar dışarıda kalır)
   try{
-    const pj=g('yks-proj'); if(!pj || d==null || d<=0) return;
-    const days=[]; for(let i=1;i<=14;i++){ const dt=new Date(); dt.setDate(dt.getDate()-i); days.push(_dstr(dt)); }
-    const qAvg=days.reduce((a,ds)=>a+_dayQuestions(ds),0)/14;
-    const fAvg=days.reduce((a,ds)=>a+_dayFocusSecs2(ds),0)/14/3600;
-    let html='';
-    if(qAvg>0.5 || fAvg>0.1){
-      html+='Bu tempoyla sınava kadar: <b style="color:var(--bright)">~'+Math.round(qAvg*d).toLocaleString('tr-TR')+' soru</b> · <b style="color:var(--bright)">~'+Math.round(fAvg*d).toLocaleString('tr-TR')+' saat odak</b>';
-    }
-    // (v7.49.2) net tahmini KALDIRILDI — 8 gürültülü noktadan gelecek okumak fal; emek matematiği yeter.
-    pj.innerHTML=html; pj.style.display=html?'block':'none';
+    const main=g('hq-tempo-main'), sub=g('hq-tempo-sub'); if(!main) return;
+    let qs=0, fs=0;
+    for(let i=1;i<=7;i++){ const dt=new Date(); dt.setDate(dt.getDate()-i); const ds=_dstr(dt); qs+=_dayQuestions(ds); fs+=_dayFocusSecs2(ds); }
+    const qpd=qs/7, hpd=fs/7/3600;
+    if(qs<=0 && fs<=0){ main.textContent='—'; if(sub) sub.textContent='henüz veri yok'; return; }
+    main.textContent='~'+Math.round(qpd)+' soru/gün';
+    let sline='~'+hpd.toFixed(1)+' sa/gün';
+    if(d!=null && d>0) sline+=' · sınava ~'+Math.round(qpd*d).toLocaleString('tr-TR')+' soru';
+    if(sub) sub.textContent=sline;
   }catch(e){}
 }
 function getLevel(xp){ let r=LEVELS[0]; LEVELS.forEach(l=>{if(xp>=l.min)r=l;}); return r; }
@@ -11227,7 +11229,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.60.2 başlatıldı.');
+addLog('OVERCLOCK v7.61.0 başlatıldı.');
 </script>
 </body>
 </html>
