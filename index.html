@@ -1983,7 +1983,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.58.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.58.1</div>
     </div>
   </div>
 </div>
@@ -4245,7 +4245,7 @@ function readTimerStop(){
   if(!b || _readElapsed<30){ if(note) note.textContent=(_readElapsed<30&&_readElapsed>0)?'Seans çok kısa (≥30 sn gerekli).':''; _readElapsed=0; const c=g('read-clock'); if(c) c.textContent='00:00'; return; }
   const elapsed=_readElapsed;
   const mins=elapsed/60;
-  miniPrompt({target:startBtn},{ title:'📖 <b>'+_he(b.title)+'</b><br><span style="color:var(--muted)">bu seansta kaç sayfa okudun? ('+_fmtClock(elapsed)+')</span>', placeholder:'sayfa', onOk:(v)=>{
+  miniPrompt({target:startBtn},{ top:true, title:'📖 <b>'+_he(b.title)+'</b><br><span style="color:var(--muted)">bu seansta kaç sayfa okudun? ('+_fmtClock(elapsed)+')</span>', placeholder:'sayfa', onOk:(v)=>{
     const pages=Math.max(0,Math.floor(v||0));
     if(pages>0){
       b.read=Math.min(b.pages,(b.read||0)+pages);
@@ -5446,7 +5446,12 @@ function _ensureMiniPrompt(){
       '<div style="display:flex;gap:6px"><button class="btn primary" style="flex:1;min-height:28px;font-size:9px" onclick="_mpOk()">✓ TAMAM</button><button class="btn" style="min-height:28px;font-size:9px;padding:2px 10px" onclick="_mpClose()">✕</button></div>';
     document.body.appendChild(p);
     p.addEventListener('click',e=>e.stopPropagation());
-    document.addEventListener('click',(e)=>{ if(p.style.display==='block' && !p.contains(e.target)) _mpClose(); }, true);
+    document.addEventListener('click',(e)=>{
+      if(p.style.display!=='block') return;
+      if(Date.now()-(window._mpOpenedAt||0)<500) return;              // açılış/klavye sıçraması kapatmasın
+      if(document.activeElement && document.activeElement.id==='mp-inp') return;  // yazarken kapatma
+      if(!p.contains(e.target)) _mpClose();
+    }, true);
     g('mp-inp').addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); _mpOk(); } if(e.key==='Escape') _mpClose(); });
   }
   return p;
@@ -5466,16 +5471,23 @@ function miniPrompt(ev, opts){
   inp.value=(opts.value!=null)?opts.value:'';
   inp.placeholder=opts.placeholder||'';
   inp.min=opts.min!=null?opts.min:0;
+  window._mpOpenedAt=Date.now();
   p.style.display='block';
-  // tetikleyen öğenin YANINA yerleş (ekran ortası DEĞİL)
+  const w=p.offsetWidth||200, h=p.offsetHeight||120;
+  const vw=window.innerWidth, vh=window.innerHeight;
   let r=null;
   try{ const el=ev&&ev.target?(ev.target.closest('button')||ev.target):null; if(el) r=el.getBoundingClientRect(); }catch(e){}
-  const w=p.offsetWidth||200, h=p.offsetHeight||100;
   let left,top;
-  if(r){ left=r.right+8; if(left+w>window.innerWidth-6) left=r.left-w-8; if(left<6) left=Math.min(Math.max(6,r.left), window.innerWidth-w-6);
-    top=r.top; if(top+h>window.innerHeight-6) top=Math.max(6,window.innerHeight-h-6); }
-  else { left=(window.innerWidth-w)/2; top=90; }
-  p.style.left=left+'px'; p.style.top=top+'px';
+  if(r){ left=r.right+8; if(left+w>vw-6) left=r.left-w-8; if(left<6) left=Math.min(Math.max(6,r.left), vw-w-6);
+    top=r.top; if(top+h>vh-6) top=Math.max(6,vh-h-6); }
+  else { left=(vw-w)/2; top=90; }
+  // ⌨️ KLAVYE-GÜVENLİ: sayı girişi klavye açar; tetikleyici alt yarıdaysa (ör. Okuma Salonu
+  // "BİTİR" butonu) popup klavyenin altında kalıyordu → üst-ortaya sabitle.
+  if(opts.top || !r || top > vh*0.42){
+    left=Math.round((vw-w)/2);
+    top=Math.round(Math.max(12, vh*0.08));
+  }
+  p.style.left=Math.max(6,left)+'px'; p.style.top=Math.max(6,top)+'px';
   setTimeout(()=>{ try{ inp.focus(); inp.select(); }catch(e){} },40);
 }
 
@@ -11142,7 +11154,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.58.0 başlatıldı.');
+addLog('OVERCLOCK v7.58.1 başlatıldı.');
 </script>
 </body>
 </html>
