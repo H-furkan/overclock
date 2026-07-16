@@ -792,6 +792,8 @@ body.pixel-font #timer-unit{font-size:8px}
   <div style="width:100%;max-width:330px;background:var(--deep);border:1px solid var(--bd2);padding:20px">
     <div style="font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--white);letter-spacing:2px;text-align:center;margin-bottom:4px">📝 SEANS BİTTİ</div>
     <div id="q-modal-sub" style="font-size:9px;color:var(--muted);letter-spacing:1px;text-align:center;margin-bottom:14px"></div>
+    <div class="ilabel" style="margin-bottom:4px">HANGİ DERS?</div>
+    <select class="inp" id="q-modal-subject" style="margin-bottom:12px"></select>
     <div class="ilabel" style="margin-bottom:4px">KAÇ SORU ÇÖZDÜN?</div>
     <input class="inp" id="q-modal-count" type="number" min="0" inputmode="numeric" placeholder="ör. 25" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')qModalSubmit()">
     <button class="btn primary fw mb8" onclick="qModalSubmit()">✓ KAYDET</button>
@@ -2014,7 +2016,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.64.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.64.1</div>
     </div>
   </div>
 </div>
@@ -3362,7 +3364,14 @@ function _promptSessionQuestions(durationMin, subject){
 function _showQModal(data){
   _qCtx = data;
   const m=g('q-modal'); if(!m) return;
-  const sub=g('q-modal-sub'); if(sub) sub.textContent = (data.subject?data.subject+' · ':'')+data.durationMin+' dk';
+  const sub=g('q-modal-sub'); if(sub) sub.textContent = data.durationMin+' dk seans';
+  const ss=g('q-modal-subject');
+  if(ss){
+    const subjects=[]; SUBJECT_OPTIONS.forEach(([grp,items])=>items.forEach(([sh,fv])=>subjects.push(fv)));
+    if(!subjects.includes('Genel')) subjects.push('Genel');
+    const cur=_canonSubj(data.subject||S.activeSubject||'');
+    ss.innerHTML=subjects.map(x=>'<option value="'+_he(x)+'"'+(x===cur?' selected':'')+'>'+_he(x)+'</option>').join('');
+  }
   const ci=g('q-modal-count'); if(ci) ci.value='';
   m.style.display='flex';
   setTimeout(()=>{ try{ g('q-modal-count').focus(); }catch(e){} }, 60);
@@ -3371,7 +3380,7 @@ function qModalSubmit(){
   const n = parseInt((g('q-modal-count')||{}).value);
   const m=g('q-modal'); if(m) m.style.display='none';
   if(!_qCtx || !n || n<1){ _qCtx=null; S._pendingQ=null; save(); return; }   // boş/0 → kaydetme
-  const subj=_canonSubj(_qCtx.subject||S.activeSubject||'Genel');
+  const subj=_canonSubj((g('q-modal-subject')||{}).value || _qCtx.subject || S.activeSubject || 'Genel');
   S.questionLog=S.questionLog||{};
   S.questionLog[subj]=(S.questionLog[subj]||0)+n;   // otomatik soru istatistiğine yaz
   const pts = Math.round(n * _coeff(subj));
@@ -11321,7 +11330,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.64.0 başlatıldı.');
+addLog('OVERCLOCK v7.64.1 başlatıldı.');
 </script>
 </body>
 </html>
