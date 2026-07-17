@@ -2006,7 +2006,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.66.1</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.67.0</div>
     </div>
   </div>
 </div>
@@ -7064,13 +7064,28 @@ function renderCharacter(){
 
 // ── 🏪 EKİPMAN SATIŞ MARKETİ (v7.63): listele → rastgele sürede alıcı bulur → XP bakiyeye döner ──
 function _mkt(){ if(!S.market) S.market={listings:[]}; if(!Array.isArray(S.market.listings)) S.market.listings=[]; return S.market; }
+function _sellTomb(k){ S.sellTombs=S.sellTombs||[]; if(!S.sellTombs.includes(k)) S.sellTombs.push(k); if(S.sellTombs.length>200) S.sellTombs=S.sellTombs.slice(-200); }
+function _unTomb(k){ S.sellTombs=(S.sellTombs||[]).filter(x=>x!==k); }
+// Kasa kilitleri (font/çerçeve) — satılabilir
+const _UNL_SELL=[
+  {flag:'pixelFont',  name:'Pixel Font',       icon:'📟', price:400},
+  {flag:'fontVt',     name:'Terminal Font',    icon:'🖥', price:400},
+  {flag:'fontRaj',    name:'Retro Uzay Font',  icon:'🛸', price:400},
+  {flag:'fontBungee', name:'Neon Font',        icon:'🎪', price:500},
+  {flag:'glowBorder', name:'Fire Çerçeve',     icon:'🔥', price:450},
+  {flag:'glasses',    name:'Frost Çerçeve',    icon:'❄', price:450},
+];
 function _marketSellables(){
   const out=[]; const inv=S.inventory||[];
   (typeof CASE_THEMES!=='undefined'?CASE_THEMES:[]).forEach(t=>{ if(inv.includes(t.id)) out.push({kind:'theme',key:t.id,name:t.name,icon:t.icon,price:500}); });
   inv.forEach(id=>{ const it=SHOP_ITEMS.find(x=>x.id===id);
     if(it && it.cat==='theme') out.push({kind:'theme',key:id,name:it.name,icon:it.icon,price:Math.round((it.cost||800)*0.5)});
     if(it && it.cat==='cosmetic') out.push({kind:'cosmetic',key:id,name:it.name,icon:it.icon,price:Math.round((it.cost||600)*0.5)});
+    if(it && it.cat==='bg') out.push({kind:'bg',key:id,name:it.name,icon:it.icon,price:Math.round((it.cost||4000)*0.5)});
   });
+  // 🔤 fontlar + çerçeve süsleri (kasa kilitleri)
+  const cu=(S.cases||{}).unlocked||{};
+  _UNL_SELL.forEach(u=>{ const has = cu[u.flag] || (u.flag==='pixelFont' && (S.cases||{}).pixelFont); if(has) out.push({kind:'unl',key:u.flag,name:u.name,icon:u.icon,price:u.price}); });
   ((S.cases||{}).profileTitles||[]).forEach(t=>out.push({kind:'title',key:t,name:t,icon:'🎖',price:600}));
   return out;
 }
@@ -7090,9 +7105,21 @@ function renderMarketSell(){
 }
 function marketList(kind, key){
   const it=_marketSellables().find(x=>x.kind===kind && String(x.key)===String(key)); if(!it){ notify('Ekipman bulunamadı'); return; }
-  if(kind==='theme'){ S.inventory=(S.inventory||[]).filter(id=>id!==key); if(S.equippedTheme===key){ S.equippedTheme=null; try{applyTheme();}catch(e){} } }
-  else if(kind==='cosmetic'){ S.inventory=(S.inventory||[]).filter(id=>id!==key); if(S.equippedCosmetic===key) S.equippedCosmetic=null; }
-  else if(kind==='title'){ const c=_cs(); c.profileTitles=(c.profileTitles||[]).filter(t=>t!==key); }
+  if(kind==='theme'){ S.inventory=(S.inventory||[]).filter(id=>id!==key); if(S.equippedTheme===key){ S.equippedTheme=null; try{applyTheme();}catch(e){} } _sellTomb('inv:'+key); }
+  else if(kind==='cosmetic'){ S.inventory=(S.inventory||[]).filter(id=>id!==key); if(S.equippedCosmetic===key) S.equippedCosmetic=null; _sellTomb('inv:'+key); }
+  else if(kind==='bg'){ S.inventory=(S.inventory||[]).filter(id=>id!==key); try{ const av=_char().avatar; if(av&&av.bg===key){ av.bg=null; renderAvatar(); } }catch(e){} _sellTomb('inv:'+key); }
+  else if(kind==='title'){ const c=_cs(); c.profileTitles=(c.profileTitles||[]).filter(t=>t!==key); _sellTomb('title:'+key); }
+  else if(kind==='unl'){
+    const c=_cs(); c.unlocked=c.unlocked||{}; delete c.unlocked[key];
+    if(key==='pixelFont'){ c.pixelFont=false; if(c.timerFont==='pixel') c.timerFont=''; }
+    if(key==='fontVt' && c.timerFont==='vt') c.timerFont='';
+    if(key==='fontRaj' && c.timerFont==='raj') c.timerFont='';
+    if(key==='fontBungee' && c.timerFont==='bungee') c.timerFont='';
+    if(key==='glowBorder' && c.avatarBorder==='glow') c.avatarBorder=null;
+    if(key==='glasses') c.avatarAccessory=(c.avatarAccessory||[]).filter(x=>x!=='glasses');
+    try{ applyCharCosmetics(); }catch(e){}
+    _sellTomb('unl:'+key);
+  }
   const now=Date.now();
   const sellAt=now + Math.round((10 + Math.floor((now%997)/997*350)) * 60000);
   _mkt().listings.push({ lid:'m'+now+'-'+(now%1000), kind, key, name:it.name, icon:it.icon, price:it.price, listedAt:now, sellAt });
@@ -7102,8 +7129,9 @@ function marketList(kind, key){
 function marketUnlist(lid){
   const L=_mkt().listings; const i=L.findIndex(x=>x.lid===lid); if(i<0) return;
   const x=L[i]; L.splice(i,1);
-  if(x.kind==='theme'||x.kind==='cosmetic'){ S.inventory=S.inventory||[]; if(!S.inventory.includes(x.key)) S.inventory.push(x.key); }
-  else if(x.kind==='title'){ const c=_cs(); c.profileTitles=c.profileTitles||[]; if(!c.profileTitles.includes(x.key)) c.profileTitles.push(x.key); }
+  if(x.kind==='theme'||x.kind==='cosmetic'||x.kind==='bg'){ S.inventory=S.inventory||[]; if(!S.inventory.includes(x.key)) S.inventory.push(x.key); _unTomb('inv:'+x.key); }
+  else if(x.kind==='title'){ const c=_cs(); c.profileTitles=c.profileTitles||[]; if(!c.profileTitles.includes(x.key)) c.profileTitles.push(x.key); _unTomb('title:'+x.key); }
+  else if(x.kind==='unl'){ const c=_cs(); c.unlocked=c.unlocked||{}; c.unlocked[x.key]=true; if(x.key==='pixelFont') c.pixelFont=false; _unTomb('unl:'+x.key); }
   save(); notify('↩ '+x.name+' satıştan geri çekildi'); try{ renderCharacter(); }catch(e){} renderMarketSell();
 }
 function _marketTick(){
@@ -10864,12 +10892,19 @@ function _mergeIncoming(incoming){
       merged.earnedBadges=((incoming.lastDate||'')>(S.lastDate||'')) ? (incoming.earnedBadges||[]) : (S.earnedBadges||[]);
   }catch(e){}
   // 🎒 Envanter + kasa kalıcıları: birlik / bayrak-OR (tek yönlü kazanımlar kaybolmaz)
-  try{ merged.inventory=[...new Set([].concat(S.inventory||[], incoming.inventory||[]))]; }catch(e){}
+  try{
+    // 🏷 SATIŞ MEZAR TAŞLARI (v7.67): satılan eşya union ile geri dirilmesin
+    merged.sellTombs=[...new Set([].concat(S.sellTombs||[], incoming.sellTombs||[]))].slice(-200);
+    const _st=new Set(merged.sellTombs);
+    merged.inventory=[...new Set([].concat(S.inventory||[], incoming.inventory||[]))].filter(id=>!_st.has('inv:'+id));
+  }catch(e){}
   try{
     if(merged.cases){
       const lc=S.cases||{}, ic=incoming.cases||{};
-      merged.cases.profileTitles=[...new Set([].concat(lc.profileTitles||[], ic.profileTitles||[]))];
+      const _st2=new Set(merged.sellTombs||[]);
+      merged.cases.profileTitles=[...new Set([].concat(lc.profileTitles||[], ic.profileTitles||[]))].filter(t=>!_st2.has('title:'+t));
       merged.cases.unlocked=Object.assign({}, ic.unlocked||{}, lc.unlocked||{});
+      _st2.forEach(k=>{ if(k.indexOf('unl:')===0) delete merged.cases.unlocked[k.slice(4)]; });
       ['fragGold','fragStd','protShards'].forEach(k=>{ merged.cases[k]=Math.max(Number(lc[k])||0, Number(ic[k])||0); });
     }
   }catch(e){}
@@ -11339,7 +11374,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.66.1 başlatıldı.');
+addLog('OVERCLOCK v7.67.0 başlatıldı.');
 </script>
 </body>
 </html>
