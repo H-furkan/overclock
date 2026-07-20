@@ -2006,7 +2006,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.69.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.70.0</div>
     </div>
   </div>
 </div>
@@ -3027,7 +3027,7 @@ function toggleTimer(){
   if(timerRunning){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     // 🛟 duraklatılmış anlık görüntü: uygulama kapansa da kalan süre korunur
-    S._runSess={ mode:(isBreak?'break':'focus'), paused:true, remainSecs:timerSecs, focusMin:(_sessFocusMin||S.focusMin), type:_sessType, subject:_sessSubject, startHour:_sessStartHour };
+    S._runSess={ mode:(isBreak?'break':'focus'), paused:true, remainSecs:timerSecs, focusMin:(_sessFocusMin||S.focusMin), type:_sessType, subject:_sessSubject, startHour:_sessStartHour, at:Date.now() };
     save();
     g('btn-start').textContent='▶ START';
     setStatus('standby'); addLog('Timer duraklatıldı.');
@@ -4565,6 +4565,7 @@ function gymDeleteEx(ev,id){
   const gm=_gym(); const ex=gm.exercises.find(e=>e.id===id); if(!ex) return;
   armBtn(ev,'gymdel',()=>{
   gm.exercises=gm.exercises.filter(e=>e.id!==id);
+  gm.exTombs=gm.exTombs||[]; if(!gm.exTombs.includes(String(id))) gm.exTombs.push(String(id)); if(gm.exTombs.length>200) gm.exTombs=gm.exTombs.slice(-200);
   save(); renderGym();
   });
 }
@@ -10921,7 +10922,7 @@ function _mergeIncoming(incoming){
   merged.streakProtUsed   = Math.max(Number(S.streakProtUsed)||0, Number(incoming.streakProtUsed)||0);
   merged.streakProtectors = Math.max(0, merged.streakProtBought - merged.streakProtUsed);
   // 🛟 kurtarma anlık görüntüsü: bu cihazdaki taze snapshot, buluttaki bayatına ezdirilmez
-  merged._runSess = S._runSess || incoming._runSess || null;
+  merged._runSess = S._runSess || null;   // v7.70: CİHAZ-YEREL — buluttaki bayat _runSess bir daha dirilmez (22:25 takılma bug'ı)
   merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
   merged.restDayLastGrant = Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0);
   // ── 📝 KAYIT DİZİLERİ (v7.50): bayat cihaz diziyi EZEMEZ — birlik (union) merge ──
@@ -11061,7 +11062,8 @@ function _mergeIncoming(incoming){
   try{
     if(merged.gym){
       const lg=S.gym||{}, ig=incoming.gym||{};
-      merged.gym.exercises=_unionArr(lg.exercises, ig.exercises, [], x=>x&&x.id, (a,b)=>(a.done?1:0)>=(b.done?1:0));
+      merged.gym.exTombs=[...new Set([].concat(lg.exTombs||[], ig.exTombs||[]).map(String))].slice(-200);
+      merged.gym.exercises=_unionArr(lg.exercises, ig.exercises, merged.gym.exTombs, x=>x&&x.id, (a,b)=>(a.done?1:0)>=(b.done?1:0));
       merged.gym.exLib=_unionArr(lg.exLib, ig.exLib, [], x=>x&&x.name, (a,b)=>true);
       merged.gym.depot=Object.assign({}, ig.depot||{}, lg.depot||{});
     }
@@ -11150,9 +11152,11 @@ function _cloudPush(){
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     const data = JSON.parse(JSON.stringify(S));
     data._device = _deviceId();
+    data._appVer = '7.70.0';
     // Firestore doküman limiti 1 MB. ARKAPLAN resimleri (1080×1920, birden çok
     // per-tab) buna sığmaz → cihaz-yerel tutulur, buluta gönderilmez.
     delete data.background;
+    delete data._runSess;   // v7.70: çalışan/duraklatılmış sayaç cihaz-yerel — buluta gitmez
     // Karakter fotoğrafı 240×240 JPEG (~30KB) — limite rahat sığar, SYNC EDİLİR.
     // (Çok büyükse — eski/sıkıştırılmamış — buluttan çıkar ki sync'i bozmasın.)
     if (data.character && data.character.photo && data.character.photo.length > 400000){
@@ -11203,6 +11207,7 @@ function _onSignedIn(user){
       // iki cihazın saati farklı olunca düşük-timestamp'li gerçek güncellemeyi
       // yanlışlıkla atlıyordu ("yazdım, diğerinde görünmedi" sebebi buydu).
       if(d._device === _deviceId()) return;            // kendi yazımızın echo'su
+      try{ if(d._appVer && d._appVer<'7.70.0') addLog('⚠ Diğer cihaz ESKİ sürümde ('+d._appVer+') — güncelle: tam kapat-aç','err'); }catch(e){}
       _applyRemote(d);
     }, ()=>{});
   }).catch(()=>{ hideSyncing(); setSyncStatus('⚠ Buluta erişilemedi.'); logErr('Buluta erişilemedi — bağlantını kontrol et'); });
@@ -11293,6 +11298,9 @@ timerSecs=S.focusMin*60;
 // Kapalıyken geçen süre ÇALIŞMA SAYILMAZ (kaza = otomatik pause). START kullanıcıda.
 function _recoverRunningSession(){
   const rs=S._runSess; if(!rs) return;
+  // v7.70: 24 saatten eski kurtarma anlık görüntüsü bayat → yok say (takılı sayaç)
+  const _rsAge = Date.now() - (rs.at || rs.lastTick || (rs.endAt?rs.endAt-((rs.remainSecs||0)*1000):0) || 0);
+  if(rs.at && _rsAge > 24*3600*1000){ S._runSess=null; try{save();}catch(e){} return; }
   let remaining;
   if(rs.paused){ remaining=Math.max(0, Math.round(rs.remainSecs||0)); }
   else if(rs.endAt && rs.lastTick){ remaining=Math.max(0, Math.round((rs.endAt-rs.lastTick)/1000)); }  // kapanma anında donmuş kalan
@@ -11434,7 +11442,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.69.0 başlatıldı.');
+addLog('OVERCLOCK v7.70.0 başlatıldı.');
 </script>
 </body>
 </html>
