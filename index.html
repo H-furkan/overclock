@@ -2006,7 +2006,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.70.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.71.0</div>
     </div>
   </div>
 </div>
@@ -3649,6 +3649,7 @@ function _evOccursOn(ev, ds){
 function _evDoneOn(ev, ds){ return (!ev.repeat||ev.repeat==='none') ? !!ev.done : ((ev.doneDates||[]).includes(ds)); }
 // Tamamlamayı (tekrarlıysa GÜNE özel) işler; XP verildiyse miktarı döndürür
 function _evToggleDone(ev, ds){
+  ev.ut=Date.now();
   if(!ev.repeat || ev.repeat==='none'){
     ev.done=!ev.done;
     if(ev.done && ev.xp>0 && !ev.xpAwarded){ ev.xpAwarded=true; return _calAwardXp(ev); }
@@ -3893,9 +3894,9 @@ function calSave(){
   S.calEvents=S.calEvents||[];
   if(_calEditId){
     const ev=S.calEvents.find(x=>x.id===_calEditId);
-    if(ev){ Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remindAt,repeat,repeatDays,color,xp,date}); ev.remind=undefined; ev.remindMin=undefined; }
+    if(ev){ Object.assign(ev,{title,desc,type,questions:q,startMin,endMin,remindAt,repeat,repeatDays,color,xp,date}); ev.remind=undefined; ev.remindMin=undefined; ev.ut=Date.now(); }
   } else {
-    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remindAt, repeat, repeatDays, color, xp, done:false });
+    S.calEvents.push({ id:String(Date.now())+'-'+Math.floor(((typeof performance!=='undefined'?performance.now():0))%10000), date, startMin, endMin, title, desc, type, questions:q, remindAt, repeat, repeatDays, color, xp, done:false, ut:Date.now() });
   }
   save(); calPopClose(); renderCalendar(); try{ renderHqCalTasks(); }catch(e){}
   if(remindAt){ _ensureNotifPerm(); scheduleCalendarReminders(); notify('🔔 Kaydedildi — '+remindAt.replace('T',' ')+' hatırlatılacak'); }
@@ -10996,7 +10997,8 @@ function _mergeIncoming(incoming){
   try{
     merged.calTombs=[...new Set([].concat(S.calTombs||[], incoming.calTombs||[]).map(String))].slice(-300);
     merged.calEvents=_unionArr(S.calEvents, incoming.calEvents, merged.calTombs, x=>x&&x.id,
-      (a,b)=>{ const pa=(a.doneDates?a.doneDates.length:0)+(a.done?1:0)+((a.xpDates?a.xpDates.length:0)); const pb=(b.doneDates?b.doneDates.length:0)+(b.done?1:0)+((b.xpDates?b.xpDates.length:0)); return pa>=pb; });
+      (a,b)=>{ const ua=a.ut||0, ub=b.ut||0; if(ua!==ub) return ua>ub;   // v7.71: EN SON DÜZENLENEN kazanır (taşıma/rename çakışması)
+        const pa=(a.doneDates?a.doneDates.length:0)+(a.done?1:0)+((a.xpDates?a.xpDates.length:0)); const pb=(b.doneDates?b.doneDates.length:0)+(b.done?1:0)+((b.xpDates?b.xpDates.length:0)); return pa>=pb; });
   }catch(e){}
   // ── 🔄 ALIŞKANLIK: UNION + mezar taşı; ilerlemesi çok olan kazanır ──
   try{
@@ -11152,7 +11154,7 @@ function _cloudPush(){
     try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
     const data = JSON.parse(JSON.stringify(S));
     data._device = _deviceId();
-    data._appVer = '7.70.0';
+    data._appVer = '7.71.0';
     // Firestore doküman limiti 1 MB. ARKAPLAN resimleri (1080×1920, birden çok
     // per-tab) buna sığmaz → cihaz-yerel tutulur, buluta gönderilmez.
     delete data.background;
@@ -11207,7 +11209,7 @@ function _onSignedIn(user){
       // iki cihazın saati farklı olunca düşük-timestamp'li gerçek güncellemeyi
       // yanlışlıkla atlıyordu ("yazdım, diğerinde görünmedi" sebebi buydu).
       if(d._device === _deviceId()) return;            // kendi yazımızın echo'su
-      try{ if(d._appVer && d._appVer<'7.70.0') addLog('⚠ Diğer cihaz ESKİ sürümde ('+d._appVer+') — güncelle: tam kapat-aç','err'); }catch(e){}
+      try{ if(d._appVer && d._appVer<'7.71.0') addLog('⚠ Diğer cihaz ESKİ sürümde ('+d._appVer+') — güncelle: tam kapat-aç','err'); }catch(e){}
       _applyRemote(d);
     }, ()=>{});
   }).catch(()=>{ hideSyncing(); setSyncStatus('⚠ Buluta erişilemedi.'); logErr('Buluta erişilemedi — bağlantını kontrol et'); });
@@ -11442,7 +11444,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.70.0 başlatıldı.');
+addLog('OVERCLOCK v7.71.0 başlatıldı.');
 </script>
 </body>
 </html>
