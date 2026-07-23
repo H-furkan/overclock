@@ -1239,6 +1239,10 @@ body.pixel-font #timer-unit{font-size:8px}
           <div id="gx-muscles" style="margin-bottom:10px"></div>
           <button class="btn primary fw" onclick="gymAddExercise()">＋ EKLE</button>
           <button class="btn fw" style="margin-top:6px;border-color:#ff9e64;color:#ff9e64" onclick="gymChallengeBuy(event)">🎫 MEYDAN OKUMA — 150 MP (7 günde 5 egzersiz → 300 MP)</button>
+          <div class="brow" style="margin-top:6px">
+            <button class="btn" style="flex:1" onclick="openGymProgram()">📅 Haftalık Program</button>
+            <button class="btn" style="flex:1;border-color:var(--green);color:var(--green)" onclick="gymApplyTodayProgram()">＋ Bugünün Programı</button>
+          </div>
         </div>
         <div id="gym-today-wrap" style="margin-top:12px">
           <div class="blabel" style="font-size:9px">🔥 Bugünün Antrenmanı</div>
@@ -2020,7 +2024,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.73.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.74.0</div>
     </div>
   </div>
 </div>
@@ -4350,7 +4354,7 @@ function _gym(){
   if(!S.gym) S.gym={ mpEarned:0, mpSpent:0, exercises:[], ownedItems:[], titles:[], badges:[] };
   const gm=S.gym;
   gm.exercises=gm.exercises||[]; gm.ownedItems=gm.ownedItems||[]; gm.titles=gm.titles||[]; gm.badges=gm.badges||[];
-  gm.depot=gm.depot||{}; gm.exLib=gm.exLib||[]; gm.buffs=gm.buffs||{};
+  gm.depot=gm.depot||{}; gm.exLib=gm.exLib||[]; gm.buffs=gm.buffs||{}; gm.program=gm.program||{days:{},week:1,weekStart:null};
   // ── ODA SÖKÜMÜ GÖÇÜ (v7.33): mobilya/kaplama harcamaları iade edilir ──
   if(!gm._roomGone){
     const OLD_PRICES={fx_tread:220,fx_pullup:120,fx_parall:80,fx_rack:180,fx_bag:140,fx_sofa:160,fx_bed:200,fx_window:90,fx_curtain:70,fx_fridge:170,fx_piano:320,fx_dresser:130,fx_rug:60,fx_lamp:75,fx_plant:55,fx_poster:45,wall_krem:60,wall_mavi:80,floor_fayans:70,floor_hali:90};
@@ -4493,6 +4497,7 @@ const GYM_BADGES=[
 function _gymItemById(id){ const bg=AV_BGS.find(x=>x.id===id&&x.mp); if(bg) return {id:bg.id,name:bg.n,price:bg.mp,icon:'🖼'}; return GYM_CLOTHES.find(x=>x.id===id)||CAFE_ITEMS.find(x=>x.id===id)||_gymPortItem(id); }
 // ── RENDER ana ──
 function renderGym(){
+  try{ _gymProgTick(); }catch(e){}
   const mp=g('gym-mp'); if(mp) mp.textContent=gymMp()+' MP';
   const gd=g('gx-date'); if(gd && !gd.value) gd.value=today();
   _gymChallengeExpire();
@@ -4513,6 +4518,93 @@ function _wireAnatomyClicks(){
     gymMusclePop(e, mus.getAttribute('data-m'));
   });
 }
+// ── 📅 HAFTALIK PROGRAM + PROGRESSIVE OVERLOAD ──
+const _GDOW=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];  // Pzt-başlı görünüm
+const _GDOW_JS=[1,2,3,4,5,6,0];  // görünüm sırası → JS getDay
+function _gymProg(){ const gm=_gym(); gm.program=gm.program||{days:{},week:1,weekStart:null}; return gm.program; }
+// Progressive overload: her yeni takvim haftasında yük 1 kademe artar
+function _gymProgTick(){
+  const p=_gymProg();
+  const curMon=_dstr(_mondayLocal(new Date()));
+  if(!p.weekStart){ p.weekStart=curMon; p.week=p.week||1; return; }
+  if(curMon>p.weekStart){
+    // kaç hafta geçti
+    const a=new Date(p.weekStart), b=new Date(curMon);
+    const wk=Math.max(1, Math.round((b-a)/(7*86400000)));
+    p.week=(p.week||1)+wk; p.weekStart=curMon;
+    try{ addLog('📅 Program haftası ilerledi → hafta '+p.week+' (yük artışı)'); }catch(e){}
+  }
+}
+function _gymAppliedLoad(item){ const w=_gymProg().week||1; return (Number(item.load)||0) + (w-1)*(Number(item.step)||0); }
+function openGymProgram(){ _gymProgTick(); renderGymProgram(); const m=g('gym-prog-modal'); if(m) m.style.display='flex'; }
+function renderGymProgram(){
+  let m=g('gym-prog-modal');
+  if(!m){
+    m=document.createElement('div'); m.id='gym-prog-modal';
+    m.style.cssText='display:none;position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:12px;animation:ocFadeIn .16s ease-out';
+    document.body.appendChild(m);
+    m.addEventListener('click',(ev)=>{ if(ev.target===m) m.style.display='none'; });
+  }
+  const p=_gymProg(); const lib=(_gym().exLib||[]);
+  const dayHtml=_GDOW.map((dname,vi)=>{
+    const dow=_GDOW_JS[vi]; const items=(p.days[dow]||[]);
+    const rows=items.map((it,i)=>{
+      const al=_gymAppliedLoad(it);
+      return '<div style="display:flex;align-items:center;gap:6px;font-size:9px;margin-bottom:3px">'+
+        '<span style="flex:1;min-width:0;color:var(--bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_he(it.name)+
+        (it.load>0?(' <span style="color:var(--green)">'+al+(it.unit||'')+'</span>'+(it.step>0?(' <span style="color:var(--muted)">(+'+it.step+'/hafta)</span>'):'')):'')+'</span>'+
+        '<button class="btn" style="min-height:22px;padding:1px 7px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="gymProgRemove('+dow+','+i+')">✕</button></div>';
+    }).join('') || '<div style="font-size:8px;color:var(--muted);padding:2px 0">boş</div>';
+    return '<div style="border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--mid)">'+
+      '<div style="font-size:9px;color:var(--white);font-weight:700;letter-spacing:1px;margin-bottom:5px">'+dname+'</div>'+rows+
+      '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+
+        '<select class="inp" id="gp-ex-'+dow+'" style="flex:2;min-width:110px;min-height:28px;font-size:9px;padding:2px 6px">'+
+          (lib.length?lib.map(x=>'<option value="'+_he(x.name)+'">'+_he(x.name)+'</option>').join(''):'<option value="">— kayıtlı egzersiz yok —</option>')+'</select>'+
+        '<input class="inp" id="gp-load-'+dow+'" type="number" min="0" placeholder="yük" style="width:52px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<input class="inp" id="gp-unit-'+dow+'" placeholder="kg" style="width:40px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<input class="inp" id="gp-step-'+dow+'" type="number" min="0" placeholder="+/hf" style="width:48px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<button class="btn primary" style="min-height:28px;padding:2px 9px;font-size:9px" onclick="gymProgAdd('+dow+')">＋</button>'+
+      '</div></div>';
+  }).join('');
+  m.innerHTML='<div style="width:100%;max-width:440px;max-height:90vh;overflow-y:auto;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:16px;animation:ocPopIn .2s cubic-bezier(.2,.9,.3,1.15)">'+
+    '<div class="fbet mb8"><div style="font-family:Orbitron,monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">📅 HAFTALIK PROGRAM</div>'+
+    '<button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="g(\'gym-prog-modal\').style.display=\'none\'">✕</button></div>'+
+    '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">Kayıtlı egzersizleri günlere ata + opsiyonel <b style="color:var(--green)">yük</b> ve <b style="color:var(--bright)">haftalık artış</b> gir. Uygulama her yeni hafta yükü otomatik artırır (şu an <b style="color:var(--bright)">HAFTA '+(p.week||1)+'</b>). "＋ Bugünün Programı" ile o günün egzersizlerini güncel yükle ekle.</div>'+
+    dayHtml+
+  '</div>';
+}
+function gymProgAdd(dow){
+  const name=((g('gp-ex-'+dow)||{}).value||'').trim(); if(!name){ notify('Egzersiz seç'); return; }
+  const load=Math.max(0, parseFloat((g('gp-load-'+dow)||{}).value)||0);
+  const unit=((g('gp-unit-'+dow)||{}).value||'').trim().slice(0,6);
+  const step=Math.max(0, parseFloat((g('gp-step-'+dow)||{}).value)||0);
+  const p=_gymProg(); p.days[dow]=p.days[dow]||[];
+  p.days[dow].push({name, load, unit, step});
+  save(); renderGymProgram();
+  notify('📅 '+_GDOW[_GDOW_JS.indexOf(dow)]+' → '+name);
+}
+function gymProgRemove(dow,i){ const p=_gymProg(); if(p.days[dow]){ p.days[dow].splice(i,1); save(); renderGymProgram(); } }
+function gymApplyTodayProgram(){
+  _gymProgTick();
+  const p=_gymProg(); const dow=new Date().getDay(); const items=(p.days[dow]||[]);
+  if(!items.length){ notify('Bugün ('+_GDOW[_GDOW_JS.indexOf(dow)]+') için program boş — 📅 Haftalık Program\'dan ekle'); return; }
+  const gm=_gym(); const t=today(); let added=0;
+  items.forEach(it=>{
+    const lx=(gm.exLib||[]).find(x=>(x.name||'').toLowerCase()===(it.name||'').toLowerCase());
+    const al=_gymAppliedLoad(it);
+    const dispName=it.name+(it.load>0?(' — '+al+(it.unit||'')):'');
+    // aynı gün aynı egzersiz zaten eklendiyse atla
+    if(gm.exercises.some(e=>e.date===t && (e.name||'').indexOf(it.name)===0)) return;
+    let mp=lx?lx.mp:20;
+    if(it.load>0){ mp=Math.max(1, Math.round(mp * al/Math.max(1,it.load))); }   // yük büyüdükçe MP büyür
+    gm.exercises.push({ id:String(Date.now())+'-'+added, name:dispName, mp, muscles:(lx?lx.muscles:[])||[], date:t, done:false });
+    added++;
+  });
+  if(gm.exercises.length>400) gm.exercises=gm.exercises.slice(-400);
+  save(); renderGym();
+  const mm=g('gym-prog-modal'); if(mm) mm.style.display='none';
+  notify(added? ('🏋 Bugünün programı eklendi ('+added+' egzersiz · hafta '+(p.week||1)+')') : 'Bugünün egzersizleri zaten ekli');
+}
 function gymMusclePop(e, key){
   const m=GYM_MUSCLES.find(x=>x.k===key);
   let p=g('gym-ex-pop');
@@ -4527,13 +4619,26 @@ function gymMusclePop(e, key){
   p.innerHTML='<div style="font-size:8px;letter-spacing:2px;color:#ff9e64;margin-bottom:6px">🫀 '+_he(m?m.lbl:key).toUpperCase()+'</div>'+
     (lib.length
       ? '<div style="font-size:7px;color:var(--muted);letter-spacing:1px;margin-bottom:5px">Dokun → form dolsun</div>'+lib.slice(0,10).map(x=>
-          '<button class="btn fw" style="min-height:28px;text-align:left;font-size:9px;padding:5px 8px;margin-bottom:4px" onclick="gymPickLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\');g(\'gym-ex-pop\').style.display=\'none\'">'+_he(x.name)+' <span style="opacity:.55">'+x.mp+' MP</span></button>').join('')
+          '<div style="display:flex;gap:4px;margin-bottom:4px"><button class="btn" style="flex:1;min-height:28px;text-align:left;font-size:9px;padding:5px 8px" onclick="gymPickLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\');g(\'gym-ex-pop\').style.display=\'none\'">'+_he(x.name)+' <span style="opacity:.55">'+x.mp+' MP</span></button><button class="btn" style="min-height:28px;padding:2px 8px;font-size:9px;border-color:var(--red);color:var(--red)" onclick="gymDeleteLib(\''+_he(x.name).replace(/'/g,"&#39;")+'\',event)">🗑</button></div>').join('')
       : '<div style="font-size:9px;color:var(--muted);letter-spacing:.5px;line-height:1.6">Bu kas için kayıtlı egzersiz yok — sağdan ekleyince buraya düşer.</div>');
   p.style.display='block';
   const w=200, h=p.offsetHeight||120;
   let left=e.clientX+12; if(left+w>window.innerWidth-6) left=e.clientX-w-12; if(left<6) left=6;
   let top=e.clientY-16; if(top+h>window.innerHeight-6) top=window.innerHeight-h-6; if(top<6) top=6;
   p.style.left=left+'px'; p.style.top=top+'px';
+}
+function gymDeleteLib(name, ev){
+  if(ev) ev.stopPropagation();
+  const gm=_gym(); const n=(name||'').toLowerCase();
+  const i=(gm.exLib||[]).findIndex(x=>(x.name||'').toLowerCase()===n);
+  if(i<0){ notify('Kayıtlı egzersiz bulunamadı'); return; }
+  const nm=gm.exLib[i].name;
+  gm.exLib.splice(i,1);
+  // haftalık programdan da temizle
+  try{ if(gm.program&&gm.program.days){ Object.keys(gm.program.days).forEach(d=>{ gm.program.days[d]=(gm.program.days[d]||[]).filter(it=>(it.name||'').toLowerCase()!==n); }); } }catch(e){}
+  save(); const pp=g('gym-ex-pop'); if(pp) pp.style.display='none';
+  notify('🗑 Kayıtlı egzersiz silindi: '+nm); addLog('GYM kayıtlı egzersiz silindi: '+nm);
+  try{ renderGym(); }catch(e){}
 }
 function gymPickLib(name){
   const lib=(_gym().exLib||[]);
@@ -11152,6 +11257,10 @@ function _mergeIncoming(incoming){
       merged.gym.exTombs=[...new Set([].concat(lg.exTombs||[], ig.exTombs||[]).map(String))].slice(-200);
       merged.gym.exercises=_unionArr(lg.exercises, ig.exercises, merged.gym.exTombs, x=>x&&x.id, (a,b)=>(a.done?1:0)>=(b.done?1:0));
       merged.gym.exLib=_unionArr(lg.exLib, ig.exLib, [], x=>x&&x.name, (a,b)=>true);
+      // 📅 haftalık program: daha dolu (çok egzersizli) olan + daha ileri hafta korunur
+      try{ const cnt=p=>{let n=0;try{Object.values((p&&p.days)||{}).forEach(a=>n+=(a||[]).length);}catch(e){}return n;};
+        const lp=lg.program, ip=ig.program; const base=(cnt(lp)>=cnt(ip))?(lp||ip):(ip||lp);
+        if(base){ base.week=Math.max((lp&&lp.week)||1,(ip&&ip.week)||1); merged.gym.program=base; } }catch(e){}
       merged.gym.depot=Object.assign({}, ig.depot||{}, lg.depot||{});
     }
   }catch(e){}
@@ -11529,7 +11638,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.73.0 başlatıldı.');
+addLog('OVERCLOCK v7.74.0 başlatıldı.');
 </script>
 </body>
 </html>
