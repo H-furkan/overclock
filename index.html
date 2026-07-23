@@ -1575,6 +1575,20 @@ body.pixel-font #timer-unit{font-size:8px}
     <div id="subject-legend" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
   </div>
 
+  <!-- GÜNÜN DERSLERİ (günlük ders bazlı soru + saat) -->
+  <div class="block">
+    <div class="fbet mb8">
+      <div class="blabel" style="margin-bottom:0;border-bottom:none;padding-bottom:0">■ Günün Dersleri</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="fbtn" onclick="dailyStatNav(-1)">◀</button>
+        <span id="daily-stat-date" style="font-size:9px;color:var(--bright);font-family:'Orbitron',monospace;min-width:74px;text-align:center">—</span>
+        <button class="fbtn" onclick="dailyStatNav(1)">▶</button>
+      </div>
+    </div>
+    <canvas id="daily-subject-chart" style="width:100%;height:190px;display:block;background:var(--deep);border:1px solid var(--bd)"></canvas>
+    <div id="daily-subject-list" style="margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+  </div>
+
   <!-- SAAT VERİMİ ISI HARİTASI -->
   <div class="block">
     <div class="blabel">■ Saat Verimi <span style="font-size:8px;color:var(--muted)">(hangi saatte kaç soru — veri v7.49'dan itibaren birikir)</span></div>
@@ -2006,7 +2020,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.72.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.73.0</div>
     </div>
   </div>
 </div>
@@ -10363,6 +10377,7 @@ function renderStats(){
   setTimeout(()=>{
     drawFocusChart();
     drawSubjectChart(_subjectRange);
+    renderDailySubjects();
     drawMonthlyChart();
     renderSubjectReport();
     renderWeekCompare();
@@ -10560,6 +10575,70 @@ const SUBJ_COLORS=[
 ];
 function subjColor(i){ return SUBJ_COLORS[i%SUBJ_COLORS.length]; }
 
+// ── 📅 GÜNÜN DERSLERİ: seçili günde ders bazlı soru (sütun) + saat ──
+let _dailyStatOffset=0;
+function dailyStatNav(dir){ _dailyStatOffset=Math.min(0, Math.max(-120, _dailyStatOffset+dir)); renderDailySubjects(); }
+function _dailySubjData(ds){
+  const m={};
+  (S.prodSessions||[]).filter(p=>p.date===ds).forEach(p=>{ const k=_canonSubj(p.subject||'Genel'); if(!m[k]) m[k]={subj:k,q:0,secs:0}; m[k].q+=(p.questions||0); });
+  const sl=(S.subjectLog||{})[ds]||{};
+  Object.entries(sl).forEach(([subj,secs])=>{ const k=_canonSubj(subj); if(!m[k]) m[k]={subj:k,q:0,secs:0}; m[k].secs+=(Number(secs)||0); });
+  return Object.values(m).filter(x=>x.q>0||x.secs>0).sort((a,b)=> (b.q-a.q)||(b.secs-a.secs));
+}
+function renderDailySubjects(){
+  const t=today(); const dt=new Date(); dt.setDate(dt.getDate()+_dailyStatOffset); const ds=_dstr(dt);
+  const lbl=g('daily-stat-date'); if(lbl) lbl.textContent=(_dailyStatOffset===0?'BUGÜN':(_dailyStatOffset===-1?'DÜN':ds.slice(5).replace('-','.')));
+  const data=_dailySubjData(ds);
+  drawDailySubjectChart(data);
+  const list=g('daily-subject-list');
+  if(list){
+    if(!data.length){ list.innerHTML='<div style="font-size:8px;color:var(--muted);letter-spacing:1px;padding:4px 0">Bu gün kayıt yok.</div>'; }
+    else{
+      const totQ=data.reduce((a,x)=>a+x.q,0), totS=data.reduce((a,x)=>a+x.secs,0);
+      list.innerHTML=data.map((x,i)=>'<div style="display:flex;align-items:center;gap:8px;font-size:9px">'+
+        '<span style="width:9px;height:9px;border-radius:2px;background:'+subjColor(i)+';flex-shrink:0"></span>'+
+        '<span style="flex:1;min-width:0;color:var(--bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_he(x.subj)+'</span>'+
+        '<span style="color:var(--white);font-family:Orbitron,monospace">'+x.q+' soru</span>'+
+        '<span style="color:var(--muted);min-width:52px;text-align:right">'+fmtHM(x.secs)+'</span>'+
+      '</div>').join('')+
+      '<div style="display:flex;gap:8px;font-size:9px;margin-top:4px;padding-top:4px;border-top:1px dashed rgba(255,255,255,.12)"><span style="flex:1;color:var(--muted);letter-spacing:1px">TOPLAM</span><span style="color:var(--white);font-family:Orbitron,monospace">'+totQ+' soru</span><span style="color:var(--muted);min-width:52px;text-align:right">'+fmtHM(totS)+'</span></div>';
+    }
+  }
+}
+function drawDailySubjectChart(data){
+  const cv=g('daily-subject-chart'); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||600, H=cv.clientHeight||190;
+  cv.width=W*dpr; cv.height=H*dpr; const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const note=g('daily-subject-chart');
+  if(!data.length){ ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font="10px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.fillText('kayıt yok', W/2, H/2); return; }
+  const padT=18, padB=30, padL=8, padR=8;
+  const maxQ=Math.max(1, ...data.map(x=>x.q));
+  const n=data.length; const bw=(W-padL-padR)/n; const ch=H-padT-padB;
+  data.forEach((x,i)=>{
+    const bx=padL+i*bw;
+    const bh=maxQ>0?(x.q/maxQ)*ch:0;
+    const col=subjColor(i);
+    // sütun (soru)
+    if(x.q>0){
+      ctx.fillStyle=col; ctx.globalAlpha=0.85;
+      ctx.fillRect(bx+bw*0.18, padT+ch-bh, bw*0.64, bh);
+      ctx.globalAlpha=1;
+      ctx.fillStyle=col; ctx.font="700 10px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText(x.q, bx+bw/2, padT+ch-bh-2);
+    } else {
+      // soru yok, sadece saat → ince taban çizgisi
+      ctx.strokeStyle=col; ctx.globalAlpha=0.6; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(bx+bw*0.18, padT+ch); ctx.lineTo(bx+bw*0.82, padT+ch); ctx.stroke(); ctx.globalAlpha=1;
+    }
+    // ders kısa etiket + saat
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.font="7px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.textBaseline='top';
+    const short=x.subj.replace('AYT ','A.').replace('TYT ','T.').slice(0,7);
+    ctx.fillText(short, bx+bw/2, padT+ch+4);
+    ctx.fillStyle='rgba(255,255,255,.32)';
+    ctx.fillText(fmtHM(x.secs), bx+bw/2, padT+ch+15);
+  });
+}
 function drawSubjectChart(days){
   const cv=g('subject-chart'); if(!cv) return;
   const dpr=window.devicePixelRatio||1;
@@ -11450,7 +11529,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.72.0 başlatıldı.');
+addLog('OVERCLOCK v7.73.0 başlatıldı.');
 </script>
 </body>
 </html>
