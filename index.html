@@ -2024,7 +2024,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.74.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.75.0</div>
     </div>
   </div>
 </div>
@@ -4535,7 +4535,15 @@ function _gymProgTick(){
     try{ addLog('📅 Program haftası ilerledi → hafta '+p.week+' (yük artışı)'); }catch(e){}
   }
 }
-function _gymAppliedLoad(item){ const w=_gymProg().week||1; return (Number(item.load)||0) + (w-1)*(Number(item.step)||0); }
+function _gymItemStart(item){ return Number(item.start!=null?item.start:item.load)||0; }
+function _gymItemGoal(item){ return Number(item.goal!=null?item.goal:(item.load!=null?(Number(item.load)+(Number(item.step)||0)*15):0))||0; }
+function _gymItemUnit(item){ return item.unit||'tekrar'; }
+function _gymAppliedLoad(item, wk){
+  const w=(wk!=null?wk:(_gymProg().week||1));
+  const start=_gymItemStart(item), goal=_gymItemGoal(item);
+  if(goal<=start) return Math.round(start);                        // hedef yok → statik (plato)
+  return Math.round(goal - (goal-start)*Math.pow(0.8, Math.max(0,w-1)));   // asimptotik: hedefi ASLA aşmaz
+}
 function openGymProgram(){ _gymProgTick(); renderGymProgram(); const m=g('gym-prog-modal'); if(m) m.style.display='flex'; }
 function renderGymProgram(){
   let m=g('gym-prog-modal');
@@ -4552,7 +4560,7 @@ function renderGymProgram(){
       const al=_gymAppliedLoad(it);
       return '<div style="display:flex;align-items:center;gap:6px;font-size:9px;margin-bottom:3px">'+
         '<span style="flex:1;min-width:0;color:var(--bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_he(it.name)+
-        (it.load>0?(' <span style="color:var(--green)">'+al+(it.unit||'')+'</span>'+(it.step>0?(' <span style="color:var(--muted)">(+'+it.step+'/hafta)</span>'):'')):'')+'</span>'+
+        (_gymItemGoal(it)>0?(' <span style="color:var(--green)">'+al+' '+_gymItemUnit(it)+'</span> <span style="color:var(--muted)">→'+_gymItemGoal(it)+'</span>'):'')+'</span>'+
         '<button class="btn" style="min-height:22px;padding:1px 7px;font-size:8px;border-color:var(--red);color:var(--red)" onclick="gymProgRemove('+dow+','+i+')">✕</button></div>';
     }).join('') || '<div style="font-size:8px;color:var(--muted);padding:2px 0">boş</div>';
     return '<div style="border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--mid)">'+
@@ -4560,26 +4568,56 @@ function renderGymProgram(){
       '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+
         '<select class="inp" id="gp-ex-'+dow+'" style="flex:2;min-width:110px;min-height:28px;font-size:9px;padding:2px 6px">'+
           (lib.length?lib.map(x=>'<option value="'+_he(x.name)+'">'+_he(x.name)+'</option>').join(''):'<option value="">— kayıtlı egzersiz yok —</option>')+'</select>'+
-        '<input class="inp" id="gp-load-'+dow+'" type="number" min="0" placeholder="yük" style="width:52px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
-        '<input class="inp" id="gp-unit-'+dow+'" placeholder="kg" style="width:40px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
-        '<input class="inp" id="gp-step-'+dow+'" type="number" min="0" placeholder="+/hf" style="width:48px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<input class="inp" id="gp-start-'+dow+'" type="number" min="0" placeholder="başl." title="başlangıç tekrar" style="width:50px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<input class="inp" id="gp-goal-'+dow+'" type="number" min="0" placeholder="hedef" title="hedef (plato) tekrar" style="width:50px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
+        '<input class="inp" id="gp-unit-'+dow+'" placeholder="tekrar" style="width:52px;min-height:28px;font-size:9px;padding:2px 4px;text-align:center">'+
         '<button class="btn primary" style="min-height:28px;padding:2px 9px;font-size:9px" onclick="gymProgAdd('+dow+')">＋</button>'+
       '</div></div>';
   }).join('');
   m.innerHTML='<div style="width:100%;max-width:440px;max-height:90vh;overflow-y:auto;background:var(--deep);border:1px solid var(--bd2);border-radius:12px;padding:16px;animation:ocPopIn .2s cubic-bezier(.2,.9,.3,1.15)">'+
     '<div class="fbet mb8"><div style="font-family:Orbitron,monospace;font-size:13px;font-weight:900;color:var(--white);letter-spacing:2px">📅 HAFTALIK PROGRAM</div>'+
     '<button class="btn" style="min-height:24px;padding:2px 10px;font-size:9px" onclick="g(\'gym-prog-modal\').style.display=\'none\'">✕</button></div>'+
-    '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">Kayıtlı egzersizleri günlere ata + opsiyonel <b style="color:var(--green)">yük</b> ve <b style="color:var(--bright)">haftalık artış</b> gir. Uygulama her yeni hafta yükü otomatik artırır (şu an <b style="color:var(--bright)">HAFTA '+(p.week||1)+'</b>). "＋ Bugünün Programı" ile o günün egzersizlerini güncel yükle ekle.</div>'+
+    '<div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:8px">Egzersizi güne ata + <b style="color:var(--green)">başlangıç</b> ve <b style="color:var(--yellow)">hedef</b> tekrar gir. Tekrar hedefe <b>asimptotik</b> yaklaşır — hızlı başlar, platoya oturur, hedefi aşmaz (1→400 saçmalığı yok). Şu an <b style="color:var(--bright)">HAFTA '+(p.week||1)+'</b>.</div>'+
+    '<canvas id="gym-prog-graph" style="width:100%;height:130px;display:block;background:var(--mid);border:1px solid var(--bd);border-radius:8px;margin-bottom:6px"></canvas>'+
+    '<div id="gym-prog-legend" style="display:flex;flex-wrap:wrap;gap:4px 8px;margin-bottom:12px"></div>'+
     dayHtml+
   '</div>';
+  setTimeout(function(){ try{ drawGymProgGraph(); }catch(e){} }, 30);
+}
+// 📈 Tekrar progresyon grafiği — her egzersizin 16 haftalık asimptotik eğrisi
+function drawGymProgGraph(){
+  const cv=g('gym-prog-graph'); if(!cv) return;
+  const p=_gymProg(); const uniq={};
+  Object.values(p.days||{}).forEach(function(arr){ (arr||[]).forEach(function(it){ if(!uniq[it.name]) uniq[it.name]=it; }); });
+  const items=Object.values(uniq).filter(function(it){ return _gymItemGoal(it)>0; });
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth||400, H=cv.clientHeight||130;
+  cv.width=W*dpr; cv.height=H*dpr; const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const leg=g('gym-prog-legend');
+  if(!items.length){ ctx.fillStyle='rgba(255,255,255,.3)'; ctx.font="9px 'Share Tech Mono',monospace"; ctx.textAlign='center'; ctx.fillText('hedef tekrar gir → progresyon eğrisi burada', W/2, H/2); if(leg) leg.innerHTML=''; return; }
+  const WK=16, padL=24, padR=8, padT=10, padB=16;
+  let maxR=1; items.forEach(function(it){ for(let w=1;w<=WK;w++) maxR=Math.max(maxR,_gymAppliedLoad(it,w)); });
+  const cw=W-padL-padR, chh=H-padT-padB;
+  const xOf=function(w){ return padL+((w-1)/(WK-1))*cw; }, yOf=function(r){ return padT+chh-(r/maxR)*chh; };
+  ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.lineWidth=1; ctx.font="7px 'Share Tech Mono',monospace"; ctx.fillStyle='rgba(255,255,255,.35)';
+  [0,Math.round(maxR/2),maxR].forEach(function(r){ const y=yOf(r); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillText(r,padL-3,y); });
+  const cw0=Math.min(WK,p.week||1); ctx.strokeStyle='rgba(255,158,100,.5)'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(xOf(cw0),padT); ctx.lineTo(xOf(cw0),padT+chh); ctx.stroke(); ctx.setLineDash([]);
+  const cols=['#8fff8f','#ffff66','#66ccff','#ff9e64','#cc88ff','#ff6666'];
+  items.forEach(function(it,ci){
+    ctx.strokeStyle=cols[ci%cols.length]; ctx.lineWidth=1.8; ctx.beginPath();
+    for(let w=1;w<=WK;w++){ const x=xOf(w), y=yOf(_gymAppliedLoad(it,w)); if(w===1) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    ctx.stroke();
+    const cx=xOf(cw0), cy=yOf(_gymAppliedLoad(it,cw0)); ctx.fillStyle=cols[ci%cols.length]; ctx.beginPath(); ctx.arc(cx,cy,2.5,0,6.283); ctx.fill();
+  });
+  ctx.fillStyle='rgba(255,255,255,.35)'; ctx.textAlign='center'; ctx.textBaseline='top'; ctx.fillText('hf 1',padL,padT+chh+3); ctx.fillText('16',W-padR,padT+chh+3);
+  if(leg) leg.innerHTML=items.map(function(it,ci){ return '<span style="font-size:8px;color:'+cols[ci%cols.length]+'">■ '+_he(it.name)+' ('+_gymAppliedLoad(it)+'/'+_gymItemGoal(it)+')</span>'; }).join('');
 }
 function gymProgAdd(dow){
   const name=((g('gp-ex-'+dow)||{}).value||'').trim(); if(!name){ notify('Egzersiz seç'); return; }
-  const load=Math.max(0, parseFloat((g('gp-load-'+dow)||{}).value)||0);
-  const unit=((g('gp-unit-'+dow)||{}).value||'').trim().slice(0,6);
-  const step=Math.max(0, parseFloat((g('gp-step-'+dow)||{}).value)||0);
+  const start=Math.max(0, parseFloat((g('gp-start-'+dow)||{}).value)||0);
+  const goal=Math.max(0, parseFloat((g('gp-goal-'+dow)||{}).value)||0);
+  const unit=(((g('gp-unit-'+dow)||{}).value||'tekrar').trim().slice(0,8))||'tekrar';
   const p=_gymProg(); p.days[dow]=p.days[dow]||[];
-  p.days[dow].push({name, load, unit, step});
+  p.days[dow].push({name, start, goal, unit});
   save(); renderGymProgram();
   notify('📅 '+_GDOW[_GDOW_JS.indexOf(dow)]+' → '+name);
 }
@@ -4592,11 +4630,11 @@ function gymApplyTodayProgram(){
   items.forEach(it=>{
     const lx=(gm.exLib||[]).find(x=>(x.name||'').toLowerCase()===(it.name||'').toLowerCase());
     const al=_gymAppliedLoad(it);
-    const dispName=it.name+(it.load>0?(' — '+al+(it.unit||'')):'');
+    const dispName=it.name+(_gymItemGoal(it)>0?(' — '+al+' '+_gymItemUnit(it)):'');
     // aynı gün aynı egzersiz zaten eklendiyse atla
     if(gm.exercises.some(e=>e.date===t && (e.name||'').indexOf(it.name)===0)) return;
     let mp=lx?lx.mp:20;
-    if(it.load>0){ mp=Math.max(1, Math.round(mp * al/Math.max(1,it.load))); }   // yük büyüdükçe MP büyür
+    const _st=_gymItemStart(it); if(_st>0){ mp=Math.max(1, Math.round(mp * al/_st)); }   // tekrar arttıkça MP büyür
     gm.exercises.push({ id:String(Date.now())+'-'+added, name:dispName, mp, muscles:(lx?lx.muscles:[])||[], date:t, done:false });
     added++;
   });
@@ -11638,7 +11676,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.74.0 başlatıldı.');
+addLog('OVERCLOCK v7.75.0 başlatıldı.');
 </script>
 </body>
 </html>
