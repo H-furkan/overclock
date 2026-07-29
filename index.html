@@ -781,6 +781,10 @@ body.pixel-font #timer-unit{font-size:8px}
     <button class="btn" onclick="finishTimerEarly(event)" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
     <button class="btn" onclick="openSubjectPicker()">📚 DERS SEÇ</button>
   </div>
+  <div id="fs-timer-addbtns" style="display:none;gap:8px;justify-content:center;margin-top:8px">
+    <button class="btn" onclick="addTimerMinutes(5)" style="border-color:var(--green);color:var(--green)">＋5 dk</button>
+    <button class="btn" onclick="addTimerMinutes(10)" style="border-color:var(--green);color:var(--green)">＋10 dk</button>
+  </div>
 </div>
 
 <!-- ERROR MODAL -->
@@ -1032,6 +1036,10 @@ body.pixel-font #timer-unit{font-size:8px}
           <button class="btn" onclick="resetTimer()">↺ RESET</button>
           <button class="btn" onclick="finishTimerEarly(event)" style="border-color:var(--yellow);color:var(--yellow)">⏹ ŞİMDİ BİTİR</button>
           <button class="btn" id="btn-subject" onclick="openSubjectPicker()" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📚 DERS SEÇ</button>
+        </div>
+        <div id="timer-addbtns" class="bgrid mb8" style="display:none">
+          <button class="btn" onclick="addTimerMinutes(5)" style="border-color:var(--green);color:var(--green)">＋5 dk</button>
+          <button class="btn" onclick="addTimerMinutes(10)" style="border-color:var(--green);color:var(--green)">＋10 dk</button>
         </div>
         <button class="btn fw mb8" onclick="enterFullscreen()" style="border-color:var(--bright)">⛶ TAM EKRAN</button>
         <button class="btn fw" style="font-size:8px;color:var(--muted);border-color:var(--bd)" onclick="tog('timer-set-panel')">⚙ SÜRE AYARLA: <span id="timer-cfg-lbl">90dk/20dk</span></button>
@@ -2036,7 +2044,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.77.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.78.0</div>
     </div>
   </div>
 </div>
@@ -3053,6 +3061,19 @@ function renderSessionType(){
     if(bk) bk.classList.toggle('primary', t==='konu');
   });
 }
+// ⏱ Çalışan sayaca süre ekle (odak veya mola) — wall-clock ve planlanan süreyi de günceller
+function addTimerMinutes(mins){
+  if(!timerRunning){ notify('Önce sayacı başlat'); return; }
+  const add=Math.max(0,mins)*60;
+  timerSecs += add;
+  if(timerEndAt) timerEndAt += add*1000;
+  if(!isBreak){ _sessPlannedMin=(_sessPlannedMin||Math.round(S.focusMin))+mins; }   // XP planlanan süreyle büyür
+  if(S._runSess){ if(timerEndAt) S._runSess.endAt=timerEndAt; S._runSess.remainSecs=timerSecs; }
+  try{ if(timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); } }catch(e){}
+  renderTimer(); save();
+  notify('⏱ +'+mins+' dk eklendi'+(isBreak?' (mola)':''));
+  addLog('Sayaca +'+mins+' dk'+(isBreak?' (mola)':' (odak)'));
+}
 function toggleTimer(){
   if(timerRunning){
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
@@ -3060,6 +3081,7 @@ function toggleTimer(){
     S._runSess={ mode:(isBreak?'break':'focus'), paused:true, remainSecs:timerSecs, focusMin:(_sessFocusMin||S.focusMin), type:_sessType, subject:_sessSubject, startHour:_sessStartHour, at:Date.now() };
     save();
     g('btn-start').textContent='▶ START';
+    try{ const _ab=g('timer-addbtns'); if(_ab) _ab.style.display='none'; const _fab=g('fs-timer-addbtns'); if(_fab) _fab.style.display='none'; }catch(e){}
     setStatus('standby'); addLog('Timer duraklatıldı.');
     cancelTimerNotification(); stopKeepAlive(); _releaseWakeLock(); _dimCancel(); _dimCancel();
     // Deep Work buff: pause yapılırsa iptal olur
@@ -3366,9 +3388,10 @@ function finishTimerEarly(ev){
   if(elapsedMin>=120) earnBadge('ghost');
   if((S.todayFocusSecs||0)>=8*3600) earnBadge('maestro');
   if(_sessType==='soru'){ try{ _promptSessionQuestions(elapsedMin, _sessSubject); }catch(e){} }
-  // back to standby with a fresh focus countdown
-  isBreak=false; timerSecs=S.focusMin*60;
-  setStatus('standby'); renderTimer(); save();
+  // ⏸ v7.78: erken bitişte de MOLAYA geç (doğal bitişteki gibi) — standby yerine mola sayacı
+  isBreak=true; timerSecs=S.breakMin*60;
+  if (S.cases && (S.cases.breakBonus||0) > 0){ const _bb=S.cases.breakBonus; timerSecs += _bb; S.cases.breakBonus=0; notify('⏸ Mola +'+Math.round(_bb/60)+'dk uzadı (kasa)'); addLog('Mola +'+Math.round(_bb/60)+'dk (kasa)'); }
+  setStatus('break'); notify('⏸ Molaya geçildi — '+Math.round(timerSecs/60)+' dk'); renderTimer(); save();
   });
 }
 
@@ -5144,6 +5167,7 @@ function renderTimer(){
   ring.style.filter=isBreak?'drop-shadow(0 0 4px rgba(255,255,102,.5))':'drop-shadow(0 0 4px rgba(255,255,255,.5))';
   g('timer-num').textContent=fmtSecs(timerSecs);
   g('timer-num').style.color=isBreak?'var(--yellow)':'var(--white)';
+  try{ const _ab=g('timer-addbtns'); if(_ab) _ab.style.display=timerRunning?'':'none'; const _fab=g('fs-timer-addbtns'); if(_fab) _fab.style.display=timerRunning?'flex':'none'; }catch(e){}
   // 100dk+ → HQ sayaç puntosu küçül (büyütülen yuvarlağı taşmasın)
   g('timer-num').style.fontSize = (timerSecs>=6000)
     ? (document.body.classList.contains('pixel-font')?'clamp(15px,4.5vw,24px)':'clamp(22px,6.4vw,38px)')
@@ -11923,7 +11947,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.77.0 başlatıldı.');
+addLog('OVERCLOCK v7.78.0 başlatıldı.');
 </script>
 </body>
 </html>
