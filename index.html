@@ -2044,7 +2044,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.79.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.80.0</div>
     </div>
   </div>
 </div>
@@ -3071,7 +3071,7 @@ function addTimerMinutes(mins){
   timerSecs += add;
   if(timerEndAt) timerEndAt += add*1000;
   if(!isBreak){ _sessPlannedMin=(_sessPlannedMin||Math.round(S.focusMin))+mins; }   // XP planlanan süreyle büyür
-  if(S._runSess){ if(timerEndAt) S._runSess.endAt=timerEndAt; S._runSess.remainSecs=timerSecs; }
+  if(S._runSess){ if(timerEndAt) S._runSess.endAt=timerEndAt; S._runSess.remainSecs=timerSecs; if(!isBreak) S._runSess.focusMin=(S._runSess.focusMin||0)+mins; }   // v7.80: resume yolu da eklenen süreyi bilsin
   try{ if(timerEndAt){ scheduleTimerNotification(); showOngoingTimerNotif(); } }catch(e){}
   renderTimer(); save();
   notify('⏱ +'+mins+' dk eklendi'+(isBreak?' (mola)':''));
@@ -3217,7 +3217,7 @@ function tickTimer(){
       addXP(sxp,'Session tamamlandı ('+_fmin+'dk)');
       _sessPlannedMin=0;
       notify('🔔 SESSION COMPLETE // +'+sxp+' XP // MOLAYA GEÇ');
-      if(_sessType==='soru'){ try{ _promptSessionQuestions(_sessFocusMin||S.focusMin, _sessSubject); }catch(e){} }
+      if(_sessType==='soru'){ try{ _promptSessionQuestions(_fmin, _sessSubject); }catch(e){} }   // v7.80: eklenen süre dahil GERÇEK süre (_fmin=_sessPlannedMin)
       if(S.streak>=3) earnBadge('streak');
       if(S.sessions>=5) earnBadge('iron');
       if(S.sessions>=3) earnBadge('overdrive');
@@ -3341,13 +3341,13 @@ function finishTimerEarly(ev){
     });
     return;
   }
-  if (Math.max(0, Math.round((Math.max(0,(S.focusMin*60)-timerSecs))/60)) < 1){
+  if (Math.max(0, Math.round((Math.max(0,((_sessPlannedMin||S.focusMin)*60)-timerSecs))/60)) < 1){
     notify('Henüz 1 dk geçmedi — XP yok');
     return;
   }
   armBtn(ev,'finish',()=>{
     if(!timerRunning || isBreak) return;
-    const elapsedSec = Math.max(0, (S.focusMin*60) - timerSecs);
+    const elapsedSec = Math.max(0, ((_sessPlannedMin||S.focusMin)*60) - timerSecs);   // v7.80: eklenen süre dahil
     const elapsedMin = Math.max(0, Math.round(elapsedSec/60));
     if (elapsedMin < 1){ notify('Henüz 1 dk geçmedi — XP yok'); return; }
   clearInterval(timerIv); timerRunning=false; timerEndAt=null; S._runSess=null;
@@ -11963,7 +11963,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.79.0 başlatıldı.');
+addLog('OVERCLOCK v7.80.0 başlatıldı.');
 </script>
 </body>
 </html>
