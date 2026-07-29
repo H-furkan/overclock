@@ -2044,7 +2044,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.80.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.81.0</div>
     </div>
   </div>
 </div>
@@ -2212,6 +2212,40 @@ const BADGES = [
   {id:'habits10',   icon:'🗃️', name:'KOLEKSİYONCU',    desc:'10 alışkanlık oluştur',    type:'permanent', trig:'auto'},
   {id:'daystreak7', icon:'📆', name:'HAFTALIK ZİNCİR', desc:'7 gün hedef streak',       type:'permanent', trig:'auto'},
   {id:'daystreak30',icon:'🔥', name:'AYLIK ALEV',      desc:'30 gün hedef streak',      type:'permanent', trig:'auto'},
+  // v7.81 — Başarımlar (daily)
+  {id:'triad',    icon:'⚖️', name:'GÜNLÜK ÜÇLÜ',   desc:'Bugün Mat + Fen + Türkçe (her biri ≥5dk)', type:'daily', trig:'auto'},
+  {id:'interday', icon:'🔀', name:'INTERLEAVING',  desc:'Bugün 4+ ders, her biri ≥50dk', type:'daily', trig:'auto'},
+  {id:'interday5',icon:'🌈', name:'TAM SPEKTRUM',  desc:'Bugün 5+ ders, her biri ≥50dk', type:'daily', trig:'auto'},
+  {id:'srclear',  icon:'🧹', name:'KUYRUK TEMİZ',  desc:'Bugün SR tekrar kuyruğunu sıfırla', type:'daily', trig:'auto'},
+  {id:'tripcrown',icon:'👑', name:'TAM FORM',      desc:'Aynı gün: uyku hedefi + antrenman + 300 soru', type:'daily', trig:'auto'},
+  // v7.81 — Başarımlar (permanent)
+  {id:'fw5',      icon:'🌙', name:'23:00 FIREWALL', desc:'5 gün üst üste 23:00 öncesi yat', type:'permanent', trig:'auto'},
+  {id:'fw30',     icon:'🛡️', name:'23:00 IRONCLAD', desc:'30 gün üst üste 23:00 öncesi yat', type:'permanent', trig:'auto'},
+  {id:'sleepguard14',icon:'🌛',name:'GECE BEKÇİSİ', desc:'14 gece yatış tutarlılığı ±30dk', type:'permanent', trig:'auto'},
+  {id:'hydro30',  icon:'🚰', name:'HİDRASYON DÜĞÜMÜ',desc:'30 gün üst üste 2L su', type:'permanent', trig:'auto'},
+  {id:'riser7',   icon:'🐦', name:'ERKEN KUŞ',     desc:'7 gün üst üste 08:00 öncesi başla', type:'permanent', trig:'auto'},
+  {id:'recovsleep',icon:'💤',name:'TOPARLANMA UYKUSU',desc:'Antrenman günü gecesi 8+ saat uyu', type:'permanent', trig:'auto'},
+  {id:'mover10',  icon:'🏃', name:'DÜZENLİ HAREKET',desc:'10 gün üst üste egzersiz', type:'permanent', trig:'auto'},
+  {id:'srstreak7',icon:'🧠', name:'TEKRAR RİTMİ',  desc:'7 gün üst üste SR tekrarı', type:'permanent', trig:'auto'},
+  {id:'srstreak30',icon:'🧩',name:'HAFIZA KİLİDİ', desc:'30 gün üst üste SR tekrarı', type:'permanent', trig:'auto'},
+  {id:'intermaster10',icon:'🎚️',name:'HARMANLAYICI',desc:'10 Interleaving günü', type:'permanent', trig:'auto'},
+  {id:'intermaster30',icon:'🎛️',name:'HARMAN USTASI',desc:'30 Interleaving günü', type:'permanent', trig:'auto'},
+  {id:'anka1',    icon:'🐣', name:'ANKA I',        desc:'Düşüşün ertesinde 3 saat çalış (1. geri dönüş)', type:'permanent', trig:'auto'},
+  {id:'anka3',    icon:'🦅', name:'ANKA II',       desc:'3. geri dönüş — pes yok', type:'permanent', trig:'auto'},
+  {id:'anka5',    icon:'🔥', name:'ANKA III',      desc:'5. geri dönüş — küllerinden doğan', type:'permanent', trig:'auto'},
+  {id:'zeroweek', icon:'🏅', name:'KUSURSUZ HAFTA',desc:'7 gün üst üste Zero Errors', type:'permanent', trig:'auto'},
+  {id:'tyt5',  icon:'🧾', name:'TYT INITIATE',  desc:'5 TYT denemesi',   type:'permanent', trig:'auto'},
+  {id:'tyt10', icon:'🧾', name:'TYT ×10',       desc:'10 TYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'tyt20', icon:'🧾', name:'TYT ×20',       desc:'20 TYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'tyt50', icon:'📜', name:'TYT ×50',       desc:'50 TYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'tyt100',icon:'📜', name:'TYT ×100',      desc:'100 TYT denemesi', type:'permanent', trig:'auto'},
+  {id:'tyt150',icon:'🏆', name:'TYT ×150',      desc:'150 TYT denemesi', type:'permanent', trig:'auto'},
+  {id:'ayt5',  icon:'🧾', name:'AYT SPECIALIST',desc:'5 AYT denemesi',   type:'permanent', trig:'auto'},
+  {id:'ayt10', icon:'🧾', name:'AYT ×10',       desc:'10 AYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'ayt20', icon:'🧾', name:'AYT ×20',       desc:'20 AYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'ayt50', icon:'📜', name:'AYT ×50',       desc:'50 AYT denemesi',  type:'permanent', trig:'auto'},
+  {id:'ayt100',icon:'📜', name:'AYT ×100',      desc:'100 AYT denemesi', type:'permanent', trig:'auto'},
+  {id:'ayt150',icon:'🏆', name:'AYT ×150',      desc:'150 AYT denemesi', type:'permanent', trig:'auto'},
 ];
 
 // ════════════════════════════════════════
@@ -2404,6 +2438,8 @@ function defState() {
     _updatedAt:0,                 // ms of last local change pushed to cloud
     // ── NEW v7: EXAM / NET TRACKING ──
     exams:[],                     // [{id,date,type,name,nets:{},total,wrongTopics:[normKey]}]
+    srDoneDays:[], waterGoalDays:[], zeroDays:[], earlyDays:[], interDays:[],   // v7.81 başarım günlük-geçmişleri
+    comebackCount:0, _ankaLastBroken:null,
     topicProgress:{},             // (deprecated v7.5)
     questionLog:{},               // {subject: totalCount}
     // ── SORU BANKASI (para) ── bakiye = earned - spent (kuruş), ikisi monoton (sync-güvenli)
@@ -3092,6 +3128,7 @@ function toggleTimer(){
   } else {
     if (!isBreak) stopLeak();
     if(!isBreak && new Date().getHours()<6) earnBadge('dawn');
+    if(!isBreak && new Date().getHours()<8) _recordDay('earlyDays');   // v7.81: Erken Kuş serisi
     // ask for notification permission on the first start (user gesture)
     if (_isNative()) {
       ensureNativeNotifPerm();
@@ -4644,6 +4681,7 @@ function sleepSave(){
   if(hit && !wasHit){ const gm=_gym(); gm.mpEarned=(gm.mpEarned||0)+15; notify('😴 +15 MP — hedef uyku (toparlanma)'); }
   _sleepEntryDate=null; _sleepDraftQ=0;
   save(); renderGym();
+  try{ _checkAchievements(); }catch(e){}   // v7.81: uyku bazlı başarımlar
   notify('😴 Uyku kaydedildi: '+hours+' sa'+(hit?' 🎯':''));
   addLog('Uyku: '+_nightLabel(d)+' → '+hours+' sa (kalite '+q+'/5)'+(hit?' [hedef ✓]':''));
 }
@@ -5472,7 +5510,7 @@ function defeatBoss(){
 // ════════════════════════════════════════
 function addWater(){
   S.waterCount=Math.min(S.waterCount+1,8); updateWaterUI();
-  if(S.waterCount>=8) earnBadge('hydra');
+  if(S.waterCount>=8){ earnBadge('hydra'); _recordDay('waterGoalDays'); try{ _checkAchievements(); }catch(e){} }
   save(); addLog('Su: '+S.waterCount+'/8');
 }
 
@@ -5764,6 +5802,107 @@ function earnBadge(id){
   addXP(50,'Rozet bonusu');
   renderBadges();
 }
+// ════════════════════════════════════════
+// 🏆 BAŞARIMLAR (v7.81) — mevcut veriyle otomatik
+// ════════════════════════════════════════
+const ACHV_REWARD={
+  triad:{xp:30}, interday:{xp:40}, interday5:{xp:30}, srclear:{xp:25}, tripcrown:{xp:200, gold:1},
+  fw5:{xp:100}, fw30:{xp:250, gold:1}, sleepguard14:{xp:150, mp:30}, hydro30:{xp:150, mp:20}, riser7:{xp:120},
+  recovsleep:{xp:80, mp:25}, mover10:{xp:120, mp:30},
+  srstreak7:{xp:100}, srstreak30:{xp:250, gold:1}, intermaster10:{xp:100}, intermaster30:{xp:200, gold:1},
+  anka1:{xp:100}, anka3:{xp:150}, anka5:{xp:250, gold:1}, zeroweek:{xp:200, gold:1},
+  tyt5:{xp:60}, tyt10:{xp:100}, tyt20:{xp:160}, tyt50:{xp:280, gold:1}, tyt100:{xp:450, gold:1}, tyt150:{xp:700, gold:2, mp:50},
+  ayt5:{xp:60}, ayt10:{xp:100}, ayt20:{xp:160}, ayt50:{xp:280, gold:1}, ayt100:{xp:450, gold:1}, ayt150:{xp:700, gold:2, mp:50},
+};
+function _earnAchv(id){
+  if((S.earnedBadges||[]).includes(id)) return false;
+  earnBadge(id);   // işaretle + 50 XP taban + toast + render
+  const r=ACHV_REWARD[id]; if(r){
+    if(r.xp) addXP(r.xp,'Başarım ödülü');
+    if(r.gold){ const cs=_cs(); cs.gold=(cs.gold||0)+r.gold; notify('✨ +'+r.gold+' Gold kasa'); }
+    if(r.mp){ const gm=_gym(); gm.mpEarned=(gm.mpEarned||0)+r.mp; notify('🏋 +'+r.mp+' MP'); }
+  }
+  return true;
+}
+function _recordDay(field, date){
+  const d=date||today(); S[field]=S[field]||[];
+  if(!S[field].includes(d)){ S[field].push(d); if(S[field].length>420) S[field]=S[field].slice(-420); }
+}
+function _streakDays(arr){
+  const set=new Set(arr||[]); let n=0; const d=new Date(); d.setHours(0,0,0,0);
+  if(!set.has(_dstr(d))) d.setDate(d.getDate()-1);   // bugün yoksa dünden say (streak kırılmasın)
+  while(set.has(_dstr(d))){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function _subjGroup(name){
+  const x=(name||'');
+  if(/Matematik|Geometri/i.test(x)) return 'mat';
+  if(/Fizik|Kimya|Biyoloji/i.test(x)) return 'fen';
+  if(/Türkçe|Edebiyat|Türk/i.test(x)) return 'tr';
+  return null;
+}
+function _todaySubjSecs(){ return (S.subjectLog||{})[today()]||{}; }
+function _bedBefore23(bed){ if(!bed) return false; const p=bed.split(':').map(Number); const m=p[0]*60+p[1]; return m>=12*60 && m<23*60; }
+function _examCount(type){ return (S.exams||[]).filter(e=>e.type===type).length; }
+
+function _checkAchievements(){
+ try{
+  const t=today();
+  const gm=S.gym||{}; const sleep=gm.sleep||[]; const ex=gm.exercises||[];
+  // Denemeler (kümülatif)
+  [['tyt',_examCount('TYT')],['ayt',_examCount('AYT')]].forEach(function(pc){
+    [5,10,20,50,100,150].forEach(function(n){ if(pc[1]>=n) _earnAchv(pc[0]+n); });
+  });
+  // Yatış <23:00 serisi (Firewall/Ironclad)
+  const fwStreak=_streakDays(sleep.filter(function(x){return _bedBefore23(x.bed);}).map(function(x){return x.d;}));
+  if(fwStreak>=5) _earnAchv('fw5');
+  if(fwStreak>=30) _earnAchv('fw30');
+  // Gece Bekçisi: son 14 gece yatış std ≤30dk
+  (function(){ const l14=sleep.slice().sort(function(a,b){return a.d<b.d?1:-1;}).slice(0,14);
+    if(l14.length>=14){ const mn=l14.map(function(x){ if(!x.bed) return null; const p=x.bed.split(':').map(Number); let m=p[0]*60+p[1]; if(m<720) m+=1440; return m; }).filter(function(v){return v!=null;});
+      if(mn.length>=14){ const av=mn.reduce(function(a,b){return a+b;},0)/mn.length; const sd=Math.sqrt(mn.reduce(function(a,b){return a+(b-av)*(b-av);},0)/mn.length); if(sd<=30) _earnAchv('sleepguard14'); } } })();
+  // Recovery Sleep: antrenman günü gecesi 8+ sa
+  (function(){ const done=new Set(ex.filter(function(e){return e.done;}).map(function(e){return e.doneDate||e.date;}));
+    for(let i=0;i<sleep.length;i++){ const x=sleep[i]; if((x.hours||0)>=8){ const p=x.d.split('-').map(Number); const prev=_dstr(new Date(p[0],p[1]-1,p[2]-1)); if(done.has(prev)){ _earnAchv('recovsleep'); break; } } } })();
+  // Consistent Mover: 10 gün üst üste egzersiz
+  if(_streakDays([...new Set(ex.filter(function(e){return e.done;}).map(function(e){return e.doneDate||e.date;}))])>=10) _earnAchv('mover10');
+  // Su 30 gün / Erken Kuş 7 gün
+  if(_streakDays(S.waterGoalDays)>=30) _earnAchv('hydro30');
+  if(_streakDays(S.earlyDays)>=7) _earnAchv('riser7');
+  // SR serisi + Flashcard Clear
+  const srs=_streakDays(S.srDoneDays);
+  if(srs>=7) _earnAchv('srstreak7');
+  if(srs>=30) _earnAchv('srstreak30');
+  if(((S.srItems||[]).length>0) && srDueItems().length===0) _earnAchv('srclear');
+  // Kusursuz Hafta
+  if(_streakDays(S.zeroDays)>=7) _earnAchv('zeroweek');
+  // Daily Triad (Mat+Fen+Türkçe, her ≥5dk)
+  (function(){ const secs=_todaySubjSecs(); const grp={};
+    Object.keys(secs).forEach(function(k){ if((secs[k]||0)>=300){ const gp=_subjGroup(k); if(gp) grp[gp]=1; } });
+    if(grp.mat&&grp.fen&&grp.tr) _earnAchv('triad'); })();
+  // Interleaving Günü (≥4 ders her ≥50dk) + master
+  (function(){ const secs=_todaySubjSecs(); const n=Object.keys(secs).filter(function(k){return (secs[k]||0)>=50*60;}).length;
+    if(n>=4){ _earnAchv('interday'); _recordDay('interDays'); }
+    if(n>=5) _earnAchv('interday5');
+    const im=(S.interDays||[]).length; if(im>=10) _earnAchv('intermaster10'); if(im>=30) _earnAchv('intermaster30'); })();
+  // Triple Crown (Tam Form)
+  (function(){ const goal=(typeof _sleepGoal==='function')?_sleepGoal():7.5;
+    const slept=sleep.some(function(x){return x.d===t && (x.hours||0)>=goal;});
+    const worked=ex.some(function(e){return e.done && (e.doneDate||e.date)===t;});
+    const q=(typeof _dayQuestions==='function')?_dayQuestions(t):0;
+    if(slept&&worked&&q>=300) _earnAchv('tripcrown'); })();
+  // Anka (event: düşüş sonrası 3 saat, brokenOn başına 1 kez)
+  (function(){ const lb=S.lastBrokenStreak; if(!lb||!lb.brokenOn) return;
+    if(S._ankaLastBroken===lb.brokenOn) return;
+    const dsince=daysUntil(lb.brokenOn);   // 0=bugün, -1=dün
+    if((S.todayFocusSecs||0)>=3*3600 && dsince!=null && dsince<=0 && dsince>=-1){
+      S._ankaLastBroken=lb.brokenOn; S.comebackCount=(S.comebackCount||0)+1; save();
+      const c=S.comebackCount;
+      _earnAchv('anka1'); if(c>=3) _earnAchv('anka3'); if(c>=5) _earnAchv('anka5');
+      notify('🔥 GERİ DÖNÜŞ — düşmek yeniltmez, kalkmamak yeniltir ('+c+'. dönüş)');
+    } })();
+ }catch(e){}
+}
 
 // ── OC RENK SEÇİCİ — tarayıcı color input'u yerine (LibreWolf 3-slider fix) ──
 // SV karesi + ton çubuğu + HEX girişi + hazır palet + KAYDEDİLEBİLİR favoriler (S.savedColors, senkronlu).
@@ -5977,6 +6116,9 @@ const SK_TREES=[
   {title:'📚 Akademi',    rows:[ ['scholar'], ['q500','exam10'], ['q2000','net100'], ['slayer','tree10'], ['focus50h','sr20'], ['focus200h','bank100'], ['tasklegend'] ]},
   {title:'🔄 Alışkanlık', rows:[ ['habit3'], ['habit7'], ['habit21','habits10'], ['habit30','daystreak7'], ['habit60','habit5all'], ['habit100','daystreak30'], ['disciplined','screenguard'] ]},
   {title:'🏋 Spor',       rows:[ ['gt_acemi','gb_kalp'], ['gt_demir','gb_dambil'], ['gt_atlet','gb_krono'], ['gt_sparta','gb_ates'], ['gt_gladyator','gt_maraton'], ['gt_mudavim','gt_demirbas'] ]},
+  {title:'🧾 Denemeler',  rows:[ ['tyt5','ayt5'], ['tyt10','ayt10'], ['tyt20','ayt20'], ['tyt50','ayt50'], ['tyt100','ayt100'], ['tyt150','ayt150'] ]},
+  {title:'😴 Ritim & Sağlık', rows:[ ['fw5'], ['fw30','sleepguard14'], ['riser7','hydro30'], ['recovsleep','mover10'] ]},
+  {title:'🎯 Hedefler',   rows:[ ['anka1'], ['anka3','zeroweek'], ['anka5','srstreak7'], ['srstreak30','intermaster10'], ['intermaster30'] ]},
 ];
 const _GYM_BADGE_EMOJI={ gb_kalp:'🫀', gb_krono:'⏱', gb_dambil:'🏋', gb_ates:'🔥' };
 // Tek düğüm bilgisi: BADGES / GYM_TITLES / GYM_BADGES kaynaklarını birleştirir
@@ -8765,6 +8907,7 @@ function addExam(){
   _examWrongChips = [];
   // Soru bankası: deneme netine göre ödül (100-105→1000TL, 105-110→2500TL, 110+→5000TL)
   if(S.exams.length>=10) earnBadge('exam10');
+  try{ _checkAchievements(); }catch(e){}   // v7.81: TYT/AYT kademeleri
   if(total>=100) earnBadge('net100');
   const _netReward = _examNetRewardKurus(Math.round(total*100)/100);
   if(_netReward>0){ bankEarn(_netReward, 'deneme', 'Deneme '+type+' — '+total.toFixed(2)+' net → '+_fmtTL(_netReward)); }
@@ -9432,7 +9575,8 @@ function srRate(id, q){
   }
   it.last=today();
   it.due=_srAddDays(today(), it.interval);
-  save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){}
+  _recordDay('srDoneDays');   // v7.81: SR serisi
+  save(); renderSrs(); try{ renderSrsBadge(); scheduleSrsNotification(); }catch(e){} try{ _checkAchievements(); }catch(e){}
 }
 function srDelete(ev,id){
   armBtn(ev,'srdel',()=>{
@@ -10698,7 +10842,7 @@ function _checkZeroErrors(){
     const calOK=p.calIds.every(id=>{ const ev=(S.calEvents||[]).find(x=>x.id===id); return ev && _evDoneOn(ev,t); });
     const pages=(S.readLog||[]).filter(r=>r.date===t).reduce((a,r)=>a+(r.pages||0),0);
     const readOK=(p.readGoal>0)?(pages>=p.readGoal):true;
-    if(gymOK && calOK && readOK) earnBadge('error0');
+    if(gymOK && calOK && readOK){ earnBadge('error0'); _recordDay('zeroDays'); try{ _checkAchievements(); }catch(e){} }   // v7.81: Kusursuz Hafta serisi
   }catch(e){}
 }
 // ── ✅ TASK MASTER: takvimde bugün tamamlanan çalışma (soru+konu) sayısı ──
@@ -11280,6 +11424,7 @@ setInterval(()=>{
     refreshNotifSwitch();
     try{ _gymProgTick(); }catch(e){}
     _ensureZeroPlan(); _checkZeroErrors();
+    try{ _checkAchievements(); }catch(e){}
     _calRemindTick();
     try{ if(!_alarmChanChecked) _upgradeAlarmChannel(); }catch(e){}
     try{ if(typeof _tokenClamp==='function') _tokenClamp(); }catch(e){}
@@ -11426,6 +11571,8 @@ function _mergeIncoming(incoming){
   merged._runSess = S._runSess || null;   // v7.70: CİHAZ-YEREL — buluttaki bayat _runSess bir daha dirilmez (22:25 takılma bug'ı)
   merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
   merged.restDayLastGrant = Math.min(Number(merged.dayStreak)||0, Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0));   // v7.79: streak'i asamaz (stale bilet-engeli diriltilmez)
+  ['srDoneDays','waterGoalDays','zeroDays','earlyDays','interDays'].forEach(function(k){ merged[k]=[...new Set([].concat(S[k]||[], incoming[k]||[]))]; });   // v7.81: başarım günleri union
+  merged.comebackCount=Math.max(Number(S.comebackCount)||0, Number(incoming.comebackCount)||0);
   // ── 📝 KAYIT DİZİLERİ (v7.50): bayat cihaz diziyi EZEMEZ — birlik (union) merge ──
   // Soru-seansı kayıtları: sid (yoksa içerik anahtarı) üzerinden birleşir; düzenlenmişse yeni ut kazanır.
   try{
@@ -11963,7 +12110,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.80.0 başlatıldı.');
+addLog('OVERCLOCK v7.81.0 başlatıldı.');
 </script>
 </body>
 </html>
