@@ -1257,6 +1257,10 @@ body.pixel-font #timer-unit{font-size:8px}
           <div id="gym-today"></div>
           <div id="gym-today-empty" style="font-size:9px;color:var(--dim);letter-spacing:1px;padding:6px 0">Bugün için egzersiz yok.</div>
         </div>
+        <div id="gym-passed-wrap" style="margin-top:10px;display:none">
+          <div class="blabel" style="font-size:9px;color:var(--red)">⏳ GEÇTİ <span style="color:var(--muted);font-weight:400;letter-spacing:0">— dünün programı, yarın silinir</span></div>
+          <div id="gym-passed"></div>
+        </div>
         <div id="gym-upcoming-wrap" style="margin-top:10px;display:none">
           <div class="blabel" style="font-size:9px">📅 Gelecek</div>
           <div id="gym-upcoming"></div>
@@ -2044,7 +2048,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.83.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.84.0</div>
     </div>
   </div>
 </div>
@@ -5025,7 +5029,13 @@ function gymDeleteEx(ev,id){
 function renderGymExercises(){
   const t=today();
   const gm=_gym();
-  const todays=gm.exercises.filter(e=>e.date<=t && !e.done).sort((a,b)=>a.date<b.date?-1:1);
+  const yst=_srAddDays(t,-1);
+  // ⏳ v7.84: program egzersizi 2+ gün geçmiş & yapılmamışsa YOK ET (dünkü = GEÇTİ olarak kalır, ondan eskisi silinir)
+  const _before=gm.exercises.length;
+  gm.exercises=gm.exercises.filter(e=> !(e.fromProg && !e.done && e.date < yst));
+  if(gm.exercises.length!==_before){ try{ save(); }catch(_e){} }
+  const todays=gm.exercises.filter(e=> !e.done && (e.date===t || (e.date<t && !e.fromProg))).sort((a,b)=>a.date<b.date?-1:1);
+  const passed=gm.exercises.filter(e=> !e.done && e.fromProg && e.date===yst).sort((a,b)=>(a.name||'')<(b.name||'')?-1:1);
   const doneToday=gm.exercises.filter(e=>e.done && e.doneDate===t);
   const upcoming=gm.exercises.filter(e=>e.date>t && !e.done).sort((a,b)=>a.date<b.date?-1:1).slice(0,10);
   const mlbl=k=>{ const m=GYM_MUSCLES.find(x=>x.k===k); return m?m.lbl:k; };
@@ -5045,6 +5055,16 @@ function renderGymExercises(){
     }).join('') + doneToday.map(e=>'<div class="gym-exrow" style="opacity:.45;border-left-color:var(--green)"><div style="flex:1;font-size:9px;color:var(--bright);text-decoration:line-through">✓ '+_he(e.name)+'</div><b style="font-size:9px;color:var(--green)">+'+e.mp+' MP</b></div>').join('');
   }
   if(emp) emp.style.display=(todays.length||doneToday.length)?'none':'block';
+  const pw=g('gym-passed-wrap'), pl=g('gym-passed');
+  if(pw) pw.style.display=passed.length?'block':'none';
+  if(pl) pl.innerHTML=passed.map(e=>
+    '<div class="gym-exrow" style="opacity:.72;border-left-color:var(--red)">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:10px;color:var(--muted);letter-spacing:.5px;font-weight:600;text-decoration:line-through">'+_he(e.name)+'</div>'+
+      '<div style="font-size:8px;color:var(--dim);letter-spacing:.5px;margin-top:2px">⏳ geçti · '+e.date.slice(5).replace('-','.')+' · yarın silinir</div></div>'+
+      '<b style="font-family:Orbitron,monospace;font-size:11px;color:#ff9e64;flex-shrink:0">+'+e.mp+' MP</b>'+
+      '<button class="btn primary" style="min-height:28px;padding:3px 10px;font-size:8px;flex-shrink:0" onclick="gymCompleteEx(\''+e.id+'\')">✓ YAPTIM</button>'+
+      '<button class="btn" style="min-height:28px;padding:3px 8px;font-size:8px;flex-shrink:0" onclick="gymDeleteEx(event,\''+e.id+'\')">🗑</button>'+
+    '</div>').join('');
   const uw=g('gym-upcoming-wrap'), ul=g('gym-upcoming');
   if(uw) uw.style.display=upcoming.length?'block':'none';
   if(ul) ul.innerHTML=upcoming.map(e=>'<div class="gym-exrow" style="opacity:.7"><div style="flex:1;min-width:0;font-size:9px;color:var(--bright)">'+_he(e.name)+' <span style="color:var(--muted);font-size:8px">· '+e.date.slice(5).replace('-','.')+' · '+e.muscles.map(mlbl).join(', ')+'</span></div><b style="font-size:9px;color:#ff9e64">+'+e.mp+' MP</b><button class="btn" style="min-height:24px;padding:2px 7px;font-size:8px" onclick="gymDeleteEx(event,\''+e.id+'\')">🗑</button></div>').join('');
@@ -12114,7 +12134,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.83.0 başlatıldı.');
+addLog('OVERCLOCK v7.84.0 başlatıldı.');
 </script>
 </body>
 </html>

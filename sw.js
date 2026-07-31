@@ -1,5 +1,5 @@
 // OVERCLOCK service worker — offline cache + scheduled (background) notifications
-const CACHE = 'overclock-v7-83-0';
+const CACHE = 'overclock-v7-84-0';
 
 self.addEventListener('install', e => self.skipWaiting());
 
