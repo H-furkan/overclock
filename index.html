@@ -2048,7 +2048,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.85.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.86.0</div>
     </div>
   </div>
 </div>
@@ -7857,8 +7857,10 @@ function _avImg(src){
 }
 const _avTintCache={};
 // Boyama — getImageData YOK (LibreWolf resistFingerprinting geri-okumayı zehirliyor).
-// 'color' compositing: kaynağın ton+doygunluğu, çizimin PARLAKLIĞI → gölgeler korunur,
-// saf beyaz beyaz kalır, kontur siyah kalır. Sonra 'destination-in' ile alfa geri kırpılır.
+// v7.86: 'color' yerine 'multiply' — 'color' rengin PARLAKLIĞINI (value) atıp sprite'ın
+// parlaklığını koruyordu → KOYU renkler açık/zıt görünüyordu. 'multiply' ile beyaz dolgu ×
+// seçilen renk = tam o renk (koyu dahil, WYSIWYG); siyah kontur siyah kalır; gölge korunur.
+// Sonra 'destination-in' ile alfa geri kırpılır.
 function _avTintCanvas(src,color){
   const key=src+'|'+(color||'');
   if(_avTintCache[key]) return _avTintCache[key];
@@ -7870,7 +7872,7 @@ function _avTintCanvas(src,color){
   ctx.drawImage(e.img,0,0);
   if(color){
     try{
-      ctx.globalCompositeOperation='color';
+      ctx.globalCompositeOperation='multiply';
       ctx.fillStyle=color;
       ctx.fillRect(0,0,w,h);
       ctx.globalCompositeOperation='destination-in';
@@ -12141,7 +12143,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.85.0 başlatıldı.');
+addLog('OVERCLOCK v7.86.0 başlatıldı.');
 </script>
 </body>
 </html>
