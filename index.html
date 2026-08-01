@@ -2048,7 +2048,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.87.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.88.0</div>
     </div>
   </div>
 </div>
@@ -2469,6 +2469,7 @@ function defState() {
     streakShieldLastBuyAt:0,      // ms timestamp of last buy
     streakShieldLastUseDate:null, // date string of last auto-consumption
     restDayTokens:0,              // ticket count (max 2)
+    restDayEarned:0, restDaySpentDates:[],   // v7.88: monoton kazanilan + harcanan-gunler → sync-guvenli bakiye (max-merge harcamayi senkronlamiyordu)
     restDayLastGrant:0,           // last dayStreak value at which a token was granted
     restDayActiveDate:null,       // if === today() → rest mode UI is active
     lastBrokenStreak:null,        // {value,brokenOn,missedDate} — Forgive&Forget geri yükler
@@ -2977,13 +2978,12 @@ function addXP(amt, label) {
       const lastGrant = S.restDayLastGrant||0;
       if (S.dayStreak >= lastGrant + 6) {
         S.restDayLastGrant = S.dayStreak - (S.dayStreak % 6);
-        const cap = 2;
-        if ((S.restDayTokens||0) < cap){
-          S.restDayTokens = (S.restDayTokens||0) + 1;
+        if (_restBalance() < REST_CAP){
+          S.restDayEarned = (S.restDayEarned||0) + 1; _restSyncTokens();
           notify('🎟 REST DAY JETONU KAZANILDI // STOK: '+S.restDayTokens);
           addLog('Rest Day jetonu +1 (stok: '+S.restDayTokens+')');
         } else {
-          notify('🎟 JETON YANDI — kapasite dolu ('+cap+')');
+          notify('🎟 JETON YANDI — kapasite dolu ('+REST_CAP+')');
           addLog('Rest Day jetonu kapasiteye takıldı — yandı.');
         }
       }
@@ -9937,6 +9937,9 @@ function pickSubject(val){
   if (after){ try{ after(); }catch(e){} }
 }
 
+const REST_CAP=2;
+function _restBalance(){ return Math.max(0, Math.min(REST_CAP, (S.restDayEarned||0) - ((S.restDaySpentDates||[]).length))); }
+function _restSyncTokens(){ S.restDayTokens=_restBalance(); return S.restDayTokens; }
 function isRestDayActive(){ return S.restDayActiveDate === today(); }
 
 function askRestDay(ev){
@@ -9950,8 +9953,9 @@ function askRestDay(ev){
 }
 function closeRestDayModal(){ const m=g('restday-modal'); if(m) m.style.display='none'; }
 function confirmRestDay(){
-  if ((S.restDayTokens||0) <= 0){ closeRestDayModal(); notify('Jeton yok'); return; }
-  S.restDayTokens -= 1;
+  if (_restBalance() <= 0){ closeRestDayModal(); notify('Jeton yok'); return; }
+  S.restDaySpentDates = S.restDaySpentDates||[]; if(!S.restDaySpentDates.includes(today())) S.restDaySpentDates.push(today());
+  _restSyncTokens();
   S.dayMarks = S.dayMarks||{};
   S.dayMarks[today()] = 'rest';
   S.restDayActiveDate = today();
@@ -9962,8 +9966,9 @@ function confirmRestDay(){
 }
 function cancelRestDay(){
   if (!isRestDayActive()) return;
-  // refund only if same day
-  S.restDayTokens = (S.restDayTokens||0) + 1;
+  // refund only if same day → harcanan-gun kaydini geri al
+  S.restDaySpentDates = (S.restDaySpentDates||[]).filter(d=>d!==today());
+  _restSyncTokens();
   if (S.dayMarks && S.dayMarks[today()] === 'rest') delete S.dayMarks[today()];
   S.restDayActiveDate = null;
   notify('Dinlenme iptal edildi — jeton iade');
@@ -11641,7 +11646,9 @@ function _mergeIncoming(incoming){
   merged.streakProtectors = Math.max(0, merged.streakProtBought - merged.streakProtUsed);
   // 🛟 kurtarma anlık görüntüsü: bu cihazdaki taze snapshot, buluttaki bayatına ezdirilmez
   merged._runSess = S._runSess || null;   // v7.70: CİHAZ-YEREL — buluttaki bayat _runSess bir daha dirilmez (22:25 takılma bug'ı)
-  merged.restDayTokens    = Math.max(Number(S.restDayTokens)||0, Number(incoming.restDayTokens)||0);
+  merged.restDayEarned = Math.max(Number(S.restDayEarned)||0, Number(incoming.restDayEarned)||0);
+  merged.restDaySpentDates = [...new Set([].concat(S.restDaySpentDates||[], incoming.restDaySpentDates||[]))].slice(-400);
+  merged.restDayTokens = Math.max(0, Math.min(2, merged.restDayEarned - merged.restDaySpentDates.length));   // v7.88: bakiye = kazanilan - harcanan (harcama artik senkronlanir)
   merged.restDayLastGrant = Math.min(Number(merged.dayStreak)||0, Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0));   // v7.79: streak'i asamaz (stale bilet-engeli diriltilmez)
   ['srDoneDays','waterGoalDays','zeroDays','earlyDays','interDays'].forEach(function(k){ merged[k]=[...new Set([].concat(S[k]||[], incoming[k]||[]))]; });   // v7.81: başarım günleri union
   merged.comebackCount=Math.max(Number(S.comebackCount)||0, Number(incoming.comebackCount)||0);
@@ -12120,6 +12127,18 @@ try{
     save();
   }
 }catch(e){}
+// 🔧 v7.88: izin bileti earned/spent modeline tasi (cihaz-yerel, tek sefer). Eski max-merge harcamayi
+// senkronlamadigi icin bir cihazda harcanan bilet digerinde kaliyordu. Reconcile + tohumla → iki cihaz da yakinsar.
+try{
+  if(!localStorage.getItem('oc_restMig788')){
+    localStorage.setItem('oc_restMig788','1');
+    if(S.restDayActiveDate===today() && (S.restDayTokens||0)>0) S.restDayTokens=Math.max(0,(S.restDayTokens||0)-1);   // bugun izin kullanildiysa stale jetonu dus
+    if(!S.restDaySpentDates || !S.restDaySpentDates.length) S.restDaySpentDates = S.restDayActiveDate?[S.restDayActiveDate]:[];
+    S.restDayEarned = (S.restDayTokens||0) + S.restDaySpentDates.length;   // mevcut bakiyeyi koru
+    S.restDayTokens = Math.max(0, Math.min(2, (S.restDayEarned||0) - S.restDaySpentDates.length));
+    save();
+  }
+}catch(e){}
 applyTheme();
 applyBackground('cockpit');
 try { applyCharCosmetics(); } catch(e){}
@@ -12183,7 +12202,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.87.0 başlatıldı.');
+addLog('OVERCLOCK v7.88.0 başlatıldı.');
 </script>
 </body>
 </html>
