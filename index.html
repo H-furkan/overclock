@@ -2048,7 +2048,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.88.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.89.0</div>
     </div>
   </div>
 </div>
@@ -4407,13 +4407,15 @@ function readTimerStop(){
   const elapsed=_readElapsed;
   const mins=elapsed/60;
   miniPrompt({target:startBtn},{ top:true, title:'📖 <b>'+_he(b.title)+'</b><br><span style="color:var(--muted)">bu seansta kaç sayfa okudun? ('+_fmtClock(elapsed)+')</span>', placeholder:'sayfa', onOk:(v)=>{
+    const bk=_bookById(_readBookId);   // v7.89: TAZE referans — async boslukta arka plan sync S.books'u degistirmis olabilir (kopan b.read kaybolur)
+    if(!bk){ if(note) note.textContent='Kitap bulunamadı.'; return; }
     const pages=Math.max(0,Math.floor(v||0));
     if(pages>0){
       let _rmul=1; if((S.readBuff||0)>0){ _rmul=2; S.readBuff--; }
-      b.read=Math.min(b.pages,(b.read||0)+pages);
-      addXP(pages*_rmul,'Okuma seansı: '+b.title+(_rmul>1?' (2×)':''));
+      bk.read=Math.min(bk.pages,(bk.read||0)+pages);
+      addXP(pages*_rmul,'Okuma seansı: '+bk.title+(_rmul>1?' (2×)':''));
       const ppm=pages/Math.max(0.1,mins);
-      S.readLog=S.readLog||[]; S.readLog.unshift({date:today(), bookId:b.id, mins:Math.round(mins*10)/10, pages, ppm:Math.round(ppm*100)/100});
+      S.readLog=S.readLog||[]; S.readLog.unshift({date:today(), bookId:bk.id, mins:Math.round(mins*10)/10, pages, ppm:Math.round(ppm*100)/100});
       if(S.readLog.length>100) S.readLog=S.readLog.slice(0,100);
       _checkReadBadge();
       if(note) note.innerHTML='📖 <b>'+pages+' sayfa</b> / '+_fmtClock(elapsed)+' → hız: <b style="color:var(--white)">'+ppm.toFixed(2)+' sayfa/dk</b>  ·  +'+(pages*_rmul)+' XP'+(_rmul>1?' <span style="color:var(--yellow)">2×</span>':'');
@@ -9412,6 +9414,8 @@ function registerWrongTopic(key, examId, date){
     S.wrongTopics[key] = w;
   }
   delete w._pending;
+  w.ut = Date.now();   // v7.89: guncelleme damgasi → merge'de EN YENI kazanir
+  S.wrongTombs = (S.wrongTombs||[]).filter(tk=>tk!==String(key));   // v7.89: yeniden eklenince mezar tasini kaldir (sync silmesin)
   w.history = w.history || [];
   w.history.push({date, examId});
   // tagging again while not fixed → escalate (level + target up); insurance can absorb
@@ -9494,6 +9498,7 @@ function markTopicFixed(key){
   }
   w.fixed = true;
   w.fixedAt = today();
+  w.ut = Date.now();
   if(Object.values(S.wrongTopics||{}).filter(x=>x.fixed).length>=10) earnBadge('tree10');
   const reward = w.target||15;
   addXP(reward, 'Düzeltildi: '+w.name);
@@ -11766,7 +11771,9 @@ function _mergeIncoming(incoming){
     Object.entries(S.wrongTopics||{}).forEach(([k,v])=>{
       const ex=wt[k];
       if(!ex){ wt[k]=v; return; }
-      const sv=(v.solved||0)+(v.fixed?9999:0), sex=(ex.solved||0)+(ex.fixed?9999:0);
+      const uv=v.ut||0, ux=ex.ut||0;
+      if(uv||ux){ wt[k]= (uv>=ux)? v : ex; return; }   // v7.89: ut varsa EN YENI kazanir → fixed VE yeniden-acma dogru senkronlanir (eskiden fixed sonsuza yapisiyordu)
+      const sv=(v.solved||0)+(v.fixed?9999:0), sex=(ex.solved||0)+(ex.fixed?9999:0);   // ut yok (eski kayit): heuristik
       wt[k]= (sv>=sex)? v : ex;
       if(v.fixed||ex.fixed) wt[k]=Object.assign({}, wt[k], {fixed:true});
     });
@@ -12202,7 +12209,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.88.0 başlatıldı.');
+addLog('OVERCLOCK v7.89.0 başlatıldı.');
 </script>
 </body>
 </html>
