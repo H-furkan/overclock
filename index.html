@@ -946,6 +946,7 @@ body.pixel-font #timer-unit{font-size:8px}
   <button class="navitem" onclick="goTab(this,'exam')">📝 NET TAKİP</button>
   <button class="navitem" onclick="goTab(this,'bank')">🏦 SORU BANKASI</button>
   <button class="navitem" onclick="goTab(this,'tree')">🌳 DENEME AĞACI</button>
+  <button class="navitem" onclick="goTab(this,'concept')">📔 KAVRAM SÖZLÜĞÜ</button>
   <button class="navitem" onclick="goTab(this,'currmap')">🗺 MÜFREDAT</button>
   <button class="navitem" onclick="goTab(this,'srs')">🧠 ARALIKLI TEKRAR</button>
   <button class="navitem" onclick="goTab(this,'stats')">📊 İSTATİSTİK</button>
@@ -1920,6 +1921,23 @@ body.pixel-font #timer-unit{font-size:8px}
   </div>
 </div>
 
+<!-- ══════════ PAGE: KAVRAM SÖZLÜĞÜ ══════════ -->
+<div id="page-concept" class="page">
+  <div class="block">
+    <div class="blabel">■ Kavram Sözlüğü</div>
+    <div style="font-size:8px;color:var(--muted);letter-spacing:1px;line-height:1.7;margin-bottom:10px">
+      Ders → konu → soru/cevap kartları oluştur (mini Anki). Bir dersin <b style="color:var(--bright)">ÇALIŞ</b> tuşuna bas → 3-2-1 sonra kartlar sorulur; cevabın doğruya ne kadar yakınsa o kadar puan (kombo × ekstra). 10 kartta skor tablosu.
+    </div>
+    <datalist id="concept-topics-dl"></datalist>
+    <div id="concept-list"></div>
+  </div>
+</div>
+
+<!-- KAVRAM OYUN OVERLAY -->
+<div id="concept-game" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;padding:16px">
+  <div id="cg-inner" style="width:100%;max-width:460px"></div>
+</div>
+
 <!-- ══════════ PAGE: ARALIKLI TEKRAR (SM-2) ══════════ -->
 <div id="page-srs" class="page">
   <div class="block">
@@ -2048,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.90.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.91.0</div>
     </div>
   </div>
 </div>
@@ -2443,6 +2461,7 @@ function defState() {
     // ── NEW v7: EXAM / NET TRACKING ──
     exams:[],                     // [{id,date,type,name,nets:{},total,wrongTopics:[normKey]}]
     srDoneDays:[], waterGoalDays:[], zeroDays:[], earlyDays:[], interDays:[],   // v7.81 başarım günlük-geçmişleri
+    concepts:{}, conceptScores:[],   // v7.91 kavram sözlüğü kartları + minigame skorları
     comebackCount:0, _ankaLastBroken:null,
     topicProgress:{},             // (deprecated v7.5)
     questionLog:{},               // {subject: totalCount}
@@ -2788,6 +2807,7 @@ function goTab(btn, name) {
   // EXAM tab
   if (name === 'exam') setTimeout(()=>{ try{ renderExam(); }catch(e){} }, 40);
   if (name === 'tree') setTimeout(()=>{ try{ renderTree(); }catch(e){} }, 20);
+  if (name === 'concept') setTimeout(()=>{ try{ renderConcepts(); }catch(e){} }, 20);
   if (name === 'srs') setTimeout(()=>{ try{ renderSrs(); }catch(e){} }, 20);
   if (name === 'bank') setTimeout(()=>{ try{ renderBank(); }catch(e){} }, 20);
   if (name === 'calendar') setTimeout(()=>{ try{ renderCalendar(); }catch(e){} }, 20);
@@ -9527,6 +9547,179 @@ function deleteTopic(ev,key){
   });
 }
 
+// ════════════════════════════════════════
+// 📔 KAVRAM SÖZLÜĞÜ + MİNİGAME (v7.91)
+// ════════════════════════════════════════
+const _CG_SUBJECTS=['TYT Paragraf','TYT Dilbilgisi','TYT Matematik','TYT Geometri','TYT Fizik','TYT Kimya','TYT Biyoloji','TYT Tarih','TYT Coğrafya','TYT Felsefe','TYT Din','AYT Matematik','AYT Fizik','AYT Kimya','AYT Biyoloji'];
+let _cgOpen=-1;   // açık ders index (accordion)
+function _concepts(){ S.concepts=S.concepts||{}; return S.concepts; }
+function _cgCards(subj){ const c=_concepts(); c[subj]=c[subj]||[]; return c[subj]; }
+function renderConcepts(){
+  const box=g('concept-list'); if(!box) return;
+  const C=_concepts();
+  box.innerHTML=_CG_SUBJECTS.map((subj,i)=>{
+    const cards=C[subj]||[]; const open=_cgOpen===i;
+    let inner='';
+    if(open){
+      // predictive datalist bu dersin konularıyla
+      const dl=g('concept-topics-dl'); if(dl){ const tops=[...new Set(cards.map(c=>c.topic).filter(Boolean))]; dl.innerHTML=tops.map(t=>'<option value="'+_he(t)+'">').join(''); }
+      const rows=cards.length?cards.map((c,ci)=>
+        '<div style="background:var(--deep);border:1px solid var(--bd);border-radius:7px;padding:7px 9px;margin-bottom:5px">'+
+          '<div class="fbet" style="gap:6px"><span style="font-size:8px;color:var(--yellow);letter-spacing:1px;flex:1;min-width:0">'+_he(c.topic||'—')+'</span>'+
+            '<button class="btn" style="min-height:18px;padding:0 6px;font-size:8px;color:var(--muted);border:none;background:transparent" onclick="conceptDelCard('+i+','+ci+')">🗑</button></div>'+
+          '<div style="font-size:9px;color:var(--white);margin:2px 0 1px">S: '+_he(c.q||'')+'</div>'+
+          '<div style="font-size:9px;color:var(--bright)">C: '+_he(c.a||'')+'</div>'+
+        '</div>').join(''):'<div style="font-size:8px;color:var(--dim);letter-spacing:1px;padding:4px 0">Henüz kart yok — aşağıdan ekle.</div>';
+      inner='<div style="padding:8px 2px 2px">'+rows+
+        '<div style="border-top:1px solid var(--bd);margin-top:8px;padding-top:8px">'+
+          '<input class="inp fw" id="cg-topic" list="concept-topics-dl" placeholder="konu (ör: Sınıflandırma)" style="margin-bottom:5px;font-size:9px">'+
+          '<input class="inp fw" id="cg-q" placeholder="soru (ör: memelilerin ayırt edici özelliği?)" style="margin-bottom:5px;font-size:9px">'+
+          '<textarea class="inp fw" id="cg-a" placeholder="cevap (ör: çizgili kastan diyafram)" style="margin-bottom:6px;font-size:9px;min-height:44px;resize:vertical"></textarea>'+
+          '<div style="display:flex;gap:5px">'+
+            '<button class="btn primary" style="flex:1;min-height:30px;font-size:9px" onclick="conceptAddCard('+i+')">＋ KART EKLE</button>'+
+            '<button class="btn" style="flex:1;min-height:30px;font-size:9px;border-color:var(--green);color:var(--green)" '+(cards.length?'':'disabled ')+'onclick="conceptStudy('+i+')">▶ ÇALIŞ ('+cards.length+')</button>'+
+          '</div>'+
+        '</div></div>';
+    }
+    return '<div style="border:1px solid var(--bd2);border-radius:9px;margin-bottom:7px;overflow:hidden;background:var(--mid)">'+
+      '<button class="fbet" style="width:100%;background:transparent;border:none;cursor:pointer;padding:11px 12px;text-align:left" onclick="conceptToggle('+i+')">'+
+        '<span style="font-size:10px;color:var(--white);letter-spacing:1px;font-weight:600">'+(open?'▾ ':'▸ ')+_he(subj)+'</span>'+
+        '<span style="font-size:8px;color:var(--muted);letter-spacing:1px">'+cards.length+' kart</span>'+
+      '</button>'+(open?'<div style="padding:0 12px 10px">'+inner+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+function conceptToggle(i){ _cgOpen=(_cgOpen===i)?-1:i; renderConcepts(); }
+function conceptAddCard(i){
+  const subj=_CG_SUBJECTS[i];
+  const topic=((g('cg-topic')||{}).value||'').trim().slice(0,60);
+  const q=((g('cg-q')||{}).value||'').trim().slice(0,200);
+  const a=((g('cg-a')||{}).value||'').trim().slice(0,300);
+  if(!q||!a){ notify('Soru ve cevap gir'); return; }
+  _cgCards(subj).push({ id:'k'+Date.now().toString(36)+Math.floor(Math.random()*1000), topic, q, a, ut:Date.now(), plays:0, best:0 });
+  save(); renderConcepts(); notify('📔 Kart eklendi');
+}
+function conceptDelCard(i,ci){
+  const subj=_CG_SUBJECTS[i]; const arr=_cgCards(subj);
+  const c=arr[ci]; if(!c) return;
+  S.conceptTombs=(S.conceptTombs||[]); S.conceptTombs.push(String(c.id)); if(S.conceptTombs.length>400) S.conceptTombs=S.conceptTombs.slice(-400);
+  arr.splice(ci,1); save(); renderConcepts();
+}
+// ── Benzerlik (offline): normalize + kök + Levenshtein bulanık eşleme ──
+const _CG_STOP=new Set(['ve','ile','bir','bu','şu','o','da','de','ki','mi','mı','için','olan','olarak','gibi','the','a','an','of','is']);
+function _cgNorm(x){ return (x||'').toLocaleLowerCase('tr').replace(/[.,;:!?()\[\]"'`´’]/g,' ').replace(/\s+/g,' ').trim(); }
+function _cgStem(w){ return w.replace(/(ları|leri|ların|lerin|lar|ler|lık|lik|luk|lük|dan|den|tan|ten|nın|nin|nun|nün|sı|si|su|sü|ya|ye|da|de|ta|te|yı|yi|yu|yü|ın|in|un|ün|ı|i|u|ü)$/,'')||w; }
+function _cgTokens(x){ return _cgNorm(x).split(' ').filter(w=>w.length>1 && !_CG_STOP.has(w)).map(_cgStem); }
+function _lev(a,b){ const m=a.length,n=b.length; if(!m)return n; if(!n)return m; let prev=Array.from({length:n+1},(_,j)=>j),cur=new Array(n+1);
+  for(let i=1;i<=m;i++){ cur[0]=i; for(let j=1;j<=n;j++){ const cost=a[i-1]===b[j-1]?0:1; cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+cost); } [prev,cur]=[cur,prev]; }
+  return prev[n]; }
+function _wordSim(a,b){ const m=Math.max(a.length,b.length); if(!m)return 1; return 1-_lev(a,b)/m; }
+function _conceptSim(user, correct){
+  const ct=_cgTokens(correct); const ut=_cgTokens(user);
+  if(!ct.length){ return _cgNorm(user)===_cgNorm(correct)?1:0; }
+  if(!ut.length) return 0;
+  let matched=0; ct.forEach(cw=>{ let best=0; ut.forEach(uw=>{ const sim=_wordSim(cw,uw); if(sim>best)best=sim; }); if(best>=0.8) matched++; });
+  return matched/ct.length;
+}
+function _cgBand(sim){ return sim>=0.8?'TAM':(sim>=0.5?'KISMİ':'KAÇTI'); }
+// ── Minigame ──
+let _cg=null, _cgIv=null;
+function conceptStudy(i){
+  const subj=_CG_SUBJECTS[i]; const all=_cgCards(subj).slice();
+  if(!all.length){ notify('Önce kart ekle'); return; }
+  for(let k=all.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [all[k],all[j]]=[all[j],all[k]]; }
+  const deck=all.slice(0,10);
+  _cg={ subj, deck, idx:0, score:0, combo:0, maxCombo:0, results:[] };
+  const ov=g('concept-game'); if(ov) ov.style.display='flex';
+  _cgCountdown(3);
+}
+function _cgCountdown(n){
+  const inner=g('cg-inner'); if(!inner) return;
+  if(n<=0){ _cgShowCard(); return; }
+  inner.innerHTML='<div style="text-align:center"><div style="font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:14px">'+_he(_cg.subj)+' · '+_cg.deck.length+' KART</div><div style="font-family:Orbitron,monospace;font-size:72px;font-weight:900;color:var(--bright);animation:ocPopIn .3s">'+n+'</div></div>';
+  clearTimeout(_cgIv); _cgIv=setTimeout(()=>_cgCountdown(n-1),800);
+}
+function _cgShowCard(){
+  const inner=g('cg-inner'); if(!inner||!_cg) return;
+  const c=_cg.deck[_cg.idx]; if(!c){ _cgFinish(); return; }
+  const words=_cgNorm(c.a).split(' ').filter(Boolean).length;
+  const secs=Math.max(25, words*4); _cg.timeLeft=secs; _cg.cardSecs=secs;
+  inner.innerHTML=
+    '<div class="fbet" style="margin-bottom:8px"><span style="font-size:8px;letter-spacing:2px;color:var(--muted)">KART '+(_cg.idx+1)+'/'+_cg.deck.length+'</span>'+
+      '<span style="font-size:8px;letter-spacing:1px;color:var(--yellow)">SKOR '+_cg.score+(_cg.combo>1?(' · 🔥'+_cg.combo+'x'):'')+'</span></div>'+
+    '<div style="height:6px;background:var(--dim);border-radius:3px;overflow:hidden;margin-bottom:12px"><div id="cg-bar" style="height:100%;width:100%;background:var(--bright);transition:width .95s linear"></div></div>'+
+    '<div style="background:var(--mid);border:1px solid var(--bd2);border-radius:10px;padding:14px;margin-bottom:10px">'+
+      '<div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">'+_he(c.topic||_cg.subj)+'</div>'+
+      '<div style="font-size:13px;color:var(--white);line-height:1.5">'+_he(c.q)+'</div>'+
+    '</div>'+
+    '<textarea class="inp fw" id="cg-ans" placeholder="cevabın…" style="min-height:60px;font-size:11px;resize:vertical;margin-bottom:8px"></textarea>'+
+    '<div style="display:flex;gap:6px"><button class="btn" style="min-height:34px;font-size:9px;color:var(--muted)" onclick="cgQuit()">✕ ÇIK</button>'+
+      '<button class="btn primary" style="flex:1;min-height:34px;font-size:10px" onclick="cgSubmit()">✓ CEVAPLA</button></div>';
+  setTimeout(()=>{ try{ g('cg-ans').focus(); }catch(e){} },50);
+  const bar=g('cg-bar'); requestAnimationFrame(()=>{ if(bar) bar.style.width='0%'; });
+  clearInterval(_cgIv); _cgIv=setInterval(()=>{ _cg.timeLeft--; if(_cg.timeLeft<=0){ clearInterval(_cgIv); cgSubmit(true); } },1000);
+}
+function cgSubmit(timeout){
+  if(!_cg) return; clearInterval(_cgIv);
+  const c=_cg.deck[_cg.idx]; const user=((g('cg-ans')||{}).value||'').trim();
+  const sim=timeout&&!user?0:_conceptSim(user, c.a);
+  const band=_cgBand(sim);
+  let base=band==='TAM'?100:(band==='KISMİ'?50:0);
+  if(band==='TAM'){ _cg.combo++; if(_cg.combo>_cg.maxCombo)_cg.maxCombo=_cg.combo; } else { _cg.combo=0; }
+  const mult=band==='TAM'?Math.min(3,1+0.2*(_cg.combo-1)):1;
+  const pts=Math.round(base*mult);
+  _cg.score+=pts;
+  _cg.results.push({ topic:c.topic, q:c.q, a:c.a, user, band, pts, sim });
+  // kart istatistiği
+  const arr=_cgCards(_cg.subj); const card=arr.find(x=>x.id===c.id); if(card){ card.plays=(card.plays||0)+1; if(pts>(card.best||0))card.best=pts; }
+  _cgReveal(band, pts, mult, user, c);
+}
+function _cgReveal(band, pts, mult, user, c){
+  const inner=g('cg-inner'); if(!inner) return;
+  const col=band==='TAM'?'var(--green)':(band==='KISMİ'?'var(--yellow)':'var(--red)');
+  const last=_cg.idx>=_cg.deck.length-1;
+  inner.innerHTML=
+    '<div style="text-align:center;margin-bottom:12px"><div style="font-family:Orbitron,monospace;font-size:34px;font-weight:900;color:'+col+'">'+band+'</div>'+
+      '<div style="font-size:11px;color:var(--bright)">+'+pts+' puan'+(mult>1?(' <span style="color:var(--yellow)">🔥'+mult.toFixed(1)+'x</span>'):'')+'</div></div>'+
+    '<div style="background:var(--mid);border:1px solid var(--bd);border-radius:8px;padding:11px;margin-bottom:10px;font-size:10px;line-height:1.6">'+
+      '<div style="color:var(--muted);margin-bottom:3px">Senin: <span style="color:var(--white)">'+(_he(user)||'<i>boş</i>')+'</span></div>'+
+      '<div style="color:var(--muted)">Doğru: <span style="color:var(--green)">'+_he(c.a)+'</span></div></div>'+
+    (band!=='TAM'?'<button class="btn fw" style="min-height:30px;font-size:9px;margin-bottom:7px;border-color:var(--yellow);color:var(--yellow)" onclick="cgOverride()">✋ Aslında doğruydu — TAM say</button>':'')+
+    '<button class="btn primary fw" style="min-height:36px;font-size:11px" onclick="cgNext()">'+(last?'🏁 BİTİR':'SONRAKİ →')+'</button>';
+}
+function cgOverride(){
+  if(!_cg) return; const r=_cg.results[_cg.results.length-1]; if(!r||r.band==='TAM') return;
+  const add=100-r.pts; _cg.score+=add; _cg.combo++; if(_cg.combo>_cg.maxCombo)_cg.maxCombo=_cg.combo;
+  r.band='TAM'; r.pts=100;
+  const c=_cg.deck[_cg.idx]; const card=_cgCards(_cg.subj).find(x=>x.id===c.id); if(card&&100>(card.best||0))card.best=100;
+  notify('✋ TAM sayıldı (+'+add+')');
+  _cgReveal('TAM', r.pts, 1, r.user, c);
+}
+function cgNext(){ if(!_cg) return; _cg.idx++; if(_cg.idx>=_cg.deck.length) _cgFinish(); else _cgShowCard(); }
+function cgQuit(){ clearInterval(_cgIv); clearTimeout(_cgIv); _cg=null; const ov=g('concept-game'); if(ov) ov.style.display='none'; }
+function _cgFinish(){
+  clearInterval(_cgIv);
+  const inner=g('cg-inner'); if(!inner||!_cg) return;
+  const maxScore=_cg.deck.length*100;
+  const pct=maxScore?Math.round(_cg.score/maxScore*100):0;
+  const tam=_cg.results.filter(r=>r.band==='TAM').length;
+  const xp=Math.round(_cg.score/20);   // skor→XP (10 kart tam = 500 puan = 25 XP civarı)
+  S.conceptScores=S.conceptScores||[]; S.conceptScores.unshift({ date:today(), subject:_cg.subj, score:_cg.score, cards:_cg.deck.length, maxCombo:_cg.maxCombo, ut:Date.now() });
+  if(S.conceptScores.length>60) S.conceptScores=S.conceptScores.slice(0,60);
+  if(xp>0) addXP(xp,'Kavram çalışması: '+_cg.subj);
+  const rows=_cg.results.map((r,i)=>{ const col=r.band==='TAM'?'var(--green)':(r.band==='KISMİ'?'var(--yellow)':'var(--red)');
+    return '<div class="fbet" style="font-size:8px;padding:3px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--muted);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(i+1)+'. '+_he(r.topic||r.q)+'</span><span style="color:'+col+';flex-shrink:0">'+r.band+' +'+r.pts+'</span></div>'; }).join('');
+  inner.innerHTML=
+    '<div style="text-align:center;margin-bottom:10px"><div style="font-size:9px;letter-spacing:3px;color:var(--muted)">SKOR TABLOSU · '+_he(_cg.subj)+'</div>'+
+      '<div style="font-family:Orbitron,monospace;font-size:46px;font-weight:900;color:var(--bright);line-height:1.1">'+_cg.score+'</div>'+
+      '<div style="font-size:9px;color:var(--muted)">%'+pct+' · '+tam+'/'+_cg.deck.length+' tam · en yüksek kombo 🔥'+_cg.maxCombo+' · +'+xp+' XP</div></div>'+
+    '<div style="background:var(--mid);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;margin-bottom:10px;max-height:34vh;overflow-y:auto">'+rows+'</div>'+
+    '<div style="display:flex;gap:6px"><button class="btn" style="flex:1;min-height:36px;font-size:10px" onclick="cgQuit()">✓ KAPAT</button>'+
+      '<button class="btn primary" style="flex:1;min-height:36px;font-size:10px" onclick="cgReplay()">↻ TEKRAR</button></div>';
+  save();
+  try{ _checkAchievements(); }catch(e){}
+}
+function cgReplay(){ if(!_cg) return; const i=_CG_SUBJECTS.indexOf(_cg.subj); _cg=null; conceptStudy(i); }
 function renderTree(){
   const list = g('tree-list'), emp = g('tree-empty'); if(!list) return;
   const wt = S.wrongTopics || {};
@@ -10711,6 +10904,7 @@ function renderAll(){
   try{ if(g('page-currmap')&&g('page-currmap').classList.contains('visible')) renderCurrMap(true); }catch(e){}
   try{ if(g('page-srs')&&g('page-srs').classList.contains('visible')) renderSrs(); }catch(e){}
   try{ if(g('page-exam')&&g('page-exam').classList.contains('visible')) renderExam(); }catch(e){}
+  try{ if(g('page-concept')&&g('page-concept').classList.contains('visible')) renderConcepts(); }catch(e){}
   renderRestDayUI();
   applyTheme();
   g('session-count').textContent=S.sessions;
@@ -11763,6 +11957,23 @@ function _mergeIncoming(incoming){
     [].concat(incoming.readLog||[], S.readLog||[]).forEach(r=>{ if(!r||!r.date) return; const k=r.date+'|'+(r.bookId||'')+'|'+(r.pages||0)+'|'+(r.mins||0); rl[k]=r; });
     merged.readLog=Object.values(rl).sort((a,b)=>a.date<b.date?1:-1).slice(0,400);
   }catch(e){}
+  // ── 📔 KAVRAM SÖZLÜĞÜ: kart union (id + ut newest-wins) + tombstone; skorlar union ──
+  try{
+    merged.conceptTombs=[...new Set([].concat(S.conceptTombs||[], incoming.conceptTombs||[]).map(String))].slice(-400);
+    const ctomb=new Set(merged.conceptTombs);
+    const lc=S.concepts||{}, ic=incoming.concepts||{};
+    const out={};
+    [...new Set([].concat(Object.keys(lc),Object.keys(ic)))].forEach(subj=>{
+      const map={};
+      [].concat(ic[subj]||[], lc[subj]||[]).forEach(c=>{ if(!c||!c.id) return; const ex=map[c.id]; if(!ex||(c.ut||0)>=(ex.ut||0)) map[c.id]=c; });
+      const arr=Object.values(map).filter(c=>!ctomb.has(String(c.id)));
+      if(arr.length) out[subj]=arr;
+    });
+    merged.concepts=out;
+    const sc={};
+    [].concat(incoming.conceptScores||[], S.conceptScores||[]).forEach(x=>{ if(x&&x.ut) sc[x.ut]=x; });
+    merged.conceptScores=Object.values(sc).sort((a,b)=>(b.ut||0)-(a.ut||0)).slice(0,60);
+  }catch(e){}
   // ── 🧠 ARALIKLI TEKRAR: UNION + mezar taşı; tekrarı ilerlemiş olan kazanır ──
   try{
     merged.srTombs=[...new Set([].concat(S.srTombs||[], incoming.srTombs||[]).map(String))].slice(-200);
@@ -12221,7 +12432,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.90.0 başlatıldı.');
+addLog('OVERCLOCK v7.91.0 başlatıldı.');
 </script>
 </body>
 </html>
