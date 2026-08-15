@@ -2066,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.94.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.95.0</div>
     </div>
   </div>
 </div>
@@ -2445,6 +2445,7 @@ function defState() {
     bossAggroLastHit:null,        // ms timestamp of last boss aggression damage
     // ── NEW v6: SHOP / INVENTORY ──
     spentXp:0,                    // total XP spent in shop
+    bankCreditXp:0,               // v7.95: bankadan aktarılan XP — harcanabilir bakiyeye katılır ama tier/level/günlük bara SAYILMAZ
     streakProtectors:0,           // türetilmiş bakiye = bought - used (gösterim/uyumluluk)
     streakProtBought:0,           // toplam alınan koruyucu (monoton — sync max-merge)
     streakProtUsed:0,             // toplam tüketilen koruyucu (monoton — sync max-merge)
@@ -3718,7 +3719,7 @@ function bankToXP(ev){
     let k=Math.floor(v||0); if(!(k>0)){ notify('Geçersiz miktar'); return; }
     k=Math.min(k,_bankKurus());
     S.bankSpentKurus=(S.bankSpentKurus||0)+k;
-    S.totalXp=(S.totalXp||0)+k*100;
+    S.bankCreditXp=(S.bankCreditXp||0)+k*100;   // v7.95: rank/level/günlük bar ETKİLENMEZ — sadece harcanabilir bakiye
     _bankLogAdd('transfer','Bankadan XP\'ye: '+k+' kr → +'+(k*100)+' XP', -k);
     save(); renderBank(); try{ renderXP(); }catch(e){}
     notify('✓ '+(k*100)+' XP aktarıldı');
@@ -6940,7 +6941,7 @@ function reminderTick(){
 // ════════════════════════════════════════
 // SHOP / INVENTORY (NEW v6)
 // ════════════════════════════════════════
-function shopBalance(){ return Math.max(0, (S.totalXp||0) - (S.spentXp||0)); }
+function shopBalance(){ return Math.max(0, (S.totalXp||0) + (S.bankCreditXp||0) - (S.spentXp||0)); }   // v7.95: banka kredisi harcanabilir ama rank'a saymaz
 
 function buyItem(id){
   const item = SHOP_ITEMS.find(x=>x.id===id); if (!item) return;
@@ -11943,6 +11944,7 @@ function _mergeIncoming(incoming){
   // 🛟 kurtarma anlık görüntüsü: bu cihazdaki taze snapshot, buluttaki bayatına ezdirilmez
   merged._runSess = S._runSess || null;   // v7.70: CİHAZ-YEREL — buluttaki bayat _runSess bir daha dirilmez (22:25 takılma bug'ı)
   merged.restDayEarned = Math.max(Number(S.restDayEarned)||0, Number(incoming.restDayEarned)||0);
+  merged.bankCreditXp = Math.max(Number(S.bankCreditXp)||0, Number(incoming.bankCreditXp)||0);   // v7.95: monoton banka kredisi
   merged.restDaySpentDates = [...new Set([].concat(S.restDaySpentDates||[], incoming.restDaySpentDates||[]))].slice(-400);
   merged.restDayTokens = Math.max(0, Math.min(2, merged.restDayEarned - merged.restDaySpentDates.length));   // v7.88: bakiye = kazanilan - harcanan (harcama artik senkronlanir)
   merged.restDayLastGrant = Math.min(Number(merged.dayStreak)||0, Math.max(Number(S.restDayLastGrant)||0, Number(incoming.restDayLastGrant)||0));   // v7.79: streak'i asamaz (stale bilet-engeli diriltilmez)
@@ -12518,7 +12520,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.94.0 başlatıldı.');
+addLog('OVERCLOCK v7.95.0 başlatıldı.');
 </script>
 </body>
 </html>
