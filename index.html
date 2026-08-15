@@ -2066,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.91.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.92.0</div>
     </div>
   </div>
 </div>
@@ -3489,7 +3489,9 @@ function qModalSubmit(){
   if(!_qCtx || !n || n<1){ _qCtx=null; S._pendingQ=null; save(); return; }   // boş/0 → kaydetme
   const subj=_canonSubj((g('q-modal-subject')||{}).value || _qCtx.subject || S.activeSubject || 'Genel');
   S.questionLog=S.questionLog||{};
-  S.questionLog[subj]=(S.questionLog[subj]||0)+n;   // otomatik soru istatistiğine yaz
+  const _qPrev=(S.questionLog[subj]||0);
+  S.questionLog[subj]=_qPrev+n;   // otomatik soru istatistiğine yaz
+  try{ _subjCaseNotify(subj,_qPrev,n); }catch(e){}   // v7.92: ders kasası eşiği
   const pts = Math.round(n * _coeff(subj));
   const breakMin = Math.round((_pendingBreakSecs/60)*10)/10;   // bu seansa kadar birikmiş mola (verimlilik için)
   _pendingBreakSecs = 0;
@@ -6120,18 +6122,21 @@ function _ensureMiniPrompt(){
 function _mpClose(){ const p=g('mini-prompt'); if(p) p.style.display='none'; _mpState=null; }
 function _mpOk(){
   if(!_mpState) return;
-  const v=parseFloat(String(g('mp-inp').value).replace(',','.'));
+  const raw=String(g('mp-inp').value);
+  const isText=_mpState.text;
+  const v=isText?raw:parseFloat(raw.replace(',','.'));
   const cb=_mpState.onOk; _mpClose();
-  try{ cb(isNaN(v)?null:v); }catch(e){}
+  try{ cb(isText?raw:(isNaN(v)?null:v)); }catch(e){}
 }
 function miniPrompt(ev, opts){
   const p=_ensureMiniPrompt();
-  _mpState={ onOk:opts.onOk };
+  _mpState={ onOk:opts.onOk, text:!!opts.text };
   g('mp-title').innerHTML=opts.title||'';
   const inp=g('mp-inp');
+  inp.type=opts.text?'text':'number';   // v7.92: metin girişi desteği (not vb.)
   inp.value=(opts.value!=null)?opts.value:'';
   inp.placeholder=opts.placeholder||'';
-  inp.min=opts.min!=null?opts.min:0;
+  if(!opts.text) inp.min=opts.min!=null?opts.min:0; else inp.removeAttribute('min');
   window._mpOpenedAt=Date.now();
   p.style.display='block';
   const w=p.offsetWidth||200, h=p.offsetHeight||120;
@@ -8307,6 +8312,63 @@ function maybeGrantGoldCase(){
   }
 }
 
+// ════════════════════════════════════════
+// 🎓 DERSE ÖZEL KASALAR (v7.92) — her 500 soruda düşer; weighted (kuruş nadir)
+// ════════════════════════════════════════
+const _SUBJ_CASE_META={
+  'TYT Paragraf':{ic:'📖',cn:'Kelime Kasası',tt:'Hızlı Okur'},
+  'TYT Dilbilgisi':{ic:'✍',cn:'Kural Kasası',tt:'Editör'},
+  'TYT Matematik':{ic:'🔢',cn:'Sayı Kasası',tt:'Analitik Zihin'},
+  'TYT Geometri':{ic:'📐',cn:'Pergel Kasası',tt:'Öklid'},
+  'TYT Fizik':{ic:'⚛',cn:'Kuantum Kasası',tt:'Newton'},
+  'TYT Kimya':{ic:'⚗',cn:'Element Kasası',tt:'Simyacı'},
+  'TYT Biyoloji':{ic:'🧬',cn:'DNA Kasası',tt:'Organizma'},
+  'TYT Tarih':{ic:'🏺',cn:'Kronik Kasası',tt:'Vakanüvis'},
+  'TYT Coğrafya':{ic:'🗺',cn:'Atlas Kasası',tt:'Kâşif'},
+  'TYT Felsefe':{ic:'🦉',cn:'Sofist Kasası',tt:'Filozof'},
+  'TYT Din':{ic:'☪',cn:'Hikmet Kasası',tt:'Âlim'},
+  'AYT Matematik':{ic:'➗',cn:'İleri Sayı Kasası',tt:'Analist'},
+  'AYT Fizik':{ic:'🌌',cn:'İleri Kuantum Kasası',tt:'Rölativist'},
+  'AYT Kimya':{ic:'🧪',cn:'İleri Element Kasası',tt:'Katalizör'},
+  'AYT Biyoloji':{ic:'🔬',cn:'İleri DNA Kasası',tt:'Genom'},
+};
+const SUBJ_CASE_STEP=500;   // her 500 soru → 1 kasa
+function _subjEarned(subj){ return Math.floor(((S.questionLog||{})[subj]||0)/SUBJ_CASE_STEP); }
+function _subjOpened(subj){ const c=_cs(); return (c.subjOpened&&c.subjOpened[subj])||0; }
+function _subjCaseBal(subj){ return Math.max(0, _subjEarned(subj)-_subjOpened(subj)); }
+function _subjCasePool(subj){
+  const mt=_SUBJ_CASE_META[subj]||{ic:'📦',cn:'Ders Kasası',tt:'Uzman'};
+  const P='sc_'+subj.replace(/\s/g,'')+'_';
+  return [
+    {id:P+'xp',    weight:38,  tier:'common',   icon:'🔹', name:'XP Parçacığı',        desc:'+200–350 XP',                    fx:()=>{ const a=200+Math.floor(Math.random()*151); addXP(a,mt.cn+': XP'); notify('🔹 +'+a+' XP'); }},
+    {id:P+'sprint',weight:18,  tier:'common',   icon:'⚡', name:'30dk Sprint',          desc:'Sonraki 30dk session 1.5× XP',   fx:()=>{ _cs().sprintActive=true; notify('⚡ Sprint aktif — sonraki 30dk 1.5×'); }},
+    {id:P+'sess',  weight:13,  tier:'uncommon', icon:'🚀', name:'3 Session Buff',       desc:'Sonraki 3 session +%20 XP',      fx:()=>{ _cs().sessionBuffRemaining=3; notify('🚀 Sonraki 3 session +%20 XP'); }},
+    {id:P+'stat1', weight:9,   tier:'uncommon', icon:'⬢', name:'Stat Kristali',        desc:'+1 stat puanı',                  fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+1; notify('⬢ +1 stat puanı'); try{renderCharacter();}catch(e){} }},
+    {id:P+'kr1',   weight:7,   tier:'uncommon', icon:'🪙', name:'Bozuk Para',           desc:'+400 kuruş Soru Bankası',        fx:()=>{ bankEarn(400,'kasa',mt.cn+': Bozuk Para'); notify('🪙 +400 kr'); }},
+    {id:P+'stat2', weight:5,   tier:'rare',     icon:'⬢', name:'Çift Stat Kristali',   desc:'+2 stat puanı',                  fx:()=>{ const c=_char(); c.statPoints=(c.statPoints||0)+2; notify('⬢⬢ +2 stat puanı'); try{renderCharacter();}catch(e){} }},
+    {id:P+'std',   weight:4,   tier:'rare',     icon:'🎁', name:'Bedava Standard',      desc:'+1 Standard Kasa',               fx:()=>{ _cs().standard++; notify('🎁 +1 Standard Kasa'); }},
+    {id:P+'boost', weight:2.5, tier:'rare',     icon:'🔥', name:'2× XP — 30dk',         desc:'30 dk boyunca tüm XP 2 kat',     fx:()=>{ S.boostUntil=Date.now()+1800*1000; S.activeShield=false; notify('🔥 2× XP boost — 30dk'); try{renderBoostBanner();}catch(e){} }},
+    {id:P+'title', weight:2,   tier:'epic',     icon:'🏅', name:'"'+mt.tt+'" Unvanı',   desc:'Profil unvanına '+mt.tt+' eklenir', fx:()=>{ const c=_cs(); c.profileTitles=c.profileTitles||[]; if(!c.profileTitles.includes(mt.tt)){ c.profileTitles.push(mt.tt); notify('🏅 Unvan: '+mt.tt); } else { bankEarn(600,'kasa','Unvan tekrar → kr'); notify('🏅 Unvan zaten var → +600 kr'); } }},
+    {id:P+'kr2',   weight:0.6, tier:'epic',     icon:'💎', name:'Büyük Deste',          desc:'+1500 kuruş Soru Bankası',       fx:()=>{ bankEarn(1500,'kasa',mt.cn+': Büyük Deste'); notify('💎 +1500 kr'); }},
+  ];
+}
+// soru eklenince çağır: yeni 500-eşiği aşıldıysa bildir
+function _subjCaseNotify(subj, prevTotal, addN){
+  try{ if(Math.floor((prevTotal+addN)/SUBJ_CASE_STEP)>Math.floor(prevTotal/SUBJ_CASE_STEP)){
+    const mt=_SUBJ_CASE_META[subj]; notify((mt?mt.ic+' '+mt.cn:'📦 Ders Kasası')+' DÜŞTÜ! (500 soru — Market › Kasalar)');
+    addLog('Ders kasası düştü: '+subj+' (500 soru eşiği)');
+  } }catch(e){}
+}
+function openSubjectCase(i){
+  const subj=_CG_SUBJECTS[i]; if(!subj) return;
+  if(_subjCaseBal(subj)<=0){ notify('Bu ders için kasa yok'); return; }
+  const cs=_cs(); cs.subjOpened=cs.subjOpened||{}; cs.subjOpened[subj]=(cs.subjOpened[subj]||0)+1;
+  const pool=_subjCasePool(subj); const winner=_weightedPick(pool);
+  const mt=_SUBJ_CASE_META[subj]||{ic:'📦',cn:'Ders Kasası'};
+  save(); renderShop();
+  showCaseRoulette(pool, winner, mt.ic+' '+mt.cn.toUpperCase(), ()=>{ try{ winner.fx(); }catch(e){} save(); renderShop(); });
+  addLog('Ders kasası açıldı ('+subj+'): '+winner.name+' ['+winner.tier+']');
+}
 function openCase(type){
   const cs=_cs();
   if (type==='standard' && cs.standard<=0){ notify('Standard kasa yok — Market\'ten al veya günlük kasanı bekle'); return; }
@@ -8358,7 +8420,7 @@ function showCaseRoulette(allItems, winner, type, onComplete){
   }).join('');
   m.innerHTML =
     '<div class="case-roulette-frame">'+
-      '<div class="case-roulette-title">'+(type==='gold'?'✨ GOLD KASA':'📦 STANDARD KASA')+' — AÇILIYOR…</div>'+
+      '<div class="case-roulette-title">'+(type==='gold'?'✨ GOLD KASA':type==='standard'?'📦 STANDARD KASA':_he(type))+' — AÇILIYOR…</div>'+
       '<div class="roulette-viewport" id="roulette-vp">'+
         '<div class="roulette-track" id="roulette-track">'+cardsHTML+'</div>'+
         '<div class="roulette-selector"></div>'+
@@ -8674,7 +8736,18 @@ function renderCases(){
     cost: CASE_PRICE_GOLD, stock: cs.gold,
     border:'#ffaa44', nameColor:'#ffd28a', bg:'rgba(255,170,68,.06)',
   });
-  grid.innerHTML = standardCard + goldCard;
+  const _subjCards=(typeof _CG_SUBJECTS!=='undefined'?_CG_SUBJECTS:[]).map((sj)=>{
+    const bal=_subjCaseBal(sj); if(bal<=0) return '';
+    const i=_CG_SUBJECTS.indexOf(sj); const mt=_SUBJ_CASE_META[sj]||{ic:'📦',cn:'Ders Kasası'};
+    return '<div class="shop-card" style="border:1px solid #7fd8ff;border-radius:12px;background:rgba(127,216,255,.06)">'+
+      '<div class="shop-icon">'+mt.ic+'</div>'+
+      '<div class="shop-name" style="color:#bfeaff">'+_he(mt.cn)+'</div>'+
+      '<div class="shop-desc">'+_he(sj)+' · 500 soru ödülü</div>'+
+      '<div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin:4px 0">BEKLEYEN: <b style="color:var(--white)">'+bal+'</b></div>'+
+      '<button class="shop-btn primary" style="width:100%" onclick="openSubjectCase('+i+')">AÇ</button>'+
+    '</div>';
+  }).filter(Boolean).join('');
+  grid.innerHTML = standardCard + goldCard + _subjCards;
   // recent log
   const log=g('cases-log');
   if (log){
@@ -9432,7 +9505,7 @@ function renderExamWrongChips(){
 function wrongTopicNote(ev, key){
   if(ev) ev.stopPropagation();
   const w=(S.wrongTopics||{})[key]; if(!w){ notify('Konu bulunamadı'); return; }
-  miniPrompt(ev?{target:ev.currentTarget||ev.target}:{},{ top:true, title:'🗒 <b>'+_he(w.name)+'</b> — not', value:w.note||'', placeholder:'ör: yorum sorularında acele ediyorum', onOk:(v)=>{
+  miniPrompt(ev?{target:ev.currentTarget||ev.target}:{},{ top:true, text:true, title:'🗒 <b>'+_he(w.name)+'</b> — not', value:w.note||'', placeholder:'ör: yorum sorularında acele ediyorum', onOk:(v)=>{
     const t=String(v||'').trim().slice(0,200);
     if(t){ w.note=t; notify('🗒 Not kaydedildi'); } else { delete w.note; notify('Not silindi'); }
     w.ut=Date.now(); save();
@@ -11905,6 +11978,7 @@ function _mergeIncoming(incoming){
       merged.cases.unlocked=Object.assign({}, ic.unlocked||{}, lc.unlocked||{});
       _st2.forEach(k=>{ if(k.indexOf('unl:')===0) delete merged.cases.unlocked[k.slice(4)]; });
       ['fragGold','fragStd','protShards'].forEach(k=>{ merged.cases[k]=Math.max(Number(lc[k])||0, Number(ic[k])||0); });
+      merged.cases.subjOpened=(function(){ const o={},a=(lc.subjOpened||{}),b=(ic.subjOpened||{}); [...new Set([].concat(Object.keys(a),Object.keys(b)))].forEach(k=>{ o[k]=Math.max(Number(a[k])||0,Number(b[k])||0); }); return o; })();
       merged.cases.lastGoldStreak=Math.min(Number(merged.dayStreak)||0, Math.max(Number(lc.lastGoldStreak)||0, Number(ic.lastGoldStreak)||0));   // v7.79: streak'i asamaz (stale gold-engeli diriltilmez)
       merged.cases.dailyClaimed=((lc.dailyClaimed||'')>=(ic.dailyClaimed||'')) ? (lc.dailyClaimed||null) : (ic.dailyClaimed||null);   // v7.83: EN GÜNCEL tarih (bir cihazda alinca her yerde 'alindi' kalsin — stale null cihaz basi tekrar aldirmasin)
     }
@@ -12432,7 +12506,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.91.0 başlatıldı.');
+addLog('OVERCLOCK v7.92.0 başlatıldı.');
 </script>
 </body>
 </html>
