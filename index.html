@@ -2066,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.95.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.96.0</div>
     </div>
   </div>
 </div>
@@ -4928,11 +4928,12 @@ function gymProgAdd(dow){
   const goal=Math.max(0, parseFloat((g('gp-goal-'+dow)||{}).value)||0);
   const unit=(((g('gp-unit-'+dow)||{}).value||'tekrar').trim().slice(0,8))||'tekrar';
   const p=_gymProg(); p.days[dow]=p.days[dow]||[];
-  p.days[dow].push({name, start, goal, unit});
+  p.days[dow].push({name, start, goal, unit, ut:Date.now()});
+  const gm=_gym(); gm.progTombs=(gm.progTombs||[]).filter(k=>k!==(dow+'|'+name.toLowerCase()));   // v7.96: yeniden eklenince mezar taşını kaldır
   save(); renderGymProgram();
   notify('📅 '+_GDOW[_GDOW_JS.indexOf(dow)]+' → '+name);
 }
-function gymProgRemove(dow,i){ const p=_gymProg(); if(p.days[dow]){ p.days[dow].splice(i,1); save(); renderGymProgram(); } }
+function gymProgRemove(dow,i){ const p=_gymProg(); if(p.days[dow]){ const it=p.days[dow][i]; if(it&&it.name){ const gm=_gym(); gm.progTombs=gm.progTombs||[]; const k=dow+'|'+String(it.name).toLowerCase(); if(!gm.progTombs.includes(k)) gm.progTombs.push(k); if(gm.progTombs.length>300) gm.progTombs=gm.progTombs.slice(-300); } p.days[dow].splice(i,1); save(); renderGymProgram(); } }
 // Bugünün program egzersizlerini gym.exercises'e ekler. force=false → günde 1 kez otomatik (sildiysen geri getirmez)
 function _gymAddTodayProgram(force){
   const p=_gymProg(); const t=today();
@@ -12115,10 +12116,22 @@ function _mergeIncoming(incoming){
       merged.gym.exLib=_unionArr(lg.exLib, ig.exLib, [], x=>x&&x.name, (a,b)=>true);
       merged.gym.sleep=_unionArr(lg.sleep, ig.sleep, [], x=>x&&x.d, (a,b)=>(a.ut||0)>=(b.ut||0)).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
       merged.gym.sleepGoal=(lg.sleepGoal!=null?lg.sleepGoal:ig.sleepGoal);
-      // 📅 haftalık program: daha dolu (çok egzersizli) olan + daha ileri hafta korunur
-      try{ const cnt=p=>{let n=0;try{Object.values((p&&p.days)||{}).forEach(a=>n+=(a||[]).length);}catch(e){}return n;};
-        const lp=lg.program, ip=ig.program; const base=(cnt(lp)>=cnt(ip))?(lp||ip):(ip||lp);
-        if(base){ base.week=Math.max((lp&&lp.week)||1,(ip&&ip.week)||1); merged.gym.program=base; } }catch(e){}
+      // 📅 haftalık program: UNION + mezar taşı (dow|name anahtarı), düzenlemede ut newest-wins
+      try{
+        const lp=lg.program||{days:{}}, ip=ig.program||{days:{}};
+        const tombs=[...new Set([].concat(lg.progTombs||[], ig.progTombs||[]).map(String))].slice(-300);
+        const tset=new Set(tombs);
+        const days={};
+        const dows=new Set([].concat(Object.keys(lp.days||{}), Object.keys(ip.days||{})));
+        dows.forEach(dow=>{
+          const map={};
+          const eat=(arr)=>{ (arr||[]).forEach(it=>{ if(!it||!it.name) return; const key=dow+'|'+String(it.name).toLowerCase(); if(tset.has(key)) return; const ex=map[key]; if(!ex||(it.ut||0)>=(ex.ut||0)) map[key]=it; }); };
+          eat(ip.days&&ip.days[dow]); eat(lp.days&&lp.days[dow]);   // ut karar verir; eşitlikte yerel
+          const arr=Object.values(map); if(arr.length) days[dow]=arr;
+        });
+        merged.gym.program={ days, week:Math.max((lp.week)||1,(ip.week)||1), weekStart:(lp.weekStart||ip.weekStart||null), lastAuto:(((lp.lastAuto||'')>=(ip.lastAuto||''))?lp.lastAuto:ip.lastAuto)||null };
+        merged.gym.progTombs=tombs;
+      }catch(e){}
       merged.gym.depot=Object.assign({}, ig.depot||{}, lg.depot||{});
     }
   }catch(e){}
@@ -12520,7 +12533,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.95.0 başlatıldı.');
+addLog('OVERCLOCK v7.96.0 başlatıldı.');
 </script>
 </body>
 </html>
