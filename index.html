@@ -2066,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.96.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.97.0</div>
     </div>
   </div>
 </div>
@@ -3224,13 +3224,10 @@ function tickTimer(){
   }
   if(timerSecs<=0){
     S._runSess=null;
-    // 🔔 v7.57: zil/bildirim TAM ŞİMDİ doğar (ön-kurulum yok). Uygulama arkaplandaysa
-    // native imza zili (ALARM kanalı, sessiz mod delinir) + anlık bildirim; öndeyse in-app zil.
-    if(_isNative() && document.hidden){
-      try{ const _t=_timerNotifText(); _nativeSchedule(_NID_TIMER, Date.now()+400, _t.title, _t.body); }catch(e){}
-      try{ const OA=_ocAlarm(); if(OA && OA.ring) OA.ring(); }catch(e){}
-    }
-    try{ const OA=_ocAlarm(); if(OA && !document.hidden) OA.cancel(); }catch(e){}
+    // v7.97: ön-planda bitiş → SADECE in-app zil (aşağıda playBell). Native alarm/imza zili YOK.
+    // Arka planda biterse önceden kurulan bildirim OS tarafından çoktan atıldı; burada kurulu olanları iptal et.
+    try{ cancelTimerNotification(); }catch(e){}
+    try{ const OA=_ocAlarm(); if(OA) OA.cancel(); }catch(e){}   // stale native alarm varsa sustur
     clearInterval(timerIv); timerRunning=false; timerEndAt=null;
     g('btn-start').textContent='▶ START';
     // clear the page fallback timer only — do NOT cancel the SW notification
@@ -3320,7 +3317,7 @@ document.addEventListener('visibilitychange', function(){
   }
   // back in foreground
   cancelBossNotification();
-  cancelOngoingTimerNotif();
+  try{ cancelTimerNotification(); }catch(e){}   // v7.97: ön plana dönünce kurulu 5dk/bitiş bildirimlerini iptal (ön planda zil çalar, noti gitmez)
   if(timerRunning && timerEndAt){
     // Let tickTimer credit the elapsed time properly. It compares `prev` (the
     // last known timerSecs) with the new wall-clock value and adds the diff
@@ -6424,12 +6421,12 @@ function swPost(msg){
 // ── Native (Capacitor APK) notification bridge ──
 // In the APK these are real OS alarms (exact, screen-off proof). On the web
 // we fall back to the service-worker Notification Triggers path.
-const _NID_TIMER = 1001, _NID_BOSS = 1002;
+const _NID_TIMER = 1001, _NID_BOSS = 1002, _NID_TIMER_PRE = 1004;
 // Channel ID bumped to v3 so devices that had the old channel muted (or created
 // without a sound by older Capacitor builds) get a fresh HIGH-importance one.
 // A channel's sound/importance is FROZEN once created, so changing the ID is
 // the only way to reset it on existing installs.
-let _NCH_TIMER = 'overclock-timer-v5';   // yamalı APK algılanırsa v6'ya (ALARM ses kanalı) yükselir
+let _NCH_TIMER = 'overclock-timer-v7';   // v7.97: NORMAL bildirim kanalı (alarm ses kanalı kaldırıldı)
 // ⏰ ALARM KANALI EL SIKIŞMASI: yeni APK (versionName 7.2.x) native yamalı —
 // 'oc_system_alarm' işaretli kanal sistem ALARM sesi + alarm ses düzeyiyle çalar
 // (bildirim sesi 0 olsa bile). Eski APK'de v5 davranışı aynen sürer.
@@ -6439,34 +6436,16 @@ let _alarmChanChecked=false, _chanReadyP=null;
 function _chanReady(){
   if(_chanReadyP) return _chanReadyP;
   if(!_isNative()) return Promise.resolve();   // şimdilik köprü yok — cache'leme
-  _chanReadyP=Promise.resolve(_upgradeAlarmChannel()).catch(()=>{});
+  _chanReadyP=Promise.resolve().then(()=>{ try{ ensureNotifChannel(); }catch(e){} });
   return _chanReadyP;
 }
 // v6 kanalına geçişi UYGULA (kaynağı kim olursa olsun: el sıkışma ya da rozet yolu)
-function _applyAlarmChannelV6(ver){
-  if(_NCH_TIMER==='overclock-timer-v6') return;
-  _NCH_TIMER='overclock-timer-v6';
-  _alarmChanChecked=true;
-  _capChannelReady=false;
-  try{ const LN=_capNotif(); if(LN){ LN.deleteChannel({id:'overclock-timer-v5'}).catch(()=>{}); } }catch(e){}
-  try{ addLog('⏰ APK '+ver+' — alarm ALARM ses kanalına taşındı (v6).'); }catch(e){}
-  try{ if(timerRunning && timerEndAt) scheduleTimerNotification(); }catch(e){}
-  try{ scheduleCalendarReminders(); scheduleHabitReminders(); scheduleSrsNotification(); }catch(e){}
+function _applyAlarmChannelV6(ver){   // v7.97: NÖTR — alarm ses kanalına ARTIK geçmez (kütüphanede zangırdıyordu); normal kanal kalır
+  try{ ensureNotifChannel(); }catch(e){}
 }
-async function _upgradeAlarmChannel(){
-  if(_alarmChanChecked) return;
-  if(!_isNative()) return;   // köprü henüz yok — sonraki deneme yakalar
+function _upgradeAlarmChannel(){   // v7.97: alarm kanalı yükseltmesi kaldırıldı → sadece normal kanalı kur
   _alarmChanChecked=true;
-  try{
-    const App=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.App;
-    const info=App?await App.getInfo():null;
-    const ver=info?String(info.version||'?'):'? (App eklentisi yok)';
-    if(ver.indexOf('7.2')===0){
-      _applyAlarmChannelV6(ver);
-    } else {
-      addLog('⚠ APK '+ver+' — ESKİ ikili, alarm bildirim kanalında. Yeni APK kur: github releases','err');
-    }
-  }catch(e){ try{ addLog('⚠ Alarm kanalı el sıkışma hatası: '+(e&&e.message||e),'err'); }catch(_){}}
+  try{ ensureNotifChannel(); }catch(e){}
 }
 const _NCH_ONGOING = 'overclock-ongoing-v1';   // düşük öncelik, sessiz — devam eden sayaç
 function _capNotif(){ try{ return window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications; }catch(e){ return null; } }
@@ -6499,16 +6478,16 @@ function ensureNotifChannel(){
     // Bitiş/alarm kanalı — yüksek öncelik, sesli (heads-up + zil)
     // DİKKAT: 'sound' alanı res/raw dosya adı bekler — 'default' diye dosya olmadığından
     // kanal SESSİZ oluşuyordu. Alanı hiç vermeyince Android varsayılan bildirim sesini çalar.
-    LN.createChannel(Object.assign({
+    LN.createChannel({
       id: _NCH_TIMER,
-      name: (_NCH_TIMER==='overclock-timer-v6')?'OVERCLOCK Alarm':'OVERCLOCK Sayaç',
-      description: 'Session ve mola bitişi alarmları',
-      importance: 5,          // IMPORTANCE_HIGH → heads-up + lock-screen + varsayılan ses
-      visibility: 1,          // PUBLIC
+      name: 'OVERCLOCK Sayaç',
+      description: 'Session ve mola bitişi bildirimleri',
+      importance: 4,          // IMPORTANCE_HIGH (heads-up) — VARSAYILAN bildirim sesi, ALARM DEĞİL
+      visibility: 1,
       vibration: true,
       lights: true,
-    }, (_NCH_TIMER==='overclock-timer-v6') ? { sound:'oc_system_alarm' } : {}));   // yamalı APK: ALARM ses kanalı
-    try{ LN.deleteChannel({ id:'overclock-timer-v4' }); }catch(e){}   // sessiz eski kanalı temizle
+    });   // v7.97: normal bildirim kanalı (alarm ses kanalı kaldırıldı — kütüphanede zangırdıyordu)
+    ['overclock-timer-v4','overclock-timer-v5','overclock-timer-v6'].forEach(id=>{ try{ LN.deleteChannel({ id }); }catch(e){} });   // eski gürültülü/sessiz kanalları sil
     // DEVAM EDEN sayaç kanalı — DÜŞÜK öncelik, SESSİZ, titreşimsiz.
     // Spotify/Focus To-Do tarzı: bildirim yukarıdan FIRLAMAZ, ses çıkarmaz,
     // sadece bildirim çekmecesinde sabit durur ve yerinde güncellenir.
@@ -6754,11 +6733,14 @@ function scheduleTimerNotification(){
   if (!timerRunning || !timerEndAt) return;
   const { focusEnd, title, body } = _timerNotifText();
   if (_isNative()){
-    // v7.57 (kullanıcı kararı): ÖN-KURULUM YOK — "2 saat sonra gaipten zil" olmaz.
-    // Zil + bildirim, sayaç FİİLEN sıfıra indiği anda doğar (tickTimer tamamlanma bloğu).
-    // Kapatırsan sayaç donar (pause-modeli) → zil de yok. Eski kurulumlar temizlenir:
-    _nativeCancel(_NID_TIMER);
-    try{ const OA=_ocAlarm(); if(OA) OA.cancel(); }catch(e){}
+    // v7.97: SADECE arka plandayken önceden kur (ön planda in-app zil çalar, bildirim gitmez).
+    if(!document.hidden){ _nativeCancel(_NID_TIMER); _nativeCancel(_NID_TIMER_PRE); return; }
+    const now=Date.now();
+    const preAt = timerEndAt - 5*60*1000;
+    if(preAt > now + 2000){
+      _nativeSchedule(_NID_TIMER_PRE, preAt, (isBreak?'⏸ Molaya 5 dk':'⏱ Bitişe 5 dk'), (isBreak?'Molanın bitmesine 5 dakika kaldı.':'Session bitmesine 5 dakika kaldı.'));
+    } else { _nativeCancel(_NID_TIMER_PRE); }
+    _nativeSchedule(_NID_TIMER, timerEndAt, title, body);   // bitiş bildirimi (normal kanal, varsayılan ses)
     return;
   }
   // always arm the precise page-side fallback
@@ -6779,7 +6761,7 @@ function cancelTimerNotification(){
   clearTimeout(_endTO); _endTO = null;
   try{ const OA=_ocAlarm(); if(OA) OA.cancel(); }catch(e){}
   try{ cancelOngoingTimerNotif(); }catch(e){}   // devam eden bildirimi de kapat
-  if (_isNative()){ _nativeCancel(_NID_TIMER); return; }
+  if (_isNative()){ _nativeCancel(_NID_TIMER); _nativeCancel(_NID_TIMER_PRE); return; }
   swPost({ type:'cancel', tag:'overclock-timer' });
 }
 
@@ -12533,7 +12515,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.96.0 başlatıldı.');
+addLog('OVERCLOCK v7.97.0 başlatıldı.');
 </script>
 </body>
 </html>
