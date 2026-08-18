@@ -2066,7 +2066,7 @@ body.pixel-font #timer-unit{font-size:8px}
     </div>
     <div class="ssec" style="border-bottom:none;text-align:center;padding-top:10px">
       <div style="font-size:10px;color:var(--bright);letter-spacing:1px">Created by Mehmet Hakan Horoz</div>
-      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.97.0</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px">OVERCLOCK v7.98.0</div>
     </div>
   </div>
 </div>
@@ -9620,13 +9620,21 @@ function deleteTopic(ev,key){
 // 📔 KAVRAM SÖZLÜĞÜ + MİNİGAME (v7.91)
 // ════════════════════════════════════════
 const _CG_SUBJECTS=['TYT Paragraf','TYT Dilbilgisi','TYT Türkçe','TYT Matematik','TYT Geometri','TYT Fizik','TYT Kimya','TYT Biyoloji','TYT Tarih','TYT Coğrafya','TYT Felsefe','TYT Din','TYT Sosyal','AYT Matematik','AYT Fizik','AYT Kimya','AYT Biyoloji'];
+// v7.98: Kavram Sözlüğü TYT/AYT ayrımı olmadan SADE ders adları (kasalar hâlâ _CG_SUBJECTS kullanır)
+const _CONCEPT_SUBJECTS=['Matematik','Geometri','Fizik','Kimya','Biyoloji','Paragraf','Dilbilgisi','Türkçe','Tarih','Coğrafya','Felsefe','Din','Sosyal'];
+function _conceptUnifyMigrate(){
+  const C=S.concepts; if(!C) return false; let changed=false;
+  Object.keys(C).forEach(k=>{ const plain=k.replace(/^(TYT|AYT)\s+/,''); if(plain!==k){ C[plain]=C[plain]||[]; (C[k]||[]).forEach(card=>{ if(card && !C[plain].some(x=>x.id===card.id)) C[plain].push(card); }); delete C[k]; changed=true; } });
+  return changed;
+}
 let _cgOpen=-1;   // açık ders index (accordion)
 function _concepts(){ S.concepts=S.concepts||{}; return S.concepts; }
 function _cgCards(subj){ const c=_concepts(); c[subj]=c[subj]||[]; return c[subj]; }
 function renderConcepts(){
   const box=g('concept-list'); if(!box) return;
   const C=_concepts();
-  box.innerHTML=_CG_SUBJECTS.map((subj,i)=>{
+  try{ if(_conceptUnifyMigrate()) save(); }catch(e){}
+  box.innerHTML=_CONCEPT_SUBJECTS.map((subj,i)=>{
     const cards=C[subj]||[]; const open=_cgOpen===i;
     let inner='';
     if(open){
@@ -9660,7 +9668,7 @@ function renderConcepts(){
 }
 function conceptToggle(i){ _cgOpen=(_cgOpen===i)?-1:i; renderConcepts(); }
 function conceptAddCard(i){
-  const subj=_CG_SUBJECTS[i];
+  const subj=_CONCEPT_SUBJECTS[i];
   const topic=((g('cg-topic')||{}).value||'').trim().slice(0,60);
   const q=((g('cg-q')||{}).value||'').trim().slice(0,200);
   const a=((g('cg-a')||{}).value||'').trim().slice(0,300);
@@ -9669,7 +9677,7 @@ function conceptAddCard(i){
   save(); renderConcepts(); notify('📔 Kart eklendi');
 }
 function conceptDelCard(i,ci){
-  const subj=_CG_SUBJECTS[i]; const arr=_cgCards(subj);
+  const subj=_CONCEPT_SUBJECTS[i]; const arr=_cgCards(subj);
   const c=arr[ci]; if(!c) return;
   S.conceptTombs=(S.conceptTombs||[]); S.conceptTombs.push(String(c.id)); if(S.conceptTombs.length>400) S.conceptTombs=S.conceptTombs.slice(-400);
   arr.splice(ci,1); save(); renderConcepts();
@@ -9694,7 +9702,7 @@ function _cgBand(sim){ return sim>=0.8?'TAM':(sim>=0.5?'KISMİ':'KAÇTI'); }
 // ── Minigame ──
 let _cg=null, _cgIv=null;
 function conceptStudy(i){
-  const subj=_CG_SUBJECTS[i]; const all=_cgCards(subj).slice();
+  const subj=_CONCEPT_SUBJECTS[i]; const all=_cgCards(subj).slice();
   if(!all.length){ notify('Önce kart ekle'); return; }
   for(let k=all.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [all[k],all[j]]=[all[j],all[k]]; }
   const deck=all.slice(0,10);
@@ -9788,7 +9796,7 @@ function _cgFinish(){
   save();
   try{ _checkAchievements(); }catch(e){}
 }
-function cgReplay(){ if(!_cg) return; const i=_CG_SUBJECTS.indexOf(_cg.subj); _cg=null; conceptStudy(i); }
+function cgReplay(){ if(!_cg) return; const i=_CONCEPT_SUBJECTS.indexOf(_cg.subj); _cg=null; conceptStudy(i); }
 function renderTree(){
   const list = g('tree-list'), emp = g('tree-empty'); if(!list) return;
   const wt = S.wrongTopics || {};
@@ -12515,7 +12523,7 @@ try { _purgePoisonedSyncCache(); } catch(e){}
 try { initSync(); } catch(e){}
 // Açılışta önce sayacın tam ekran halini göster (kapatınca HQ'ya dönülür)
 try { enterFullscreen(); } catch(e){}
-addLog('OVERCLOCK v7.97.0 başlatıldı.');
+addLog('OVERCLOCK v7.98.0 başlatıldı.');
 </script>
 </body>
 </html>
